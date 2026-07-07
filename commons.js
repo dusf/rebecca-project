@@ -732,8 +732,8 @@
         const seriesNames = selectedSeries.map(s => s.name).join('、');
         const siteName = sites.find(s => s.id === selectedSite)?.name || '';
 
-        // 去重检查：按系列分组整理重复商品
-        let duplicateItems = [];
+        // 去重检查：按商品分组，记录每个商品已铺到的系列
+        let duplicateItems = [];  // { name, seriesList: ['系列1', '系列2'] }
         let syncNames = [];
         for (const name of names) {
           const existing = existingSyncMap[name] || [];
@@ -742,52 +742,48 @@
             const dupSeries = alreadyInSeries.map(eid => {
               const s = allSeries.find(a => a.id === eid);
               return s ? s.name : eid;
-            }).join('、');
-            duplicateItems.push({ name, series: dupSeries });
+            });
+            duplicateItems.push({ name, seriesList });
           } else {
             syncNames.push(name);
           }
         }
 
         if (duplicateItems.length > 0) {
-          // 按系列分组
-          const grouped = {};
-          for (const d of duplicateItems) {
-            if (!grouped[d.series]) grouped[d.series] = [];
-            grouped[d.series].push(d.name);
-          }
-          const groupEntries = Object.entries(grouped);
-
-          // 构建折叠列表
-          const maxShow = 3; // 默认显示前3个分组
-          const needCollapse = groupEntries.length > maxShow;
+          const maxShow = 5;
+          const needCollapse = duplicateItems.length > maxShow;
           const groupId = 'dupGroup_' + Date.now();
           const collapseId = 'dupCollapse_' + Date.now();
 
-          const buildGroupItem = (series, items) => `
-            <div class="dup-group-item">
-              <div class="dup-group-series">${series}</div>
-              <div class="dup-group-names">${items.map(n => `<span class="dup-name-tag">${n}</span>`).join('')}</div>
-            </div>
-          `;
+          const buildItem = (d, idx) => {
+            const seriesTags = d.seriesList.map(s => `<span class="dup-series-tag">${s}</span>`).join('');
+            return `
+              <div class="dup-item">
+                <span class="dup-item-idx">${idx + 1}</span>
+                <span class="dup-item-name">${d.name}</span>
+                <span class="dup-item-arrow">→</span>
+                <span class="dup-item-series">${seriesTags}</span>
+              </div>
+            `;
+          };
 
-          const visibleGroups = groupEntries.slice(0, maxShow).map(([s, items]) => buildGroupItem(s, items)).join('');
-          const hiddenGroups = groupEntries.slice(maxShow).map(([s, items]) => buildGroupItem(s, items)).join('');
+          const visibleItems = duplicateItems.slice(0, maxShow).map((d, i) => buildItem(d, i)).join('');
+          const hiddenItems = duplicateItems.slice(maxShow).map((d, i) => buildItem(d, i + maxShow)).join('');
 
           const confirmHtml = `
             <div class="dup-confirm-body">
               <div class="dup-summary">
                 <span class="dup-summary-icon">⚠️</span>
-                <span><b>${duplicateItems.length}</b> 件商品已铺货到当前选中的系列，将跳过</span>
+                <span>以下 <b>${duplicateItems.length}</b> 件商品已铺货到当前选中的系列，将<b>跳过</b>：</span>
               </div>
-              <div class="dup-group-list" id="${groupId}">
-                ${visibleGroups}
-                ${needCollapse ? `<div id="${collapseId}" class="dup-collapse-content">${hiddenGroups}</div>` : ''}
+              <div class="dup-item-list" id="${groupId}">
+                ${visibleItems}
+                ${needCollapse ? `<div id="${collapseId}" class="dup-collapse-content">${hiddenItems}</div>` : ''}
               </div>
-              ${needCollapse ? `<div class="dup-expand-btn" onclick="window._toggleDupCollapse('${collapseId}', this)">展开全部 ${groupEntries.length} 个系列 ▼</div>` : ''}
+              ${needCollapse ? `<div class="dup-expand-btn" onclick="window._toggleDupCollapse('${collapseId}', this)">展开全部 ${duplicateItems.length} 件 ▼</div>` : ''}
               <div class="dup-sync-summary">
                 ${syncNames.length > 0
-                  ? `<span>可同步 <b>${syncNames.length}</b> 件新商品到 <b>${siteName}</b>（${statusText}）</span>`
+                  ? `<span>✅ 可同步 <b>${syncNames.length}</b> 件新商品到 <b>${siteName}</b>（${statusText}）</span>`
                   : `<span style="color:var(--error)">没有可同步的新商品</span>`
                 }
               </div>

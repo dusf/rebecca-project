@@ -1593,3 +1593,113 @@
       border-radius: 50%;
     }
 
+    /* ==================== 重复商品确认弹窗 ==================== */
+    .dup-dialog {
+      max-width: 560px;
+      width: 90vw;
+    }
+
+    .dup-confirm-body {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .dup-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #FFF8F0;
+      border: 1px solid #FDE4C3;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: #8B6914;
+    }
+
+    .dup-summary-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .dup-group-list {
+      margin-bottom: 12px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .dup-group-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid hsl(var(--border));
+      font-size: 12px;
+    }
+
+    .dup-group-item:last-child {
+      border-bottom: none;
+    }
+
+    .dup-group-series {
+      flex-shrink: 0;
+      min-width: 80px;
+      padding: 2px 8px;
+      background: hsl(var(--primary-50));
+      color: hsl(var(--primary-700));
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .dup-group-names {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .dup-name-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #F5F5F5;
+      border-radius: 3px;
+      color: hsl(var(--foreground));
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .dup-collapse-content {
+      display: none;
+    }
+
+    .dup-collapse-content.open {
+      display: block;
+    }
+
+    .dup-expand-btn {
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+      color: hsl(var(--primary));
+      cursor: pointer;
+      user-select: none;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      transition: background 0.15s;
+    }
+
+    .dup-expand-btn:hover {
+      background: hsl(var(--primary-50));
+    }
+
+    .dup-sync-summary {
+      padding: 10px 14px;
+      background: #F0FAF0;
+      border: 1px solid #C3E6C3;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #3A7A3A;
+    }
+

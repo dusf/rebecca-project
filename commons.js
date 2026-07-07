@@ -732,9 +732,9 @@
         const seriesNames = selectedSeries.map(s => s.name).join('、');
         const siteName = sites.find(s => s.id === selectedSite)?.name || '';
 
-        // 去重检查：区分已铺到当前选中系列的商品和可同步的商品
-        let duplicateItems = [];  // 已铺到当前选中系列的商品
-        let syncNames = [];       // 可以正常同步的商品
+        // 去重检查：按系列分组整理重复商品
+        let duplicateItems = [];
+        let syncNames = [];
         for (const name of names) {
           const existing = existingSyncMap[name] || [];
           const alreadyInSeries = existing.filter(eid => selectedSeriesIds.has(eid));
@@ -749,31 +749,63 @@
           }
         }
 
-        // 如果有重复商品，弹出确认提示
         if (duplicateItems.length > 0) {
-          const dupList = duplicateItems.map(d => `「${d.name}」已铺到「${d.series}」`).join('<br>');
-          const dupNames = duplicateItems.map(d => d.name);
-          const confirmHtml = `
-            <div style="margin-bottom:16px;font-size:13px;line-height:1.8">
-              <p style="margin-bottom:12px">以下 <b>${duplicateItems.length}</b> 件商品已经出现在当前选中的站点系列中：</p>
-              <div style="background:#FFF8F0;border:1px solid #FDE4C3;border-radius:6px;padding:10px 14px;margin-bottom:12px;max-height:150px;overflow-y:auto;font-size:12px;color:#8B6914">
-                ${dupList}
-              </div>
-              <p>是否<b>跳过</b>这些已铺货的商品，仅同步剩余 <b>${syncNames.length}</b> 件？</p>
-              ${syncNames.length > 0 ? `<p style="color:hsl(var(--muted-foreground));font-size:12px">可同步：${syncNames.join('、')}</p>` : '<p style="color:red;font-size:12px">没有可同步的新商品</p>'}
+          // 按系列分组
+          const grouped = {};
+          for (const d of duplicateItems) {
+            if (!grouped[d.series]) grouped[d.series] = [];
+            grouped[d.series].push(d.name);
+          }
+          const groupEntries = Object.entries(grouped);
+
+          // 构建折叠列表
+          const maxShow = 3; // 默认显示前3个分组
+          const needCollapse = groupEntries.length > maxShow;
+          const groupId = 'dupGroup_' + Date.now();
+          const collapseId = 'dupCollapse_' + Date.now();
+
+          const buildGroupItem = (series, items) => `
+            <div class="dup-group-item">
+              <div class="dup-group-series">${series}</div>
+              <div class="dup-group-names">${items.map(n => `<span class="dup-name-tag">${n}</span>`).join('')}</div>
             </div>
           `;
 
-          // 创建确认弹窗
+          const visibleGroups = groupEntries.slice(0, maxShow).map(([s, items]) => buildGroupItem(s, items)).join('');
+          const hiddenGroups = groupEntries.slice(maxShow).map(([s, items]) => buildGroupItem(s, items)).join('');
+
+          const confirmHtml = `
+            <div class="dup-confirm-body">
+              <div class="dup-summary">
+                <span class="dup-summary-icon">⚠️</span>
+                <span><b>${duplicateItems.length}</b> 件商品已铺货到当前选中的系列，将跳过</span>
+              </div>
+              <div class="dup-group-list" id="${groupId}">
+                ${visibleGroups}
+                ${needCollapse ? `<div id="${collapseId}" class="dup-collapse-content">${hiddenGroups}</div>` : ''}
+              </div>
+              ${needCollapse ? `<div class="dup-expand-btn" onclick="window._toggleDupCollapse('${collapseId}', this)">展开全部 ${groupEntries.length} 个系列 ▼</div>` : ''}
+              <div class="dup-sync-summary">
+                ${syncNames.length > 0
+                  ? `<span>可同步 <b>${syncNames.length}</b> 件新商品到 <b>${siteName}</b>（${statusText}）</span>`
+                  : `<span style="color:var(--error)">没有可同步的新商品</span>`
+                }
+              </div>
+            </div>
+          `;
+
           const dupOverlay = document.createElement('div');
           dupOverlay.className = 'dialog-overlay';
           dupOverlay.innerHTML = `
-            <div class="dialog" style="max-width:520px">
-              <div class="dialog-title">重复商品提示</div>
+            <div class="dialog dup-dialog">
+              <div class="dialog-title">跳过已铺货商品</div>
               <div class="dialog-body">${confirmHtml}</div>
               <div class="dialog-actions">
                 <button class="btn btn-secondary" id="btnDupCancel">取消</button>
-                ${syncNames.length > 0 ? `<button class="btn btn-primary" id="btnDupSkip">跳过重复，同步 ${syncNames.length} 件</button>` : `<button class="btn btn-primary" id="btnDupSkip" disabled>没有可同步的商品</button>`}
+                ${syncNames.length > 0
+                  ? `<button class="btn btn-primary" id="btnDupSkip">跳过重复，同步 ${syncNames.length} 件</button>`
+                  : `<button class="btn btn-primary" id="btnDupCancel2">知道了</button>`
+                }
               </div>
             </div>
           `;
@@ -782,15 +814,15 @@
           });
           document.body.appendChild(dupOverlay);
 
-          document.getElementById('btnDupCancel').addEventListener('click', function() {
-            dupOverlay.remove();
-          });
+          const closeDup = () => dupOverlay.remove();
+          document.getElementById('btnDupCancel').addEventListener('click', closeDup);
+          const btnCancel2 = document.getElementById('btnDupCancel2');
+          if (btnCancel2) btnCancel2.addEventListener('click', closeDup);
 
           if (syncNames.length > 0) {
             document.getElementById('btnDupSkip').addEventListener('click', function() {
               dupOverlay.remove();
               document.querySelector('.dialog-overlay').remove();
-              // 更新 existingSyncMap 记录已同步的商品
               for (const name of syncNames) {
                 if (!existingSyncMap[name]) existingSyncMap[name] = [];
                 for (const sid of selectedSeriesIds) {
@@ -799,19 +831,13 @@
                   }
                 }
               }
-              let msg = `已同步 ${syncNames.length} 件商品到 ${siteName} 的 ${seriesNames}（${statusText}）`;
-              if (duplicateItems.length > 0) {
-                msg += `，已跳过 ${duplicateItems.length} 件重复商品`;
-              }
-              showToast('success', msg);
+              showToast('success', `已同步 ${syncNames.length} 件商品到 ${siteName} 的 ${seriesNames}（${statusText}），跳过 ${duplicateItems.length} 件已铺货商品`);
             });
           }
           return;
         }
 
-        // 没有重复，直接同步
         document.querySelector('.dialog-overlay').remove();
-        // 更新 existingSyncMap
         for (const name of syncNames) {
           if (!existingSyncMap[name]) existingSyncMap[name] = [];
           for (const sid of selectedSeriesIds) {
@@ -821,6 +847,14 @@
           }
         }
         showToast('success', `已同步 ${syncNames.length} 件商品到 ${siteName} 的 ${seriesNames}（${statusText}）`);
+      };
+
+      // 折叠/展开切换
+      window._toggleDupCollapse = function(collapseId, btn) {
+        const el = document.getElementById(collapseId);
+        if (!el) return;
+        const isOpen = el.classList.toggle('open');
+        btn.innerHTML = isOpen ? '收起 ▲' : btn.innerHTML.replace('收起 ▲', '展开全部 ' + (el.querySelectorAll('.dup-group-item').length || '') + ' 个系列 ▼');
       };
 
       overlay.addEventListener('click', (e) => {

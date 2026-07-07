@@ -1310,6 +1310,11 @@
       margin-bottom: 8px;
     }
 
+    .dialog-body {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
     .dialog-desc {
       font-size: 14px;
       color: hsl(var(--muted-foreground));

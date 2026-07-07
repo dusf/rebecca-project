@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 国家管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="commons.css">
+  <style>
+    /* ==================== 国家管理页面专用样式 ==================== */
+
+    /* 页面头部提示卡 */
+    .country-tip-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #F5F0EB;
+      border: 1px solid #E8DCCF;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: hsl(30 10% 35%);
+      line-height: 1.6;
+    }
+    .country-tip-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .country-tip-content b {
+      color: hsl(var(--foreground));
+    }
+
+    /* 工具栏 */
+    .country-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .country-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .country-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 统计摘要 */
+    .country-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+    }
+    .country-stats .num {
+      font-weight: 700;
+      color: hsl(var(--primary));
+    }
+    .country-stats .sep {
+      width: 1px;
+      height: 14px;
+      background: hsl(var(--border));
+      margin: 0 4px;
+    }
+
+    /* 表格容器 */
+    .country-table-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .country-table-wrapper {
+      overflow: auto;
+    }
+    .country-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .country-table thead {
+      background: #FDFBFA;
+    }
+    .country-table th {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      text-align: left;
+      border-bottom: 1px solid hsl(var(--border));
+      white-space: nowrap;
+      user-select: none;
+    }
+    .country-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      border-bottom: 1px solid hsl(var(--border) / 0.4);
+      vertical-align: middle;
+    }
+    .country-table tbody tr:hover > td {
+      background: hsl(30 20% 97%);
+    }
+    .country-table tbody tr.row-expanded > td {
+      background: hsl(30 25% 96%);
+    }
+    .country-table .col-expand { width: 44px; text-align: center; }
+    .country-table .col-checkbox { width: 40px; text-align: center; }
+
+    /* 展开箭头 */
+    .expand-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: hsl(var(--muted-foreground));
+    }
+    .expand-arrow:hover {
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+    }
+    .expand-arrow.open {
+      transform: rotate(90deg);
+    }
+
+    /* 国旗占位 */
+    .country-flag-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .country-flag-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .country-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .country-code {
+      font-size: 11px;
+      color: hsl(var(--muted-foreground));
+      margin-left: 4px;
+    }
+
+    /* 区域层级数标签 */
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+    }
+    .level-badge.configured {
+      background: hsl(142 50% 92%);
+      color: hsl(142 76% 36%);
+    }
+
+    /* 状态开关 */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: hsl(var(--muted));
+      border-radius: 22px;
+      transition: all 0.25s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: hsl(var(--success));
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(18px);
+    }
+
+    /* 操作链接 */
+    .country-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .country-action-link {
+      font-size: 13px;
+      color: hsl(var(--primary));
+      cursor: pointer;
+      transition: color 0.15s;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font-sans);
+    }
+    .country-action-link:hover {
+      color: hsl(var(--primary-600));
+      text-decoration: underline;
+    }
+
+    /* ==================== 展开行 - 行政区划编辑器 ==================== */
+    .region-expand-row {
+      display: none;
+    }
+    .region-expand-row.open {
+      display: table-row;
+    }
+    .region-expand-cell {
+      padding: 0 !important;
+      background: hsl(30 25% 96%) !important;
+    }
+    .region-panel {
+      padding: 20px 24px;
+      border-top: 2px solid hsl(var(--primary-200));
+    }
+
+    .region-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .region-panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+    }
+    .region-panel-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-left: 8px;
+      font-weight: 400;
+    }
+    .region-panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* 级联层级 Tabs */
+    .region-level-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-bottom: 2px solid hsl(var(--border));
+    }
+    .region-level-tab {
+      padding: 8px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .region-level-tab:hover {
+      color: hsl(var(--foreground));
+    }
+    .region-level-tab.active {
+      color: hsl(var(--primary));
+      border-bottom-color: hsl(var(--primary));
+    }
+    .region-level-tab .count {
+      font-size: 11px;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    /* 区域列表 */
+    .region-list {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: white;
+    }
+    .region-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-bottom: 1px solid hsl(var(--border) / 0.4);
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      transition: background 0.15s;
+    }
+    .region-item:last-child {
+      border-bottom: none;
+    }
+    .region-item:hover {
+      background: hsl(var(--primary-50));
+    }
+    .region-item .drag-handle {
+      color: hsl(var(--muted-foreground));
+      cursor: grab;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .region-item .drag-handle:active {
+      cursor: grabbing;
+    }
+    .region-item-code {
+      width: 60px;
+      padding: 3px 6px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+      font-family: monospace;
+      background: white;
+      outline: none;
+    }
+    .region-item-code:focus {
+      border-color: hsl(var(--primary));
+    }
+    .region-item-name-input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font-size: 13px;
+      background: transparent;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+    .region-item-name-input:hover {
+      border-color: hsl(var(--border));
+    }
+    .region-item-name-input:focus {
+      border-color: hsl(var(--primary));
+      background: white;
+    }
+    .region-item-del {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      transition: all 0.15s;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .region-item-del:hover {
+      background: hsl(0 70% 92%);
+      color: hsl(var(--error));
+    }
+
+    /* 空区域提示 */
+    .region-empty {
+      padding: 40px 20px;
+      text-align: center;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+    }
+    .region-empty .hint-link {
+      color: hsl(var(--primary));
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* 添加区域行 */
+    .region-add-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-top: 1px dashed hsl(var(--border));
+      cursor: pointer;
+      color: hsl(var(--primary));
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .region-add-row:hover {
+      background: hsl(var(--primary-50));
+    }
+
+    /* 保存状态提示 */
+    .region-save-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid hsl(var(--border) / 0.5);
+    }
+
+    /* 批量导入弹窗 */
+    .import-textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 12px;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: monospace;
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+    }
+    .import-textarea:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+    .import-format-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* 新增国家弹窗 */
+    .add-country-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+    }
+    .form-group input,
+    .form-group select {
+      height: 36px;
+      padding: 0 10px;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      outline: none;
+      background: white;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+  </style>
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL',
+          versionCode:'1.0.0',
+          channelID:'share',
+          delay:1000,
+          sessionDuration:30*60*1000,
+          isOversea:false,
+          needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href,
+          'referrer':document.referrer,
+          'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ==================== 侧边栏 ==================== -->
+    <aside class="sidebar">
+      <div class="sidebar-shop-selector">
+        <div class="sidebar-shop-avatar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9Z"/><path d="M3 9l2.5 5c.5 1 1.5 1 2 0L10 9"/><path d="M10 9l2.5 5c.5 1 1.5 1 2 0L17 9"/><path d="M17 9l2.5 5c.5 1 1.5 1 2 0L23 9"/></svg>
+        </div>
+        <div class="sidebar-shop-info">
+          <div class="sidebar-shop-name">QVR品牌站</div>
+          <div class="sidebar-shop-domain">youpin.shop</div>
+        </div>
+        <svg class="sidebar-shop-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">数据</div>
+        <div class="sidebar-item" data-page="dashboard">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5-4-3 5-5-3-2 5"/></svg></span>
+          <span>数据</span>
+        </div>
+
+        <div class="sidebar-section-title">资产</div>
+        <div class="sidebar-item" data-page="products">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="m21 7.5-9-5-9 5"/><path d="m21 7.5-9 5-9-5"/><path d="M21 7.5v9l-9 5-9-5v-9"/></svg></span>
+          <span>商品</span>
+        </div>
+        <div class="sidebar-item" data-page="social">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.5 10.5 15.5 6.5"/><path d="M8.5 13.5 15.5 17.5"/></svg></span>
+          <span>社媒</span>
+        </div>
+        <div class="sidebar-item" data-page="influencers">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span>网红</span>
+        </div>
+        <div class="sidebar-item" data-page="orders">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+          <span>订单</span>
+        </div>
+
+        <div class="sidebar-section-title">店铺</div>
+        <div class="sidebar-item" data-page="series">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span>系列</span>
+        </div>
+        <div class="sidebar-item" data-page="promotions">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.45.94 3.38 0l6.63-6.63c.94-.94.94-2.45 0-3.38L12 2Z"/><path d="M7 7h.01"/></svg></span>
+          <span>促销</span>
+        </div>
+        <div class="sidebar-item" data-page="gifts">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 2.5 2.5v5"/><path d="M16.5 8v-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-2.5 2.5h-5"/></svg></span>
+          <span>赠品</span>
+        </div>
+        <div class="sidebar-item" data-page="content">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg></span>
+          <span>内容</span>
+        </div>
+        <div class="sidebar-item" data-page="users">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg></span>
+          <span>用户</span>
+        </div>
+        <div class="sidebar-item" data-page="settings">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.64l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.64V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.64l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.64V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span>配置</span>
+        </div>
+        <div class="sidebar-item" data-page="decor">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="m14.622 17.897-10.68-2.913"/><path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.707.707a.5.5 0 0 0 .707 0l4.021-4.02a1 1 0 0 1 3.002 3.001l-4.02 4.021a2.5 2.5 0 0 1-3.535 0l-.707-.707a2.5 2.5 0 0 1 0-3.535z"/><path d="M8.79 17.897a1.5 1.5 0 0 0 2.208 1.193l-2.208-1.193Z"/></svg></span>
+          <span>装修</span>
+        </div>
+
+        <div class="sidebar-section-title">全局</div>
+        <div class="sidebar-item active" data-page="countries">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>
+          <span>国家</span>
+        </div>
+        <div class="sidebar-item" data-page="language">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></span>
+          <span>语言</span>
+        </div>
+        <div class="sidebar-item" data-page="currency">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg></span>
+          <span>货币</span>
+        </div>
+        <div class="sidebar-item" data-page="exchange-rate">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9"/><path d="M3 12a9 9 0 0 1 9-9"/><path d="M12 3v18"/><path d="m7 6 2-2 2 2"/><path d="m13 18 2 2 2-2"/></svg></span>
+          <span>汇率</span>
+        </div>
+        <div class="sidebar-item" data-page="tax-rate">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg></span>
+          <span>税率</span>
+        </div>
+        <div class="sidebar-item" data-page="freight">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+          <span>运费</span>
+        </div>
+        <div class="sidebar-item" data-page="vip-system">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+          <span>VIP体系</span>
+        </div>
+        <div class="sidebar-item" data-page="category-mgmt">
+          <span class="sidebar-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span>分类</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-profile">
+        <div class="sidebar-profile-avatar">管</div>
+        <div class="sidebar-profile-info">
+          <div class="sidebar-profile-name">管理员</div>
+          <div class="sidebar-profile-role">超级管理员</div>
+        </div>
+        <div class="sidebar-profile-bell">
+          <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <div class="sidebar-profile-bell-dot"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main-area">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>全局</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">国家管理</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page active" id="page-countries">
+          <!-- 页面标题栏 -->
+          <div class="page-header">
+            <div>
+              <div class="page-title">国家管理</div>
+              <div class="page-subtitle" id="pageSubtitle">配置全球国家及其行政区划，供前端下单时选择收货地址</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-secondary" onclick="batchImportRegions()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                批量导入
+              </button>
+              <button class="btn btn-primary" onclick="openAddCountryDialog()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                新增国家
+              </button>
+            </div>
+          </div>
+
+          <!-- 提示卡 -->
+          <div class="country-tip-card">
+            <span class="country-tip-icon">💡</span>
+            <div class="country-tip-content">
+              <b>设计说明：</b>每个国家独立维护其行政区划层级（如中国的省/市/区、美国的州/城市）。<b>下单时默认根据用户 IP 定位国家</b>，用户可自行切换。勾选"启用"后，该国才会出现在前端下单页的国家选择列表中。
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="country-toolbar">
+            <div class="country-toolbar-left">
+              <div class="search-input" style="margin:0;">
+                <input type="text" placeholder="搜索国家名称或代码..." id="countrySearch" oninput="renderCountryTable()" />
+              </div>
+              <select class="filter-select" id="continentFilter" onchange="renderCountryTable()">
+                <option value="">全部大洲</option>
+                <option value="asia">亚洲</option>
+                <option value="europe">欧洲</option>
+                <option value="north_america">北美洲</option>
+                <option value="south_america">南美洲</option>
+                <option value="africa">非洲</option>
+                <option value="oceania">大洋洲</option>
+              </select>
+              <select class="filter-select" id="statusFilter" onchange="renderCountryTable()">
+                <option value="">全部状态</option>
+                <option value="enabled">已启用</option>
+                <option value="disabled">未启用</option>
+                <option value="configured">已配置区域</option>
+                <option value="empty">未配置区域</option>
+              </select>
+            </div>
+            <div class="country-stats" id="countryStats"></div>
+          </div>
+
+          <!-- 国家表格 -->
+          <div class="country-table-card">
+            <div class="country-table-wrapper">
+              <table class="country-table">
+                <thead>
+                  <tr>
+                    <th class="col-expand"></th>
+                    <th class="col-checkbox"><div class="checkbox" onclick="toggleAllCountryCheckboxes(this)"></div></th>
+                    <th>国家</th>
+                    <th>代码</th>
+                    <th>大洲</th>
+                    <th>货币</th>
+                    <th>语言</th>
+                    <th>区域层级</th>
+                    <th>启用</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="countryTableBody">
+                  <!-- JS 动态填充 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="commons.js"></script>
+  <script>
+    // ==================== 国家数据 ====================
+    // 每个国家的区域数据结构: { levels: ['level1_name', 'level2_name', ...], data: { parentCode: [{code, name}] } }
+    let countriesData = [
+      {
+        id: 1, name: '中国', code: 'CN', continent: 'asia', currency: 'CNY', language: 'zh',
+        enabled: true,
+        regionLevels: ['省/直辖市', '市/区', '区/县'],
+        regions: {
+          root: [
+            { code: 'BJ', name: '北京市' },
+            { code: 'SH', name: '上海市' },
+            { code: 'GD', name: '广东省' },
+            { code: 'ZJ', name: '浙江省' },
+            { code: 'JS', name: '江苏省' },
+            { code: 'SC', name: '四川省' },
+          ],
+          'BJ': [
+            { code: 'BJ-HD', name: '海淀区' },
+            { code: 'BJ-CY', name: '朝阳区' },
+            { code: 'BJ-DC', name: '东城区' },
+          ],
+          'SH': [
+            { code: 'SH-PD', name: '浦东新区' },
+            { code: 'SH-JA', name: '静安区' },
+            { code: 'SH-XH', name: '徐汇区' },
+          ],
+          'GD': [
+            { code: 'GD-GZ', name: '广州市' },
+            { code: 'GD-SZ', name: '深圳市' },
+            { code: 'GD-DG', name: '东莞市' },
+          ],
+          'GD-GZ': [
+            { code: 'GD-GZ-TH', name: '天河区' },
+            { code: 'GD-GZ-YX', name: '越秀区' },
+            { code: 'GD-GZ-BY', name: '白云区' },
+          ],
+          'GD-SZ': [
+            { code: 'GD-SZ-NS', name: '南山区' },
+            { code: 'GD-SZ-FT', name: '福田区' },
+            { code: 'GD-SZ-LH', name: '罗湖区' },
+          ],
+          'ZJ': [
+            { code: 'ZJ-HZ', name: '杭州市' },
+            { code: 'ZJ-NB', name: '宁波市' },
+          ],
+          'ZJ-HZ': [
+            { code: 'ZJ-HZ-XH', name: '西湖区' },
+            { code: 'ZJ-HZ-BJ', name: '滨江区' },
+          ],
+          'JS': [
+            { code: 'JS-NJ', name: '南京市' },
+            { code: 'JS-SZ', name: '苏州市' },
+          ],
+          'SC': [
+            { code: 'SC-CD', name: '成都市' },
+          ],
+        }
+      },
+      {
+        id: 2, name: '美国', code: 'US', continent: 'north_america', currency: 'USD', language: 'en',
+        enabled: true,
+        regionLevels: ['州/特区', '城市'],
+        regions: {
+          root: [
+            { code: 'US-CA', name: '加利福尼亚州 California' },
+            { code: 'US-NY', name: '纽约州 New York' },
+            { code: 'US-TX', name: '德克萨斯州 Texas' },
+            { code: 'US-FL', name: '佛罗里达州 Florida' },
+          ],
+          'US-CA': [
+            { code: 'US-CA-LA', name: '洛杉矶 Los Angeles' },
+            { code: 'US-CA-SF', name: '旧金山 San Francisco' },
+            { code: 'US-CA-SD', name: '圣地亚哥 San Diego' },
+          ],
+          'US-NY': [
+            { code: 'US-NY-NYC', name: '纽约市 New York City' },
+            { code: 'US-NY-BUF', name: '布法罗 Buffalo' },
+          ],
+          'US-TX': [
+            { code: 'US-TX-HOU', name: '休斯顿 Houston' },
+            { code: 'US-TX-AUS', name: '奥斯汀 Austin' },
+          ],
+          'US-FL': [
+            { code: 'US-FL-MIA', name: '迈阿密 Miami' },
+            { code: 'US-FL-ORL', name: '奥兰多 Orlando' },
+          ],
+        }
+      },
+      {
+        id: 3, name: '日本', code: 'JP', continent: 'asia', currency: 'JPY', language: 'ja',
+        enabled: true,
+        regionLevels: ['都道府县', '市区町村'],
+        regions: {
+          root: [
+            { code: 'JP-TK', name: '東京都' },
+            { code: 'JP-OS', name: '大阪府' },
+            { code: 'JP-KN', name: '神奈川県' },
+            { code: 'JP-AI', name: '愛知県' },
+          ],
+          'JP-TK': [
+            { code: 'JP-TK-SJ', name: '新宿区' },
+            { code: 'JP-TK-SB', name: '渋谷区' },
+            { code: 'JP-TK-MN', name: '港区' },
+          ],
+          'JP-OS': [
+            { code: 'JP-OS-UM', name: '梅田' },
+            { code: 'JP-OS-NN', name: '難波' },
+          ],
+          'JP-KN': [
+            { code: 'JP-KN-YH', name: '横浜市' },
+          ],
+        }
+      },
+      {
+        id: 4, name: '英国', code: 'GB', continent: 'europe', currency: 'GBP', language: 'en',
+        enabled: false,
+        regionLevels: ['地区', '城市'],
+        regions: {
+          root: [
+            { code: 'GB-ENG', name: '英格兰 England' },
+            { code: 'GB-SCT', name: '苏格兰 Scotland' },
+            { code: 'GB-WLS', name: '威尔士 Wales' },
+          ],
+          'GB-ENG': [
+            { code: 'GB-ENG-LDN', name: '伦敦 London' },
+            { code: 'GB-ENG-MAN', name: '曼彻斯特 Manchester' },
+            { code: 'GB-ENG-BIR', name: '伯明翰 Birmingham' },
+          ],
+          'GB-SCT': [
+            { code: 'GB-SCT-EDB', name: '爱丁堡 Edinburgh' },
+            { code: 'GB-SCT-GLA', name: '格拉斯哥 Glasgow' },
+          ],
+        }
+      },
+      {
+        id: 5, name: '德国', code: 'DE', continent: 'europe', currency: 'EUR', language: 'de',
+        enabled: false,
+        regionLevels: ['联邦州', '城市'],
+        regions: {
+          root: [
+            { code: 'DE-BE', name: '柏林 Berlin' },
+            { code: 'DE-BY', name: '巴伐利亚 Bayern' },
+            { code: 'DE-NW', name: '北莱茵-威斯特法伦 Nordrhein-Westfalen' },
+          ],
+          'DE-BE': [
+            { code: 'DE-BE-MT', name: '米特区 Mitte' },
+            { code: 'DE-BE-CB', name: '夏洛滕堡 Charlottenburg' },
+          ],
+          'DE-BY': [
+            { code: 'DE-BY-MUC', name: '慕尼黑 München' },
+            { code: 'DE-BY-NBG', name: '纽伦堡 Nürnberg' },
+          ],
+        }
+      },
+      {
+        id: 6, name: '加拿大', code: 'CA', continent: 'north_america', currency: 'CAD', language: 'en',
+        enabled: false,
+        regionLevels: ['省/地区', '城市'],
+        regions: {
+          root: [
+            { code: 'CA-ON', name: '安大略省 Ontario' },
+            { code: 'CA-BC', name: '不列颠哥伦比亚省 British Columbia' },
+            { code: 'CA-QC', name: '魁北克省 Québec' },
+          ],
+          'CA-ON': [
+            { code: 'CA-ON-TOR', name: '多伦多 Toronto' },
+            { code: 'CA-ON-OTT', name: '渥太华 Ottawa' },
+          ],
+          'CA-BC': [
+            { code: 'CA-BC-VAN', name: '温哥华 Vancouver' },
+          ],
+        }
+      },
+      {
+        id: 7, name: '澳大利亚', code: 'AU', continent: 'oceania', currency: 'AUD', language: 'en',
+        enabled: false,
+        regionLevels: ['州/领地', '城市'],
+        regions: {
+          root: [
+            { code: 'AU-NSW', name: '新南威尔士州 NSW' },
+            { code: 'AU-VIC', name: '维多利亚州 VIC' },
+            { code: 'AU-QLD', name: '昆士兰州 QLD' },
+          ],
+          'AU-NSW': [
+            { code: 'AU-NSW-SYD', name: '悉尼 Sydney' },
+          ],
+          'AU-VIC': [
+            { code: 'AU-VIC-MEL', name: '墨尔本 Melbourne' },
+          ],
+        }
+      },
+      {
+        id: 8, name: '法国', code: 'FR', continent: 'europe', currency: 'EUR', language: 'fr',
+        enabled: false,
+        regionLevels: ['大区', '省份', '城市'],
+        regions: {
+          root: [
+            { code: 'FR-IDF', name: '法兰西岛 Île-de-France' },
+            { code: 'FR-PAC', name: '普罗旺斯 PACA' },
+          ],
+          'FR-IDF': [
+            { code: 'FR-IDF-75', name: '巴黎 Paris' },
+            { code: 'FR-IDF-92', name: '上塞纳省 Hauts-de-Seine' },
+          ],
+          'FR-IDF-75': [
+            { code: 'FR-IDF-75-01', name: '巴黎第一区 1er' },
+            { code: 'FR-IDF-75-08', name: '巴黎第八区 8e' },
+          ],
+        }
+      },
+    ];
+
+    let selectedCountryIds = new Set();
+    let expandedCountryId = null;
+    let activeRegionLevel = 0; // 当前展开的国家的活跃层级 tab
+
+    // ==================== 渲染国家表格 ====================
+    function getFilteredCountries() {
+      const search = (document.getElementById('countrySearch')?.value || '').toLowerCase();
+      const continent = document.getElementById('continentFilter')?.value || '';
+      const status = document.getElementById('statusFilter')?.value || '';
+
+      return countriesData.filter(c => {
+        if (search && !c.name.toLowerCase().includes(search) && !c.code.toLowerCase().includes(search)) return false;
+        if (continent && c.continent !== continent) return false;
+        if (status === 'enabled' && !c.enabled) return false;
+        if (status === 'disabled' && c.enabled) return false;
+        if (status === 'configured') {
+          const rootRegions = (c.regions.root || []).length;
+          if (rootRegions === 0) return false;
+        }
+        if (status === 'empty') {
+          const rootRegions = (c.regions.root || []).length;
+          if (rootRegions > 0) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderCountryTable() {
+      const filtered = getFilteredCountries();
+      const tbody = document.getElementById('countryTableBody');
+      const continentLabels = { asia: '亚洲', europe: '欧洲', north_america: '北美洲', south_america: '南美洲', africa: '非洲', oceania: '大洋洲' };
+
+      const flagColors = {
+        CN: '#DE2910', US: '#3C3B6E', JP: '#BC002D', GB: '#012169', DE: '#000000',
+        CA: '#FF0000', AU: '#00008B', FR: '#002395'
+      };
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10"><div style="padding:60px;text-align:center;color:hsl(var(--muted-foreground));font-size:14px;">没有匹配的国家数据</div></td></tr>`;
+        updateStats(filtered);
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(c => {
+        const rootCount = (c.regions.root || []).length;
+        const hasConfig = rootCount > 0;
+        const levelText = hasConfig ? `${c.regionLevels.length} 级` : '未配置';
+        const levelBadgeClass = hasConfig ? 'configured' : '';
+        const isExpanded = expandedCountryId === c.id;
+
+        let rows = `
+          <tr class="country-row ${isExpanded ? 'row-expanded' : ''}" data-id="${c.id}">
+            <td class="col-expand">
+              <span class="expand-arrow ${isExpanded ? 'open' : ''}" onclick="toggleExpandCountry(${c.id})">▶</span>
+            </td>
+            <td class="col-checkbox">
+              <div class="checkbox ${selectedCountryIds.has(c.id) ? 'checked' : ''}" onclick="toggleCountryCheckbox(this, ${c.id})">${selectedCountryIds.has(c.id) ? '✓' : ''}</div>
+            </td>
+            <td>
+              <div class="country-flag-cell">
+                <div class="country-flag-dot" style="background:${flagColors[c.code] || '#888'};color:white;">${c.code.charAt(0)}</div>
+                <span class="country-name">${c.name}</span>
+              </div>
+            </td>
+            <td><span style="font-family:monospace;font-weight:600;">${c.code}</span></td>
+            <td>${continentLabels[c.continent] || c.continent}</td>
+            <td>${c.currency}</td>
+            <td>${c.language}</td>
+            <td><span class="level-badge ${levelBadgeClass}">${levelText}</span>${hasConfig ? ` <span style="font-size:11px;color:hsl(var(--muted-foreground))">· ${rootCount} 个一级区域</span>` : ''}</td>
+            <td>
+              <label class="toggle-switch" onclick="event.stopPropagation();">
+                <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleCountryEnabled(${c.id}, this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </td>
+            <td>
+              <div class="country-actions">
+                <button class="country-action-link" onclick="editCountry(${c.id})">编辑</button>
+                <button class="country-action-link" onclick="deleteCountry(${c.id})" style="color:hsl(var(--error));">删除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        // 展开行 - 行政区划编辑器
+        rows += `
+          <tr class="region-expand-row ${isExpanded ? 'open' : ''}" data-expand-id="${c.id}">
+            <td colspan="10" class="region-expand-cell">
+              <div class="region-panel">
+                <div class="region-panel-header">
+                  <div>
+                    <span class="region-panel-title">${c.name} 行政区划</span>
+                    <span class="region-panel-hint">共 ${c.regionLevels.length} 级 · 拖动区域可排序</span>
+                  </div>
+                  <div class="region-panel-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="importRegionsForCountry(${c.id})">批量导入</button>
+                    <button class="btn btn-primary btn-sm" onclick="addRegionToLevel(${c.id}, ${activeRegionLevel})">+ 添加区域</button>
+                  </div>
+                </div>
+                ${buildRegionLevelTabs(c)}
+                <div class="region-list" id="regionList-${c.id}">
+                  ${buildRegionListHTML(c, activeRegionLevel)}
+                </div>
+                <div class="region-save-bar">
+                  <span style="font-size:12px;color:hsl(var(--muted-foreground));" id="regionSaveHint-${c.id}"></span>
+                  <button class="btn btn-primary btn-sm" onclick="saveCountryRegions(${c.id})">保存修改</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        return rows;
+      }).join('');
+
+      updateStats(filtered);
+    }
+
+    function buildRegionLevelTabs(country) {
+      return `
+        <div class="region-level-tabs" id="levelTabs-${country.id}">
+          ${country.regionLevels.map((label, idx) => `
+            <div class="region-level-tab ${idx === activeRegionLevel ? 'active' : ''}" onclick="switchRegionLevel(${country.id}, ${idx})">
+              ${idx + 1}级 · ${label}
+              <span class="count">(${getRegionCountAtLevel(country, idx)})</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function getRegionCountAtLevel(country, level) {
+      if (level === 0) return (country.regions.root || []).length;
+      // 统计所有 parent 下的子区域数量
+      let count = 0;
+      const parentKeys = level === 1 ? (country.regions.root || []).map(r => r.code) : [];
+      if (level === 1) {
+        parentKeys.forEach(pk => {
+          count += (country.regions[pk] || []).length;
+        });
+      } else if (level === 2) {
+        const l1Keys = (country.regions.root || []).map(r => r.code);
+        l1Keys.forEach(l1 => {
+          const l2List = country.regions[l1] || [];
+          l2List.forEach(l2 => {
+            count += (country.regions[l2.code] || []).length;
+          });
+        });
+      }
+      return count;
+    }
+
+    function buildRegionListHTML(country, level) {
+      let items = [];
+      if (level === 0) {
+        items = country.regions.root || [];
+      } else {
+        // 收集当前层级的所有区域
+        if (level === 1) {
+          const parents = country.regions.root || [];
+          parents.forEach(p => {
+            const children = country.regions[p.code] || [];
+            children.forEach(c => {
+              items.push({ ...c, _parent: p.code, _parentName: p.name });
+            });
+          });
+        } else if (level === 2) {
+          const l1List = country.regions.root || [];
+          l1List.forEach(l1 => {
+            const l2List = country.regions[l1.code] || [];
+            l2List.forEach(l2 => {
+              const l3List = country.regions[l2.code] || [];
+              l3List.forEach(l3 => {
+                items.push({ ...l3, _parent: l2.code, _parentName: l2.name, _grandParent: l1.code, _grandParentName: l1.name });
+              });
+            });
+          });
+        }
+      }
+
+      if (items.length === 0) {
+        return `<div class="region-empty">
+          暂无 ${country.regionLevels[level]} 数据，
+          <span class="hint-link" onclick="addRegionToLevel(${country.id}, ${level})">点击添加</span>
+          或
+          <span class="hint-link" onclick="importRegionsForCountry(${country.id})">批量导入</span>
+        </div>`;
+      }
+
+      let html = items.map((item, idx) => {
+        let parentInfo = '';
+        if (level === 1) parentInfo = `<span style="font-size:11px;color:hsl(var(--muted-foreground));margin-left:4px;">← ${item._parentName}</span>`;
+        if (level === 2) parentInfo = `<span style="font-size:11px;color:hsl(var(--muted-foreground));margin-left:4px;">← ${item._grandParentName} / ${item._parentName}</span>`;
+
+        return `
+          <div class="region-item" draggable="true" data-code="${item.code}">
+            <span class="drag-handle">⋮⋮</span>
+            <input class="region-item-code" value="${item.code}" onchange="markRegionDirty(${country.id})" />
+            <input class="region-item-name-input" value="${item.name.replace(/"/g, '&quot;')}" onchange="markRegionDirty(${country.id})" />
+            ${parentInfo}
+            <span class="region-item-del" title="删除" onclick="removeRegionItem(${country.id}, '${item.code}', this)">×</span>
+          </div>
+        `;
+      }).join('');
+
+      html += `
+        <div class="region-add-row" onclick="addRegionToLevel(${country.id}, ${level})">
+          + 添加 ${country.regionLevels[level]}
+        </div>
+      `;
+
+      return html;
+    }
+
+    // ==================== 展开/折叠 ====================
+    function toggleExpandCountry(countryId) {
+      if (expandedCountryId === countryId) {
+        expandedCountryId = null;
+        activeRegionLevel = 0;
+      } else {
+        expandedCountryId = countryId;
+        activeRegionLevel = 0;
+      }
+      renderCountryTable();
+    }
+
+    function switchRegionLevel(countryId, level) {
+      activeRegionLevel = level;
+      const country = countriesData.find(c => c.id === countryId);
+      if (!country) return;
+
+      // 更新 tabs 样式
+      document.querySelectorAll(`#levelTabs-${countryId} .region-level-tab`).forEach((tab, i) => {
+        tab.classList.toggle('active', i === level);
+      });
+
+      // 更新区域列表
+      const listEl = document.getElementById(`regionList-${countryId}`);
+      if (listEl) {
+        listEl.innerHTML = buildRegionListHTML(country, level);
+      }
+    }
+
+    // ==================== 区域操作 ====================
+    function markRegionDirty(countryId) {
+      const hint = document.getElementById(`regionSaveHint-${countryId}`);
+      if (hint) hint.textContent = '有未保存的修改';
+    }
+
+    function addRegionToLevel(countryId, level) {
+      const country = countriesData.find(c => c.id === countryId);
+      if (!country) return;
+      const newCode = prompt(`请输入新区域代码（如 ${country.code}-XX）：`);
+      if (!newCode) return;
+      const newName = prompt(`请输入${country.regionLevels[level]}名称：`);
+      if (!newName) return;
+
+      if (level === 0) {
+        if (!country.regions.root) country.regions.root = [];
+        country.regions.root.push({ code: newCode, name: newName });
+      }
+      markRegionDirty(countryId);
+      switchRegionLevel(countryId, level);
+      renderCountryTable();
+    }
+
+    function removeRegionItem(countryId, code, el) {
+      if (!confirm('确定删除该区域吗？其子区域也会被移除。')) return;
+      const country = countriesData.find(c => c.id === countryId);
+      if (!country) return;
+
+      // 从 root 中移除
+      country.regions.root = (country.regions.root || []).filter(r => r.code !== code);
+      // 递归删除子区域
+      delete country.regions[code];
+      // 也检查作为子区域
+      for (const key of Object.keys(country.regions)) {
+        if (key === 'root') continue;
+        country.regions[key] = country.regions[key].filter(r => r.code !== code);
+        delete country.regions[code];
+      }
+
+      markRegionDirty(countryId);
+      switchRegionLevel(countryId, activeRegionLevel);
+      renderCountryTable();
+    }
+
+    function saveCountryRegions(countryId) {
+      const hint = document.getElementById(`regionSaveHint-${countryId}`);
+      if (hint) hint.textContent = '已保存 ✓';
+      setTimeout(() => {
+        if (hint) hint.textContent = '';
+      }, 2000);
+      renderCountryTable();
+      showToast('success', '行政区划已保存');
+    }
+
+    function importRegionsForCountry(countryId) {
+      const country = countriesData.find(c => c.id === countryId);
+      if (!country) return;
+      showImportDialog(country);
+    }
+
+    // ==================== 批量导入 ====================
+    function batchImportRegions() {
+      if (selectedCountryIds.size === 0) {
+        showToast('info', '请先勾选要导入的国家');
+        return;
+      }
+      if (selectedCountryIds.size === 1) {
+        const country = countriesData.find(c => c.id === [...selectedCountryIds][0]);
+        if (country) showImportDialog(country);
+      } else {
+        showToast('info', '批量导入仅支持单个国家操作，请只勾选一个国家');
+      }
+    }
+
+    function showImportDialog(country) {
+      const overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = `
+        <div class="dialog" style="width:560px;max-width:94vw;">
+          <div class="dialog-title">批量导入 - ${country.name}</div>
+          <div class="dialog-desc">每行一条数据，格式：<b>区域代码, 区域名称</b>（可指定上级：<b>上级代码, 区域代码, 区域名称</b>）</div>
+          <textarea class="import-textarea" id="importTextarea" placeholder="示例：&#10;US-CA, 加利福尼亚州 California&#10;US-CA, US-CA-LA, 洛杉矶 Los Angeles&#10;US-CA, US-CA-SF, 旧金山 San Francisco">${(country.regions.root || []).map(r => `${r.code}, ${r.name}`).join('\n')}</textarea>
+          <div class="import-format-hint">
+            💡 <b>格式说明：</b><br>
+            · 一级区域：<code>代码, 名称</code><br>
+            · 二级区域：<code>上级代码, 代码, 名称</code><br>
+            · 三级区域：<code>上级代码, 代码, 名称</code>
+          </div>
+          <div class="dialog-actions" style="margin-top:16px;">
+            <button class="btn btn-secondary" onclick="this.closest('.dialog-overlay').remove()">取消</button>
+            <button class="btn btn-primary" id="btnConfirmImport">确认导入</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+
+      document.getElementById('btnConfirmImport').addEventListener('click', () => {
+        const text = document.getElementById('importTextarea').value.trim();
+        if (!text) { showToast('info', '请输入数据'); return; }
+        const lines = text.split('\n').filter(l => l.trim());
+        const newRegions = { root: [] };
+
+        for (const line of lines) {
+          const parts = line.split(',').map(s => s.trim());
+          if (parts.length === 2) {
+            newRegions.root.push({ code: parts[0], name: parts[1] });
+          } else if (parts.length === 3) {
+            newRegions.root.push({ code: parts[0], name: parts[1] }); // TODO: 支持层级
+          }
+        }
+        country.regions = { ...country.regions, ...newRegions };
+        overlay.remove();
+        renderCountryTable();
+        if (expandedCountryId === country.id) {
+          switchRegionLevel(country.id, activeRegionLevel);
+        }
+        showToast('success', `已导入 ${lines.length} 条区域数据`);
+      });
+    }
+
+    // ==================== 新增/编辑/删除国家 ====================
+    function openAddCountryDialog() {
+      const overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = `
+        <div class="dialog" style="width:520px;max-width:94vw;">
+          <div class="dialog-title">新增国家</div>
+          <div class="add-country-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>国家名称 *</label>
+                <input id="addCountryName" placeholder="如：韩国" />
+              </div>
+              <div class="form-group">
+                <label>国家代码 *</label>
+                <input id="addCountryCode" placeholder="如：KR" style="width:80px;" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>所属大洲</label>
+                <select id="addCountryContinent">
+                  <option value="asia">亚洲</option>
+                  <option value="europe">欧洲</option>
+                  <option value="north_america">北美洲</option>
+                  <option value="south_america">南美洲</option>
+                  <option value="africa">非洲</option>
+                  <option value="oceania">大洋洲</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>货币</label>
+                <input id="addCountryCurrency" placeholder="如：KRW" />
+              </div>
+              <div class="form-group">
+                <label>语言</label>
+                <input id="addCountryLanguage" placeholder="如：ko" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>区域层级（用逗号分隔）</label>
+                <input id="addCountryLevels" placeholder="如：道/广域市, 市/郡/区" />
+              </div>
+            </div>
+          </div>
+          <div class="dialog-actions" style="margin-top:20px;">
+            <button class="btn btn-secondary" onclick="this.closest('.dialog-overlay').remove()">取消</button>
+            <button class="btn btn-primary" id="btnConfirmAdd">确认添加</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+
+      document.getElementById('btnConfirmAdd').addEventListener('click', () => {
+        const name = document.getElementById('addCountryName').value.trim();
+        const code = document.getElementById('addCountryCode').value.trim().toUpperCase();
+        if (!name || !code) { showToast('info', '请填写国家名称和代码'); return; }
+        if (countriesData.find(c => c.code === code)) { showToast('info', '该国家代码已存在'); return; }
+
+        const levelsStr = document.getElementById('addCountryLevels').value.trim();
+        const regionLevels = levelsStr ? levelsStr.split(',').map(s => s.trim()) : ['区域'];
+
+        const newId = Math.max(...countriesData.map(c => c.id), 0) + 1;
+        countriesData.push({
+          id: newId, name, code,
+          continent: document.getElementById('addCountryContinent').value,
+          currency: document.getElementById('addCountryCurrency').value.trim() || code,
+          language: document.getElementById('addCountryLanguage').value.trim() || '',
+          enabled: true,
+          regionLevels,
+          regions: { root: [] }
+        });
+        overlay.remove();
+        renderCountryTable();
+        showToast('success', `已添加 ${name}`);
+      });
+    }
+
+    function editCountry(id) {
+      showToast('info', '编辑国家功能开发中...');
+    }
+
+    function deleteCountry(id) {
+      const country = countriesData.find(c => c.id === id);
+      if (!country) return;
+      if (!confirm(`确定删除「${country.name}」吗？此操作不可恢复。`)) return;
+      countriesData = countriesData.filter(c => c.id !== id);
+      if (expandedCountryId === id) expandedCountryId = null;
+      selectedCountryIds.delete(id);
+      renderCountryTable();
+      showToast('success', `已删除 ${country.name}`);
+    }
+
+    // ==================== 复选框 ====================
+    function toggleCountryCheckbox(el, id) {
+      el.classList.toggle('checked');
+      if (el.classList.contains('checked')) {
+        el.innerHTML = '✓';
+        selectedCountryIds.add(id);
+      } else {
+        el.innerHTML = '';
+        selectedCountryIds.delete(id);
+      }
+    }
+
+    function toggleAllCountryCheckboxes(el) {
+      const isChecked = !el.classList.contains('checked');
+      el.classList.toggle('checked');
+      el.innerHTML = isChecked ? '✓' : '';
+      const filtered = getFilteredCountries();
+      document.querySelectorAll('#countryTableBody .checkbox').forEach(cb => {
+        cb.classList.toggle('checked', isChecked);
+        cb.innerHTML = isChecked ? '✓' : '';
+      });
+      if (isChecked) {
+        filtered.forEach(c => selectedCountryIds.add(c.id));
+      } else {
+        selectedCountryIds.clear();
+      }
+    }
+
+    // ==================== 启用开关 ====================
+    function toggleCountryEnabled(id, checked) {
+      const country = countriesData.find(c => c.id === id);
+      if (country) {
+        country.enabled = checked;
+        renderCountryTable();
+        showToast('success', `${country.name} 已${checked ? '启用' : '停用'}`);
+      }
+    }
+
+    // ==================== 统计 ====================
+    function updateStats(filtered) {
+      const total = countriesData.length;
+      const enabled = countriesData.filter(c => c.enabled).length;
+      const configured = countriesData.filter(c => (c.regions.root || []).length > 0).length;
+      document.getElementById('countryStats').innerHTML = `
+        共 <span class="num">${total}</span> 个国家
+        <span class="sep"></span>
+        <span class="num">${enabled}</span> 已启用
+        <span class="sep"></span>
+        <span class="num">${configured}</span> 已配置区域
+      `;
+      document.getElementById('pageSubtitle').textContent = `配置全球国家及其行政区划，供前端下单时选择收货地址 · ${enabled} 个国家已对用户开放`;
+    }
+
+    // ==================== 初始化 ====================
+    renderCountryTable();
+  </script>
+</body>
+</html>

@@ -2,6 +2,175 @@
 // 此文件包含商品数据、Toast、侧边栏导航等所有页面共享的逻辑
 
 
+    // ==================== Toast 通知 ====================
+    function showToast(type, message) {
+      const container = document.getElementById('toastContainer');
+      const icons = { success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>', error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' };
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ==================== 侧边栏菜单数据 ====================
+    const SIDEBAR_MENU = [
+      {
+        section: '数据',
+        items: [
+          { page: 'dashboard', label: '数据',
+            icon: '<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5-4-3 5-5-3-2 5"/></svg>' }
+        ]
+      },
+      {
+        section: '资产',
+        items: [
+          { page: 'products', label: '商品',
+            icon: '<svg viewBox="0 0 24 24"><path d="m21 7.5-9-5-9 5"/><path d="m21 7.5-9 5-9-5"/><path d="M21 7.5v9l-9 5-9-5v-9"/></svg>' },
+          { page: 'social', label: '社媒',
+            icon: '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.5 10.5 15.5 6.5"/><path d="M8.5 13.5 15.5 17.5"/></svg>' },
+          { page: 'influencers', label: '网红',
+            icon: '<svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+          { page: 'orders', label: '订单',
+            icon: '<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' }
+        ]
+      },
+      {
+        section: '店铺',
+        items: [
+          { page: 'series', label: '系列',
+            icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>' },
+          { page: 'promotions', label: '促销',
+            icon: '<svg viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.45.94 3.38 0l6.63-6.63c.94-.94.94-2.45 0-3.38L12 2Z"/><path d="M7 7h.01"/></svg>' },
+          { page: 'gifts', label: '赠品',
+            icon: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 2.5 2.5v5"/><path d="M16.5 8v-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-2.5 2.5h-5"/></svg>' },
+          { page: 'content', label: '内容',
+            icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>' },
+          { page: 'users', label: '用户',
+            icon: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>' },
+          { page: 'settings', label: '配置',
+            icon: '<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.64l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.64V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.64l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.64V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>' },
+          { page: 'decor', label: '装修',
+            icon: '<svg viewBox="0 0 24 24"><path d="m14.622 17.897-10.68-2.913"/><path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.707.707a.5.5 0 0 0 .707 0l4.021-4.02a1 1 0 0 1 3.002 3.001l-4.02 4.021a2.5 2.5 0 0 1-3.535 0l-.707-.707a2.5 2.5 0 0 1 0-3.535z"/><path d="M8.79 17.897a1.5 1.5 0 0 0 2.208 1.193l-2.208-1.193Z"/></svg>' }
+        ]
+      },
+      {
+        section: '全局',
+        items: [
+          { page: 'countries', label: '国家',
+            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>' },
+          { page: 'language', label: '语言',
+            icon: '<svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>' },
+          { page: 'currency', label: '货币',
+            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg>' },
+          { page: 'exchange-rate', label: '汇率',
+            icon: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9"/><path d="M3 12a9 9 0 0 1 9-9"/><path d="M12 3v18"/><path d="m7 6 2-2 2 2"/><path d="m13 18 2 2 2-2"/></svg>' },
+          { page: 'tax-rate', label: '税率',
+            icon: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg>' },
+          { page: 'freight', label: '运费',
+            icon: '<svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' },
+          { page: 'vip-system', label: 'VIP体系',
+            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+          { page: 'category-mgmt', label: '分类',
+            icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' }
+        ]
+      }
+    ];
+
+    // ==================== 路由映射 ====================
+    const PAGE_ROUTES = {
+      'products':      'product/product_list.html',
+      'add-product':   'product/add_product.html',
+      'countries':     'country/countries.html',
+      'exchange-rate': 'exchange-rate/exchange_rate.html'
+    };
+
+    // ==================== 侧边栏渲染 ====================
+    function renderSidebar(activePage) {
+      const container = document.getElementById('sidebarContainer');
+      if (!container) return;
+
+      let html = `
+      <div class="sidebar-shop-selector">
+        <div class="sidebar-shop-avatar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="sidebar-shop-info">
+          <div class="sidebar-shop-name">QVR品牌站</div>
+          <div class="sidebar-shop-domain">youpin.shop</div>
+        </div>
+        <svg class="sidebar-shop-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <nav class="sidebar-nav">`;
+
+      SIDEBAR_MENU.forEach(group => {
+        html += `<div class="sidebar-section-title">${group.section}</div>`;
+        group.items.forEach(item => {
+          const activeClass = item.page === activePage ? ' active' : '';
+          html += `
+        <div class="sidebar-item${activeClass}" data-page="${item.page}">
+          <span class="sidebar-item-icon">${item.icon}</span>
+          ${item.label}
+        </div>`;
+        });
+      });
+
+      html += `
+      </nav>
+      <div class="sidebar-profile">
+        <div class="sidebar-profile-avatar">管</div>
+        <div class="sidebar-profile-info">
+          <div class="sidebar-profile-name">管理员</div>
+          <div class="sidebar-profile-role">超级管理员</div>
+        </div>
+        <div class="sidebar-profile-bell">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="sidebar-profile-bell-dot"></div>
+        </div>
+      </div>`;
+
+      container.innerHTML = html;
+    }
+
+    // ==================== 侧边栏导航（事件委托） ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebar = document.getElementById('sidebarContainer');
+      if (!sidebar) return;
+
+      sidebar.addEventListener('click', function(e) {
+        // 通知铃铛点击
+        const bell = e.target.closest('.sidebar-profile-bell');
+        if (bell) {
+          e.stopPropagation();
+          showToast('info', '您有 3 条未读通知');
+          return;
+        }
+
+        const item = e.target.closest('.sidebar-item');
+        if (!item) return;
+        const page = item.dataset.page;
+        if (!page) return;
+
+        // 已开发的页面：跨页面跳转
+        if (PAGE_ROUTES[page]) {
+          window.location.href = PAGE_ROUTES[page];
+          return;
+        }
+
+        // 未开发的页面：显示 toast 提示
+        showToast('info', `${item.textContent.trim()} 页面开发中...`);
+      });
+
+      // 自动渲染侧边栏
+      if (typeof CURRENT_PAGE !== 'undefined') {
+        renderSidebar(CURRENT_PAGE);
+      }
+    });
+
     // ==================== 商品数据 ====================
     const products = [
       { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', site: 3, creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
@@ -311,25 +480,6 @@
         }
       });
     }
-
-    // ==================== 侧边栏导航 ====================
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const page = item.dataset.page;
-        if (page === 'products') {
-          showPage('products');
-        } else if (page) {
-          // 其他页面暂不实现，显示提示
-          showToast('info', `${item.textContent.trim()} 页面开发中...`);
-        }
-      });
-    });
-
-    // 个人中心通知铃铛
-    document.querySelector('.sidebar-profile-bell')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showToast('info', '您有 3 条未读通知');
-    });
 
     // ==================== 渲染商品表格 ====================
     function renderProducts(filter = {}) {

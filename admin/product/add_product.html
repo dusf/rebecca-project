@@ -1005,65 +1005,128 @@
       outline: none;
     }
 
-    .media-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    /* 媒体区域 - 上下两行布局 */
+    .media-block {
+      margin-bottom: 24px;
+    }
+    .media-block:last-child {
+      margin-bottom: 0;
+    }
+    .media-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-start;
     }
 
-    .media-upload-box {
-      aspect-ratio: 1;
-      max-height: 180px;
-      border: 1px dashed hsl(var(--border));
-      border-radius: 12px;
+    /* 添加媒体卡片 */
+    .media-add-card {
+      width: 120px;
+      height: 120px;
+      border: 1.5px dashed hsl(var(--border));
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
       transition: all 0.2s;
       background: hsl(var(--background));
       color: hsl(var(--muted-foreground));
-      position: relative;
-      overflow: hidden;
+      flex-shrink: 0;
     }
-
-    .media-upload-box:hover {
+    .media-add-card:hover {
       border-color: hsl(var(--primary));
       background: hsl(var(--primary-50));
     }
-
-    .media-upload-box .plus {
-      font-size: 24px;
+    .media-add-card .plus {
+      font-size: 22px;
       font-weight: 300;
       line-height: 1;
     }
-
-    .media-upload-box .text {
-      font-size: 13px;
+    .media-add-card .text {
+      font-size: 12px;
       font-weight: 500;
       color: hsl(var(--foreground));
     }
-
-    .media-upload-box .count {
-      font-size: 12px;
+    .media-add-card .count {
+      font-size: 11px;
       color: hsl(var(--muted-foreground));
     }
 
-    .media-upload-box .order-badge {
+    /* 媒体预览卡片 */
+    .media-card {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+      flex-shrink: 0;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: hsl(var(--muted));
+    }
+    .media-card:hover {
+      border-color: hsl(var(--primary-300));
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .media-card.dragging {
+      opacity: 0.4;
+    }
+    .media-card.drag-over {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    }
+    .media-card img, .media-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .media-card .media-type-badge {
       position: absolute;
-      top: 8px;
-      left: 8px;
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: hsl(var(--foreground));
-      color: hsl(var(--primary-foreground));
+      top: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .media-card .media-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .media-card:hover .media-delete {
+      opacity: 1;
+    }
+    .media-card .media-delete:hover {
+      background: hsl(var(--error));
+    }
+    .media-card .media-order {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
       font-weight: 600;
     }
 
@@ -1085,6 +1148,7 @@
       padding: 12px;
       background: hsl(var(--muted));
       border-radius: 8px;
+      margin-top: 16px;
       margin-bottom: 12px;
     }
 
@@ -1332,7 +1396,7 @@
               <div class="page-title">添加商品</div>
               <div class="add-product-actions">
                 <button class="btn btn-secondary" onclick="saveDraft()">保存</button>
-                <button class="btn btn-primary" onclick="submitProduct()">同步到店铺系列中</button>
+                <button class="btn btn-primary" onclick="submitProduct()">提交商品</button>
               </div>
             </div>
 
@@ -1425,30 +1489,34 @@
                   <div class="form-section-card-header">
                     <div>
                       <div class="form-section-card-title">商品媒体</div>
-                      <div class="form-section-card-subtitle">轮播媒体和详情媒体均支持图片/视频，最多 9 个，第一项轮播媒体作为主图或主视频。</div>
+                      <div class="form-section-card-subtitle">支持上传图片或视频，拖拽可排序，最多 9 个。轮播第一项作为主图/主视频。</div>
                     </div>
                   </div>
 
-                  <div class="media-section">
-                    <div>
-                      <div class="spec-section-title">商品轮播</div>
-                      <div class="media-upload-box" onclick="simulateMediaUpload('carousel')">
-                        <div class="order-badge">1</div>
+                  <!-- 商品轮播 -->
+                  <div class="media-block">
+                    <div class="spec-section-title">商品轮播</div>
+                    <div class="media-grid" id="carouselGrid">
+                      <div class="media-add-card" onclick="simulateMediaUpload('carousel')">
                         <div class="plus">+</div>
                         <div class="text">添加图片/视频</div>
                         <div class="count" id="carouselCount">(0/9)</div>
                       </div>
                     </div>
-                    <div>
-                      <div class="spec-section-title">商品详情</div>
-                      <div class="media-upload-box" onclick="simulateMediaUpload('detail')">
-                        <div class="order-badge">1</div>
+                  </div>
+
+                  <!-- 商品详情 -->
+                  <div class="media-block">
+                    <div class="spec-section-title">商品详情</div>
+                    <div class="media-grid" id="detailGrid">
+                      <div class="media-add-card" onclick="simulateMediaUpload('detail')">
                         <div class="plus">+</div>
                         <div class="text">添加图片/视频</div>
                         <div class="count" id="detailCount">(0/9)</div>
                       </div>
                     </div>
                   </div>
+                </div>
                 </div>
 
                 <!-- SKU 规格 -->
@@ -1504,6 +1572,7 @@
                             <th>SKU 名称（英语）</th>
                             <th>货品编码</th>
                             <th>库存</th>
+                            <th>购买数量</th>
                             <th>价格（美元）</th>
                           </tr>
                         </thead>
@@ -1527,9 +1596,8 @@
                     <label class="form-label">商品状态</label>
                     <select class="form-select" id="productStatus">
                       <option value="draft">草稿</option>
-                      <option value="on-sale">已上架</option>
+                      <option value="on-sale" selected>已上架</option>
                       <option value="off-sale">已下架</option>
-                      <option value="pending">待审核</option>
                     </select>
                   </div>
 
@@ -1749,7 +1817,7 @@
       const tbody = document.getElementById('skuTableBody');
 
       if (colors.length === 0 || sizes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="sku-empty">请添加颜色和尺码后生成 SKU</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7"><div class="sku-empty">请添加颜色和尺码后生成 SKU</div></td></tr>';
         return;
       }
 
@@ -1769,6 +1837,7 @@
             name: `${c}*${s}`,
             code: `HG-${idx.toString().padStart(2, '0')}-BW22`,
             stock: '',
+            qty: 1,
             price: basePrice
           });
           idx++;
@@ -1783,6 +1852,7 @@
           <td><input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" /></td>
           <td><input value="${item.code}" onchange="updateSkuData('${item.key}', 'code', this.value)" /></td>
           <td><input type="number" value="${item.stock}" placeholder="-" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
+          <td><input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" /></td>
           <td>
             <div class="currency">
               <span>$</span>
@@ -1838,16 +1908,130 @@
       showToast('success', `已批量设置 ${checked.length} 条 SKU 库存`);
     }
 
-    // ==================== 媒体上传模拟 ====================
-    const mediaCounts = { carousel: 0, detail: 0 };
+    // ==================== 媒体上传（支持预览、删除、拖拽排序） ====================
+    const mediaData = { carousel: [], detail: [] };
+    const MAX_MEDIA = 9;
+
+    // 模拟上传用随机颜色生成占位图/视频
+    const mockColors = [
+      '#C9A96E', '#6B8F71', '#5B7FBF', '#C06070', '#8B7A9E',
+      '#D4A76A', '#5A9E8F', '#7B9EC7', '#C78B8B', '#A08BB5',
+    ];
+    const mockLabels = ['主图', '角度2', '细节', '佩戴', '对比', '包装', '色卡', '材质', '场景'];
+
     function simulateMediaUpload(type) {
-      if (mediaCounts[type] >= 9) {
+      if (mediaData[type].length >= MAX_MEDIA) {
         showToast('error', '最多上传 9 个媒体文件');
         return;
       }
-      mediaCounts[type]++;
-      document.getElementById(type + 'Count').textContent = `(${mediaCounts[type]}/9)`;
-      showToast('success', `${type === 'carousel' ? '轮播' : '详情'}媒体上传成功（模拟）`);
+      const isVideo = Math.random() < 0.2; // 20% 概率模拟视频
+      const idx = mediaData[type].length;
+      const color = mockColors[idx % mockColors.length];
+      const label = mockLabels[idx % mockLabels.length];
+      mediaData[type].push({
+        id: Date.now() + Math.random(),
+        type: isVideo ? 'video' : 'image',
+        label: label,
+        color: color,
+        // 真实场景这里放 URL，模拟用颜色生成占位
+      });
+      renderMediaGrid(type);
+      showToast('success', `${type === 'carousel' ? '轮播' : '详情'}${isVideo ? '视频' : '图片'}上传成功`);
+    }
+
+    function renderMediaGrid(type) {
+      const grid = document.getElementById(type === 'carousel' ? 'carouselGrid' : 'detailGrid');
+      const items = mediaData[type];
+      const countEl = document.getElementById(type + 'Count');
+
+      // 先清空，再重建（保留添加按钮）
+      let html = items.map((item, i) => {
+        const isVideo = item.type === 'video';
+        return `
+        <div class="media-card" draggable="true"
+             data-id="${item.id}" data-index="${i}" data-type="${type}"
+             ondragstart="handleMediaDragStart(event)"
+             ondragover="handleMediaDragOver(event)"
+             ondragleave="handleMediaDragLeave(event)"
+             ondrop="handleMediaDrop(event, '${type}')"
+             ondragend="handleMediaDragEnd(event)">
+          ${isVideo
+            ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,${item.color},${item.color}88);display:flex;align-items:center;justify-content:center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" opacity="0.7"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+               </div>`
+            : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${item.color},${item.color}88);display:flex;align-items:center;justify-content:center;font-size:20px;color:white;font-weight:600;">${item.label}</div>`
+          }
+          <span class="media-type-badge">${isVideo ? '视频' : '图片'}</span>
+          <span class="media-delete" onclick="deleteMedia('${type}', ${i}, event)">×</span>
+          <span class="media-order">${i + 1}</span>
+        </div>`;
+      }).join('');
+
+      // 添加按钮
+      html += `
+        <div class="media-add-card" onclick="simulateMediaUpload('${type}')">
+          <div class="plus">+</div>
+          <div class="text">添加图片/视频</div>
+          <div class="count">(${items.length}/${MAX_MEDIA})</div>
+        </div>`;
+
+      grid.innerHTML = html;
+      if (countEl) countEl.textContent = `(${items.length}/${MAX_MEDIA})`;
+    }
+
+    function deleteMedia(type, index, event) {
+      event.stopPropagation();
+      mediaData[type].splice(index, 1);
+      renderMediaGrid(type);
+      showToast('info', '媒体已删除');
+    }
+
+    // ==================== 媒体拖拽排序 ====================
+    let mediaDragItem = null;
+
+    function handleMediaDragStart(e) {
+      mediaDragItem = e.target.closest('.media-card');
+      if (!mediaDragItem) return;
+      mediaDragItem.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', mediaDragItem.dataset.index);
+    }
+
+    function handleMediaDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const card = e.target.closest('.media-card');
+      if (card && card !== mediaDragItem) {
+        card.classList.add('drag-over');
+      }
+    }
+
+    function handleMediaDragLeave(e) {
+      const card = e.target.closest('.media-card');
+      if (card) card.classList.remove('drag-over');
+    }
+
+    function handleMediaDrop(e, type) {
+      e.preventDefault();
+      const target = e.target.closest('.media-card');
+      if (!target || !mediaDragItem || target === mediaDragItem) return;
+      target.classList.remove('drag-over');
+
+      const fromIdx = parseInt(mediaDragItem.dataset.index);
+      const toIdx = parseInt(target.dataset.index);
+      if (isNaN(fromIdx) || isNaN(toIdx)) return;
+
+      const items = mediaData[type];
+      const [moved] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, moved);
+      renderMediaGrid(type);
+    }
+
+    function handleMediaDragEnd(e) {
+      document.querySelectorAll('.media-card').forEach(c => {
+        c.classList.remove('dragging', 'drag-over');
+      });
+      mediaDragItem = null;
     }
 
     // ==================== 评论导入 ====================

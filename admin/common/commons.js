@@ -173,16 +173,16 @@
 
     // ==================== 商品数据 ====================
     const products = [
-      { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', site: 3, creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
-      { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', site: 5, creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
-      { id: 3, name: 'AirPods Pro 2', spu: 'SPU-DZ-00003', category: '数码电子', price: 1899, originalPrice: 1999, stock: '3款8件', stockLink: false, stockUpdateTime: '', site: 4, creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
-      { id: 4, name: 'Nike Air Max 270', spu: 'SPU-FS-00001', category: '服饰鞋包', price: 899, originalPrice: 1299, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', site: 2, creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
-      { id: 5, name: 'Adidas Ultraboost', spu: 'SPU-FS-00002', category: '服饰鞋包', price: 1299, originalPrice: 1599, stock: '4款0件', stockLink: false, stockUpdateTime: '', site: 1, creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
-      { id: 6, name: '星巴克精品咖啡豆', spu: 'SPU-SP-00001', category: '食品饮料', price: 128, originalPrice: 158, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', site: 6, creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
-      { id: 7, name: '戴森 V15 吸尘器', spu: 'SPU-JJ-00001', category: '家居生活', price: 4990, originalPrice: 5490, stock: '3款15件', stockLink: false, stockUpdateTime: '', site: 3, creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
-      { id: 8, name: '兰蔻小黑瓶精华', spu: 'SPU-MZ-00001', category: '美妆护肤', price: 1080, originalPrice: 1280, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', site: 5, creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
-      { id: 9, name: 'SK-II 神仙水', spu: 'SPU-MZ-00002', category: '美妆护肤', price: 1590, originalPrice: 1690, stock: '2款0件', stockLink: false, stockUpdateTime: '', site: 4, creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
-      { id: 10, name: '小米智能手环 8', spu: 'SPU-DZ-00004', category: '数码电子', price: 249, originalPrice: 299, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', site: 2, creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
+      { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
+      { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
+      { id: 3, name: 'AirPods Pro 2', spu: 'SPU-DZ-00003', category: '数码电子', price: 1899, originalPrice: 1999, stock: '3款8件', stockLink: false, stockUpdateTime: '', status: 'off-sale', creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
+      { id: 4, name: 'Nike Air Max 270', spu: 'SPU-FS-00001', category: '服饰鞋包', price: 899, originalPrice: 1299, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', status: 'on-sale', creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
+      { id: 5, name: 'Adidas Ultraboost', spu: 'SPU-FS-00002', category: '服饰鞋包', price: 1299, originalPrice: 1599, stock: '4款0件', stockLink: false, stockUpdateTime: '', status: 'draft', creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
+      { id: 6, name: '星巴克精品咖啡豆', spu: 'SPU-SP-00001', category: '食品饮料', price: 128, originalPrice: 158, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', status: 'draft', creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
+      { id: 7, name: '戴森 V15 吸尘器', spu: 'SPU-JJ-00001', category: '家居生活', price: 4990, originalPrice: 5490, stock: '3款15件', stockLink: false, stockUpdateTime: '', status: 'on-sale', creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
+      { id: 8, name: '兰蔻小黑瓶精华', spu: 'SPU-MZ-00001', category: '美妆护肤', price: 1080, originalPrice: 1280, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', status: 'on-sale', creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
+      { id: 9, name: 'SK-II 神仙水', spu: 'SPU-MZ-00002', category: '美妆护肤', price: 1590, originalPrice: 1690, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
+      { id: 10, name: '小米智能手环 8', spu: 'SPU-DZ-00004', category: '数码电子', price: 249, originalPrice: 299, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
     ];
 
     // ==================== 组织架构数据 ====================
@@ -241,9 +241,8 @@
       { key: 'price', label: '价格', defaultShow: true },
       { key: 'stock', label: '库存', defaultShow: true },
       { key: 'stockLink', label: '库存联动', defaultShow: true },
-      { key: 'site', label: '所属站点', defaultShow: true },
+      { key: 'status', label: '商品状态', defaultShow: true },
       { key: 'creator', label: '创建人', defaultShow: true },
-      { key: 'org', label: '所属组织', defaultShow: true },
       { key: 'date', label: '创建时间', defaultShow: true },
       { key: 'updateDate', label: '更新时间', defaultShow: false },
       { key: 'action', label: '操作', fixed: 'right', width: '120px', alwaysShow: true, isAction: true },
@@ -481,6 +480,17 @@
       });
     }
 
+    // ==================== 商品状态 Badge ====================
+    function getStatusBadge(status) {
+      const map = {
+        'draft':    { label: '草稿',     cls: 'badge-secondary' },
+        'on-sale':  { label: '已上架',   cls: 'badge-success' },
+        'off-sale': { label: '已下架',   cls: 'badge-error' },
+      };
+      const s = map[status] || { label: status || '-', cls: 'badge-secondary' };
+      return `<span class="badge ${s.cls}">${s.label}</span>`;
+    }
+
     // ==================== 渲染商品表格 ====================
     function renderProducts(filter = {}) {
       const tbody = document.getElementById('productTableBody');
@@ -595,14 +605,11 @@
                 ? `<div><span class="badge badge-success">已联动</span>${p.stockUpdateTime ? `<div style="font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px;">${p.stockUpdateTime}</div>` : ''}</div>`
                 : '<span class="badge badge-secondary">未联动</span>';
               break;
-            case 'site':
-              content = `<span style="font-weight: 500;">${p.site}</span>`;
+            case 'status':
+              content = getStatusBadge(p.status);
               break;
             case 'creator':
               content = `<span style="font-size: 13px;">${p.creator || '-'}</span>`;
-              break;
-            case 'org':
-              content = `<span style="font-size: 13px; color: hsl(var(--muted-foreground));">${p.org || '-'}</span>`;
               break;
             case 'date':
               content = `<span style="color: hsl(var(--muted-foreground));">${p.date}</span>`;
@@ -636,9 +643,11 @@
         bar.classList.toggle('visible', checked > 0);
       }
       // 控制按钮状态
-      const syncBtn = document.getElementById('btnSyncShop');
+      const btnOnSale = document.getElementById('btnBatchOnSale');
+      const btnOffSale = document.getElementById('btnBatchOffSale');
       const delBtn = document.getElementById('btnBatchDelete');
-      if (syncBtn) syncBtn.disabled = checked === 0;
+      if (btnOnSale) btnOnSale.disabled = checked === 0;
+      if (btnOffSale) btnOffSale.disabled = checked === 0;
       if (delBtn) delBtn.disabled = checked === 0;
     }
 
@@ -673,10 +682,35 @@
       showToast('success', `已导出 ${checked} 条商品`);
     }
 
-    function batchSyncToShop() {
+    // ==================== 批量设置状态 ====================
+    function batchSetStatus(status) {
       const checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');
       if (checkedEls.length === 0) {
-        showToast('info', '请先选择要同步的商品');
+        showToast('info', '请先选择要操作的商品');
+        return;
+      }
+      const statusMap = { 'on-sale': '上架', 'off-sale': '下架', 'draft': '草稿' };
+      const statusText = statusMap[status] || status;
+
+      checkedEls.forEach(cb => {
+        const row = cb.closest('tr');
+        const nameEl = row.querySelector('.product-name');
+        if (!nameEl) return;
+        const productName = nameEl.textContent;
+        const product = products.find(p => p.name === productName);
+        if (product) product.status = status;
+      });
+
+      renderProducts(getCurrentFilter());
+      updateSelectedCount();
+      showToast('success', `已将 ${checkedEls.length} 件商品设为「${statusText}」`);
+    }
+
+    // ==================== 添加到产品系列中 ====================
+    function addToProductSeries() {
+      const checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');
+      if (checkedEls.length === 0) {
+        showToast('info', '请先选择要添加到系列的商品');
         return;
       }
       const names = [];
@@ -685,332 +719,42 @@
         const nameEl = row.querySelector('.product-name');
         if (nameEl) names.push(nameEl.textContent);
       });
-      openSyncDialog(names);
+      showToast('success', `已将 ${names.length} 件商品添加到产品系列中`);
     }
 
-    function openSyncDialog(names) {
-      const sites = [
-        { id: 'qvr', name: 'QVR 品牌站', color: '#C9A96E', domain: 'qvr.shop.com' },
-        { id: 'rft', name: 'RFT 品牌站', color: '#6B8F71', domain: 'rft.shop.com' },
-        { id: 'blc', name: 'BLC 品牌站', color: '#5B7FBF', domain: 'blc.shop.com' },
-        { id: 'nxd', name: 'NXD 品牌站', color: '#C06070', domain: 'nxd.shop.com' },
-      ];
+    // ==================== 更多操作下拉 ====================
+    function toggleMoreActions() {
+      const dropdown = document.getElementById('moreActionsDropdown');
+      const wrapper = document.getElementById('moreActionsWrapper');
+      if (!dropdown) return;
 
-      // 每个站点下的一级/二级系列
-      const siteSeriesMap = {
-        qvr: [
-          { id: 'qvr-c1', name: '假发系列', level: 1, children: [
-            { id: 'qvr-c1-1', name: 'HD Lace 前蕾丝系列', level: 2 },
-            { id: 'qvr-c1-2', name: 'Closure 封口系列', level: 2 },
-            { id: 'qvr-c1-3', name: 'Frontal 前额系列', level: 2 },
-          ]},
-          { id: 'qvr-c2', name: '配件系列', level: 1, children: [
-            { id: 'qvr-c2-1', name: '发网与发帽', level: 2 },
-            { id: 'qvr-c2-2', name: '护理工具', level: 2 },
-          ]},
-          { id: 'qvr-c3', name: '定制系列', level: 1, children: [
-            { id: 'qvr-c3-1', name: '颜色定制', level: 2 },
-            { id: 'qvr-c3-2', name: '尺寸定制', level: 2 },
-          ]},
-        ],
-        rft: [
-          { id: 'rft-c1', name: '发套系列', level: 1, children: [
-            { id: 'rft-c1-1', name: '全蕾丝发套', level: 2 },
-            { id: 'rft-c1-2', name: '半蕾丝发套', level: 2 },
-          ]},
-          { id: 'rft-c2', name: '配件系列', level: 1, children: [
-            { id: 'rft-c2-1', name: '胶水与胶带', level: 2 },
-            { id: 'rft-c2-2', name: '梳子与支架', level: 2 },
-          ]},
-        ],
-        blc: [
-          { id: 'blc-c1', name: '经典系列', level: 1, children: [
-            { id: 'blc-c1-1', name: 'Bob 波波头', level: 2 },
-            { id: 'blc-c1-2', name: 'Pixie 精灵短发', level: 2 },
-          ]},
-          { id: 'blc-c2', name: '潮流系列', level: 1, children: [
-            { id: 'blc-c2-1', name: 'Ombre 渐变', level: 2 },
-            { id: 'blc-c2-2', name: 'Balayage 挑染', level: 2 },
-          ]},
-        ],
-        nxd: [
-          { id: 'nxd-c1', name: '男士系列', level: 1, children: [
-            { id: 'nxd-c1-1', name: '男士发块', level: 2 },
-            { id: 'nxd-c1-2', name: '男士发套', level: 2 },
-          ]},
-          { id: 'nxd-c2', name: '女士系列', level: 1, children: [
-            { id: 'nxd-c2-1', name: '长发系列', level: 2 },
-            { id: 'nxd-c2-2', name: '中短发系列', level: 2 },
-          ]},
-        ],
-      };
-
-      // 模拟已同步数据：{ 商品名: [已铺到的系列ID列表] }
-      const existingSyncMap = {
-        'iPhone 15 Pro Max': ['qvr-c1-1', 'qvr-c2-1'],
-        'MacBook Air M3': ['qvr-c1-1'],
-        'Nike Air Max 270': ['rft-c1-1'],
-      };
-
-      let selectedSite = 'qvr';
-      let selectedSeriesIds = new Set();
-
-      function renderSeries() {
-        const series = siteSeriesMap[selectedSite] || [];
-        const container = document.getElementById('syncSeriesList');
-        container.innerHTML = series.map(cat => `
-          <div class="sync-series-category">
-            <div class="sync-series-cat-header">
-              <svg class="sync-series-cat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-              <span>${cat.name}</span>
-              <span class="sync-series-cat-hint">一级·不可选</span>
-            </div>
-            <div class="sync-series-children">
-              ${cat.children.map(child => `
-                <div class="sync-series-child ${selectedSeriesIds.has(child.id) ? 'selected' : ''}" data-series-id="${child.id}" onclick="window._toggleSeries('${child.id}', this)">
-                  <div class="sync-series-child-check">✓</div>
-                  <span>${child.name}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `).join('');
+      const isOpen = dropdown.classList.contains('show');
+      if (isOpen) {
+        dropdown.classList.remove('show');
+        dropdown.style.display = 'none';
+        return;
       }
 
-      window._toggleSeries = function(seriesId, el) {
-        if (selectedSeriesIds.has(seriesId)) {
-          selectedSeriesIds.delete(seriesId);
-          el.classList.remove('selected');
-        } else {
-          selectedSeriesIds.add(seriesId);
-          el.classList.add('selected');
-        }
-        updateSelectedSeriesTags();
-      };
-
-      function updateSelectedSeriesTags() {
-        const tags = document.getElementById('syncSeriesTags');
-        const allSeries = (siteSeriesMap[selectedSite] || []).flatMap(c => c.children);
-        const selected = allSeries.filter(s => selectedSeriesIds.has(s.id));
-        tags.innerHTML = selected.length === 0
-          ? '<span style="font-size:12px;color:hsl(var(--muted-foreground))">未选择系列</span>'
-          : selected.map(s => `<div class="sync-selected-tag" data-series="${s.id}" onclick="window._removeSeriesTag('${s.id}')">${s.name}<span class="remove" onclick="event.stopPropagation();window._removeSeriesTag('${s.id}')">×</span></div>`).join('');
-      }
-
-      window._removeSeriesTag = function(seriesId) {
-        selectedSeriesIds.delete(seriesId);
-        const child = document.querySelector(`.sync-series-child[data-series-id='${seriesId}']`);
-        if (child) child.classList.remove('selected');
-        updateSelectedSeriesTags();
-      };
-
-      const overlay = document.createElement('div');
-      overlay.className = 'dialog-overlay';
-      overlay.innerHTML = `
-        <div class="dialog sync-dialog-v3">
-          <div class="dialog-title">同步到店铺系列中</div>
-          <div class="dialog-desc">已选 ${names.length} 件商品，选择目标站点下的系列进行同步</div>
-          <div class="sync-dialog-v3-body">
-            <div class="sync-dialog-v3-left">
-              <div class="sync-section-title">选择站点</div>
-              <div class="sync-site-list-v3" id="syncSiteListV3">
-                ${sites.map(s => `
-                  <div class="sync-site-row-v3 ${s.id === selectedSite ? 'selected' : ''}" data-site="${s.id}" onclick="window._selectSyncSite('${s.id}', this)">
-                    <div class="sync-site-avatar" style="background:${s.color}">${s.name.charAt(0)}</div>
-                    <div class="sync-site-info-v3">
-                      <div class="sync-site-name-v3">${s.name}</div>
-                      <div class="sync-site-domain-v3">${s.domain}</div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-            <div class="sync-dialog-v3-right">
-              <div class="sync-section-title">选择系列（二级）</div>
-              <div class="sync-series-list" id="syncSeriesList"></div>
-              <div style="margin-top:16px">
-                <div class="sync-section-title">已选系列</div>
-                <div class="sync-selected-tags-v3" id="syncSeriesTags"></div>
-              </div>
-              <div style="margin-top:20px">
-                <div class="sync-section-title">上架状态</div>
-                <div class="sync-status-options-v3" id="syncStatusOptionsV3">
-                  <div class="sync-status-option selected" data-status="on" onclick="window._selectSyncStatus(this)">
-                    <div class="radio"></div><span>已上架</span>
-                  </div>
-                  <div class="sync-status-option" data-status="off" onclick="window._selectSyncStatus(this)">
-                    <div class="radio"></div><span>未上架</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="dialog-actions" style="margin-top:20px">
-            <button class="btn btn-secondary" onclick="this.closest('.dialog-overlay').remove()">取消</button>
-            <button class="btn btn-primary" onclick="window._confirmSyncV3('${names.join('|')}')">确认同步</button>
-          </div>
-        </div>
-      `;
-
-      window._selectSyncSite = function(siteId, el) {
-        if (siteId === selectedSite) return;
-        selectedSite = siteId;
-        selectedSeriesIds.clear();
-        document.querySelectorAll('#syncSiteListV3 .sync-site-row-v3').forEach(r => r.classList.remove('selected'));
-        el.classList.add('selected');
-        renderSeries();
-        updateSelectedSeriesTags();
-      };
-
-      window._selectSyncStatus = function(el) {
-        document.querySelectorAll('#syncStatusOptionsV3 .sync-status-option').forEach(o => o.classList.remove('selected'));
-        el.classList.add('selected');
-      };
-
-      window._confirmSyncV3 = function(namesStr) {
-        const names = namesStr.split('|');
-        if (selectedSeriesIds.size === 0) {
-          showToast('info', '请至少选择一个二级系列');
-          return;
-        }
-        const statusEl = document.querySelector('#syncStatusOptionsV3 .sync-status-option.selected');
-        const status = statusEl ? statusEl.dataset.status : 'on';
-        const statusText = status === 'on' ? '已上架' : '未上架';
-
-        const allSeries = (siteSeriesMap[selectedSite] || []).flatMap(c => c.children);
-        const selectedSeries = allSeries.filter(s => selectedSeriesIds.has(s.id));
-        const seriesNames = selectedSeries.map(s => s.name).join('、');
-        const siteName = sites.find(s => s.id === selectedSite)?.name || '';
-
-        // 去重检查：按商品分组，记录每个商品已铺到的系列
-        let duplicateItems = [];  // { name, seriesList: ['系列1', '系列2'] }
-        let syncNames = [];
-        for (const name of names) {
-          const existing = existingSyncMap[name] || [];
-          const alreadyInSeries = existing.filter(eid => selectedSeriesIds.has(eid));
-          if (alreadyInSeries.length > 0) {
-            const dupSeries = alreadyInSeries.map(eid => {
-              const s = allSeries.find(a => a.id === eid);
-              return s ? s.name : eid;
-            });
-            duplicateItems.push({ name, seriesList });
-          } else {
-            syncNames.push(name);
-          }
-        }
-
-        if (duplicateItems.length > 0) {
-          const maxShow = 5;
-          const needCollapse = duplicateItems.length > maxShow;
-          const groupId = 'dupGroup_' + Date.now();
-          const collapseId = 'dupCollapse_' + Date.now();
-
-          const buildItem = (d, idx) => {
-            const seriesTags = d.seriesList.map(s => `<span class="dup-series-tag">${s}</span>`).join('');
-            return `
-              <div class="dup-item">
-                <span class="dup-item-idx">${idx + 1}</span>
-                <span class="dup-item-name">${d.name}</span>
-                <span class="dup-item-arrow">→</span>
-                <span class="dup-item-series">${seriesTags}</span>
-              </div>
-            `;
-          };
-
-          const visibleItems = duplicateItems.slice(0, maxShow).map((d, i) => buildItem(d, i)).join('');
-          const hiddenItems = duplicateItems.slice(maxShow).map((d, i) => buildItem(d, i + maxShow)).join('');
-
-          const confirmHtml = `
-            <div class="dup-confirm-body">
-              <div class="dup-summary">
-                <span class="dup-summary-icon">⚠️</span>
-                <span>以下 <b>${duplicateItems.length}</b> 件商品已铺货到当前选中的系列，将<b>跳过</b>：</span>
-              </div>
-              <div class="dup-item-list" id="${groupId}">
-                ${visibleItems}
-                ${needCollapse ? `<div id="${collapseId}" class="dup-collapse-content">${hiddenItems}</div>` : ''}
-              </div>
-              ${needCollapse ? `<div class="dup-expand-btn" onclick="window._toggleDupCollapse('${collapseId}', this)">展开全部 ${duplicateItems.length} 件 ▼</div>` : ''}
-              <div class="dup-sync-summary">
-                ${syncNames.length > 0
-                  ? `<span>✅ 可同步 <b>${syncNames.length}</b> 件新商品到 <b>${siteName}</b>（${statusText}）</span>`
-                  : `<span style="color:var(--error)">没有可同步的新商品</span>`
-                }
-              </div>
-            </div>
-          `;
-
-          const dupOverlay = document.createElement('div');
-          dupOverlay.className = 'dialog-overlay';
-          dupOverlay.innerHTML = `
-            <div class="dialog dup-dialog">
-              <div class="dialog-title">跳过已铺货商品</div>
-              <div class="dialog-body">${confirmHtml}</div>
-              <div class="dialog-actions">
-                <button class="btn btn-secondary" id="btnDupCancel">取消</button>
-                ${syncNames.length > 0
-                  ? `<button class="btn btn-primary" id="btnDupSkip">跳过重复，同步 ${syncNames.length} 件</button>`
-                  : `<button class="btn btn-primary" id="btnDupCancel2">知道了</button>`
-                }
-              </div>
-            </div>
-          `;
-          dupOverlay.addEventListener('click', function(e) {
-            if (e.target === dupOverlay) dupOverlay.remove();
-          });
-          document.body.appendChild(dupOverlay);
-
-          const closeDup = () => dupOverlay.remove();
-          document.getElementById('btnDupCancel').addEventListener('click', closeDup);
-          const btnCancel2 = document.getElementById('btnDupCancel2');
-          if (btnCancel2) btnCancel2.addEventListener('click', closeDup);
-
-          if (syncNames.length > 0) {
-            document.getElementById('btnDupSkip').addEventListener('click', function() {
-              dupOverlay.remove();
-              document.querySelector('.dialog-overlay').remove();
-              for (const name of syncNames) {
-                if (!existingSyncMap[name]) existingSyncMap[name] = [];
-                for (const sid of selectedSeriesIds) {
-                  if (!existingSyncMap[name].includes(sid)) {
-                    existingSyncMap[name].push(sid);
-                  }
-                }
-              }
-              showToast('success', `已同步 ${syncNames.length} 件商品到 ${siteName} 的 ${seriesNames}（${statusText}），跳过 ${duplicateItems.length} 件已铺货商品`);
-            });
-          }
-          return;
-        }
-
-        document.querySelector('.dialog-overlay').remove();
-        for (const name of syncNames) {
-          if (!existingSyncMap[name]) existingSyncMap[name] = [];
-          for (const sid of selectedSeriesIds) {
-            if (!existingSyncMap[name].includes(sid)) {
-              existingSyncMap[name].push(sid);
-            }
-          }
-        }
-        showToast('success', `已同步 ${syncNames.length} 件商品到 ${siteName} 的 ${seriesNames}（${statusText}）`);
-      };
-
-      // 折叠/展开切换
-      window._toggleDupCollapse = function(collapseId, btn) {
-        const el = document.getElementById(collapseId);
-        if (!el) return;
-        const isOpen = el.classList.toggle('open');
-        btn.innerHTML = isOpen ? '收起 ▲' : btn.innerHTML.replace('收起 ▲', '展开全部 ' + (el.querySelectorAll('.dup-group-item').length || '') + ' 个系列 ▼');
-      };
-
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) overlay.remove();
-      });
-      document.body.appendChild(overlay);
-
-      renderSeries();
-      updateSelectedSeriesTags();
+      // body 级别 fixed 定位：按钮下方左对齐，彻底脱离父级 stacking context
+      const btn = document.getElementById('btnMoreActions');
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.left = Math.max(8, rect.left) + 'px';
+      dropdown.classList.add('show');
+      dropdown.style.display = 'block';
     }
+
+    // 点击外部关闭更多操作下拉
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('moreActionsWrapper');
+      const dropdown = document.getElementById('moreActionsDropdown');
+      if (dropdown && wrapper && !wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show');
+        dropdown.style.display = 'none';
+      }
+    });
+
 
     function batchDelete() {
       const checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');

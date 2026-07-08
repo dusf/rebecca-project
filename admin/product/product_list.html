@@ -152,6 +152,42 @@
       align-items: center;
       gap: 4px;
     }
+
+    /* 更多操作下拉菜单 */
+    .more-actions-dropdown {
+      position: fixed;
+      background: #FFFFFF;
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 99999;
+      min-width: 160px;
+      overflow: hidden;
+    }
+    .more-actions-dropdown.show {
+      display: block !important;
+    }
+    .more-actions-item {
+      padding: 9px 16px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .more-actions-item:hover {
+      background: hsl(var(--primary-50));
+    }
+
+    /* 成功按钮 */
+    .btn-success {
+      background: hsl(var(--success));
+      color: hsl(var(--success-foreground));
+    }
+    .btn-success:hover {
+      background: hsl(142 60% 30%);
+      box-shadow: 0 2px 8px hsl(var(--success) / 0.3);
+    }
   </style>
   <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
   <script>
@@ -242,8 +278,15 @@
           <div class="bulk-action-bar" id="bulkActionBar">
             <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
             <div class="bulk-actions">
-              <button class="btn btn-primary btn-sm" id="btnSyncShop" onclick="batchSyncToShop()" disabled>同步到店铺系列中</button>
+              <button class="btn btn-success btn-sm" id="btnBatchOnSale" onclick="batchSetStatus('on-sale')" disabled>批量上架</button>
+              <button class="btn btn-destructive btn-sm" id="btnBatchOffSale" onclick="batchSetStatus('off-sale')" disabled>批量下架</button>
               <button class="btn btn-secondary btn-sm" id="btnBatchDelete" onclick="batchDelete()" disabled>批量删除</button>
+              <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+                <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                  更多操作
+                </button>
+              </div>
               <div class="custom-col-wrapper" id="customColWrapper">
                 <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -310,5 +353,11 @@
     renderTableHead();
     renderProducts();
   </script>
+
+  <!-- 更多操作下拉菜单（挂载到 body 级别，避免被表格遮挡） -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="batchSetStatus('draft')">批量设为草稿</div>
+    <div class="more-actions-item" onclick="addToProductSeries()">添加到产品系列中</div>
+  </div>
 </body>
 </html>

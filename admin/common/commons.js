@@ -173,16 +173,16 @@
 
     // ==================== 商品数据 ====================
     const products = [
-      { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
-      { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
-      { id: 3, name: 'AirPods Pro 2', spu: 'SPU-DZ-00003', category: '数码电子', price: 1899, originalPrice: 1999, stock: '3款8件', stockLink: false, stockUpdateTime: '', status: 'off-sale', creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
-      { id: 4, name: 'Nike Air Max 270', spu: 'SPU-FS-00001', category: '服饰鞋包', price: 899, originalPrice: 1299, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', status: 'on-sale', creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
-      { id: 5, name: 'Adidas Ultraboost', spu: 'SPU-FS-00002', category: '服饰鞋包', price: 1299, originalPrice: 1599, stock: '4款0件', stockLink: false, stockUpdateTime: '', status: 'draft', creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
-      { id: 6, name: '星巴克精品咖啡豆', spu: 'SPU-SP-00001', category: '食品饮料', price: 128, originalPrice: 158, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', status: 'draft', creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
-      { id: 7, name: '戴森 V15 吸尘器', spu: 'SPU-JJ-00001', category: '家居生活', price: 4990, originalPrice: 5490, stock: '3款15件', stockLink: false, stockUpdateTime: '', status: 'on-sale', creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
-      { id: 8, name: '兰蔻小黑瓶精华', spu: 'SPU-MZ-00001', category: '美妆护肤', price: 1080, originalPrice: 1280, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', status: 'on-sale', creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
-      { id: 9, name: 'SK-II 神仙水', spu: 'SPU-MZ-00002', category: '美妆护肤', price: 1590, originalPrice: 1690, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
-      { id: 10, name: '小米智能手环 8', spu: 'SPU-DZ-00004', category: '数码电子', price: 249, originalPrice: 299, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
+      { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', seriesCount: 3, seriesNames: ['2024秋冬系列', '旗舰系列', '热销推荐'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
+      { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', seriesCount: 2, seriesNames: ['笔记本系列', '学生特惠'], creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
+      { id: 3, name: 'AirPods Pro 2', spu: 'SPU-DZ-00003', category: '数码电子', price: 1899, originalPrice: 1999, stock: '3款8件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seriesCount: 1, seriesNames: ['音频系列'], creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
+      { id: 4, name: 'Nike Air Max 270', spu: 'SPU-FS-00001', category: '服饰鞋包', price: 899, originalPrice: 1299, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', status: 'on-sale', seriesCount: 2, seriesNames: ['运动潮流', '春季新品'], creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
+      { id: 5, name: 'Adidas Ultraboost', spu: 'SPU-FS-00002', category: '服饰鞋包', price: 1299, originalPrice: 1599, stock: '4款0件', stockLink: false, stockUpdateTime: '', status: 'draft', seriesCount: 0, seriesNames: [], creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
+      { id: 6, name: '星巴克精品咖啡豆', spu: 'SPU-SP-00001', category: '食品饮料', price: 128, originalPrice: 158, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', status: 'draft', seriesCount: 1, seriesNames: ['进口精选'], creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
+      { id: 7, name: '戴森 V15 吸尘器', spu: 'SPU-JJ-00001', category: '家居生活', price: 4990, originalPrice: 5490, stock: '3款15件', stockLink: false, stockUpdateTime: '', status: 'on-sale', seriesCount: 2, seriesNames: ['高端家电', '品质生活'], creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
+      { id: 8, name: '兰蔻小黑瓶精华', spu: 'SPU-MZ-00001', category: '美妆护肤', price: 1080, originalPrice: 1280, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', status: 'on-sale', seriesCount: 3, seriesNames: ['护肤精选', '明星产品', '节日礼盒'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
+      { id: 9, name: 'SK-II 神仙水', spu: 'SPU-MZ-00002', category: '美妆护肤', price: 1590, originalPrice: 1690, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seriesCount: 1, seriesNames: ['护肤精选'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
+      { id: 10, name: '小米智能手环 8', spu: 'SPU-DZ-00004', category: '数码电子', price: 249, originalPrice: 299, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', seriesCount: 2, seriesNames: ['智能穿戴', '性价比之王'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
     ];
 
     // ==================== 组织架构数据 ====================
@@ -242,6 +242,7 @@
       { key: 'stock', label: '库存', defaultShow: true },
       { key: 'stockLink', label: '库存联动', defaultShow: true },
       { key: 'status', label: '商品状态', defaultShow: true },
+      { key: 'series', label: '所属系列', defaultShow: true },
       { key: 'creator', label: '创建人', defaultShow: true },
       { key: 'date', label: '创建时间', defaultShow: true },
       { key: 'updateDate', label: '更新时间', defaultShow: false },
@@ -425,7 +426,8 @@
         search: document.getElementById('productSearch')?.value || '',
         category: document.getElementById('categoryFilter')?.value || '',
         status: document.getElementById('statusFilter')?.value || '',
-        org: document.getElementById('orgFilter')?.value || '',
+        dateFrom: document.getElementById('dateFrom')?.value || '',
+        dateTo: document.getElementById('dateTo')?.value || '',
       };
     }
 
@@ -510,12 +512,17 @@
         filteredProducts = filteredProducts.filter(p => p.category === catMap[filter.category]);
       }
 
-      // 组织过滤
-      if (filter.org) {
-        const orgNode = flattenOrgTree(orgTree).find(n => n.id === filter.org);
-        if (orgNode && orgNode.path) {
-          filteredProducts = filteredProducts.filter(p => p.orgPath && p.orgPath.startsWith(orgNode.path));
-        }
+      // 状态过滤
+      if (filter.status) {
+        filteredProducts = filteredProducts.filter(p => p.status === filter.status);
+      }
+
+      // 日期范围过滤
+      if (filter.dateFrom) {
+        filteredProducts = filteredProducts.filter(p => p.date >= filter.dateFrom);
+      }
+      if (filter.dateTo) {
+        filteredProducts = filteredProducts.filter(p => p.date <= filter.dateTo);
       }
 
       if (filteredProducts.length === 0) {
@@ -608,6 +615,20 @@
             case 'status':
               content = getStatusBadge(p.status);
               break;
+            case 'series':
+              if (p.seriesCount > 0 && p.seriesNames && p.seriesNames.length > 0) {
+                const tooltipItems = p.seriesNames.map(name => `<div class="series-tooltip-item">${name}</div>`).join('');
+                content = `<div class="series-cell">
+                  <span class="series-cell-count">${p.seriesCount}</span>
+                  <span class="series-cell-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    <div class="series-tooltip">${tooltipItems}</div>
+                  </span>
+                </div>`;
+              } else {
+                content = `<span style="color: hsl(var(--muted-foreground));">-</span>`;
+              }
+              break;
             case 'creator':
               content = `<span style="font-size: 13px;">${p.creator || '-'}</span>`;
               break;
@@ -631,7 +652,9 @@
 
     document.getElementById('productSearch').addEventListener('input', filterAndRender);
     document.getElementById('categoryFilter').addEventListener('change', filterAndRender);
-    document.getElementById('orgFilter')?.addEventListener('change', filterAndRender);
+    document.getElementById('statusFilter')?.addEventListener('change', filterAndRender);
+    document.getElementById('dateFrom')?.addEventListener('change', filterAndRender);
+    document.getElementById('dateTo')?.addEventListener('change', filterAndRender);
 
     // ==================== Checkbox ====================
     function updateSelectedCount() {

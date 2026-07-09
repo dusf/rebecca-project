@@ -61,6 +61,20 @@
       user-select: none;
       -webkit-user-select: none;
     }
+
+    /* 修复 iframe 内页面滚动：content 需填满视口并作为 flex 容器 */
+    .content {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      padding: 16px 24px 24px;
+    }
+
+    /* SVG 不拦截拖拽事件 */
+    .drag-handle-icon svg {
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>

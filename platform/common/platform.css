@@ -1283,3 +1283,75 @@ tr:hover td { background: hsl(220 15% 96%); }
 th .checkbox {
   display: inline-flex;
 }
+
+/* ==================== 拖拽排序 ==================== */
+
+/* 拖拽手柄图标 */
+.drag-handle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  cursor: grab;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.35;
+  transition: opacity 0.15s, color 0.15s;
+  user-select: none;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.drag-handle-icon svg {
+  width: 14px;
+  height: 14px;
+}
+tr:hover .drag-handle-icon {
+  opacity: 0.8;
+  color: hsl(var(--foreground));
+}
+.drag-handle-icon:active {
+  cursor: grabbing;
+  opacity: 1;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary-50));
+}
+
+/* 正在拖拽的行 */
+tr.dragging {
+  opacity: 0.35;
+  outline: 2px dashed hsl(var(--primary));
+  outline-offset: -2px;
+  background: hsl(var(--primary-50)) !important;
+}
+tr.dragging td {
+  pointer-events: none;
+}
+
+/* 有效拖入目标 — 绿色呼吸边框 */
+tr.drag-over-valid {
+  outline: 2px solid hsl(var(--success));
+  outline-offset: -2px;
+  background: hsl(142 50% 95%) !important;
+  animation: dragPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dragPulse {
+  0%, 100% { outline-color: hsl(var(--success)); }
+  50%      { outline-color: hsl(142 60% 55%); }
+}
+
+/* 插入指示线 — 在该行上方插入 */
+tr.drag-insert-before {
+  box-shadow: 0 -3px 0 0 hsl(var(--primary));
+}
+
+/* 插入指示线 — 在该行下方插入 */
+tr.drag-insert-after {
+  box-shadow: 0 3px 0 0 hsl(var(--primary));
+}
+
+/* 整个 tbody 在拖入时产生一个区域高亮（用于拖入空的父节点） */
+tr.drag-zone-highlight {
+  box-shadow: inset 0 0 0 2px hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary-50)) !important;
+}

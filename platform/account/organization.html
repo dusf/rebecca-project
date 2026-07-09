@@ -55,6 +55,12 @@
     }
     .tree-toggle.expanded svg { transform: rotate(90deg); }
     .tree-toggle.leaf { visibility: hidden; pointer-events: none; }
+
+    /* 拖拽时 body 禁止选中 */
+    body.dragging-active {
+      user-select: none;
+      -webkit-user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -62,7 +68,7 @@
     <div class="page-header">
       <div>
         <div class="page-title">组织机构</div>
-        <div class="page-subtitle">管理集团/公司/部门/小组的组织层级结构，每个组织节点需指定类型</div>
+        <div class="page-subtitle">管理集团/公司/部门/小组的组织层级结构，拖拽排序需要遵守直系父子层级规则</div>
       </div>
     </div>
 
@@ -102,13 +108,14 @@
         <table>
           <thead>
             <tr>
+              <th style="width:32px"></th>
               <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></th>
-              <th style="width:30%">组织名称</th>
-              <th style="width:13%">组织类型</th>
-              <th style="width:13%">组织代码</th>
-              <th style="width:13%">上级组织</th>
-              <th style="width:9%">排序</th>
-              <th style="width:9%">状态</th>
+              <th style="width:28%">组织名称</th>
+              <th style="width:12%">组织类型</th>
+              <th style="width:12%">组织代码</th>
+              <th style="width:12%">上级组织</th>
+              <th style="width:8%">排序</th>
+              <th style="width:8%">状态</th>
               <th style="width:6%">操作</th>
             </tr>
           </thead>
@@ -140,6 +147,7 @@
       ],
       onColumnsChange: function(){ renderTable(); }
     };
+
     // ========== 组织类型配置 ==========
     var ORG_TYPES = {
       group:   { label: '集团', cls: 'group'   },
@@ -168,6 +176,44 @@
 
     var collapsedSet = {};
 
+    // ========== 数据工具 ==========
+    function findNode(id) {
+      for (var i = 0; i < orgData.length; i++) {
+        if (orgData[i].id === id) return orgData[i];
+      }
+      return null;
+    }
+
+    function getNodeName(id) {
+      var n = findNode(id);
+      return n ? n.name : '--';
+    }
+
+    // 判断 descendantId 是否是 ancestorId 的后代
+    function isDescendantOf(descendantId, ancestorId) {
+      var current = findNode(descendantId);
+      while (current) {
+        if (current.parent === ancestorId) return true;
+        current = findNode(current.parent);
+      }
+      return false;
+    }
+
+    // 获取某节点下所有后代 ID 集合（用于展开/折叠和过滤时的扁平化）
+    function getDescendantIds(nodeId) {
+      var result = [];
+      function walk(pid) {
+        orgData.forEach(function(item) {
+          if (item.parent === pid) {
+            result.push(item.id);
+            walk(item.id);
+          }
+        });
+      }
+      walk(nodeId);
+      return result;
+    }
+
     // ========== 构建树 ==========
     function buildTree(data) {
       var map = {};
@@ -192,7 +238,7 @@
       return roots;
     }
 
-    // ========== 根据名称搜索过滤树 ==========
+    // ========== 过滤数据 ==========
     function filterData() {
       var keyword = (document.getElementById('searchInput').value || '').toLowerCase();
       var typeVal = document.getElementById('typeFilter').value;
@@ -212,7 +258,7 @@
       var tbody = document.getElementById('orgTableBody');
 
       if (tree.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配的组织</div><div class="empty-state-desc">尝试调整筛选条件或添加新的组织机构</div></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配的组织</div><div class="empty-state-desc">尝试调整筛选条件或添加新的组织机构</div></div></td></tr>';
         return;
       }
 
@@ -234,6 +280,9 @@
         disabled: { label: '停用', cls: 'badge-secondary' }
       };
 
+      // 六点拖拽手柄 SVG
+      var gripSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.3"/><circle cx="11" cy="3" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="5" cy="13" r="1.3"/><circle cx="11" cy="13" r="1.3"/></svg>';
+
       var html = '';
       rows.forEach(function(row) {
         var node = row.node;
@@ -252,7 +301,16 @@
           toggleHtml = '<span class="tree-toggle leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
         }
 
-        html += '<tr data-id="' + node.id + '">';
+        // 拖拽手柄：集团不可拖
+        var handleHtml = '';
+        if (node.type !== 'group') {
+          handleHtml = '<td><span class="drag-handle-icon" draggable="true" data-drag-id="' + node.id + '">' + gripSvg + '</span></td>';
+        } else {
+          handleHtml = '<td></td>';
+        }
+
+        html += '<tr data-id="' + node.id + '" data-type="' + node.type + '" data-parent="' + (node.parent || '') + '" data-level="' + ORG_TYPE_LEVEL[node.type] + '">';
+        html += handleHtml;
         html += '<td><div class="checkbox" onclick="puToggleCheckbox(this)" style="display:inline-flex"></div></td>';
         html += '<td class="' + indentCls + '"><div class="tree-name-cell">' + toggleHtml + '<span>' + node.name + '</span></div></td>';
         html += '<td><span class="org-type ' + t.cls + '">' + t.label + '</span></td>';
@@ -282,13 +340,261 @@
           renderTable();
         });
       });
+
+      // 绑定拖拽事件（事件委托）
+      bindDragEvents(tbody);
     }
 
-    function getNodeName(id) {
-      for (var i = 0; i < orgData.length; i++) {
-        if (orgData[i].id === id) return orgData[i].name;
+    // ============================================================
+    //  拖拽排序逻辑
+    // ============================================================
+    var currentDragId = null;
+    var currentDragNode = null;
+
+    function bindDragEvents(tbody) {
+      // dragstart — 委托给 .drag-handle-icon
+      tbody.querySelectorAll('.drag-handle-icon').forEach(function(handle) {
+        handle.addEventListener('dragstart', handleDragStart);
+        handle.addEventListener('dragend', handleDragEnd);
+      });
+
+      // dragover / dragleave / drop — 委托给 tr
+      tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
+        tr.addEventListener('dragover', handleDragOver);
+        tr.addEventListener('dragleave', handleDragLeave);
+        tr.addEventListener('drop', handleDrop);
+      });
+    }
+
+    function handleDragStart(e) {
+      var dragId = this.dataset.dragId;
+      var node = findNode(dragId);
+      if (!node || node.type === 'group') {
+        e.preventDefault();
+        return;
       }
-      return '--';
+      currentDragId = dragId;
+      currentDragNode = node;
+
+      // 设置拖拽图像为半透明
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragId);
+
+      // 标记拖拽行
+      var row = this.closest('tr');
+      row.classList.add('dragging');
+      document.body.classList.add('dragging-active');
+
+      // 下一帧再高亮，确保 drag image 已捕获
+      setTimeout(function() {
+        if (row) row.classList.add('dragging');
+      }, 0);
+    }
+
+    function handleDragEnd(e) {
+      var tbody = document.getElementById('orgTableBody');
+      var row = tbody.querySelector('tr.dragging');
+      if (row) row.classList.remove('dragging');
+      document.body.classList.remove('dragging-active');
+
+      // 清除所有拖拽视觉状态
+      clearAllDragStates();
+
+      currentDragId = null;
+      currentDragNode = null;
+    }
+
+    function clearAllDragStates() {
+      var tbody = document.getElementById('orgTableBody');
+      if (!tbody) return;
+      var rows = tbody.querySelectorAll('tr');
+      rows.forEach(function(r) {
+        r.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-zone-highlight');
+      });
+    }
+
+    function handleDragOver(e) {
+      if (!currentDragNode) return;
+      e.preventDefault();
+
+      var row = e.currentTarget;
+      var targetId = row.dataset.id;
+
+      // 不能拖到自己身上
+      if (targetId === currentDragId) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+
+      // 不能拖到自己的后代上（防止循环）
+      if (isDescendantOf(targetId, currentDragId)) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+
+      var targetNode = findNode(targetId);
+      if (!targetNode) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+
+      // 清除之前的状态
+      clearAllDragStates();
+
+      var draggedLevel = ORG_TYPE_LEVEL[currentDragNode.type];
+      var targetLevel = ORG_TYPE_LEVEL[targetNode.type];
+
+      // 判断是否为有效父节点（直系父子：parentLevel = draggedLevel - 1）
+      var canBeParent = (targetLevel === draggedLevel - 1);
+
+      // 判断是否为同级兄弟（同一父节点、同一层级）
+      var isSibling = (currentDragNode.parent === targetNode.parent && draggedLevel === targetLevel);
+
+      if (!canBeParent && !isSibling) {
+        // 既不是有效父节点也不是兄弟 → 不响应
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+
+      // 根据鼠标 Y 位置区分操作类型
+      var rect = row.getBoundingClientRect();
+      var y = e.clientY - rect.top;
+      var inTopZone = y < rect.height * 0.3;
+      var inBottomZone = y > rect.height * 0.7;
+
+      if (canBeParent && !inTopZone && !inBottomZone) {
+        // 有效父节点 + 中间区域 → 绿色呼吸边框（挂入为该节点子级）
+        row.classList.add('drag-over-valid');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (isSibling && inTopZone) {
+        // 同级兄弟 + 上部 → 蓝色插入线（插入到该行之前）
+        row.classList.add('drag-insert-before');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (isSibling && inBottomZone) {
+        // 同级兄弟 + 下部 → 蓝色插入线（插入到该行之后）
+        row.classList.add('drag-insert-after');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (canBeParent && (inTopZone || inBottomZone)) {
+        // 有效父节点但在边缘 → 作为插入位置也可以（插入到父节点前后）
+        // 这种情况下也允许，按插入处理
+        row.classList.add('drag-over-valid');
+        e.dataTransfer.dropEffect = 'move';
+      } else {
+        e.dataTransfer.dropEffect = 'none';
+      }
+    }
+
+    function handleDragLeave(e) {
+      // 只在真正离开行时才清除（避免冒泡触发）
+      if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget)) {
+        var row = e.currentTarget;
+        row.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after');
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!currentDragNode) return;
+
+      var row = e.currentTarget;
+      var targetId = row.dataset.id;
+      var targetNode = findNode(targetId);
+      if (!targetNode || targetId === currentDragId) return;
+
+      var rect = row.getBoundingClientRect();
+      var y = e.clientY - rect.top;
+      var inTopZone = y < rect.height * 0.3;
+      var inBottomZone = y > rect.height * 0.7;
+
+      var draggedLevel = ORG_TYPE_LEVEL[currentDragNode.type];
+      var targetLevel = ORG_TYPE_LEVEL[targetNode.type];
+      var canBeParent = (targetLevel === draggedLevel - 1);
+      var isSibling = (currentDragNode.parent === targetNode.parent && draggedLevel === targetLevel);
+
+      if (canBeParent && !inTopZone && !inBottomZone) {
+        // === 跨父移动：挂入到新父节点下 ===
+        moveToParent(currentDragNode, targetNode);
+      } else if (isSibling) {
+        // === 同级重排：插入到目标行之前或之后 ===
+        reorderSibling(currentDragNode, targetNode, inTopZone ? 'before' : 'after');
+      } else if (canBeParent && (inTopZone || inBottomZone)) {
+        // 边缘情况：对有效父节点上下边缘也当成插入
+        moveToParent(currentDragNode, targetNode);
+      } else {
+        // 非法操作
+        showToast('warning', '不允许跨层级拖拽，请遵循直系父子层级规则');
+        return;
+      }
+
+      // 清除拖拽状态
+      clearAllDragStates();
+      currentDragId = null;
+      currentDragNode = null;
+
+      // 重新渲染
+      renderTable();
+      showToast('success', '排序已更新');
+    }
+
+    // ========== 跨父移动 ==========
+    function moveToParent(draggedNode, newParentNode) {
+      var oldParent = draggedNode.parent;
+      draggedNode.parent = newParentNode.id;
+
+      // 新父节点下当前子节点最大 sort + 1
+      var siblings = orgData.filter(function(item) { return item.parent === newParentNode.id && item.id !== draggedNode.id; });
+      var maxSort = 0;
+      siblings.forEach(function(s) { if (s.sort > maxSort) maxSort = s.sort; });
+      draggedNode.sort = maxSort + 1;
+
+      // 修正旧父节点下子节点的 sort（消除空隙）
+      if (oldParent) {
+        renumberSorts(oldParent);
+      }
+    }
+
+    // ========== 同级重排 ==========
+    function reorderSibling(draggedNode, targetNode, position) {
+      var parentId = draggedNode.parent;
+
+      // 获取旧父节点下所有同级（排除被拖节点）
+      var siblings = orgData.filter(function(item) {
+        return item.parent === parentId && item.id !== draggedNode.id;
+      }).sort(function(a, b) { return a.sort - b.sort; });
+
+      var targetIndex = -1;
+      for (var i = 0; i < siblings.length; i++) {
+        if (siblings[i].id === targetNode.id) { targetIndex = i; break; }
+      }
+      if (targetIndex === -1) return;
+
+      // 构建新的排序序列
+      var newOrder = [];
+      for (var j = 0; j < siblings.length; j++) {
+        if (j === targetIndex && position === 'before') {
+          newOrder.push(draggedNode);
+        }
+        newOrder.push(siblings[j]);
+        if (j === targetIndex && position === 'after') {
+          newOrder.push(draggedNode);
+        }
+      }
+
+      // 重新编号 sort
+      for (var k = 0; k < newOrder.length; k++) {
+        newOrder[k].sort = k + 1;
+      }
+    }
+
+    // ========== 重新编号某父节点下所有子节点的 sort ==========
+    function renumberSorts(parentId) {
+      var children = orgData.filter(function(item) { return item.parent === parentId; })
+        .sort(function(a, b) { return a.sort - b.sort; });
+      for (var i = 0; i < children.length; i++) {
+        children[i].sort = i + 1;
+      }
     }
 
     // ========== 筛选事件 ==========

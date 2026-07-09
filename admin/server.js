@@ -1,13 +1,15 @@
-// 简易本地服务器，用于 admin 后台测试
+// 简易本地服务器，用于前台 + 中台 + 后台测试
 // 启动: node server.js
-// 访问: http://localhost:3001
+// 访问: http://127.0.0.1:8080/              → 后台首页
+//        http://127.0.0.1:8080/platform/index → 中台首页
+//        http://127.0.0.1:8080/shop/...       → 店铺前台
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3001;
-const ROOT = __dirname;
+const PORT = 8080;
+const ROOT = path.resolve(__dirname, '..');   // 工作区根目录
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -23,8 +25,17 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(ROOT, req.url === '/' ? '/index.html' : req.url.split('?')[0]);
-  const ext = path.extname(filePath);
+  let url = req.url.split('?')[0];
+
+  // 首页重写
+  if (url === '/') url = '/admin/index.html';
+
+  let filePath = path.join(ROOT, url);
+
+  // 无扩展名 → 尝试补 .html
+  if (!path.extname(filePath)) {
+    filePath += '.html';
+  }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -32,6 +43,7 @@ const server = http.createServer((req, res) => {
       res.end('404 Not Found: ' + req.url);
       return;
     }
+    const ext = path.extname(filePath);
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     res.end(data);
   });

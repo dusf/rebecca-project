@@ -250,4 +250,91 @@
     puRestoreCheckedIds(tbodyId, checkedIds);
   };
 
+  // ==================== 分页 ====================
+
+  /**
+   * 渲染分页栏。调用方在 table-card 内部放置 <div class="pagination-bar" id="xxxPagination"></div>。
+   * @param options { total, pageSize, currentPage, onPageChange, containerId }
+   */
+  window.puRenderPagination = function(options) {
+    var total = options.total || 0;
+    var pageSize = options.pageSize || 10;
+    var current = options.currentPage || 1;
+    var containerId = options.containerId || 'paginationBar';
+    var onPageChange = options.onPageChange || function() {};
+
+    var totalPages = Math.ceil(total / pageSize) || 1;
+    if (current > totalPages) current = totalPages;
+
+    var container = document.getElementById(containerId);
+    if (!container) return;
+
+    var start = total === 0 ? 0 : (current - 1) * pageSize + 1;
+    var end = Math.min(current * pageSize, total);
+
+    var html = '';
+    html += '<span class="pagination-info">显示 ' + start + '-' + end + ' 条，共 ' + total + ' 条</span>';
+    html += '<div class="pagination-buttons">';
+
+    // 上一页
+    html += '<div class="page-btn' + (current <= 1 ? ' disabled' : '') + '" data-page="' + (current - 1) + '">‹</div>';
+
+    // 页码
+    var pages = paginatePages(current, totalPages);
+    for (var i = 0; i < pages.length; i++) {
+      var p = pages[i];
+      if (p === '...') {
+        html += '<div class="page-btn disabled">...</div>';
+      } else {
+        html += '<div class="page-btn' + (p === current ? ' active' : '') + '" data-page="' + p + '">' + p + '</div>';
+      }
+    }
+
+    // 下一页
+    html += '<div class="page-btn' + (current >= totalPages ? ' disabled' : '') + '" data-page="' + (current + 1) + '">›</div>';
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // 绑定点击
+    container.querySelectorAll('.page-btn:not(.disabled):not([data-page="..."])').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var page = parseInt(this.getAttribute('data-page'));
+        if (page && page !== current) {
+          onPageChange(page);
+        }
+      });
+    });
+  };
+
+  /** 生成页码序列，如 [1, '...', 4, 5, 6, '...', 10] */
+  function paginatePages(current, total) {
+    if (total <= 7) {
+      var arr = [];
+      for (var i = 1; i <= total; i++) arr.push(i);
+      return arr;
+    }
+    var pages = [1];
+    if (current > 3) pages.push('...');
+    var start = Math.max(2, current - 1);
+    var end = Math.min(total - 1, current + 1);
+    for (var i = start; i <= end; i++) pages.push(i);
+    if (current < total - 2) pages.push('...');
+    pages.push(total);
+    return pages;
+  }
+
+  /**
+   * 切片数据（用于分页）
+   * @param data  - 完整数据数组
+   * @param page  - 当前页码（1-based）
+   * @param size  - 每页条数
+   */
+  window.puSlicePage = function(data, page, size) {
+    page = page || 1;
+    size = size || 10;
+    var start = (page - 1) * size;
+    return data.slice(start, start + size);
+  };
+
 })();

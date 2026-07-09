@@ -68,6 +68,7 @@
           <tbody id="accountTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination-bar" id="accountsPagination"></div>
     </div>
   </div>
 
@@ -125,6 +126,9 @@
 
     var sortField = 'createdAt';
     var sortDir = 'desc';
+    var currentPage = 1;
+    var pageSize = 10;
+    var filteredData = [];
 
     function sortAccounts(data) {
       return data.slice().sort(function(a, b) {
@@ -165,19 +169,24 @@
       data = sortAccounts(data);
       updateSortIcons();
 
+      // 保存过滤后全量数据，供分页使用
+      filteredData = data;
+
+      var pageData = puSlicePage(data, currentPage, pageSize);
       var tbody = document.getElementById('accountTableBody');
       var checkedIds = puSaveCheckedIds('accountTableBody');
       var cols = window.PU_CONFIG.visibleCols;
       if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-state-title">暂无匹配账号</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
         puUpdateBulkBar();
+        document.getElementById('accountsPagination').innerHTML = '';
         return;
       }
 
       var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
       var statusMap = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
 
-      tbody.innerHTML = data.map(function(a) {
+      tbody.innerHTML = pageData.map(function(a) {
         var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
         var cells = '';
         cols.forEach(function(key) {
@@ -201,9 +210,18 @@
 
       // 初始化自定义列面板
       puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
+
+      // 渲染分页
+      puRenderPagination({
+        total: data.length,
+        pageSize: pageSize,
+        currentPage: currentPage,
+        containerId: 'accountsPagination',
+        onPageChange: function(page) { currentPage = page; renderAccounts(); }
+      });
     }
 
-    function filterAccounts() { renderAccounts(); }
+    function filterAccounts() { currentPage = 1; renderAccounts(); }
 
     document.addEventListener('click', function(e) {
       var th = e.target.closest('th.sortable');
@@ -216,6 +234,7 @@
         sortField = key;
         sortDir = 'desc';
       }
+      currentPage = 1;
       renderAccounts();
     });
 

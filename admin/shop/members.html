@@ -8,12 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../common/commons.css">
+  <link rel="stylesheet" href="../common/member_dialogs.css">
   <style>
     /* ==================== 布局 ==================== */
     html, body { height: 100%; margin: 0; overflow: hidden; }
     .members-container { display: flex; flex-direction: column; height: 100%; padding: 8px 24px 24px; box-sizing: border-box; }
     .page-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-shrink: 0; }
-    .page-title { font-size: 16px; font-weight: 700; color: hsl(var(--foreground)); }
+    .page-title { font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); }
     .page-subtitle { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
     .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
     /* ==================== 头像 & 成员信息 ==================== */
@@ -31,141 +32,24 @@
     .action-btn-sm.remove { background: hsl(0 84% 95%); color: hsl(var(--error)); }
     .action-btn-sm.remove:hover { background: hsl(0 84% 90%); }
     /* ==================== 按钮 ==================== */
-    .invite-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .invite-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); white-space: nowrap; }
     .invite-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px hsl(var(--primary) / 0.3); }
-    .invite-btn svg { width: 16px; height: 16px; }
+    .invite-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
     .invite-btn.secondary { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
     .invite-btn.secondary:hover { background: hsl(var(--muted-foreground) / 0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    /* ==================== 所在店铺 ==================== */
-    .store-count-cell { position: relative; cursor: pointer; }
-    .store-count-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; background: hsl(var(--primary-50)); color: hsl(var(--primary)); font-weight: 600; font-size: 13px; transition: background 0.15s; }
-    .store-count-badge:hover { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
-    .store-count-badge .arrow-icon { width: 12px; height: 12px; transition: transform 0.15s; }
-    .store-count-badge:hover .arrow-icon { transform: rotate(180deg); }
-    .store-popup { display: none; position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid hsl(var(--border)); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; min-width: 180px; padding: 6px 0; white-space: nowrap; }
-    .store-popup.show { display: block; }
-    .store-popup-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; color: hsl(var(--foreground)); transition: background 0.1s; }
-    .store-popup-item:hover { background: hsl(var(--muted)); }
-    .store-popup-item .sp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .store-popup-item .sp-name { font-weight: 500; }
-    .store-popup-item .sp-domain { font-size: 11px; color: hsl(var(--muted-foreground)); margin-left: 4px; }
-    .store-popup-empty { padding: 10px 14px; font-size: 13px; color: hsl(var(--muted-foreground)); text-align: center; }
     /* ==================== 空状态 ==================== */
     .empty-state { text-align: center; padding: 48px 20px; }
     .empty-icon { width: 56px; height: 56px; border-radius: 50%; background: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: hsl(var(--muted-foreground)); }
     .empty-icon svg { width: 24px; height: 24px; }
     .empty-title { font-size: 15px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 4px; }
     .empty-desc { font-size: 13px; color: hsl(var(--muted-foreground)); }
-    /* ==================== 表单 ==================== */
-    .add-member-dialog { width: 520px; height: 520px; display: flex; flex-direction: column; overflow: hidden; }
-    .add-member-dialog .dialog-body { padding: 0 24px; flex: 1; overflow-y: auto; }
-    .add-member-dialog .dialog-desc { margin-bottom: 16px; flex-shrink: 0; }
-    .add-member-dialog .dialog-actions { padding: 16px 24px 4px; flex-shrink: 0; }
-    .form-group { margin-bottom: 16px; }
-    .form-group:last-child { margin-bottom: 0; }
-    .form-label { display: block; font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 6px; }
-    .form-input { width: 100%; height: 40px; padding: 0 14px; font-size: 14px; font-family: var(--font-sans); border: 1.5px solid hsl(30 15% 88%); border-radius: 10px; outline: none; box-sizing: border-box; transition: border-color 0.15s, box-shadow 0.15s; }
-    .form-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1); }
-    .form-input::placeholder { color: hsl(var(--muted-foreground)); }
-    .form-hint { font-size: 11px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
-    .form-error { font-size: 11px; color: hsl(var(--error)); margin-top: 4px; display: none; }
-    .store-check-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .store-check-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1.5px solid hsl(var(--border)); cursor: pointer; font-size: 13px; transition: all 0.15s; }
-    .store-check-item:hover { border-color: hsl(var(--primary)); }
-    .store-check-item.selected { border-color: hsl(var(--primary)); background: hsl(var(--primary-50)); }
-    .store-check-item .sci-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .assign-dialog { width: 500px; height: 360px; display: flex; flex-direction: column; overflow: hidden; }
-    .assign-dialog .dialog-body { padding: 0 24px; flex: 1; overflow-y: auto; }
-    .assign-dialog .dialog-desc { margin-bottom: 16px; flex-shrink: 0; }
-    .assign-dialog .dialog-actions { padding: 12px 24px 4px; flex-shrink: 0; }
-    /* ----- Dialog/Member Pick Modal ----- */
-    .member-pick-list { max-height: 240px; overflow-y: auto; margin-bottom: 16px; }
-    .member-pick-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
-    .member-pick-item:hover { background: hsl(var(--muted)); }
-    .member-pick-item.selected { border-color: hsl(var(--primary)); background: hsl(var(--primary-50)); }
-    .member-pick-item .pick-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; flex-shrink: 0; }
-    .member-pick-item .pick-info { flex: 1; min-width: 0; }
-    .member-pick-item .pick-name { font-weight: 600; font-size: 14px; }
-    .member-pick-item .pick-account { font-size: 12px; color: hsl(var(--muted-foreground)); }
-    .member-pick-item .pick-org { font-size: 11px; color: hsl(var(--muted-foreground)); }
-    .member-pick-item .pick-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
-    .member-pick-item.selected .pick-check { background: hsl(var(--primary)); border-color: hsl(var(--primary)); color: white; }
-    .member-pick-item.selected .pick-check svg { width: 12px; height: 12px; }
-    .search-inline { width: 100%; height: 38px; padding: 0 14px 0 36px; font-size: 13px; font-family: var(--font-sans); border: 1.5px solid hsl(30 15% 88%); border-radius: 10px; outline: none; box-sizing: border-box; margin-bottom: 12px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239B8E85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 12px center no-repeat; }
-    .search-inline:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1); }
-    /* Org tree */
-    .org-tree-wrap { margin-bottom: 0; }
-    .org-tree-label { display: block; font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 6px; }
-    .org-tree-select { position: relative; }
-    .org-tree-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 14px; font-size: 14px; font-family: var(--font-sans); border: 1.5px solid hsl(30 15% 88%); border-radius: 10px; background: #fff; cursor: pointer; box-sizing: border-box; }
-    .org-tree-trigger.placeholder { color: hsl(var(--muted-foreground)); }
-    .org-tree-trigger svg { width: 14px; height: 14px; transition: transform 0.2s; }
-    .org-tree-trigger.open svg { transform: rotate(180deg); }
-    .org-tree-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid hsl(var(--border)); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 100; max-height: 220px; overflow-y: auto; }
-    .org-tree-dropdown.show { display: block; }
-    .org-tree-node { display: flex; align-items: center; gap: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; transition: background 0.1s; }
-    .org-tree-node:hover { background: hsl(var(--muted)); }
-    .org-tree-node.selected { background: hsl(var(--primary-50)); color: hsl(var(--primary)); font-weight: 600; }
-    .org-tree-node .node-indent { width: 18px; flex-shrink: 0; }
-    .org-tree-node .node-check { width: 16px; height: 16px; border-radius: 4px; border: 2px solid hsl(var(--border)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .org-tree-node.selected .node-check { background: hsl(var(--primary)); border-color: hsl(var(--primary)); }
-    .org-tree-node.selected .node-check::after { content: '✓'; font-size: 10px; color: white; font-weight: 700; }
-    .create-new-option { padding: 10px 14px; border-top: 1px solid hsl(var(--border)); cursor: pointer; font-size: 13px; color: hsl(var(--primary)); font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .create-new-option:hover { background: hsl(var(--muted)); }
-    .create-new-option svg { width: 14px; height: 14px; }
-    /* ----- 新邀请成员弹窗：双面板 ----- */
-    .invite-v2-dialog { width: 780px; height: 660px; display: flex; flex-direction: column; overflow: hidden; }
-    .invite-v2-dialog .dialog-body { padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .invite-v2-dialog .dialog-desc { margin-bottom: 16px; flex-shrink: 0; }
-    .invite-v2-panels { display: flex; flex: 1; min-height: 0; border-top: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); }
-    .invite-v2-left { width: 58%; display: flex; flex-direction: column; border-right: 1px solid hsl(var(--border)); overflow: hidden; }
-    .invite-v2-right { width: 42%; display: flex; flex-direction: column; overflow: hidden; }
-    .invite-v2-search { padding: 12px; border-bottom: 1px solid hsl(var(--border)); flex-shrink: 0; }
-    .invite-v2-search-input { width: 100%; height: 36px; padding: 0 12px 0 34px; border: 1.5px solid hsl(var(--border)); border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box; font-family: var(--font-sans); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239B8E85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 10px center no-repeat; }
-    .invite-v2-search-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary)/0.1); }
-    .invite-v2-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
-    .invite-v2-right-title { padding: 12px; font-size: 13px; font-weight: 600; border-bottom: 1px solid hsl(var(--border)); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
-    .invite-v2-right-title .clear-link { font-size: 12px; color: hsl(var(--error)); cursor: pointer; background: none; border: none; font-family: var(--font-sans); font-weight: 400; }
-    .invite-v2-shop-list { flex: 1; overflow-y: auto; padding: 6px 0; }
-    .invite-v2-shop-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; margin: 2px 6px; }
-    .invite-v2-shop-item:hover { background: hsl(var(--muted)); }
-    .invite-v2-shop-item.selected { border-color: hsl(var(--primary)); background: hsl(var(--primary-50)); }
-    .invite-v2-shop-item .s-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .invite-v2-shop-item .s-info { flex: 1; min-width: 0; }
-    .invite-v2-shop-item .s-name { font-weight: 600; font-size: 14px; }
-    .invite-v2-shop-item .s-domain { font-size: 11px; color: hsl(var(--muted-foreground)); }
-    .invite-v2-shop-item .s-check { width: 20px; height: 20px; border-radius: 4px; border: 2px solid hsl(var(--border)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .invite-v2-shop-item.selected .s-check { background: hsl(var(--primary)); border-color: hsl(var(--primary)); }
-    .invite-v2-shop-item.selected .s-check::after { content: '✓'; font-size: 11px; color: white; font-weight: 700; }
-    .invite-v2-shop-empty { text-align: center; padding: 30px; font-size: 13px; color: hsl(var(--muted-foreground)); }
-    .invite-v2-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 0; flex-shrink: 0; }
-    .invite-v2-footer-info { font-size: 13px; color: hsl(var(--muted-foreground)); }
-    /* 邀请弹窗内的组织树节点 */
-    .it-node { display: flex; align-items: center; gap: 6px; padding: 7px 12px 7px 16px; cursor: pointer; font-size: 13px; transition: background 0.1s; user-select: none; }
-    .it-node:hover { background: hsl(var(--muted)); }
-    .it-node .it-expand { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: hsl(var(--muted-foreground)); transition: transform 0.15s; }
-    .it-node .it-expand.open { transform: rotate(90deg); }
-    .it-node .it-cb { width: 18px; height: 18px; border-radius: 4px; border: 2px solid hsl(var(--border)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .it-node.checked > .it-cb { background: hsl(var(--primary)); border-color: hsl(var(--primary)); }
-    .it-node.checked > .it-cb::after { content: '✓'; font-size: 11px; color: white; font-weight: 700; }
-    .it-node .it-icon { width: 16px; height: 16px; flex-shrink: 0; color: hsl(var(--muted-foreground)); }
-    .it-node .it-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .it-node .it-extra { font-size: 11px; color: hsl(var(--muted-foreground)); }
-    .it-node.member .it-icon { color: hsl(var(--primary)); }
-    .it-node.member::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: hsl(var(--primary)); flex-shrink: 0; margin-left: 8px; margin-right: -6px; }
-    .it-children { overflow: hidden; }
-    .it-children > .it-node { padding-left: 38px; }
-    .it-no-result { text-align: center; padding: 30px; font-size: 13px; color: hsl(var(--muted-foreground)); }
   </style>
 </head>
 <body>
   <div class="members-container">
     <div class="page-toolbar">
       <div>
-        <div class="page-title" style="display:flex;align-items:center;gap:8px;">
-          <a href="shop_list.html" style="display:flex;align-items:center;color:hsl(var(--muted-foreground));transition:color 0.15s;" onmouseover="this.style.color='hsl(var(--primary))'" onmouseout="this.style.color='hsl(var(--muted-foreground))'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </a>
+        <div class="page-title">
           成员管理<span class="count-badge" id="memberCount"></span>
         </div>
         <div class="page-subtitle" id="shopContext">店铺成员管理</div>
@@ -175,7 +59,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           添加成员
         </button>
-        <button class="invite-btn" id="inviteBtn" onclick="openInviteModal()">
+        <button class="invite-btn" id="inviteBtn" onclick="openInviteMemberModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           邀请成员
         </button>
@@ -186,7 +70,6 @@
     <div class="bulk-action-bar" id="bulkActionBar">
       <div class="bulk-selected-count">已选 <span class="count" id="batchCount">0</span> 人</div>
       <div class="bulk-actions">
-        <button class="btn btn-primary btn-sm" onclick="openBatchAssignStore()" disabled id="btnBatchAssign">指派店铺</button>
         <button class="btn btn-destructive btn-sm" onclick="batchRemoveMembers()" disabled id="btnBatchRemove">批量移除</button>
       </div>
     </div>
@@ -202,7 +85,6 @@
               <th>账号ID</th>
               <th>手机号</th>
               <th>组织机构</th>
-              <th>所在店铺</th>
               <th style="width:130px">加入时间</th>
               <th style="width:80px">操作</th>
             </tr>
@@ -226,16 +108,14 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="../common/commons.js"></script>
+  <script src="../common/member_dialogs.js"></script>
   <script>
     // ==================== 成员数据管理 ====================
     const MEMBER_COLORS = ['#D4845A','#8B9A7C','#7C8B9A','#B4846C','#9A8B7C','#6C8B84','#C4957A','#8B7C9A','#A47C6C','#7C9A8B'];
-    const ALL_ACCOUNTS_KEY = 'rebecca_all_accounts';
 
     function getMembersKey() { return 'rebecca_members_' + (getCurrentShopId() || 'default'); }
     function loadMembers() { try { var d = localStorage.getItem(getMembersKey()); return d ? JSON.parse(d) : getDefaultMembers(); } catch(e) { return getDefaultMembers(); } }
     function saveMembers(members) { localStorage.setItem(getMembersKey(), JSON.stringify(members)); }
-    function loadAllAccounts() { try { var d = localStorage.getItem(ALL_ACCOUNTS_KEY); return d ? JSON.parse(d) : []; } catch(e) { return []; } }
-    function saveAllAccounts(accounts) { localStorage.setItem(ALL_ACCOUNTS_KEY, JSON.stringify(accounts)); }
 
     function getDefaultMembers() {
       return [{
@@ -265,14 +145,12 @@
 
     function updateBatchBar() {
       var countEl = document.getElementById('batchCount');
-      var assignBtn = document.getElementById('btnBatchAssign');
       var removeBtn = document.getElementById('btnBatchRemove');
       var selectAll = document.getElementById('selectAllCb');
       var members = loadMembers();
       var nonCreator = members.filter(function(m) { return m.type !== 'creator'; });
       var c = selectedMemberIds.length;
       if (countEl) countEl.textContent = c;
-      if (assignBtn) assignBtn.disabled = c === 0;
       if (removeBtn) removeBtn.disabled = c === 0;
       if (selectAll) {
         selectAll.classList.toggle('checked', c > 0 && c >= nonCreator.length && nonCreator.length > 0);
@@ -345,8 +223,6 @@
       }
       if (empty) empty.style.display = 'none';
 
-      closeAllStorePopups();
-
       tbody.innerHTML = pageMembers.map(function(m, i) {
         var color = MEMBER_COLORS[(start + i) % MEMBER_COLORS.length];
         var isCreatorType = m.type === 'creator';
@@ -374,30 +250,12 @@
           orgHtml = '<span style="color:hsl(var(--muted-foreground))">-</span>';
         }
 
-        // 所在店铺
-        var stores = (m.stores && m.stores.length > 0) ? m.stores : [];
-        var storeCount = stores.length;
-        var storeHtml;
-        if (storeCount === 0) {
-          storeHtml = '<span style="font-size:13px;color:hsl(var(--muted-foreground))">-</span>';
-        } else {
-          var popupId = 'storePopup_' + m.id;
-          storeHtml = '<div class="store-count-cell" onmouseenter="showStorePopup(\'' + popupId + '\')" onmouseleave="hideStorePopup(\'' + popupId + '\')">' +
-            '<span class="store-count-badge">' + storeCount + '<svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>' +
-            '<div class="store-popup" id="' + popupId + '">' +
-              stores.map(function(s) {
-                return '<div class="store-popup-item"><span class="sp-dot" style="background:' + (s.color || '#8B9A7C') + '"></span><span class="sp-name">' + s.name + '</span><span class="sp-domain">' + (s.domain || '') + '</span></div>';
-              }).join('') +
-            '</div></div>';
-        }
-
         return '<tr>' +
           '<td>' + checkboxHtml + '</td>' +
           '<td><div class="member-avatar-cell"><div class="member-avatar" style="background:' + color + '">' + m.name.charAt(0) + '</div><div><div class="member-name">' + m.name + '</div></div></div></td>' +
           '<td><span style="font-family:monospace;font-size:13px;">' + (m.accountId || '-') + '</span></td>' +
           '<td>' + (m.phone || '-') + '</td>' +
           '<td><div class="org-cell">' + orgHtml + '</div></td>' +
-          '<td>' + storeHtml + '</td>' +
           '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + m.joinedAt + '</span></td>' +
           '<td>' + actionHtml + '</td>' +
           '</tr>';
@@ -439,547 +297,77 @@
       renderMembers();
     };
 
-    // ==================== 店铺弹出层 ====================/
-    function showStorePopup(popupId) {
-      var el = document.getElementById(popupId);
-      if (el) el.classList.add('show');
-    }
-    function hideStorePopup(popupId) {
-      var el = document.getElementById(popupId);
-      if (el) { setTimeout(function() { if (!el.parentElement.matches(':hover')) el.classList.remove('show'); }, 100); }
-    }
-    function closeAllStorePopups() {
-      var popups = document.querySelectorAll('.store-popup.show');
-      popups.forEach(function(p) { p.classList.remove('show'); });
-    }
-
-    // ==================== 邀请成员弹窗（新：选人 + 选店铺） ====================/
-    // 可邀请成员池（全局）
-    var INVITABLE_MEMBERS = [
-      { id: 'im001', name: '张三', phone: '13800001001', accountId: 'AC20260700002', orgDept: '总部/数码事业部', orgTeam: '数码组', orgSubTeam: '' },
-      { id: 'im002', name: '李四', phone: '13800001002', accountId: 'AC20260700003', orgDept: '总部/数码事业部', orgTeam: '数码组', orgSubTeam: '渠道小组' },
-      { id: 'im003', name: '王五', phone: '13800001003', accountId: 'AC20260700004', orgDept: '总部/数码事业部', orgTeam: '手机组', orgSubTeam: '' },
-      { id: 'im004', name: '赵六', phone: '13800001004', accountId: 'AC20260700005', orgDept: '总部/数码事业部', orgTeam: '手机组', orgSubTeam: '旗舰小组' },
-      { id: 'im005', name: '钱七', phone: '13800001005', accountId: 'AC20260700006', orgDept: '总部/数码事业部', orgTeam: '配件组', orgSubTeam: '' },
-      { id: 'im006', name: '孙八', phone: '13800001006', accountId: 'AC20260700007', orgDept: '总部/服饰事业部', orgTeam: '运动鞋组', orgSubTeam: '' },
-      { id: 'im007', name: '周九', phone: '13800001007', accountId: 'AC20260700008', orgDept: '总部/服饰事业部', orgTeam: '服装组', orgSubTeam: '' },
-      { id: 'im008', name: '吴十', phone: '13800001008', accountId: 'AC20260700009', orgDept: '总部/服饰事业部', orgTeam: '服装组', orgSubTeam: '女装小组' },
-      { id: 'im009', name: '郑十一', phone: '13800001009', accountId: 'AC20260700010', orgDept: '总部/美妆事业部', orgTeam: '护肤组', orgSubTeam: '' },
-      { id: 'im010', name: '冯十二', phone: '13800001010', accountId: 'AC20260700011', orgDept: '总部/美妆事业部', orgTeam: '彩妆组', orgSubTeam: '' },
-      { id: 'im011', name: '陈十三', phone: '13800001011', accountId: 'AC20260700012', orgDept: '总部/家居事业部', orgTeam: '家电组', orgSubTeam: '' },
-      { id: 'im012', name: '褚十四', phone: '13800001012', accountId: 'AC20260700013', orgDept: '总部/家居事业部', orgTeam: '家纺组', orgSubTeam: '' },
-      { id: 'im013', name: '卫十五', phone: '13800001013', accountId: 'AC20260700014', orgDept: '总部/食品事业部', orgTeam: '进口食品组', orgSubTeam: '' },
-      { id: 'im014', name: '蒋十六', phone: '13800001014', accountId: 'AC20260700015', orgDept: '总部/数码事业部', orgTeam: '数码组', orgSubTeam: '渠道小组' },
-    ];
-
-    function getInviteOrgTree() {
-      return [
-        { id: 'iorg_zongbu', label: '总部', path: '总部', children: [
-          { id: 'iorg_dzsyb', label: '数码事业部', path: '总部/数码事业部', children: [
-            { id: 'iorg_dz', label: '数码组', path: '总部/数码事业部/数码组', children: [
-              { id: 'iorg_dz_qd', label: '渠道小组', path: '总部/数码事业部/数码组/渠道小组' }
-            ]},
-            { id: 'iorg_sj', label: '手机组', path: '总部/数码事业部/手机组', children: [
-              { id: 'iorg_sj_qj', label: '旗舰小组', path: '总部/数码事业部/手机组/旗舰小组' }
-            ]},
-            { id: 'iorg_pj', label: '配件组', path: '总部/数码事业部/配件组' },
-          ]},
-          { id: 'iorg_fssyb', label: '服饰事业部', path: '总部/服饰事业部', children: [
-            { id: 'iorg_ydx', label: '运动鞋组', path: '总部/服饰事业部/运动鞋组' },
-            { id: 'iorg_fz', label: '服装组', path: '总部/服饰事业部/服装组', children: [
-              { id: 'iorg_fz_nz', label: '女装小组', path: '总部/服饰事业部/服装组/女装小组' }
-            ]},
-          ]},
-          { id: 'iorg_mzsyd', label: '美妆事业部', path: '总部/美妆事业部', children: [
-            { id: 'iorg_hf', label: '护肤组', path: '总部/美妆事业部/护肤组' },
-            { id: 'iorg_cz', label: '彩妆组', path: '总部/美妆事业部/彩妆组' },
-          ]},
-          { id: 'iorg_jjsyd', label: '家居事业部', path: '总部/家居事业部', children: [
-            { id: 'iorg_jd', label: '家电组', path: '总部/家居事业部/家电组' },
-            { id: 'iorg_jf', label: '家纺组', path: '总部/家居事业部/家纺组' },
-          ]},
-          { id: 'iorg_spsyd', label: '食品事业部', path: '总部/食品事业部', children: [
-            { id: 'iorg_jksp', label: '进口食品组', path: '总部/食品事业部/进口食品组' },
-          ]},
-        ]},
-      ];
-    }
-    function getInviteMemsByPath(orgPath) {
-      return INVITABLE_MEMBERS.filter(function(m) {
-        var full = m.orgDept;
-        if (m.orgTeam) full += '/' + m.orgTeam;
-        if (m.orgSubTeam) full += '/' + m.orgSubTeam;
-        return full === orgPath;
-      });
-    }
-    function getInviteMemsByChildren(node) {
-      var paths = [node.path];
-      function collect(n) { if (n.children) { n.children.forEach(function(c) { paths.push(c.path); collect(c); }); } }
-      collect(node);
-      return INVITABLE_MEMBERS.filter(function(m) {
-        var full = m.orgDept;
-        if (m.orgTeam) full += '/' + m.orgTeam;
-        if (m.orgSubTeam) full += '/' + m.orgSubTeam;
-        return paths.indexOf(full) !== -1;
-      });
-    }
-    function loadShops() {
-      try { var d = localStorage.getItem('rebecca_shops'); return d ? JSON.parse(d) : getDefaultShops(); } catch(e) { return getDefaultShops(); }
-    }
-    function getDefaultShops() {
-      return [
-        { id: 'shop_001', name: 'QVR品牌站', domain: 'qvr.rebeccashop.com', color: '#D4845A', status: 'active' },
-        { id: 'shop_002', name: 'Fashion Plus', domain: 'fashion.rebeccashop.com', color: '#8B9A7C', status: 'active' },
-        { id: 'shop_003', name: 'Tokyo Select', domain: 'tokyo.rebeccashop.com', color: '#7C8B9A', status: 'active' },
-      ];
-    }
-
-    var inviteState = { selectedMemberIds: [], selectedShopIds: [], expandedOrgs: {}, searchQuery: '' };
-
-    function openInviteModal() {
-      inviteState = { selectedMemberIds: [], selectedShopIds: [], expandedOrgs: {}, searchQuery: '' };
-      var overlay = document.createElement('div');
-      overlay.className = 'dialog-overlay';
-      overlay.id = 'inviteModalOverlay';
-      overlay.innerHTML = '<div class="dialog invite-v2-dialog">' +
-        '<div class="dialog-header"><div class="dialog-title">邀请成员</div><button class="dialog-close" onclick="closeInviteModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
-        '<div class="dialog-desc">选择成员并指定要加入的店铺，确认后成员将获得对应店铺的访问权限</div>' +
-        '<div class="dialog-body">' +
-          '<div class="invite-v2-panels">' +
-            '<div class="invite-v2-left">' +
-              '<div class="invite-v2-search"><input class="invite-v2-search-input" id="inviteSearchInput" placeholder="搜索姓名或手机号..." /></div>' +
-              '<div class="invite-v2-tree" id="inviteTree"></div>' +
-            '</div>' +
-            '<div class="invite-v2-right">' +
-              '<div class="invite-v2-right-title"><span>选择店铺</span><button class="clear-link" onclick="clearInviteShops()">清空</button></div>' +
-              '<div class="invite-v2-shop-list" id="inviteShopList"></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="invite-v2-footer">' +
-          '<span class="invite-v2-footer-info">已选择 <strong id="inviteSelectedCount">0</strong> 名成员，<strong id="inviteShopCount">0</strong> 家店铺</span>' +
-          '<div class="dialog-actions" style="margin:0;">' +
-            '<button class="btn btn-secondary" onclick="closeInviteModal()">取消</button>' +
-            '<button class="btn btn-primary" id="inviteConfirmBtn" onclick="doInviteMember()" disabled>确认邀请</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeInviteModal(); });
-      document.body.appendChild(overlay);
-      renderInviteTree();
-      renderInviteShops();
-      var si = document.getElementById('inviteSearchInput');
-      if (si) { si.addEventListener('input', function() { inviteState.searchQuery = this.value; renderInviteTree(); }); }
-      overlay.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInviteModal(); });
-    }
-
-    function closeInviteModal() {
-      var ov = document.getElementById('inviteModalOverlay');
-      if (ov) ov.remove();
-    }
-
-    function renderInviteTree() {
-      var ct = document.getElementById('inviteTree');
-      if (!ct) return;
-      var q = inviteState.searchQuery.trim().toLowerCase();
-
-      if (q) {
-        var matched = INVITABLE_MEMBERS.filter(function(m) { return m.name.toLowerCase().indexOf(q) !== -1 || m.phone.indexOf(q) !== -1 || m.accountId.toLowerCase().indexOf(q) !== -1; });
-        ct.innerHTML = matched.length === 0 ? '<div class="it-no-result">未找到匹配的成员</div>' : matched.map(renderInviteMemberNode).join('');
-        return;
-      }
-
-      ct.innerHTML = getInviteOrgTree().map(renderInviteOrgNode).join('');
-    }
-
-    function renderInviteOrgNode(node) {
-      var isExp = inviteState.expandedOrgs[node.id] === true;
-      var cm = getInviteMemsByChildren(node);
-      var total = cm.length;
-      var availIds = cm.map(function(m) { return m.id; });
-      var allSel = availIds.length > 0 && availIds.every(function(id) { return inviteState.selectedMemberIds.indexOf(id) !== -1; });
-      var partSel = availIds.length > 0 && !allSel && availIds.some(function(id) { return inviteState.selectedMemberIds.indexOf(id) !== -1; });
-
-      var h = '<div class="it-node' + (allSel || partSel ? ' checked' : '') + '" onclick="toggleInviteOrg(event,\'' + node.id + '\')">';
-      if (node.children) { h += '<span class="it-expand' + (isExp ? ' open' : '') + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>'; }
-      else { h += '<span class="it-expand"></span>'; }
-      h += '<span class="it-cb"></span><svg class="it-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
-      h += '<span class="it-label">' + node.label + '</span><span class="it-extra">' + total + '</span></div>';
-
-      if (node.children && isExp) {
-        h += '<div class="it-children">';
-        node.children.forEach(function(cn) {
-          h += renderInviteOrgNode(cn);
-          getInviteMemsByPath(cn.path).forEach(function(m) { h += renderInviteMemberNode(m); });
-        });
-        h += '</div>';
-      }
-      return h;
-    }
-
-    function renderInviteMemberNode(m) {
-      var sel = inviteState.selectedMemberIds.indexOf(m.id) !== -1;
-      var orgShow = m.orgTeam || '';
-      if (m.orgSubTeam) orgShow += ' > ' + m.orgSubTeam;
-      return '<div class="it-node member' + (sel ? ' checked' : '') + '" onclick="toggleInviteMember(event,\'' + m.id + '\')">' +
-        '<span class="it-expand"></span><span class="it-cb"></span>' +
-        '<svg class="it-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
-        '<span class="it-label">' + m.name + ' <span style="font-size:11px;color:#9B8E85">' + m.phone + '</span></span>' +
-        '<span class="it-extra" style="font-size:11px;color:#9B8E85">' + orgShow + '</span></div>';
-    }
-
-    function toggleInviteOrg(event, nodeId) {
-      event.stopPropagation();
-      if (event.target.closest('.it-expand')) {
-        inviteState.expandedOrgs[nodeId] = !inviteState.expandedOrgs[nodeId];
-        renderInviteTree();
-        return;
-      }
-      // 批量选择
-      var tree = getInviteOrgTree();
-      function find(nodes, id) { for (var i = 0; i < nodes.length; i++) { if (nodes[i].id === id) return nodes[i]; if (nodes[i].children) { var f = find(nodes[i].children, id); if (f) return f; } } return null; }
-      var node = find(tree, nodeId);
-      if (!node) return;
-      var allMems = node.children ? getInviteMemsByChildren(node) : getInviteMemsByPath(node.path);
-      var allIds = allMems.map(function(m) { return m.id; });
-      var allSel = allIds.length > 0 && allIds.every(function(id) { return inviteState.selectedMemberIds.indexOf(id) !== -1; });
-      if (allSel) { inviteState.selectedMemberIds = inviteState.selectedMemberIds.filter(function(id) { return allIds.indexOf(id) === -1; }); }
-      else { allIds.forEach(function(id) { if (inviteState.selectedMemberIds.indexOf(id) === -1) inviteState.selectedMemberIds.push(id); }); }
-      updateInviteFooter();
-      renderInviteTree();
-    }
-
-    function toggleInviteMember(event, memberId) {
-      event.stopPropagation();
-      var idx = inviteState.selectedMemberIds.indexOf(memberId);
-      if (idx !== -1) { inviteState.selectedMemberIds.splice(idx, 1); } else { inviteState.selectedMemberIds.push(memberId); }
-      updateInviteFooter();
-      renderInviteTree();
-    }
-
-    function renderInviteShops() {
-      var ct = document.getElementById('inviteShopList');
-      if (!ct) return;
-      var shops = loadShops();
-      if (shops.length === 0) { ct.innerHTML = '<div class="invite-v2-shop-empty">暂无可选店铺</div>'; return; }
-      ct.innerHTML = shops.map(function(s) {
-        var sel = inviteState.selectedShopIds.indexOf(s.id) !== -1;
-        return '<div class="invite-v2-shop-item' + (sel ? ' selected' : '') + '" onclick="toggleInviteShop(\'' + s.id + '\')">' +
-          '<span class="s-dot" style="background:' + (s.color || '#8B9A7C') + '"></span>' +
-          '<div class="s-info"><div class="s-name">' + s.name + '</div><div class="s-domain">' + (s.domain || '') + '</div></div>' +
-          '<span class="s-check"></span></div>';
-      }).join('');
-      updateInviteFooter();
-    }
-
-    function toggleInviteShop(shopId) {
-      var idx = inviteState.selectedShopIds.indexOf(shopId);
-      if (idx !== -1) { inviteState.selectedShopIds.splice(idx, 1); } else { inviteState.selectedShopIds.push(shopId); }
-      renderInviteShops();
-    }
-
-    function clearInviteShops() {
-      inviteState.selectedShopIds = [];
-      renderInviteShops();
-    }
-
-    function updateInviteFooter() {
-      var mc = document.getElementById('inviteSelectedCount');
-      var sc = document.getElementById('inviteShopCount');
-      var btn = document.getElementById('inviteConfirmBtn');
-      if (mc) mc.textContent = inviteState.selectedMemberIds.length;
-      if (sc) sc.textContent = inviteState.selectedShopIds.length;
-      if (btn) btn.disabled = inviteState.selectedMemberIds.length === 0 || inviteState.selectedShopIds.length === 0;
-    }
-
-    function doInviteMember() {
-      if (inviteState.selectedMemberIds.length === 0 || inviteState.selectedShopIds.length === 0) return;
+    // ==================== 页面回调钩子（设置保存逻辑） ====================
+    // 这些钩子由 member_dialogs.js 在确认添加/邀请时调用
+    window.MDHooks.onAddMember = function(formData) {
+      // 添加到当前店铺成员列表
       var now = new Date();
-      var joinedAt = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-
-      // 为每个选中店铺添加每个选中成员
-      inviteState.selectedShopIds.forEach(function(shopId) {
-        var key = 'rebecca_members_' + shopId;
-        var mems = []; try { var d = localStorage.getItem(key); if (d) mems = JSON.parse(d); } catch(e) {}
-        inviteState.selectedMemberIds.forEach(function(mid) {
-          var m = INVITABLE_MEMBERS.find(function(x) { return x.id === mid; });
-          if (!m) return;
-          if (mems.some(function(ex) { return ex.accountId === m.accountId; })) return;
-          var stores = loadShops().filter(function(s) { return inviteState.selectedShopIds.indexOf(s.id) !== -1; }).map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; });
-          mems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: stores, type: 'invited', joinedAt: joinedAt });
-        });
-        localStorage.setItem(key, JSON.stringify(mems));
-      });
-
-      // 同步到全局账号
-      var allAccounts = loadAllAccounts();
-      inviteState.selectedMemberIds.forEach(function(mid) {
-        var m = INVITABLE_MEMBERS.find(function(x) { return x.id === mid; });
-        if (!m) return;
-        if (!allAccounts.some(function(a) { return a.accountId === m.accountId; })) {
-          allAccounts.push({ accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, createdAt: new Date().toISOString() });
-        }
-      });
-      saveAllAccounts(allAccounts);
-
-      var shopNames = [];
-      var shops = loadShops();
-      inviteState.selectedShopIds.forEach(function(sid) { var s = shops.find(function(x) { return x.id === sid; }); if (s) shopNames.push(s.name); });
-      var memNames = inviteState.selectedMemberIds.map(function(mid) { var m = INVITABLE_MEMBERS.find(function(x) { return x.id === mid; }); return m ? m.name : ''; }).filter(Boolean);
-
-      closeInviteModal();
-      currentPage = 1;
-      renderMembers();
-      showToast('success', '已邀请 ' + memNames.length + ' 名成员加入 ' + shopNames.length + ' 家店铺');
-    }
-
-    function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-    // ==================== 添加成员 ====================/
-    function generateAccountId() {
-      var now = new Date();
-      var prefix = 'AC' + now.getFullYear() + pad(now.getMonth()+1);
-      var members = loadMembers();
-      var maxNum = 0;
-      members.forEach(function(m) {
-        if (m.accountId && m.accountId.indexOf(prefix) === 0) {
-          var num = parseInt(m.accountId.substring(prefix.length), 10);
-          if (num > maxNum) maxNum = num;
-        }
-      });
-      // 也检查全局账号
-      var allAccounts = loadAllAccounts();
-      allAccounts.forEach(function(a) {
-        if (a.accountId && a.accountId.indexOf(prefix) === 0) {
-          var num = parseInt(a.accountId.substring(prefix.length), 10);
-          if (num > maxNum) maxNum = num;
-        }
-      });
-      var nextNum = maxNum + 1;
-      if (nextNum < 1) nextNum = 1;
-      return prefix + padNum(nextNum, 5);
-    }
-    function padNum(n, len) { var s = '' + n; while (s.length < len) s = '0' + s; return s; }
-
-    function openAddMemberModal() {
-      var shops = loadShops();
-
-      var overlay = document.createElement('div');
-      overlay.className = 'dialog-overlay';
-      overlay.id = 'addMemberModalOverlay';
-      overlay.innerHTML =
-        '<div class="dialog add-member-dialog">' +
-          '<div class="dialog-header"><div class="dialog-title">添加成员</div><button class="dialog-close" onclick="closeAddMemberModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
-          '<div class="dialog-desc">创建新成员账号，并指定所在店铺</div>' +
-          '<div class="dialog-body">' +
-            '<div class="form-group">' +
-              '<label class="form-label">姓名</label>' +
-              '<input class="form-input" id="addMemberName" placeholder="请输入成员姓名" />' +
-              '<div class="form-error" id="addNameError">请输入姓名</div>' +
-            '</div>' +
-            '<div class="form-group">' +
-              '<label class="form-label">手机号</label>' +
-              '<input class="form-input" id="addMemberPhone" placeholder="请输入手机号" />' +
-              '<div class="form-error" id="addPhoneError">请输入手机号</div>' +
-            '</div>' +
-            '<div class="form-group">' +
-              '<label class="form-label">组织机构</label>' +
-              '<select class="form-input" id="addMemberOrgDept" onchange="onAddDeptChange()">' +
-                '<option value="">请选择分公司/部门</option>' +
-                '<option value="总部/数码事业部">总部/数码事业部</option>' +
-                '<option value="总部/服饰事业部">总部/服饰事业部</option>' +
-                '<option value="总部/美妆事业部">总部/美妆事业部</option>' +
-                '<option value="总部/家居事业部">总部/家居事业部</option>' +
-                '<option value="总部/食品事业部">总部/食品事业部</option>' +
-              '</select>' +
-              '<div class="form-error" id="addOrgError">请选择组织机构</div>' +
-            '</div>' +
-            '<div class="form-group" id="addMemberTeamGroup" style="display:none">' +
-              '<label class="form-label">小组</label>' +
-              '<select class="form-input" id="addMemberOrgTeam" onchange="onAddTeamChange()">' +
-                '<option value="">请选择小组</option>' +
-              '</select>' +
-            '</div>' +
-            '<div class="form-group" id="addMemberSubTeamGroup" style="display:none">' +
-              '<label class="form-label">子小组（可选）</label>' +
-              '<select class="form-input" id="addMemberOrgSubTeam">' +
-                '<option value="">无</option>' +
-              '</select>' +
-            '</div>' +
-            '<div class="form-group">' +
-              '<label class="form-label">所在店铺</label>' +
-              '<div class="store-check-grid" id="addStoreCheckGrid">' +
-                shops.map(function(s) {
-                  return '<div class="store-check-item" data-shop-id="' + s.id + '" onclick="toggleAddStoreCheck(this)">' +
-                    '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span>' +
-                    '<span>' + s.name + '</span></div>';
-                }).join('') +
-              '</div>' +
-              '<div class="form-error" id="addStoreError">请至少选择一家店铺</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="dialog-actions">' +
-            '<button class="btn btn-secondary" onclick="closeAddMemberModal()">取消</button>' +
-            '<button class="btn btn-primary" onclick="doAddMember()">确认添加</button>' +
-          '</div>' +
-        '</div>';
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeAddMemberModal(); });
-      document.body.appendChild(overlay);
-      overlay.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAddMemberModal(); });
-    }
-
-    function closeAddMemberModal() {
-      var ov = document.getElementById('addMemberModalOverlay');
-      if (ov) ov.remove();
-      // 清理全局函数引用
-      window._addDeptTeams = null;
-    }
-
-    // 组织机构级联数据
-    var ORG_TEAMS_MAP = {
-      '总部/数码事业部': [
-        { name: '数码组', subTeams: ['渠道小组'] },
-        { name: '手机组', subTeams: ['旗舰小组'] },
-        { name: '配件组', subTeams: [] }
-      ],
-      '总部/服饰事业部': [
-        { name: '运动鞋组', subTeams: [] },
-        { name: '服装组', subTeams: ['女装小组'] }
-      ],
-      '总部/美妆事业部': [
-        { name: '护肤组', subTeams: [] },
-        { name: '彩妆组', subTeams: [] }
-      ],
-      '总部/家居事业部': [
-        { name: '家电组', subTeams: [] },
-        { name: '家纺组', subTeams: [] }
-      ],
-      '总部/食品事业部': [
-        { name: '进口食品组', subTeams: [] }
-      ]
-    };
-
-    window.onAddDeptChange = function() {
-      var deptVal = document.getElementById('addMemberOrgDept').value;
-      var teamGroup = document.getElementById('addMemberTeamGroup');
-      var teamSelect = document.getElementById('addMemberOrgTeam');
-      var subTeamGroup = document.getElementById('addMemberSubTeamGroup');
-      var subTeamSelect = document.getElementById('addMemberOrgSubTeam');
-
-      teamSelect.innerHTML = '<option value="">请选择小组</option>';
-      subTeamSelect.innerHTML = '<option value="">无</option>';
-      teamGroup.style.display = 'none';
-      subTeamGroup.style.display = 'none';
-
-      if (deptVal && ORG_TEAMS_MAP[deptVal]) {
-        var teams = ORG_TEAMS_MAP[deptVal];
-        teams.forEach(function(t) {
-          teamSelect.innerHTML += '<option value="' + t.name + '">' + t.name + '</option>';
-        });
-        teamGroup.style.display = 'block';
-        window._addDeptTeams = teams;
-      }
-    };
-
-    window.onAddTeamChange = function() {
-      var deptVal = document.getElementById('addMemberOrgDept').value;
-      var teamVal = document.getElementById('addMemberOrgTeam').value;
-      var subTeamGroup = document.getElementById('addMemberSubTeamGroup');
-      var subTeamSelect = document.getElementById('addMemberOrgSubTeam');
-
-      subTeamSelect.innerHTML = '<option value="">无</option>';
-      subTeamGroup.style.display = 'none';
-
-      if (deptVal && teamVal && ORG_TEAMS_MAP[deptVal]) {
-        var teams = ORG_TEAMS_MAP[deptVal];
-        var team = teams.find(function(t) { return t.name === teamVal; });
-        if (team && team.subTeams.length > 0) {
-          team.subTeams.forEach(function(st) {
-            subTeamSelect.innerHTML += '<option value="' + st + '">' + st + '</option>';
-          });
-          subTeamGroup.style.display = 'block';
-        }
-      }
-    };
-
-    window.toggleAddStoreCheck = function(el) {
-      el.classList.toggle('selected');
-    };
-
-    function doAddMember() {
-      var name = document.getElementById('addMemberName').value.trim();
-      var phone = document.getElementById('addMemberPhone').value.trim();
-      var accountId = generateAccountId();
-      var orgDept = document.getElementById('addMemberOrgDept').value;
-      var orgTeam = document.getElementById('addMemberOrgTeam').value;
-      var orgSubTeam = document.getElementById('addMemberOrgSubTeam').value;
-
-      // 验证
-      var valid = true;
-      if (!name) { document.getElementById('addNameError').style.display = 'block'; valid = false; }
-      else { document.getElementById('addNameError').style.display = 'none'; }
-      if (!phone) { document.getElementById('addPhoneError').style.display = 'block'; valid = false; }
-      else { document.getElementById('addPhoneError').style.display = 'none'; }
-      if (!orgDept || !orgTeam) { document.getElementById('addOrgError').style.display = 'block'; valid = false; }
-      else { document.getElementById('addOrgError').style.display = 'none'; }
-
-      var selectedStores = document.querySelectorAll('#addStoreCheckGrid .store-check-item.selected');
-      if (selectedStores.length === 0) { document.getElementById('addStoreError').style.display = 'block'; valid = false; }
-      else { document.getElementById('addStoreError').style.display = 'none'; }
-
-      if (!valid) return;
-
-      var stores = [];
-      var allShops = loadShops();
-      selectedStores.forEach(function(el) {
-        var sid = el.getAttribute('data-shop-id');
-        var shop = allShops.find(function(s) { return s.id === sid; });
-        if (shop) stores.push({ id: shop.id, name: shop.name, domain: shop.domain, color: shop.color });
-      });
-
-      var now = new Date();
-      var joinedAt = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-
+      var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
       var newMember = {
         id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
-        accountId: accountId,
-        name: name,
-        phone: phone,
-        orgDept: orgDept,
-        orgTeam: orgTeam,
-        orgSubTeam: orgSubTeam || '',
-        stores: stores,
+        accountId: formData.accountId,
+        name: formData.name,
+        phone: formData.phone,
+        orgDept: formData.orgDept,
+        orgTeam: formData.orgTeam,
+        orgSubTeam: formData.orgSubTeam || '',
+        stores: formData.stores,
         type: 'invited',
         joinedAt: joinedAt
       };
-
-      // 添加到当前店铺成员列表
       var members = loadMembers();
       members.push(newMember);
       saveMembers(members);
 
       // 同步到全局账号
-      var allAccounts = loadAllAccounts();
-      if (!allAccounts.some(function(a) { return a.accountId === accountId; })) {
-        allAccounts.push({ accountId: accountId, name: name, phone: phone, orgDept: orgDept, orgTeam: orgTeam, orgSubTeam: orgSubTeam || '', createdAt: new Date().toISOString() });
+      var allAccounts = mdLoadAllAccounts();
+      if (!allAccounts.some(function(a) { return a.accountId === formData.accountId; })) {
+        allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', createdAt: new Date().toISOString() });
       }
-      saveAllAccounts(allAccounts);
+      mdSaveAllAccounts(allAccounts);
 
       // 为每个选中店铺也添加成员
-      stores.forEach(function(store) {
+      formData.stores.forEach(function(store) {
         var key = 'rebecca_members_' + store.id;
         var storeMems = []; try { var d = localStorage.getItem(key); if (d) storeMems = JSON.parse(d); } catch(e) {}
-        if (!storeMems.some(function(ex) { return ex.accountId === accountId; })) {
-          storeMems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: accountId, name: name, phone: phone, orgDept: orgDept, orgTeam: orgTeam, orgSubTeam: orgSubTeam || '', stores: stores, type: 'invited', joinedAt: joinedAt });
+        if (!storeMems.some(function(ex) { return ex.accountId === formData.accountId; })) {
+          storeMems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', stores: formData.stores, type: 'invited', joinedAt: joinedAt });
           localStorage.setItem(key, JSON.stringify(storeMems));
         }
       });
 
-      closeAddMemberModal();
       currentPage = 1;
       renderMembers();
-      showToast('success', '已添加成员「' + name + '」');
-    }
+      showToast('success', '已添加成员「' + formData.name + '」');
+    };
+
+    window.MDHooks.onInviteMembers = function(data) {
+      var now = new Date();
+      var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
+
+      data.shopIds.forEach(function(shopId) {
+        var key = 'rebecca_members_' + shopId;
+        var mems = []; try { var d = localStorage.getItem(key); if (d) mems = JSON.parse(d); } catch(e) {}
+        data.selectedMembers.forEach(function(m) {
+          if (mems.some(function(ex) { return ex.accountId === m.accountId; })) return;
+          mems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: data.selectedShops.map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; }), type: 'invited', joinedAt: joinedAt });
+        });
+        localStorage.setItem(key, JSON.stringify(mems));
+      });
+
+      // 同步到全局账号
+      var allAccounts = mdLoadAllAccounts();
+      data.selectedMembers.forEach(function(m) {
+        if (!allAccounts.some(function(a) { return a.accountId === m.accountId; })) {
+          allAccounts.push({ accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, createdAt: new Date().toISOString() });
+        }
+      });
+      mdSaveAllAccounts(allAccounts);
+
+      currentPage = 1;
+      renderMembers();
+      showToast('success', '已邀请 ' + data.selectedMembers.length + ' 名成员加入 ' + data.selectedShops.length + ' 家店铺');
+    };
 
     // ==================== 移除成员 ====================/
     function confirmRemoveMember(memberId, memberName) {
@@ -1051,94 +439,6 @@
         renderMembers();
         showToast('success', '已移除 ' + removed.length + ' 名成员');
       });
-    }
-
-    // ==================== 批量指派店铺 ====================/
-    function openBatchAssignStore() {
-      if (selectedMemberIds.length === 0) return;
-      var shops = loadShops();
-
-      var overlay = document.createElement('div');
-      overlay.className = 'dialog-overlay';
-      overlay.id = 'batchAssignOverlay';
-      overlay.innerHTML =
-        '<div class="dialog assign-dialog">' +
-          '<div class="dialog-header"><div class="dialog-title">指派店铺</div><button class="dialog-close" onclick="closeBatchAssign()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
-          '<div class="dialog-desc">为选中的 <strong>' + selectedMemberIds.length + '</strong> 名成员指派店铺</div>' +
-          '<div class="dialog-body">' +
-            '<label class="form-label">选择店铺（可多选）</label>' +
-            '<div class="store-check-grid" id="assignStoreCheckGrid">' +
-              shops.map(function(s) {
-                return '<div class="store-check-item" data-shop-id="' + s.id + '" onclick="window._toggleAssignStore(this)">' +
-                  '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span>' +
-                  '<span>' + s.name + '</span></div>';
-              }).join('') +
-            '</div>' +
-            '<div class="form-error" id="assignStoreError">请至少选择一家店铺</div>' +
-          '</div>' +
-          '<div class="dialog-actions">' +
-            '<button class="btn btn-secondary" onclick="closeBatchAssign()">取消</button>' +
-            '<button class="btn btn-primary" onclick="doBatchAssign()">确认指派</button>' +
-          '</div>' +
-        '</div>';
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeBatchAssign(); });
-      document.body.appendChild(overlay);
-
-      window._toggleAssignStore = function(el) { el.classList.toggle('selected'); };
-    }
-
-    function closeBatchAssign() {
-      var ov = document.getElementById('batchAssignOverlay');
-      if (ov) ov.remove();
-      window._toggleAssignStore = null;
-    }
-
-    function doBatchAssign() {
-      var selectedEls = document.querySelectorAll('#assignStoreCheckGrid .store-check-item.selected');
-      if (selectedEls.length === 0) {
-        document.getElementById('assignStoreError').style.display = 'block';
-        return;
-      }
-      var allShops = loadShops();
-      var assignedStores = [];
-      selectedEls.forEach(function(el) {
-        var sid = el.getAttribute('data-shop-id');
-        var shop = allShops.find(function(s) { return s.id === sid; });
-        if (shop) assignedStores.push({ id: shop.id, name: shop.name, domain: shop.domain, color: shop.color });
-      });
-
-      var members = loadMembers();
-      members.forEach(function(m) {
-        if (selectedMemberIds.indexOf(m.id) === -1) return;
-        if (!m.stores) m.stores = [];
-        assignedStores.forEach(function(as) {
-          if (!m.stores.some(function(s) { return s.id === as.id; })) {
-            m.stores.push(as);
-          }
-        });
-        // 同步到每个店铺的成员列表
-        assignedStores.forEach(function(as) {
-          var key = 'rebecca_members_' + as.id;
-          var storeMems = []; try { var d = localStorage.getItem(key); if (d) storeMems = JSON.parse(d); } catch(e) {}
-          if (!storeMems.some(function(ex) { return ex.accountId === m.accountId; })) {
-            storeMems.push({
-              id: m.id, accountId: m.accountId, name: m.name, phone: m.phone,
-              orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam || '',
-              stores: m.stores, type: m.type, joinedAt: m.joinedAt
-            });
-            localStorage.setItem(key, JSON.stringify(storeMems));
-          }
-        });
-      });
-      saveMembers(members);
-
-      var storeNames = assignedStores.map(function(s) { return s.name; }).join('、');
-      var assignedCount = selectedMemberIds.length;
-      closeBatchAssign();
-      selectedMemberIds = [];
-      currentPage = 1;
-      renderMembers();
-      showToast('success', '已为 ' + assignedCount + ' 名成员指派店铺：' + storeNames);
     }
 
     // ==================== 初始化 ====================/

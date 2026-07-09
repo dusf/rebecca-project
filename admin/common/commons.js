@@ -90,9 +90,9 @@
         if (saved) return JSON.parse(saved);
       } catch (e) { /* ignore */ }
       return [
-        { id: 'shop_001', name: 'QVR品牌站', slug: 'qvr', description: '专注于时尚服饰品牌', logo: '', domain: 'qvr.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#D4845A', createdAt: '2026-06-15', productCount: 128 },
-        { id: 'shop_002', name: 'Fashion Plus', slug: 'fashion', description: '欧美潮流女装精选', logo: '', domain: 'fashion.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#8B9A7C', createdAt: '2026-06-20', productCount: 56 },
-        { id: 'shop_003', name: 'Tokyo Select', slug: 'tokyo', description: '日本精选好物', logo: '', domain: 'tokyo.rebeccashop.com', customDomain: '', domainStatus: 'disabled', status: 'disabled', color: '#7C8B9A', createdAt: '2026-07-01', productCount: 0 }
+        { id: 'shop_qvr', name: 'QVR品牌站', slug: 'qvr', description: '专注于时尚服饰品牌', logo: '', domain: 'qvr.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#D4845A', createdAt: '2026-06-15', productCount: 128 },
+        { id: 'shop_fashion', name: 'Fashion Plus', slug: 'fashion', description: '欧美潮流女装精选', logo: '', domain: 'fashion.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#8B9A7C', createdAt: '2026-06-20', productCount: 56 },
+        { id: 'shop_tokyo', name: 'Tokyo Select', slug: 'tokyo', description: '日本精选好物', logo: '', domain: 'tokyo.rebeccashop.com', customDomain: '', domainStatus: 'disabled', status: 'disabled', color: '#7C8B9A', createdAt: '2026-07-01', productCount: 0 }
       ];
     }
 
@@ -341,7 +341,7 @@
         } else if (typeof window.handleSidebarNav === 'function') {
           window.handleSidebarNav('members');
         } else {
-          navigateToPage('shop/members.html');
+          navigateToPage('member/members.html');
         }
       });
 
@@ -387,7 +387,7 @@
       overlay.id = 'createShopOverlay';
       overlay.innerHTML = `
         <div class="dialog" style="width:480px;">
-          <div class="dialog-title">创建新店铺</div>
+          <div class="dialog-header"><div class="dialog-title">创建新店铺</div><button class="dialog-close" onclick="this.closest('.dialog-overlay').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
           <div class="dialog-desc">填写店铺基本信息，创建属于你的独立站</div>
           <div class="dialog-body">
             <div style="margin-bottom:16px;">
@@ -479,10 +479,10 @@
           guideOverlay.id = 'guideOverlay';
           guideOverlay.innerHTML = `
             <div class="dialog" style="width:420px;text-align:center;">
+              <div class="dialog-header"><div class="dialog-title">店铺创建成功！</div><button class="dialog-close" onclick="this.closest('.dialog-overlay').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
               <div style="width:64px;height:64px;border-radius:50%;background:hsl(142 50% 92%);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--success))" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <div class="dialog-title">店铺创建成功！</div>
               <div class="dialog-desc">预览域名：<strong style="color:hsl(var(--primary))">${slug}.rebeccashop.com</strong></div>
               <div class="dialog-actions" style="justify-content:center;">
                 <button class="btn btn-secondary" id="guideSkip">暂不配置</button>
@@ -1078,7 +1078,7 @@
     function confirmBatchDelete(names) {
       var overlay = document.createElement('div');
       overlay.className = 'dialog-overlay';
-      overlay.innerHTML = '<div class="dialog"><div class="dialog-title">确认批量删除</div><div class="dialog-desc">确定要删除选中的 ' + names.length + ' 件商品吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="executeBatchDelete(' + JSON.stringify(names) + '); this.closest(\'.dialog-overlay\').remove();">确认删除</button></div></div>';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认批量删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除选中的 ' + names.length + ' 件商品吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="executeBatchDelete(' + JSON.stringify(names) + '); this.closest(\'.dialog-overlay\').remove();">确认删除</button></div></div>';
       overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();
       });
@@ -1099,7 +1099,7 @@
     function confirmDelete(name) {
       var overlay = document.createElement('div');
       overlay.className = 'dialog-overlay';
-      overlay.innerHTML = '<div class="dialog"><div class="dialog-title">确认删除</div><div class="dialog-desc">确定要删除商品「' + name + '」吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="this.closest(\'.dialog-overlay\').remove();showToast(\'success\', \'已删除: ' + name + '\')">确认删除</button></div></div>';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除商品「' + name + '」吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="this.closest(\'.dialog-overlay\').remove();showToast(\'success\', \'已删除: ' + name + '\')">确认删除</button></div></div>';
       overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();
       });

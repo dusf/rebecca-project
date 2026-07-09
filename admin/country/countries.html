@@ -1162,7 +1162,7 @@
       overlay.className = 'dialog-overlay';
       overlay.innerHTML = `
         <div class="dialog" style="width:560px;max-width:94vw;">
-          <div class="dialog-title">批量导入 - ${country.name}</div>
+          <div class="dialog-header"><div class="dialog-title">批量导入 - ${country.name}</div><button class="dialog-close" onclick="this.closest('.dialog-overlay').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
           <div class="dialog-desc">每行一条数据，格式：<b>区域代码, 区域名称</b>（可指定上级：<b>上级代码, 区域代码, 区域名称</b>）</div>
           <textarea class="import-textarea" id="importTextarea" placeholder="示例：&#10;US-CA, 加利福尼亚州 California&#10;US-CA, US-CA-LA, 洛杉矶 Los Angeles&#10;US-CA, US-CA-SF, 旧金山 San Francisco">${(country.regions.root || []).map(r => `${r.code}, ${r.name}`).join('\n')}</textarea>
           <div class="import-format-hint">
@@ -1210,7 +1210,7 @@
       overlay.className = 'dialog-overlay';
       overlay.innerHTML = `
         <div class="dialog" style="width:520px;max-width:94vw;">
-          <div class="dialog-title">新增国家</div>
+          <div class="dialog-header"><div class="dialog-title">新增国家</div><button class="dialog-close" onclick="this.closest('.dialog-overlay').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
           <div class="add-country-form">
             <div class="form-row">
               <div class="form-group">

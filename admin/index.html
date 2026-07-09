@@ -96,7 +96,8 @@
       'content':      'product/product_list.html',
       'users':        'product/product_list.html',
       'settings':     'shop/shop_settings.html',
-      'members':      'shop/members.html',
+      'members':      'member/members.html',
+      'shop-members': 'shop/members.html',
       'shop-list':    'shop/shop_list.html',
       'decor':        'product/product_list.html',
       'countries':    'country/countries.html',
@@ -113,7 +114,7 @@
     var CURRENT_PAGE = 'products';
     var currentActivePage = 'products';
 
-    // 面包屑配置：page -> [分类, 页面名]
+    // 面包屑配置：page -> [分类, 页面名] 或 [分类, {label: '中间页', page: 'pageKey'}, 页面名]
     var BREADCRUMB_CONFIG = {
       'dashboard':    ['仪表盘', '概览'],
       'products':     ['资产', '商品列表'],
@@ -126,6 +127,7 @@
       'users':        ['用户', '用户管理'],
       'settings':     ['店铺管理', '店铺配置'],
       'members':      ['全局', '成员管理'],
+      'shop-members': ['全局', { label: '店铺管理', page: 'shop-list' }, '成员管理'],
       'shop-list':    ['全局', '店铺管理'],
       'decor':        ['装修', '店铺装修'],
       'countries':    ['设置', '国家管理'],
@@ -145,7 +147,22 @@
       var bc = BREADCRUMB_CONFIG[page] || ['', page];
       var el = document.getElementById('breadcrumb');
       if (el) {
-        el.innerHTML = '<span>' + bc[0] + '</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-current">' + bc[1] + '</span>';
+        var html = '';
+        bc.forEach(function(item, index) {
+          var isLast = index === bc.length - 1;
+          var label = (typeof item === 'object' && item !== null) ? item.label : item;
+          if (isLast) {
+            html += '<span class="breadcrumb-current">' + label + '</span>';
+          } else if (typeof item === 'object' && item !== null && item.page) {
+            html += '<span class="breadcrumb-link" onclick="window.handleSidebarNav(\'' + item.page + '\')">' + label + '</span>';
+          } else {
+            html += '<span>' + label + '</span>';
+          }
+          if (!isLast) {
+            html += '<span class="breadcrumb-separator">/</span>';
+          }
+        });
+        el.innerHTML = html;
       }
     }
 

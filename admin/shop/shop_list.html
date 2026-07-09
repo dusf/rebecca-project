@@ -352,41 +352,7 @@
 
     /* 创建按钮（添加卡片样式） */
     .shop-card.add-card {
-      border: 2px dashed hsl(var(--border));
-      background: rgba(255, 255, 255, 0.4);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: hsl(var(--muted-foreground));
-      min-height: 240px;
-    }
-
-    .shop-card.add-card:hover {
-      border-color: hsl(var(--primary));
-      color: hsl(var(--primary));
-      background: rgba(255, 255, 255, 0.7);
-    }
-
-    .shop-card.add-card .add-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: hsl(var(--muted));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .shop-card.add-card:hover .add-icon {
-      background: hsl(var(--primary-100));
-    }
-
-    .shop-card.add-card .add-text {
-      font-size: 14px;
-      font-weight: 600;
+      display: none;
     }
 
     /* 对话框内表单 */
@@ -1020,14 +986,7 @@
             </div>
           </div>
         `;
-      }).join('') + `
-        <div class="shop-card add-card" onclick="openCreateDialog()">
-          <div class="add-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </div>
-          <div class="add-text">创建新店铺</div>
-        </div>
-      `;
+      }).join('');
     }
 
     function renderInvitedShops() {

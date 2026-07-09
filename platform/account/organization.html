@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组织机构 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">组织机构</div>
+        <div class="page-subtitle">管理公司/部门/团队的组织层级结构</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索组织名称..." oninput="console.log(this.value)">
+        <select class="filter-select">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary btn-sm" onclick="showToast('info', '添加组织')">+ 添加组织</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>组织名称</th>
+              <th>组织代码</th>
+              <th>上级组织</th>
+              <th>排序</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>总部</strong></td>
+              <td>HQ</td>
+              <td>--</td>
+              <td>1</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 32px;">├ 技术部</td>
+              <td>TECH</td>
+              <td>总部</td>
+              <td>1</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 56px;">├ 前端组</td>
+              <td>TECH-FE</td>
+              <td>技术部</td>
+              <td>1</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 56px;">├ 后端组</td>
+              <td>TECH-BE</td>
+              <td>技术部</td>
+              <td>2</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
+            </tr>
+            <tr>
+              <td style="padding-left: 32px;">├ 运营部</td>
+              <td>OPS</td>
+              <td>总部</td>
+              <td>2</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

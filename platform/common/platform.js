@@ -27,6 +27,8 @@ var PLATFORM_SIDEBAR_MENU = [
   {
     section: '账号管理',
     items: [
+      { page: 'organization', label: '组织机构',
+        icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="18" height="7" rx="1"/><line x1="8" y1="10" x2="12" y2="14"/><line x1="16" y1="10" x2="12" y2="14"/></svg>' },
       { page: 'accounts', label: '账号列表',
         icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' }
     ]
@@ -67,6 +69,7 @@ var PLATFORM_SIDEBAR_MENU = [
 
 // ==================== 页面路由映射 ====================
 var PLATFORM_PAGE_CONFIG = {
+  'organization':  'account/organization.html',
   'accounts':      'account/accounts.html',
   'country':       'global/country.html',
   'region':        'global/region.html',
@@ -83,6 +86,7 @@ var PLATFORM_PAGE_CONFIG = {
 
 // ==================== 面包屑配置 ====================
 var PLATFORM_BREADCRUMB_CONFIG = {
+  'organization':  ['账号管理', '组织机构'],
   'accounts':      ['账号管理', '账号列表'],
   'country':       ['全局', '国家'],
   'region':        ['全局', '地区'],

@@ -5,27 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>组织机构 - 中台管理</title>
   <link rel="stylesheet" href="../common/platform.css">
+  <style>
+    /* 组织类型标签 */
+    .org-type {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .org-type.group    { background: hsl(215 35% 92%); color: hsl(215 35% 42%); }
+    .org-type.company  { background: hsl(142 50% 92%); color: hsl(142 76% 32%); }
+    .org-type.dept     { background: hsl(38 80% 92%);  color: hsl(38 92% 36%); }
+    .org-type.team     { background: hsl(270 40% 92%); color: hsl(270 40% 48%); }
+
+    /* 树形缩进 */
+    .indent-l1 { padding-left: 32px; }
+    .indent-l2 { padding-left: 56px; }
+    .indent-l3 { padding-left: 80px; }
+
+    .tree-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tree-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      color: hsl(var(--muted-foreground));
+    }
+    .tree-toggle:hover {
+      background: hsl(220 10% 88%);
+      color: hsl(var(--foreground));
+    }
+    .tree-toggle svg {
+      width: 12px;
+      height: 12px;
+      transition: transform 0.2s;
+    }
+    .tree-toggle.expanded svg { transform: rotate(90deg); }
+    .tree-toggle.leaf { visibility: hidden; pointer-events: none; }
+  </style>
 </head>
 <body>
   <div class="content">
     <div class="page-header">
       <div>
         <div class="page-title">组织机构</div>
-        <div class="page-subtitle">管理公司/部门/团队的组织层级结构</div>
+        <div class="page-subtitle">管理集团/公司/部门/小组的组织层级结构，每个组织节点需指定类型</div>
       </div>
     </div>
 
     <div class="toolbar">
       <div class="toolbar-left">
-        <input class="search-input" type="text" placeholder="搜索组织名称..." oninput="console.log(this.value)">
-        <select class="filter-select">
+        <input class="search-input" type="text" placeholder="搜索组织名称..." id="searchInput">
+        <select class="filter-select" id="typeFilter">
+          <option value="">全部类型</option>
+          <option value="group">集团</option>
+          <option value="company">公司</option>
+          <option value="dept">部门</option>
+          <option value="team">小组</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
           <option value="">全部状态</option>
           <option value="active">启用</option>
           <option value="disabled">停用</option>
         </select>
       </div>
       <div class="toolbar-right">
-        <button class="btn btn-primary btn-sm" onclick="showToast('info', '添加组织')">+ 添加组织</button>
+        <button class="btn btn-primary btn-sm" onclick="handleAdd()">+ 添加组织</button>
       </div>
     </div>
 
@@ -34,59 +92,183 @@
         <table>
           <thead>
             <tr>
-              <th>组织名称</th>
-              <th>组织代码</th>
-              <th>上级组织</th>
-              <th>排序</th>
-              <th>状态</th>
-              <th>操作</th>
+              <th style="width:32%">组织名称</th>
+              <th style="width:14%">组织类型</th>
+              <th style="width:14%">组织代码</th>
+              <th style="width:14%">上级组织</th>
+              <th style="width:10%">排序</th>
+              <th style="width:10%">状态</th>
+              <th style="width:6%">操作</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td><strong>总部</strong></td>
-              <td>HQ</td>
-              <td>--</td>
-              <td>1</td>
-              <td><span class="badge badge-success">启用</span></td>
-              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
-            </tr>
-            <tr>
-              <td style="padding-left: 32px;">├ 技术部</td>
-              <td>TECH</td>
-              <td>总部</td>
-              <td>1</td>
-              <td><span class="badge badge-success">启用</span></td>
-              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
-            </tr>
-            <tr>
-              <td style="padding-left: 56px;">├ 前端组</td>
-              <td>TECH-FE</td>
-              <td>技术部</td>
-              <td>1</td>
-              <td><span class="badge badge-success">启用</span></td>
-              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
-            </tr>
-            <tr>
-              <td style="padding-left: 56px;">├ 后端组</td>
-              <td>TECH-BE</td>
-              <td>技术部</td>
-              <td>2</td>
-              <td><span class="badge badge-success">启用</span></td>
-              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
-            </tr>
-            <tr>
-              <td style="padding-left: 32px;">├ 运营部</td>
-              <td>OPS</td>
-              <td>总部</td>
-              <td>2</td>
-              <td><span class="badge badge-success">启用</span></td>
-              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑组织')">编辑</div></td>
-            </tr>
-          </tbody>
+          <tbody id="orgTableBody"></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <script>
+    // ========== 组织类型配置 ==========
+    var ORG_TYPES = {
+      group:   { label: '集团', cls: 'group'   },
+      company: { label: '公司', cls: 'company' },
+      dept:    { label: '部门', cls: 'dept'    },
+      team:    { label: '小组', cls: 'team'    }
+    };
+
+    // 类型层级：集团 > 公司 > 部门 > 小组
+    var ORG_TYPE_LEVEL = { group: 0, company: 1, dept: 2, team: 3 };
+
+    // ========== 示例数据 ==========
+    var orgData = [
+      { id: 'G1',  name: '瑞贝卡集团',   type: 'group',   parent: null,    code: 'RBC-GROUP',  sort: 1, status: 'active'   },
+      { id: 'C1',  name: '瑞贝卡科技',   type: 'company', parent: 'G1',    code: 'RBC-TECH',   sort: 1, status: 'active'   },
+      { id: 'D1',  name: '技术研发部',   type: 'dept',    parent: 'C1',    code: 'TECH-RD',    sort: 1, status: 'active'   },
+      { id: 'T1',  name: '前端开发组',   type: 'team',    parent: 'D1',    code: 'TECH-FE',    sort: 1, status: 'active'   },
+      { id: 'T2',  name: '后端开发组',   type: 'team',    parent: 'D1',    code: 'TECH-BE',    sort: 2, status: 'active'   },
+      { id: 'D2',  name: '产品设计部',   type: 'dept',    parent: 'C1',    code: 'PROD-DSGN',  sort: 2, status: 'active'   },
+      { id: 'T3',  name: 'UI设计组',     type: 'team',    parent: 'D2',    code: 'PROD-UI',    sort: 1, status: 'active'   },
+      { id: 'C2',  name: '瑞贝卡电商',   type: 'company', parent: 'G1',    code: 'RBC-EC',     sort: 2, status: 'active'   },
+      { id: 'D3',  name: '运营部',       type: 'dept',    parent: 'C2',    code: 'EC-OPS',     sort: 1, status: 'active'   },
+      { id: 'T4',  name: '市场推广组',   type: 'team',    parent: 'D3',    code: 'EC-MKT',     sort: 1, status: 'active'   },
+      { id: 'D4',  name: '客服部',       type: 'dept',    parent: 'C2',    code: 'EC-CS',      sort: 2, status: 'disabled' }
+    ];
+
+    var collapsedSet = {};
+
+    // ========== 构建树 ==========
+    function buildTree(data) {
+      var map = {};
+      var roots = [];
+      data.forEach(function(item) {
+        item.children = [];
+        map[item.id] = item;
+      });
+      data.forEach(function(item) {
+        if (item.parent && map[item.parent]) {
+          map[item.parent].children.push(item);
+        } else {
+          roots.push(item);
+        }
+      });
+      function sortFn(n) {
+        n.children.sort(function(a, b) { return a.sort - b.sort; });
+        n.children.forEach(sortFn);
+      }
+      roots.sort(function(a, b) { return a.sort - b.sort; });
+      roots.forEach(sortFn);
+      return roots;
+    }
+
+    // ========== 根据名称搜索过滤树 ==========
+    function filterData() {
+      var keyword = (document.getElementById('searchInput').value || '').toLowerCase();
+      var typeVal = document.getElementById('typeFilter').value;
+      var statusVal = document.getElementById('statusFilter').value;
+      return orgData.filter(function(item) {
+        if (keyword && item.name.toLowerCase().indexOf(keyword) === -1 && item.code.toLowerCase().indexOf(keyword) === -1) return false;
+        if (typeVal && item.type !== typeVal) return false;
+        if (statusVal && item.status !== statusVal) return false;
+        return true;
+      });
+    }
+
+    // ========== 渲染表格 ==========
+    function renderTable() {
+      var filtered = filterData();
+      var tree = buildTree(filtered);
+      var tbody = document.getElementById('orgTableBody');
+
+      if (tree.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配的组织</div><div class="empty-state-desc">尝试调整筛选条件或添加新的组织机构</div></div></td></tr>';
+        return;
+      }
+
+      var rows = [];
+      function walk(nodes) {
+        nodes.forEach(function(node) {
+          var expanded = !collapsedSet[node.id];
+          var hasChildren = node.children && node.children.length > 0;
+          rows.push({ node: node, hasChildren: hasChildren });
+          if (hasChildren && expanded) {
+            walk(node.children);
+          }
+        });
+      }
+      walk(tree);
+
+      var statusMap = {
+        active:   { label: '启用', cls: 'badge-success'   },
+        disabled: { label: '停用', cls: 'badge-secondary' }
+      };
+
+      var html = '';
+      rows.forEach(function(row) {
+        var node = row.node;
+        var t = ORG_TYPES[node.type] || { label: node.type, cls: '' };
+        var parentName = node.parent ? getNodeName(node.parent) : '--';
+        var s = statusMap[node.status] || { label: node.status, cls: 'badge-secondary' };
+        var depth = ORG_TYPE_LEVEL[node.type];
+        var indentCls = depth > 0 ? ' indent-l' + depth : '';
+
+        // 展开/折叠图标
+        var toggleHtml = '';
+        if (row.hasChildren) {
+          var expClass = collapsedSet[node.id] ? '' : ' expanded';
+          toggleHtml = '<span class="tree-toggle' + expClass + '" data-tid="' + node.id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+        } else {
+          toggleHtml = '<span class="tree-toggle leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+        }
+
+        html += '<tr>';
+        html += '<td class="' + indentCls + '"><div class="tree-name-cell">' + toggleHtml + '<span>' + node.name + '</span></div></td>';
+        html += '<td><span class="org-type ' + t.cls + '">' + t.label + '</span></td>';
+        html += '<td>' + node.code + '</td>';
+        html += '<td style="color:hsl(var(--muted-foreground))">' + parentName + '</td>';
+        html += '<td>' + node.sort + '</td>';
+        html += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+        html += '<td><div class="action-group">' +
+          '<div class="action-btn" title="编辑" onclick="handleEdit(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>' +
+          '<div class="action-btn danger" title="删除" onclick="handleDelete(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+        '</div></td>';
+        html += '</tr>';
+      });
+
+      tbody.innerHTML = html;
+
+      // 绑定展开/折叠事件
+      tbody.querySelectorAll('.tree-toggle:not(.leaf)').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var tid = this.dataset.tid;
+          if (collapsedSet[tid]) {
+            delete collapsedSet[tid];
+          } else {
+            collapsedSet[tid] = true;
+          }
+          renderTable();
+        });
+      });
+    }
+
+    function getNodeName(id) {
+      for (var i = 0; i < orgData.length; i++) {
+        if (orgData[i].id === id) return orgData[i].name;
+      }
+      return '--';
+    }
+
+    // ========== 筛选事件 ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTable();
+      document.getElementById('searchInput').addEventListener('input', renderTable);
+      document.getElementById('typeFilter').addEventListener('change', renderTable);
+      document.getElementById('statusFilter').addEventListener('change', renderTable);
+    });
+
+    function handleAdd() { showToast('info', '添加组织'); }
+    function handleEdit(id) { showToast('info', '编辑组织: ' + getNodeName(id)); }
+    function handleDelete(id) { showToast('info', '删除组织: ' + getNodeName(id)); }
+  </script>
 </body>
 </html>

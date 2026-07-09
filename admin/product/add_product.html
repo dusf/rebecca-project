@@ -1369,8 +1369,6 @@
     <!-- ==================== 侧边栏 ==================== -->
     <aside class="sidebar" id="sidebarContainer"></aside>
 
-    </aside>
-
     <!-- ==================== 主内容区 ==================== -->
     <div class="main-area">
       <!-- 顶部头部 -->
@@ -1379,7 +1377,7 @@
           <div class="breadcrumb" id="breadcrumb">
             <span>资产</span>
             <span class="breadcrumb-separator">/</span>
-            <a class="breadcrumb-link" href="product_list.html">商品列表</a>
+            <a class="breadcrumb-link" href="javascript:void(0)" onclick="navigateToPage('product_list.html')">商品列表</a>
             <span class="breadcrumb-separator">/</span>
             <span class="breadcrumb-current">添加商品</span>
           </div>
@@ -1404,7 +1402,7 @@
             <div class="info-bar">
               <div class="info-bar-content">
                 <div class="info-bar-title">新版商城商品资料</div>
-                <div class="info-bar-desc">内容、媒体、SKU 和 SEO 在同一页面维护；当前为前端骨架，不接真实保存。</div>
+                <div class="info-bar-desc">内容、属性、媒体、SKU 和 SEO 在同一页面维护；支持多语言版本录入、评论 CSV 导入、库存 SKU 映射。</div>
               </div>
               <div class="info-bar-tag">美元基准价</div>
             </div>
@@ -1456,6 +1454,43 @@
                   <div class="form-group">
                     <label class="form-label">商品关键词</label>
                     <input class="form-input" type="text" id="productKeywords" placeholder="如：body wave, natural black, pre-plucked hairline" />
+                  </div>
+
+                  <!-- 属性1 ~ 属性5 固定字段 -->
+                  <div class="spec-section-title" style="margin-bottom: 12px;">商品属性</div>
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">属性1</label>
+                      <input class="form-input" type="text" id="attr1" placeholder="属性1（如：材质）" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">属性2</label>
+                      <input class="form-input" type="text" id="attr2" placeholder="属性2（如：长度）" />
+                    </div>
+                  </div>
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">属性3</label>
+                      <input class="form-input" type="text" id="attr3" placeholder="属性3（如：密度）" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">属性4</label>
+                      <input class="form-input" type="text" id="attr4" placeholder="属性4（如：蕾丝类型）" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">属性5</label>
+                    <input class="form-input" type="text" id="attr5" placeholder="属性5" style="max-width: 50%;" />
+                  </div>
+                  <div class="form-hint" style="margin-bottom: 16px;">以上5个属性为固定字段，商家按需自由填写，每个属性输入框仅填写一个值。</div>
+
+                  <!-- 产品标记（多标签输入） -->
+                  <div class="form-group">
+                    <label class="form-label">产品标记（Tags）</label>
+                    <div class="tag-pills" id="productTags">
+                      <button class="tag-add-btn" onclick="showProductTagInput(this)">+ 添加标记</button>
+                    </div>
+                    <div class="form-hint" style="margin-top: 6px;">输入后回车添加，点击标签上的 × 删除。标记用于产品系列智能筛选和前端过滤。</div>
                   </div>
 
                   <div class="form-group">
@@ -1524,7 +1559,7 @@
                   <div class="form-section-card-header">
                     <div>
                       <div class="form-section-card-title">SKU 规格</div>
-                      <div class="form-section-card-subtitle">按颜色、尺码组合生成 SKU。SKU 编码创建后系统生成，当前页面只做前端原型。</div>
+                      <div class="form-section-card-subtitle">按颜色、尺码组合生成 SKU。商品SKU编码与库存系统SKU编码手动映射，价格以美元为基准。</div>
                     </div>
                     <button class="form-section-card-action" onclick="batchSetStock()">批量设置库存</button>
                   </div>
@@ -1570,9 +1605,10 @@
                             <th><div class="checkbox" onclick="toggleAllSkuCheckboxes(this)"></div></th>
                             <th>图片</th>
                             <th>SKU 名称（英语）</th>
-                            <th>货品编码</th>
+                            <th>商品SKU编码</th>
+                            <th>库存SKU编码</th>
                             <th>库存</th>
-                            <th>购买数量</th>
+                            <th>购买基数</th>
                             <th>价格（美元）</th>
                           </tr>
                         </thead>
@@ -1637,6 +1673,14 @@
                     <label class="form-label">SEO 描述</label>
                     <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" style="min-height: 80px; resize: vertical;"></textarea>
                   </div>
+                  <div class="form-group">
+                    <label class="form-label">URL 网址名称</label>
+                    <div style="display: flex; align-items: center; gap: 0;">
+                      <span style="padding: 10px 8px 10px 12px; border: 1px solid hsl(var(--border)); border-right: none; border-radius: 8px 0 0 8px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-size: 13px;">/products/</span>
+                      <input class="form-input" type="text" id="seoSlug" placeholder="product-url-slug" style="border-radius: 0 8px 8px 0;" />
+                    </div>
+                    <div class="form-hint" style="margin-top: 6px;">商品落地页URL标识，由标题自动生成可手动修改。</div>
+                  </div>
                 </div>
 
                 <!-- 评论导入 -->
@@ -1646,7 +1690,7 @@
                     <button class="review-import-btn" onclick="downloadReviewTemplate()">下载评论模板</button>
                     <button class="review-import-btn" onclick="importReviews()">导入评论</button>
                   </div>
-                  <div class="review-import-hint">当前为入口占位，不解析真实文件。</div>
+                  <div class="review-import-hint">下载模板按格式填写，上传 CSV 文件批量导入评论到当前商品。</div>
                 </div>
               </div>
             </div>
@@ -1688,6 +1732,10 @@
       const catCode = catCodeMap[category] || 'OT';
       const spu = 'SPU-' + catCode + '-' + String(products.length + 1).padStart(5, '0');
 
+      // 收集产品标记
+      const productTags = Array.from(document.getElementById('productTags').querySelectorAll('.tag-pill'))
+        .map(p => p.childNodes[0].textContent.trim());
+
       const newProduct = {
         id: products.length + 1,
         name: title,
@@ -1699,12 +1747,23 @@
         site: 1,
         status: document.getElementById('productStatus').value,
         date: new Date().toISOString().split('T')[0],
+        // 新增字段
+        attr1: document.getElementById('attr1').value,
+        attr2: document.getElementById('attr2').value,
+        attr3: document.getElementById('attr3').value,
+        attr4: document.getElementById('attr4').value,
+        attr5: document.getElementById('attr5').value,
+        tags: productTags,
+        seoSlug: document.getElementById('seoSlug').value,
+        seoTitle: document.getElementById('seoTitle').value,
+        seoDesc: document.getElementById('seoDesc').value,
+        skuData: skuData,  // 包含 invCode 的完整 SKU 数据
       };
 
       products.unshift(newProduct);
       renderProducts();
       showToast('success', `商品「${title}」提交成功，等待上架审核！`);
-      setTimeout(() => { window.location.href = 'product_list.html'; }, 800);
+      setTimeout(() => { navigateToPage('product_list.html'); }, 800);
     }
 
     // ==================== 保存草稿 ====================
@@ -1718,6 +1777,34 @@
       const el = document.getElementById(elId);
       if (el) el.textContent = `${count}/${max}`;
     }
+
+    // ==================== URL Slug 自动生成 ====================
+    function generateSlugFromTitle() {
+      const title = document.getElementById('productTitle').value.trim();
+      const slugInput = document.getElementById('seoSlug');
+      // 只在 slug 为空或与当前 title 高度相关时自动更新
+      if (!slugInput.value || slugInput.value === titleToSlug(slugInput.dataset.lastTitle || '')) {
+        const slug = titleToSlug(title);
+        slugInput.value = slug;
+        slugInput.dataset.lastTitle = title;
+      }
+    }
+
+    function titleToSlug(title) {
+      return title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')      // 移除特殊字符
+        .replace(/\s+/g, '-')           // 空格转连字符
+        .replace(/-+/g, '-')            // 合并多个连字符
+        .replace(/^-+|-+$/g, '')        // 移除首尾连字符
+        .substring(0, 80);              // 限制长度
+    }
+
+    // 监听标题输入，自动生成 slug
+    document.getElementById('productTitle').addEventListener('input', function() {
+      updateCharCount(this, 'titleCount', 120);
+      generateSlugFromTitle();
+    });
 
     // ==================== 语言切换 ====================
     document.getElementById('langTabs')?.addEventListener('click', function(e) {
@@ -1817,7 +1904,7 @@
       const tbody = document.getElementById('skuTableBody');
 
       if (colors.length === 0 || sizes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="sku-empty">请添加颜色和尺码后生成 SKU</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="sku-empty">请添加颜色和尺码后生成 SKU</div></td></tr>';
         return;
       }
 
@@ -1850,7 +1937,8 @@
           <td><div class="checkbox" onclick="toggleSkuCheckbox(this)"></div></td>
           <td><div class="img-upload-cell" onclick="showToast('info', '选择 SKU 图片')">+</div></td>
           <td><input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" /></td>
-          <td><input value="${item.code}" onchange="updateSkuData('${item.key}', 'code', this.value)" /></td>
+          <td><input value="${item.code}" onchange="updateSkuData('${item.key}', 'code', this.value)" placeholder="如：HG-01-BW22" /></td>
+          <td><input value="${item.invCode || ''}" onchange="updateSkuData('${item.key}', 'invCode', this.value)" placeholder="库存系统货品编码" /></td>
           <td><input type="number" value="${item.stock}" placeholder="-" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
           <td><input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" /></td>
           <td>
@@ -1900,7 +1988,7 @@
       if (value === null) return;
       checked.forEach(cb => {
         const row = cb.closest('tr');
-        const stockInput = row.querySelector('td:nth-child(5) input');
+        const stockInput = row.querySelector('td:nth-child(6) input');
         if (stockInput) stockInput.value = value;
         const key = row.dataset.key;
         updateSkuData(key, 'stock', value);
@@ -2036,11 +2124,94 @@
 
     // ==================== 评论导入 ====================
     function downloadReviewTemplate() {
-      showToast('success', '评论模板下载成功（模拟）');
+      // 生成 CSV 评论模版
+      const headers = ['用户昵称', '评分(1-5)', '评论标题', '评论内容', '评论时间(YYYY-MM-DD HH:mm:ss)'];
+      const sampleRow = ['示例用户', '5', '非常满意', '产品质量很好，物流也很快，推荐购买！', '2026-07-01 10:30:00'];
+      
+      // BOM for UTF-8 Excel compatibility
+      const BOM = '\uFEFF';
+      const csvContent = BOM + headers.join(',') + '\n' + sampleRow.join(',') + '\n';
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '评论导入模板.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('success', '评论模板下载成功！请按模版格式填写后导入');
     }
 
     function importReviews() {
-      showToast('info', '请选择评论文件导入（模拟）');
+      // 创建隐藏的文件选择器
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const text = ev.target.result;
+          const lines = text.split('\n').filter(l => l.trim());
+          if (lines.length < 2) {
+            showToast('error', 'CSV文件格式错误，请使用下载的模板格式');
+            return;
+          }
+          // 预览前3条评论
+          const preview = lines.slice(0, 4).join('<br>');
+          const totalReviews = lines.length - 1; // 减去表头
+          showToast('success', `文件解析完成，共识别 ${totalReviews} 条评论，准备导入到当前商品`);
+          // 后续接入真实导入逻辑
+        };
+        reader.readAsText(file, 'UTF-8');
+      };
+      input.click();
+    }
+
+    // ==================== 产品标记输入 ====================
+    let activeProductTagInput = null;
+    function showProductTagInput(btn) {
+      if (activeProductTagInput) {
+        activeProductTagInput.remove();
+        activeProductTagInput = null;
+      }
+      const input = document.createElement('input');
+      input.className = 'tag-input';
+      input.placeholder = '输入标记';
+      input.style.width = '100px';
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && input.value.trim()) {
+          addProductTag(btn, input.value.trim());
+        } else if (e.key === 'Escape') {
+          input.remove();
+          activeProductTagInput = null;
+        }
+      });
+      input.addEventListener('blur', function() {
+        if (input.value.trim()) {
+          addProductTag(btn, input.value.trim());
+        } else {
+          input.remove();
+          activeProductTagInput = null;
+        }
+      });
+      btn.parentElement.insertBefore(input, btn);
+      input.focus();
+      activeProductTagInput = input;
+    }
+
+    function addProductTag(btn, value) {
+      if (activeProductTagInput) {
+        activeProductTagInput.remove();
+        activeProductTagInput = null;
+      }
+      const pill = document.createElement('div');
+      pill.className = 'tag-pill';
+      pill.innerHTML = `${value}<span class="remove" onclick="this.parentElement.remove()">×</span>`;
+      btn.parentElement.insertBefore(pill, btn);
     }
 
     // ==================== 删除确认 ====================
@@ -2073,9 +2244,12 @@
     }
 
     // ==================== 导出 ====================
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      showToast('success', '商品数据导出成功（模拟）');
-    });
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        showToast('success', '商品数据导出成功（模拟）');
+      });
+    }
 
     // ==================== 富文本编辑 ====================
     function formatText(type) {

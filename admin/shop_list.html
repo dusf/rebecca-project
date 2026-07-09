@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RebeccaShop - 我的店铺</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common/commons.css">
+  <style>
+    /* ==================== 店铺列表专用样式 ==================== */
+    .shop-list-layout {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #FDFBFA 0%, #F5EDE8 50%, #EDE5DE 100%);
+      background-attachment: fixed;
+    }
+
+    /* 顶部导航栏 */
+    .shop-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid hsl(var(--border));
+      flex-shrink: 0;
+    }
+
+    .shop-list-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .shop-list-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: hsl(var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+    }
+
+    .shop-list-logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+    }
+
+    .shop-list-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .shop-list-user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #8B9A7C;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+
+    .shop-list-user-avatar:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .shop-list-user-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+
+    .shop-list-logout {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .shop-list-logout:hover {
+      color: hsl(var(--error));
+    }
+
+    /* 主内容区 */
+    .shop-list-main {
+      flex: 1;
+      padding: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .shop-list-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .shop-list-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+    }
+
+    .shop-list-subtitle {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 28px;
+    }
+
+    /* 店铺卡片网格 */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .shop-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .shop-card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      border-color: hsl(var(--primary-300));
+    }
+
+    .shop-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .shop-card-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .shop-card-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .shop-status-dot.active {
+      background: hsl(var(--success));
+      box-shadow: 0 0 6px hsl(var(--success) / 0.5);
+    }
+
+    .shop-status-dot.disabled {
+      background: hsl(var(--muted-foreground));
+    }
+
+    .shop-card-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shop-card-domain {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-card-domain svg {
+      flex-shrink: 0;
+    }
+
+    .shop-card-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 16px;
+    }
+
+    .shop-card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .shop-card-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .shop-card:hover .shop-card-actions {
+      opacity: 1;
+    }
+
+    .shop-card-btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid hsl(var(--border));
+      background: white;
+      color: hsl(var(--foreground));
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-sans);
+    }
+
+    .shop-card-btn:hover {
+      background: hsl(var(--muted));
+    }
+
+    .shop-card-btn.danger {
+      color: hsl(var(--error));
+      border-color: hsl(var(--error) / 0.3);
+    }
+
+    .shop-card-btn.danger:hover {
+      background: hsl(0 84% 95%);
+    }
+
+    .shop-card-btn.primary {
+      background: hsl(var(--primary));
+      color: white;
+      border: none;
+    }
+
+    .shop-card-btn.primary:hover {
+      background: hsl(var(--primary-600));
+    }
+
+    /* 空状态 */
+    .empty-shop-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      border: 2px dashed hsl(var(--border));
+    }
+
+    .empty-shop-state-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .empty-shop-state-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .empty-shop-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 8px;
+    }
+
+    .empty-shop-state-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 24px;
+    }
+
+    /* 创建按钮（添加卡片样式） */
+    .shop-card.add-card {
+      border: 2px dashed hsl(var(--border));
+      background: rgba(255, 255, 255, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: hsl(var(--muted-foreground));
+      min-height: 240px;
+    }
+
+    .shop-card.add-card:hover {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .shop-card.add-card .add-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .shop-card.add-card:hover .add-icon {
+      background: hsl(var(--primary-100));
+    }
+
+    .shop-card.add-card .add-text {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* 对话框内表单 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: hsl(var(--error));
+      margin-left: 2px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all 0.2s;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-input.error {
+      border-color: hsl(var(--error));
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    .form-error {
+      font-size: 12px;
+      color: hsl(var(--error));
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .form-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .form-input-group .form-input {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+
+    .form-input-group .form-suffix {
+      height: 40px;
+      padding: 0 14px;
+      background: hsl(var(--muted));
+      border: 1.5px solid hsl(var(--border));
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      font-family: var(--font-sans);
+    }
+
+    /* 创建对话框 */
+    .shop-dialog {
+      width: 480px;
+    }
+
+    .shop-dialog .dialog-body {
+      padding: 4px 0;
+    }
+
+    /* Toast 动画 (commons.css 中已定义) */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      animation: toastIn 0.3s ease;
+      background: white;
+    }
+
+    .toast.success { border-left: 3px solid hsl(var(--success)); }
+    .toast.error { border-left: 3px solid hsl(var(--error)); }
+    .toast.info { border-left: 3px solid hsl(var(--primary)); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(40px); }
+    }
+
+    /* 确认弹窗 */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+
+    .confirm-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      width: 400px;
+      max-width: 90vw;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      animation: dialogIn 0.3s ease;
+    }
+
+    .confirm-dialog-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .confirm-dialog-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .confirm-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes dialogIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shop-list-layout">
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <header class="shop-list-header">
+      <div class="shop-list-logo">
+        <div class="shop-list-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="shop-list-logo-text">RebeccaShop</span>
+      </div>
+      <div class="shop-list-header-right">
+        <span class="shop-list-user-name">管理员</span>
+        <div class="shop-list-user-avatar">管</div>
+        <span class="shop-list-logout" onclick="handleLogout()">退出登录</span>
+      </div>
+    </header>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <main class="shop-list-main">
+      <div class="shop-list-title-row">
+        <h1 class="shop-list-title">我的店铺</h1>
+        <button class="btn btn-primary" onclick="openCreateDialog()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          创建店铺
+        </button>
+      </div>
+      <p class="shop-list-subtitle">
+        共 <span id="shopCount">3</span> 家店铺，管理你的所有店铺
+        <span style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 12px; display: inline-flex; align-items: center; gap: 3px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          点击店铺卡片进入后台管理
+        </span>
+      </p>
+
+      <div class="shop-grid" id="shopGrid">
+        <!-- 由 JS 动态渲染 -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== Toast 容器 ==================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ==================== 店铺数据 ====================
+    let shops = [
+      {
+        id: 1,
+        name: 'QVR品牌站',
+        domain: 'qvr.rebeccashop.com',
+        language: 'English',
+        currency: 'USD',
+        timezone: 'America/Los_Angeles',
+        status: 'active',
+        color: '#D4845A',
+        createdAt: '2026-06-15',
+        productCount: 128
+      },
+      {
+        id: 2,
+        name: 'Fashion Plus',
+        domain: 'fashion.rebeccashop.com',
+        language: 'English',
+        currency: 'EUR',
+        timezone: 'Europe/Paris',
+        status: 'active',
+        color: '#8B9A7C',
+        createdAt: '2026-06-20',
+        productCount: 56
+      },
+      {
+        id: 3,
+        name: 'Tokyo Select',
+        domain: 'tokyo.rebeccashop.com',
+        language: '日本語',
+        currency: 'JPY',
+        timezone: 'Asia/Tokyo',
+        status: 'disabled',
+        color: '#7C8B9A',
+        createdAt: '2026-07-01',
+        productCount: 0
+      }
+    ];
+
+    let nextId = 4;
+
+    // 颜色库
+    const avatarColors = ['#D4845A', '#8B9A7C', '#7C8B9A', '#B4846C', '#9A8B7C', '#6C8B84', '#C4957A', '#8B7C9A'];
+
+    // ==================== Toast ====================
+    function showToast(type, message) {
+      const container = document.getElementById('toastContainer');
+      const icons = {
+        success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+        error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ==================== 渲染店铺列表 ====================
+    function renderShopGrid() {
+      const grid = document.getElementById('shopGrid');
+      document.getElementById('shopCount').textContent = shops.length;
+
+      if (shops.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-shop-state" style="grid-column: 1 / -1;">
+            <div class="empty-shop-state-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="empty-shop-state-title">您还没有任何店铺</div>
+            <div class="empty-shop-state-desc">点击下方按钮创建您的第一家店铺，开始跨境电商之旅</div>
+            <button class="btn btn-primary" onclick="openCreateDialog()">创建店铺</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = shops.map(shop => {
+        const avatarLetter = shop.name.charAt(0);
+        const isActive = shop.status === 'active';
+        const statusLabel = isActive ? '启用' : '停用';
+        const statusClass = isActive ? 'badge-success' : 'badge-secondary';
+
+        return `
+          <div class="shop-card" onclick="enterShop(${shop.id})">
+            <div class="shop-card-header">
+              <div class="shop-card-avatar" style="background: ${shop.color};">${avatarLetter}</div>
+              <div class="shop-card-status">
+                <span class="shop-status-dot ${isActive ? 'active' : 'disabled'}"></span>
+                <span class="badge ${statusClass}">${statusLabel}</span>
+              </div>
+            </div>
+            <div class="shop-card-name">${shop.name}</div>
+            <div class="shop-card-domain">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              ${shop.domain}
+            </div>
+            <div class="shop-card-meta">
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                ${shop.language}
+              </div>
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg>
+                ${shop.currency}
+              </div>
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                ${shop.productCount} 件商品
+              </div>
+            </div>
+            <div class="shop-card-meta-item" style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              创建于 ${shop.createdAt}
+            </div>
+            <div class="shop-card-actions" onclick="event.stopPropagation()">
+              <button class="shop-card-btn" onclick="enterShop(${shop.id})">进入管理</button>
+              <button class="shop-card-btn" onclick="openEditDialog(${shop.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                编辑
+              </button>
+              ${isActive ? `
+                <button class="shop-card-btn danger" onclick="confirmToggleShop(${shop.id}, 'disable')">停用</button>
+              ` : `
+                <button class="shop-card-btn primary" onclick="confirmToggleShop(${shop.id}, 'enable')">启用</button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 添加"创建新店铺"卡片
+      grid.innerHTML += `
+        <div class="shop-card add-card" onclick="openCreateDialog()">
+          <div class="add-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="add-text">创建新店铺</div>
+        </div>
+      `;
+    }
+
+    // ==================== 进入店铺 ====================
+    function enterShop(shopId) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+      if (shop.status !== 'active') {
+        showToast('info', `"${shop.name}" 已停用，请先启用该店铺`);
+        return;
+      }
+      // 跳转到店铺后台（目前跳转到商品列表页）
+      showToast('success', `正在进入 "${shop.name}"`);
+      setTimeout(() => {
+        window.location.href = 'product/product_list.html';
+      }, 500);
+    }
+
+    // ==================== 创建/编辑弹窗 ====================
+    function openCreateDialog() {
+      const overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.id = 'shopFormOverlay';
+      overlay.innerHTML = `
+        <div class="dialog shop-dialog">
+          <div class="dialog-title">创建新店铺</div>
+          <div class="dialog-desc">填写店铺基本信息，创建属于你的独立站</div>
+          <div class="dialog-body">
+            <div class="form-group">
+              <label class="form-label">店铺名称 <span class="required">*</span></label>
+              <input class="form-input" id="shopNameInput" placeholder="例如：My Brand Store" maxlength="50" />
+              <div class="form-error" id="shopNameError">请输入店铺名称</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">店铺域名 <span class="required">*</span></label>
+              <div class="form-input-group">
+                <input class="form-input" id="shopDomainInput" placeholder="输入你的域名前缀" style="border-radius: 8px 0 0 8px; border-right: none;" />
+                <span class="form-suffix">.rebeccashop.com</span>
+              </div>
+              <div class="form-hint">仅支持字母、数字和连字符，创建后不可修改</div>
+              <div class="form-error" id="shopDomainError">该域名已被使用</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">默认语言 <span class="required">*</span></label>
+              <select class="form-input" id="shopLanguageInput">
+                <option value="">请选择语言</option>
+                <option value="English">English</option>
+                <option value="中文简体">中文简体</option>
+                <option value="中文繁體">中文繁體</option>
+                <option value="日本語">日本語</option>
+                <option value="한국어">한국어</option>
+                <option value="Français">Français</option>
+                <option value="Deutsch">Deutsch</option>
+                <option value="Español">Español</option>
+              </select>
+              <div class="form-error" id="shopLanguageError">请选择默认语言</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">默认币种 <span class="required">*</span></label>
+              <select class="form-input" id="shopCurrencyInput">
+                <option value="">请选择币种</option>
+                <option value="USD">USD - 美元</option>
+                <option value="EUR">EUR - 欧元</option>
+                <option value="GBP">GBP - 英镑</option>
+                <option value="JPY">JPY - 日元</option>
+                <option value="CNY">CNY - 人民币</option>
+                <option value="KRW">KRW - 韩元</option>
+                <option value="AUD">AUD - 澳元</option>
+                <option value="CAD">CAD - 加元</option>
+              </select>
+              <div class="form-error" id="shopCurrencyError">请选择默认币种</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">时区 <span class="required">*</span></label>
+              <select class="form-input" id="shopTimezoneInput">
+                <option value="">请选择时区</option>
+                <option value="America/Los_Angeles">(UTC-8) 洛杉矶</option>
+                <option value="America/New_York">(UTC-5) 纽约</option>
+                <option value="Europe/London">(UTC+0) 伦敦</option>
+                <option value="Europe/Paris">(UTC+1) 巴黎</option>
+                <option value="Asia/Shanghai">(UTC+8) 上海</option>
+                <option value="Asia/Tokyo">(UTC+9) 东京</option>
+                <option value="Asia/Seoul">(UTC+9) 首尔</option>
+                <option value="Australia/Sydney">(UTC+10) 悉尼</option>
+              </select>
+              <div class="form-error" id="shopTimezoneError">请选择时区</div>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary" onclick="closeDialog()">取消</button>
+            <button class="btn btn-primary" onclick="createShop()">创建店铺</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeDialog();
+      });
+      document.body.appendChild(overlay);
+
+      // 域名实时校验
+      const domainInput = document.getElementById('shopDomainInput');
+      if (domainInput) {
+        domainInput.addEventListener('input', debounce(function() {
+          validateDomain(this.value);
+        }, 300));
+      }
+    }
+
+    function openEditDialog(shopId) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.id = 'shopFormOverlay';
+      overlay.innerHTML = `
+        <div class="dialog shop-dialog">
+          <div class="dialog-title">编辑店铺信息</div>
+          <div class="dialog-desc">修改店铺基本配置</div>
+          <div class="dialog-body">
+            <div class="form-group">
+              <label class="form-label">店铺名称 <span class="required">*</span></label>
+              <input class="form-input" id="shopNameInput" placeholder="例如：My Brand Store" maxlength="50" value="${shop.name}" />
+              <div class="form-error" id="shopNameError">请输入店铺名称</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">店铺域名</label>
+              <div class="form-input-group">
+                <input class="form-input" id="shopDomainInput" value="${shop.domain.replace('.rebeccashop.com', '')}" disabled style="background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-radius: 8px 0 0 8px; border-right: none;" />
+                <span class="form-suffix">.rebeccashop.com</span>
+              </div>
+              <div class="form-hint">域名创建后不可修改</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">默认语言 <span class="required">*</span></label>
+              <select class="form-input" id="shopLanguageInput">
+                <option value="">请选择语言</option>
+                <option value="English" ${shop.language === 'English' ? 'selected' : ''}>English</option>
+                <option value="中文简体" ${shop.language === '中文简体' ? 'selected' : ''}>中文简体</option>
+                <option value="中文繁體" ${shop.language === '中文繁體' ? 'selected' : ''}>中文繁體</option>
+                <option value="日本語" ${shop.language === '日本語' ? 'selected' : ''}>日本語</option>
+                <option value="한국어" ${shop.language === '한국어' ? 'selected' : ''}>한국어</option>
+                <option value="Français" ${shop.language === 'Français' ? 'selected' : ''}>Français</option>
+                <option value="Deutsch" ${shop.language === 'Deutsch' ? 'selected' : ''}>Deutsch</option>
+                <option value="Español" ${shop.language === 'Español' ? 'selected' : ''}>Español</option>
+              </select>
+              <div class="form-error" id="shopLanguageError">请选择默认语言</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">默认币种 <span class="required">*</span></label>
+              <select class="form-input" id="shopCurrencyInput">
+                <option value="">请选择币种</option>
+                <option value="USD" ${shop.currency === 'USD' ? 'selected' : ''}>USD - 美元</option>
+                <option value="EUR" ${shop.currency === 'EUR' ? 'selected' : ''}>EUR - 欧元</option>
+                <option value="GBP" ${shop.currency === 'GBP' ? 'selected' : ''}>GBP - 英镑</option>
+                <option value="JPY" ${shop.currency === 'JPY' ? 'selected' : ''}>JPY - 日元</option>
+                <option value="CNY" ${shop.currency === 'CNY' ? 'selected' : ''}>CNY - 人民币</option>
+                <option value="KRW" ${shop.currency === 'KRW' ? 'selected' : ''}>KRW - 韩元</option>
+                <option value="AUD" ${shop.currency === 'AUD' ? 'selected' : ''}>AUD - 澳元</option>
+                <option value="CAD" ${shop.currency === 'CAD' ? 'selected' : ''}>CAD - 加元</option>
+              </select>
+              <div class="form-error" id="shopCurrencyError">请选择默认币种</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">时区 <span class="required">*</span></label>
+              <select class="form-input" id="shopTimezoneInput">
+                <option value="">请选择时区</option>
+                <option value="America/Los_Angeles" ${shop.timezone === 'America/Los_Angeles' ? 'selected' : ''}>(UTC-8) 洛杉矶</option>
+                <option value="America/New_York" ${shop.timezone === 'America/New_York' ? 'selected' : ''}>(UTC-5) 纽约</option>
+                <option value="Europe/London" ${shop.timezone === 'Europe/London' ? 'selected' : ''}>(UTC+0) 伦敦</option>
+                <option value="Europe/Paris" ${shop.timezone === 'Europe/Paris' ? 'selected' : ''}>(UTC+1) 巴黎</option>
+                <option value="Asia/Shanghai" ${shop.timezone === 'Asia/Shanghai' ? 'selected' : ''}>(UTC+8) 上海</option>
+                <option value="Asia/Tokyo" ${shop.timezone === 'Asia/Tokyo' ? 'selected' : ''}>(UTC+9) 东京</option>
+                <option value="Asia/Seoul" ${shop.timezone === 'Asia/Seoul' ? 'selected' : ''}>(UTC+9) 首尔</option>
+                <option value="Australia/Sydney" ${shop.timezone === 'Australia/Sydney' ? 'selected' : ''}>(UTC+10) 悉尼</option>
+              </select>
+              <div class="form-error" id="shopTimezoneError">请选择时区</div>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary" onclick="closeDialog()">取消</button>
+            <button class="btn btn-primary" onclick="updateShop(${shop.id})">保存修改</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeDialog();
+      });
+      document.body.appendChild(overlay);
+    }
+
+    function closeDialog() {
+      const overlay = document.getElementById('shopFormOverlay');
+      if (overlay) overlay.remove();
+    }
+
+    // ==================== 域名校验 ====================
+    function validateDomain(domain) {
+      const errorEl = document.getElementById('shopDomainError');
+      const inputEl = document.getElementById('shopDomainInput');
+      if (!domain.trim()) {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+        return;
+      }
+      // 检查是否已被占用
+      const fullDomain = domain.trim().toLowerCase() + '.rebeccashop.com';
+      const exists = shops.some(s => s.domain === fullDomain);
+      if (exists) {
+        errorEl.textContent = '该域名已被使用';
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+      } else if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(domain.trim())) {
+        errorEl.textContent = '仅支持字母、数字和连字符，不能以连字符开头或结尾';
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+      } else {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+      }
+    }
+
+    // ==================== 表单验证 ====================
+    function validateShopForm(isEdit = false) {
+      let valid = true;
+      const nameEl = document.getElementById('shopNameInput');
+      const domainEl = document.getElementById('shopDomainInput');
+      const languageEl = document.getElementById('shopLanguageInput');
+      const currencyEl = document.getElementById('shopCurrencyInput');
+      const timezoneEl = document.getElementById('shopTimezoneInput');
+
+      // 店铺名称
+      if (!nameEl.value.trim()) {
+        document.getElementById('shopNameError').classList.add('show');
+        nameEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopNameError').classList.remove('show');
+        nameEl.classList.remove('error');
+      }
+
+      // 域名（仅创建时验证）
+      if (!isEdit) {
+        const domain = domainEl.value.trim().toLowerCase();
+        if (!domain) {
+          document.getElementById('shopDomainError').textContent = '请输入域名';
+          document.getElementById('shopDomainError').classList.add('show');
+          domainEl.classList.add('error');
+          valid = false;
+        } else {
+          const fullDomain = domain + '.rebeccashop.com';
+          const exists = shops.some(s => s.domain === fullDomain);
+          if (exists) {
+            document.getElementById('shopDomainError').textContent = '该域名已被使用';
+            document.getElementById('shopDomainError').classList.add('show');
+            domainEl.classList.add('error');
+            valid = false;
+          }
+        }
+      }
+
+      // 默认语言
+      if (!languageEl.value) {
+        document.getElementById('shopLanguageError').classList.add('show');
+        languageEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopLanguageError').classList.remove('show');
+        languageEl.classList.remove('error');
+      }
+
+      // 默认币种
+      if (!currencyEl.value) {
+        document.getElementById('shopCurrencyError').classList.add('show');
+        currencyEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopCurrencyError').classList.remove('show');
+        currencyEl.classList.remove('error');
+      }
+
+      // 时区
+      if (!timezoneEl.value) {
+        document.getElementById('shopTimezoneError').classList.add('show');
+        timezoneEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopTimezoneError').classList.remove('show');
+        timezoneEl.classList.remove('error');
+      }
+
+      return valid;
+    }
+
+    // ==================== 创建店铺 ====================
+    function createShop() {
+      if (!validateShopForm(false)) return;
+
+      const name = document.getElementById('shopNameInput').value.trim();
+      const domain = document.getElementById('shopDomainInput').value.trim().toLowerCase();
+      const language = document.getElementById('shopLanguageInput').value;
+      const currency = document.getElementById('shopCurrencyInput').value;
+      const timezone = document.getElementById('shopTimezoneInput').value;
+
+      const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      const today = new Date().toISOString().split('T')[0];
+
+      shops.push({
+        id: nextId++,
+        name: name,
+        domain: domain + '.rebeccashop.com',
+        language: language,
+        currency: currency,
+        timezone: timezone,
+        status: 'active',
+        color: randomColor,
+        createdAt: today,
+        productCount: 0
+      });
+
+      closeDialog();
+      renderShopGrid();
+      showToast('success', `店铺 "${name}" 创建成功！`);
+    }
+
+    // ==================== 更新店铺 ====================
+    function updateShop(shopId) {
+      if (!validateShopForm(true)) return;
+
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+
+      shop.name = document.getElementById('shopNameInput').value.trim();
+      shop.language = document.getElementById('shopLanguageInput').value;
+      shop.currency = document.getElementById('shopCurrencyInput').value;
+      shop.timezone = document.getElementById('shopTimezoneInput').value;
+
+      closeDialog();
+      renderShopGrid();
+      showToast('success', `店铺 "${shop.name}" 已更新`);
+    }
+
+    // ==================== 停用/启用确认 ====================
+    function confirmToggleShop(shopId, action) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+
+      const isEnabling = action === 'enable';
+      const title = isEnabling ? '确认启用店铺' : '确认停用店铺';
+      const desc = isEnabling
+        ? `确定要启用店铺"${shop.name}"吗？启用后用户端可正常访问。`
+        : `确定要停用店铺"${shop.name}"吗？停用后用户端将无法访问该店铺。`;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.innerHTML = `
+        <div class="confirm-dialog">
+          <div class="confirm-dialog-title">${title}</div>
+          <div class="confirm-dialog-desc">${desc}</div>
+          <div class="confirm-dialog-actions">
+            <button class="btn btn-secondary" onclick="this.closest('.confirm-overlay').remove()">取消</button>
+            <button class="btn ${isEnabling ? 'btn-primary' : 'btn-destructive'}" id="confirmToggleBtn">
+              ${isEnabling ? '确认启用' : '确认停用'}
+            </button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+      document.body.appendChild(overlay);
+
+      document.getElementById('confirmToggleBtn').addEventListener('click', () => {
+        toggleShopStatus(shopId);
+        overlay.remove();
+      });
+    }
+
+    function toggleShopStatus(shopId) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+      shop.status = shop.status === 'active' ? 'disabled' : 'active';
+      renderShopGrid();
+      const msg = shop.status === 'active' ? '已启用' : '已停用';
+      showToast('info', `店铺 "${shop.name}" ${msg}`);
+    }
+
+    // ==================== 退出登录 ====================
+    function handleLogout() {
+      showToast('info', '已退出登录');
+    }
+
+    // ==================== 工具函数 ====================
+    function debounce(fn, delay) {
+      let timer;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    // ==================== ESC 关闭弹窗 ====================
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDialog();
+        const confirmOverlay = document.querySelector('.confirm-overlay');
+        if (confirmOverlay) confirmOverlay.remove();
+      }
+    });
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      renderShopGrid();
+    });
+  </script>
+</body>
+</html>

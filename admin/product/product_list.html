@@ -11,6 +11,7 @@
   <style>
     /* ==================== 商品列表页专用样式 ==================== */
     /* 统计卡片 */
+    .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -286,27 +287,15 @@
 
     <!-- ==================== 主内容区 ==================== -->
     <div class="main-area">
-      <!-- 顶部头部 -->
-      <header class="header">
-        <div class="header-left">
-          <div class="breadcrumb" id="breadcrumb">
-            <span>资产</span>
-            <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-current">商品列表</span>
-          </div>
-        </div>
-      </header>
-
       <!-- 内容区域 -->
       <div class="content">
         <!-- ==================== 商品列表页面 ==================== -->
         <div class="page active" id="page-products">
           <div class="page-header">
             <div>
-              <div class="page-title">商品列表</div>
+              <div class="page-title">商品列表<span class="count-badge">(128件)</span></div>
               <div class="page-subtitle">
-                共 128 件商品
-                <span style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 12px; display: inline-flex; align-items: center; gap: 3px;">
+                <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                   只能查看自己所属部门及其下级小组的商品数据
                 </span>

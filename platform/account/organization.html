@@ -75,6 +75,18 @@
     .drag-handle-icon svg {
       pointer-events: none;
     }
+
+    /* 组织机构表格：缩小拖拽手柄列和复选框列的间距 */
+    #orgTableBody td.drag-col { padding: 14px 4px 14px 12px; width: 28px; }
+    #orgTableBody td.check-col { padding: 14px 2px; width: 28px; text-align: center; }
+
+    /* 无效拖拽目标 — 禁止提示 */
+    tr.drag-invalid {
+      cursor: not-allowed;
+    }
+    tr.drag-invalid td {
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -120,8 +132,8 @@
         <table>
           <thead>
             <tr>
-              <th style="width:32px"></th>
-              <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></th>
+              <th style="width:28px"></th>
+              <th style="width:28px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></th>
               <th style="width:28%">组织名称</th>
               <th style="width:12%">组织类型</th>
               <th style="width:12%">组织代码</th>
@@ -319,14 +331,14 @@
         // 拖拽手柄：集团不可拖
         var handleHtml = '';
         if (node.type !== 'group') {
-          handleHtml = '<td><span class="drag-handle-icon" draggable="true" data-drag-id="' + node.id + '">' + gripSvg + '</span></td>';
+          handleHtml = '<td class="drag-col"><span class="drag-handle-icon" draggable="true" data-drag-id="' + node.id + '">' + gripSvg + '</span></td>';
         } else {
-          handleHtml = '<td></td>';
+          handleHtml = '<td class="drag-col"></td>';
         }
 
         html += '<tr data-id="' + node.id + '" data-type="' + node.type + '" data-parent="' + (node.parent || '') + '" data-level="' + ORG_TYPE_LEVEL[node.type] + '">';
         html += handleHtml;
-        html += '<td><div class="checkbox" onclick="puToggleCheckbox(this)" style="display:inline-flex"></div></td>';
+        html += '<td class="check-col"><div class="checkbox" onclick="puToggleCheckbox(this)" style="display:inline-flex"></div></td>';
         html += '<td class="' + indentCls + '"><div class="tree-name-cell">' + toggleHtml + '<span>' + node.name + '</span></div></td>';
         html += '<td><span class="org-type ' + t.cls + '">' + t.label + '</span></td>';
         html += '<td>' + node.code + '</td>';
@@ -398,15 +410,13 @@
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', dragId);
 
-      // 标记拖拽行
+      // 标记拖拽行（延迟以确保浏览器捕获正常外观的拖拽图像）
       var row = this.closest('tr');
-      row.classList.add('dragging');
       document.body.classList.add('dragging-active');
 
-      // 下一帧再高亮，确保 drag image 已捕获
-      setTimeout(function() {
+      requestAnimationFrame(function() {
         if (row) row.classList.add('dragging');
-      }, 0);
+      });
     }
 
     function handleDragEnd(e) {
@@ -427,7 +437,7 @@
       if (!tbody) return;
       var rows = tbody.querySelectorAll('tr');
       rows.forEach(function(r) {
-        r.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-zone-highlight');
+        r.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-zone-highlight', 'drag-invalid');
       });
     }
 
@@ -441,12 +451,15 @@
       // 不能拖到自己身上
       if (targetId === currentDragId) {
         e.dataTransfer.dropEffect = 'none';
+        clearAllDragStates();
         return;
       }
 
       // 不能拖到自己的后代上（防止循环）
       if (isDescendantOf(targetId, currentDragId)) {
         e.dataTransfer.dropEffect = 'none';
+        clearAllDragStates();
+        row.classList.add('drag-invalid');
         return;
       }
 
@@ -469,10 +482,14 @@
       var isSibling = (currentDragNode.parent === targetNode.parent && draggedLevel === targetLevel);
 
       if (!canBeParent && !isSibling) {
-        // 既不是有效父节点也不是兄弟 → 不响应
+        // 既不是有效父节点也不是兄弟 → 不响应，显示禁止提示
         e.dataTransfer.dropEffect = 'none';
+        row.classList.add('drag-invalid');
         return;
       }
+
+      // 移除无效目标样式
+      row.classList.remove('drag-invalid');
 
       // 根据鼠标 Y 位置区分操作类型
       var rect = row.getBoundingClientRect();
@@ -506,7 +523,7 @@
       // 只在真正离开行时才清除（避免冒泡触发）
       if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget)) {
         var row = e.currentTarget;
-        row.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after');
+        row.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-invalid');
       }
     }
 

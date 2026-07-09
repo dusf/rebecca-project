@@ -62,23 +62,20 @@
       -webkit-user-select: none;
     }
 
-    /* 修复 iframe 内页面滚动：content 需填满视口并作为 flex 容器 */
-    .content {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      padding: 16px 24px 24px;
-    }
-
     /* SVG 不拦截拖拽事件 */
     .drag-handle-icon svg {
       pointer-events: none;
     }
 
-    /* 组织机构表格：缩小拖拽手柄列和复选框列的间距 */
-    #orgTableBody td.drag-col { padding: 14px 4px 14px 12px; width: 28px; }
-    #orgTableBody td.check-col { padding: 14px 2px; width: 28px; text-align: center; }
+    /* 组织机构表格：拖拽手柄列 + 复选框列紧凑对齐 */
+    .table-card th.drag-col,
+    #orgTableBody td.drag-col { box-sizing: border-box; width: 34px; padding: 14px 0 14px 12px; }
+
+    .table-card th.check-col,
+    #orgTableBody td.check-col { box-sizing: border-box; width: 30px; padding: 14px 0 14px 8px; text-align: left; }
+
+    .table-card th.drag-col,
+    .table-card th.check-col { padding-top: 12px; padding-bottom: 12px; }
 
     /* 无效拖拽目标 — 禁止提示 */
     tr.drag-invalid {
@@ -132,8 +129,8 @@
         <table>
           <thead>
             <tr>
-              <th style="width:28px"></th>
-              <th style="width:28px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></th>
+              <th class="drag-col"></th>
+              <th class="check-col"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></th>
               <th style="width:28%">组织名称</th>
               <th style="width:12%">组织类型</th>
               <th style="width:12%">组织代码</th>

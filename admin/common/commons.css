@@ -1596,6 +1596,28 @@
       gap: 12px;
     }
 
+    .dialog-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: hsl(var(--muted));
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--muted-foreground));
+      transition: all 0.15s;
+      z-index: 10;
+    }
+    .dialog-close:hover { background: hsl(30 15% 88%); color: hsl(var(--foreground)); }
+    .dialog-close svg { width: 14px; height: 14px; }
+
+    .dialog-header { position: relative; }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }

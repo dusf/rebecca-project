@@ -36,6 +36,8 @@ var PLATFORM_SIDEBAR_MENU = [
     items: [
       { page: 'country', label: '国家',
         icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
+      { page: 'region', label: '地区',
+        icon: '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
       { page: 'language', label: '语言',
         icon: '<svg viewBox="0 0 24 24"><path d="M5 8h6"/><path d="M8 8v8"/><path d="M14 16V8l5 8V8"/></svg>' },
       { page: 'currency', label: '货币',
@@ -67,6 +69,7 @@ var PLATFORM_SIDEBAR_MENU = [
 var PLATFORM_PAGE_CONFIG = {
   'accounts':      'account/accounts.html',
   'country':       'global/country.html',
+  'region':        'global/region.html',
   'language':      'global/language.html',
   'currency':      'global/currency.html',
   'exchange-rate': 'global/exchange_rate.html',
@@ -82,6 +85,7 @@ var PLATFORM_PAGE_CONFIG = {
 var PLATFORM_BREADCRUMB_CONFIG = {
   'accounts':      ['账号管理', '账号列表'],
   'country':       ['全局', '国家'],
+  'region':        ['全局', '地区'],
   'language':      ['全局', '语言'],
   'currency':      ['全局', '货币'],
   'exchange-rate': ['全局', '汇率'],

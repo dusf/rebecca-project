@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地区 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">地区</div>
+        <div class="page-subtitle">管理国家下的省、市、区/县级行政区划</div>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('info', '添加地区功能开发中...')">+ 添加地区</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索地区名称...">
+        <select class="filter-select">
+          <option value="">全部国家</option>
+          <option value="CN">中国</option>
+          <option value="US">美国</option>
+        </select>
+        <select class="filter-select">
+          <option value="">全部层级</option>
+          <option value="province">省/州</option>
+          <option value="city">市</option>
+          <option value="district">区/县</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>地区名称</th>
+              <th>层级</th>
+              <th>上级地区</th>
+              <th>国家</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>广东省</strong></td>
+              <td>省</td>
+              <td>中国</td>
+              <td>中国</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑地区')">编辑</div></td>
+            </tr>
+            <tr>
+              <td>　├ 广州市</td>
+              <td>市</td>
+              <td>广东省</td>
+              <td>中国</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑地区')">编辑</div></td>
+            </tr>
+            <tr>
+              <td>　　└ 天河区</td>
+              <td>区/县</td>
+              <td>广州市</td>
+              <td>中国</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑地区')">编辑</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -48,19 +48,21 @@
     return tbody.querySelectorAll('tr .checkbox.checked').length;
   };
 
+  /** 获取当前页面的 tbodyId */
+  function puGetTbodId() {
+    var config = window.PU_CONFIG || {};
+    return config.tbodId || 'tableBody';
+  }
+
   /** 更新批量操作栏状态 */
   window.puUpdateBulkBar = function() {
-    var count = puGetCheckedCount();
+    var tbodyId = puGetTbodId();
+    var count = puGetCheckedCount(tbodyId);
     var countEl = document.getElementById('puSelectedCount');
     if (countEl) countEl.textContent = count;
     // 启用/禁用批量按钮
     var bar = document.getElementById('bulkActionBar');
     if (bar) {
-      var btns = bar.querySelectorAll('.bulk-actions .btn[disabled], .bulk-actions .btn:disabled');
-      btns.forEach(function(btn) {
-        btn.disabled = count === 0;
-      });
-      // 也找没有 disabled 属性的普通批量按钮
       bar.querySelectorAll('.bulk-actions .btn').forEach(function(btn) {
         if (count === 0) {
           btn.setAttribute('disabled', '');
@@ -202,7 +204,8 @@
 
   /** 执行批量操作 */
   window.puDoBatchAction = function(actionName) {
-    var count = puGetCheckedCount();
+    var tbodyId = puGetTbodId();
+    var count = puGetCheckedCount(tbodyId);
     if (count === 0) {
       if (typeof showToast === 'function') showToast('info', '请先选择要操作的数据');
       return;
@@ -211,8 +214,40 @@
     if (!config || !config.batchActions) return;
     var action = config.batchActions.find(function(a) { return a.name === actionName; });
     if (action && typeof action.handler === 'function') {
-      action.handler(puGetCheckedIds());
+      action.handler(puGetCheckedIds(tbodyId));
     }
+  };
+
+  /** 获取渲染前已选中的 ID 列表（渲染前保存） */
+  window.puSaveCheckedIds = function(tbodyId) {
+    var tbody = document.getElementById(tbodyId || puGetTbodId());
+    if (!tbody) return [];
+    var ids = [];
+    tbody.querySelectorAll('tr .checkbox.checked').forEach(function(cb) {
+      var tr = cb.closest('tr');
+      if (tr && tr.dataset.id) ids.push(tr.dataset.id);
+    });
+    return ids;
+  };
+
+  /** 渲染后恢复复选框选中状态并刷新批量操作栏 */
+  window.puRestoreCheckedIds = function(tbodyId, ids) {
+    if (!ids || !ids.length) return;
+    var tbody = document.getElementById(tbodyId || puGetTbodId());
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function(tr) {
+      if (!tr.dataset.id || ids.indexOf(tr.dataset.id) === -1) return;
+      var cb = tr.querySelector('.checkbox');
+      if (cb) { cb.classList.add('checked'); cb.innerHTML = '✓'; }
+    });
+    puUpdateBulkBar();
+  };
+
+  /** 组合方法：渲染前返回选中 ID，期望页面在渲染后调用 puRestoreCheckedIds */
+  window.puWrapRender = function(tbodyId, renderFn) {
+    var checkedIds = puSaveCheckedIds(tbodyId);
+    renderFn();
+    puRestoreCheckedIds(tbodyId, checkedIds);
   };
 
 })();

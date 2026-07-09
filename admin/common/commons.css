@@ -1060,8 +1060,11 @@
     }
 
     thead .col-fixed-left {
+      position: sticky;
+      left: 0;
+      top: 0;
       background: #F5F0EB;
-      z-index: 3;
+      z-index: 4;
     }
 
     tbody .col-fixed-left {
@@ -1076,8 +1079,11 @@
     }
 
     thead .col-fixed-right {
+      position: sticky;
+      right: 0;
+      top: 0;
       background: #F5F0EB;
-      z-index: 3;
+      z-index: 4;
     }
 
     tbody .col-fixed-right {
@@ -1338,9 +1344,6 @@
 
     thead {
       background: #F5F0EB;
-      position: sticky;
-      top: 0;
-      z-index: 1;
     }
 
     th {
@@ -1351,6 +1354,10 @@
       text-align: left;
       white-space: nowrap;
       border-bottom: 1px solid #EBE4DB;
+      position: sticky;
+      top: 0;
+      background: #F5F0EB;
+      z-index: 2;
     }
 
     td {

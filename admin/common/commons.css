@@ -1360,6 +1360,22 @@
       z-index: 2;
     }
 
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    th.sortable:hover { color: hsl(var(--primary)); }
+    th.sortable .sort-icon {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 10px;
+      opacity: 0.4;
+      transition: opacity 0.15s;
+    }
+    th.sortable:hover .sort-icon,
+    th.sortable.sorted .sort-icon { opacity: 1; color: hsl(var(--primary)); }
+
     td {
       padding: 14px 16px;
       font-size: 14px;

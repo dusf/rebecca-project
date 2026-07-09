@@ -114,6 +114,8 @@ function getDeduplicatedStores(member) {
 var currentPage = 1;
 var pageSize = 10;
 var selectedMemberIds = [];
+var sortField = 'joinedAt';
+var sortDir = 'desc';
 
 function updateBatchBar() {
   var countEl = document.getElementById('batchCount');
@@ -204,10 +206,54 @@ function getOrgPaths(allMembers) {
   return Object.keys(paths).sort();
 }
 
+// ==================== 排序 ====================
+function sortMembers(members) {
+  return members.slice().sort(function(a, b) {
+    var va = a[sortField] || '', vb = b[sortField] || '';
+    if (sortField === 'joinedAt') {
+      // 日期时间字符串比较
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function updateSortIcons() {
+  var ths = document.querySelectorAll('th[data-sort]');
+  ths.forEach(function(th) {
+    var key = th.getAttribute('data-sort');
+    var icon = th.querySelector('.sort-icon');
+    th.classList.toggle('sorted', key === sortField);
+    if (icon) icon.textContent = (key === sortField) ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : '';
+  });
+}
+
+document.addEventListener('click', function(e) {
+  var th = e.target.closest('th.sortable');
+  if (!th) return;
+  var key = th.getAttribute('data-sort');
+  if (!key) return;
+  if (sortField === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = key;
+    sortDir = 'desc';
+  }
+  currentPage = 1;
+  updateSortIcons();
+  renderMembers();
+});
+
 // ==================== 渲染 ====================
 function renderMembers() {
   var allMembers = loadAllGlobalMembers();
   var filtered = getFilteredMembers(allMembers);
+  filtered = sortMembers(filtered);
+  updateSortIcons();
   var tbody = document.getElementById('memberTableBody');
   var empty = document.getElementById('emptyState');
   var countEl = document.getElementById('memberCount');

@@ -591,6 +591,9 @@
       { key: 'action', label: '操作', fixed: 'right', width: '120px', alwaysShow: true, isAction: true },
     ];
 
+    var productSortField = 'date';
+    var productSortDir = 'desc';
+
     let visibleCols = columnConfig.filter(function(c) { return c.defaultShow || c.alwaysShow; }).map(function(c) { return c.key; });
     let columnOrder = columnConfig.filter(function(c) { return !c.isCheckbox && !c.isAction && !c.alwaysShow; }).map(function(c) { return c.key; });
     columnOrder = columnConfig.filter(function(c) { return !c.isCheckbox && !c.isAction && c.alwaysShow && c.key !== 'checkbox'; }).map(function(c) { return c.key; }).concat(columnOrder);
@@ -770,6 +773,7 @@
       var thead = document.querySelector('.table-card table thead tr');
       if (!thead) return;
       var ordered = getOrderedVisibleCols();
+      var sortableKeys = { 'price': true, 'date': true, 'updateDate': true };
       thead.innerHTML = ordered.map(function(key) {
         var c = columnConfig.find(function(col) { return col.key === key; });
         if (!c) return '';
@@ -780,6 +784,11 @@
         }
         if (c.isAction) {
           return '<th class="' + fixedClass + '" style="' + width + '">' + c.label + '</th>';
+        }
+        if (sortableKeys[key]) {
+          var sorted = key === productSortField ? ' sorted' : '';
+          var icon = key === productSortField ? (productSortDir === 'asc' ? '\u25B2' : '\u25BC') : '';
+          return '<th class="sortable' + sorted + ' ' + fixedClass + '" data-sort="' + key + '" style="' + width + '">' + c.label + '<span class="sort-icon">' + icon + '</span></th>';
         }
         return '<th class="' + fixedClass + '" style="' + width + '">' + c.label + '</th>';
       }).join('');
@@ -846,6 +855,21 @@
           filteredProducts = filteredProducts.filter(function(p) { return p.date <= filter.dateTo; });
         }
       }
+
+      // 排序
+      filteredProducts.sort(function(a, b) {
+        var va = a[productSortField], vb = b[productSortField];
+        if (va === undefined) va = ''; if (vb === undefined) vb = '';
+        if (productSortField === 'price') {
+          // 数值排序
+          va = Number(va) || 0; vb = Number(vb) || 0;
+          return productSortDir === 'asc' ? va - vb : vb - va;
+        }
+        // 日期/字符串排序
+        if (va < vb) return productSortDir === 'asc' ? -1 : 1;
+        if (va > vb) return productSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
 
       if (filteredProducts.length === 0) {
         var colCount = visibleCols.length;
@@ -939,6 +963,22 @@
     function filterAndRender() {
       renderProducts(getCurrentFilter());
     }
+
+    // 商品表格排序点击
+    document.addEventListener('click', function(e) {
+      var th = e.target.closest('th.sortable');
+      if (!th) return;
+      var key = th.getAttribute('data-sort');
+      if (!key) return;
+      if (productSortField === key) {
+        productSortDir = productSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        productSortField = key;
+        productSortDir = 'desc';
+      }
+      renderTableHead();
+      renderProducts(getCurrentFilter());
+    });
 
     var productSearchEl = document.getElementById('productSearch');
     if (productSearchEl) productSearchEl.addEventListener('input', filterAndRender);

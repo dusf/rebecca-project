@@ -85,7 +85,7 @@
               <th>账号ID</th>
               <th>手机号</th>
               <th>组织机构</th>
-              <th style="width:130px">加入时间</th>
+              <th class="sortable sorted" data-sort="joinedAt" style="width:130px">加入时间<span class="sort-icon"></span></th>
               <th style="width:80px">操作</th>
             </tr>
           </thead>
@@ -142,6 +142,8 @@
     var selectedMemberIds = [];
     var currentPage = 1;
     var pageSize = 10;
+    var sortField = 'joinedAt';
+    var sortDir = 'desc';
 
     function updateBatchBar() {
       var countEl = document.getElementById('batchCount');
@@ -182,9 +184,52 @@
       }
     };
 
+    // ==================== 排序 ====================
+    function sortMembers(members) {
+      return members.slice().sort(function(a, b) {
+        var va = a[sortField] || '', vb = b[sortField] || '';
+        if (sortField === 'joinedAt') {
+          if (va < vb) return sortDir === 'asc' ? -1 : 1;
+          if (va > vb) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        }
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function updateSortIcons() {
+      var ths = document.querySelectorAll('th[data-sort]');
+      ths.forEach(function(th) {
+        var key = th.getAttribute('data-sort');
+        var icon = th.querySelector('.sort-icon');
+        th.classList.toggle('sorted', key === sortField);
+        if (icon) icon.textContent = (key === sortField) ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : '';
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      var th = e.target.closest('th.sortable');
+      if (!th) return;
+      var key = th.getAttribute('data-sort');
+      if (!key) return;
+      if (sortField === key) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortField = key;
+        sortDir = 'desc';
+      }
+      currentPage = 1;
+      updateSortIcons();
+      renderMembers();
+    });
+
     // ==================== 渲染 ====================/
     function renderMembers() {
       var members = loadMembers();
+      members = sortMembers(members);
+      updateSortIcons();
       var tbody = document.getElementById('memberTableBody');
       var empty = document.getElementById('emptyState');
       var countEl = document.getElementById('memberCount');

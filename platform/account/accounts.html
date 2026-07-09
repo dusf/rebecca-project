@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号列表 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">账号列表</div>
+        <div class="page-subtitle">管理系统中的所有账号信息</div>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('info', '添加账号功能开发中...')">+ 添加账号</button>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索账号名称/邮箱..." oninput="filterAccounts()" id="accountSearch">
+        <select class="filter-select" onchange="filterAccounts()" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th><div class="checkbox" onclick="toggleAllCheckboxes(this)"></div></th>
+              <th>账号</th>
+              <th class="sortable" data-sort="name">姓名<span class="sort-icon"></span></th>
+              <th>角色</th>
+              <th>组织</th>
+              <th>手机号</th>
+              <th class="sortable sorted" data-sort="createdAt">创建时间<span class="sort-icon">▼</span></th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="accountTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var PAGE_ROUTES = window.parent && window.parent.PLATFORM_PAGE_CONFIG;
+    var mockAccounts = [
+      { id: 1, account: 'admin', name: '系统管理员', role: '超级管理员', org: '总部/技术部', phone: '13800138000', email: 'admin@example.com', status: 'active', createdAt: '2026-07-01' },
+      { id: 2, account: 'zhangsan', name: '张三', role: '运营经理', org: '总部/运营部', phone: '13800138001', email: 'zhangsan@example.com', status: 'active', createdAt: '2026-07-03' },
+      { id: 3, account: 'lisi', name: '李四', role: '商品编辑', org: '总部/商品部', phone: '13800138002', email: 'lisi@example.com', status: 'active', createdAt: '2026-07-05' },
+      { id: 4, account: 'wangwu', name: '王五', role: '内容审核', org: '总部/内容部', phone: '13800138003', email: 'wangwu@example.com', status: 'disabled', createdAt: '2026-07-06' },
+      { id: 5, account: 'zhaoliu', name: '赵六', role: '数据分析', org: '总部/数据部', phone: '13800138004', email: 'zhaoliu@example.com', status: 'active', createdAt: '2026-07-08' }
+    ];
+
+    var sortField = 'createdAt';
+    var sortDir = 'desc';
+
+    function sortAccounts(data) {
+      return data.slice().sort(function(a, b) {
+        var va = a[sortField] || '', vb = b[sortField] || '';
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function updateSortIcons() {
+      var ths = document.querySelectorAll('th[data-sort]');
+      ths.forEach(function(th) {
+        var key = th.getAttribute('data-sort');
+        var icon = th.querySelector('.sort-icon');
+        th.classList.toggle('sorted', key === sortField);
+        if (icon) icon.textContent = (key === sortField) ? (sortDir === 'asc' ? '▲' : '▼') : '';
+      });
+    }
+
+    function renderAccounts() {
+      var data = mockAccounts.slice();
+      var search = (document.getElementById('accountSearch') || {}).value || '';
+      var status = (document.getElementById('statusFilter') || {}).value || '';
+
+      if (search) {
+        var s = search.toLowerCase();
+        data = data.filter(function(a) {
+          return a.account.toLowerCase().indexOf(s) !== -1 ||
+                 a.name.toLowerCase().indexOf(s) !== -1 ||
+                 (a.email || '').toLowerCase().indexOf(s) !== -1;
+        });
+      }
+      if (status) {
+        data = data.filter(function(a) { return a.status === status; });
+      }
+
+      data = sortAccounts(data);
+      updateSortIcons();
+
+      var tbody = document.getElementById('accountTableBody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-state-title">暂无匹配账号</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
+        return;
+      }
+
+      var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+
+      var statusMap = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+
+      tbody.innerHTML = data.map(function(a) {
+        var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
+        return '<tr>' +
+          '<td><div class="checkbox" onclick="toggleCheckbox(this)"></div></td>' +
+          '<td><strong>' + a.account + '</strong><br><span style="font-size:12px;color:hsl(var(--muted-foreground))">' + (a.email || '') + '</span></td>' +
+          '<td>' + a.name + '</td>' +
+          '<td>' + a.role + '</td>' +
+          '<td>' + a.org + '</td>' +
+          '<td>' + a.phone + '</td>' +
+          '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>' +
+          '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>' +
+          '<td><div class="action-group">' +
+            '<div class="action-btn" title="编辑" onclick="showToast(\'info\', \'编辑: ' + a.name + '\')">' + editIcon + '</div>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function filterAccounts() { renderAccounts(); }
+
+    function toggleCheckbox(el) {
+      el.classList.toggle('checked');
+      el.innerHTML = el.classList.contains('checked') ? '✓' : '';
+    }
+
+    function toggleAllCheckboxes(el) {
+      var isChecked = !el.classList.contains('checked');
+      el.classList.toggle('checked');
+      el.innerHTML = isChecked ? '✓' : '';
+      document.querySelectorAll('#accountTableBody .checkbox').forEach(function(cb) {
+        cb.classList.toggle('checked', isChecked);
+        cb.innerHTML = isChecked ? '✓' : '';
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      var th = e.target.closest('th.sortable');
+      if (!th) return;
+      var key = th.getAttribute('data-sort');
+      if (!key) return;
+      if (sortField === key) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortField = key;
+        sortDir = 'desc';
+      }
+      renderAccounts();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderAccounts();
+    });
+  </script>
+</body>
+</html>

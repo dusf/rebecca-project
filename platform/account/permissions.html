@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>权限配置 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">权限配置</div>
+        <div class="page-subtitle">配置各角色的功能访问权限</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>权限标识</th>
+              <th>权限名称</th>
+              <th>所属模块</th>
+              <th>描述</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-info">account.view</span></td>
+              <td><strong>查看账号</strong></td>
+              <td>账号管理</td>
+              <td>查看系统账号列表和详情</td>
+              <td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast('info', '编辑权限')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">account.manage</span></td>
+              <td><strong>管理账号</strong></td>
+              <td>账号管理</td>
+              <td>创建、编辑、删除系统账号</td>
+              <td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast('info', '编辑权限')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">role.view</span></td>
+              <td><strong>查看角色</strong></td>
+              <td>角色管理</td>
+              <td>查看系统角色列表和详情</td>
+              <td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast('info', '编辑权限')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">config.view</span></td>
+              <td><strong>查看配置</strong></td>
+              <td>全局配置</td>
+              <td>查看全局字段、模版等配置</td>
+              <td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast('info', '编辑权限')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">config.manage</span></td>
+              <td><strong>管理配置</strong></td>
+              <td>全局配置</td>
+              <td>创建、编辑全局字段和模版</td>
+              <td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast('info', '编辑权限')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-info">共 5 条记录</div>
+        <div class="pagination-buttons">
+          <div class="page-btn active">1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>操作日志 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">操作日志</div>
+        <div class="page-subtitle">查看系统中所有操作记录</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索操作人/操作内容...">
+        <select class="filter-select">
+          <option value="">全部模块</option>
+          <option value="account">账号管理</option>
+          <option value="config">全局配置</option>
+          <option value="system">系统设置</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>操作时间</th>
+              <th>操作人</th>
+              <th>操作模块</th>
+              <th>操作类型</th>
+              <th>操作描述</th>
+              <th>IP 地址</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 15:30:22</td>
+              <td>系统管理员</td>
+              <td>账号管理</td>
+              <td><span class="badge badge-info">新增</span></td>
+              <td>添加账号「赵六」</td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.100</td>
+            </tr>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 14:12:05</td>
+              <td>张三</td>
+              <td>全局配置</td>
+              <td><span class="badge badge-warning">修改</span></td>
+              <td>更新通用字段「商品颜色」</td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.101</td>
+            </tr>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 11:05:33</td>
+              <td>系统管理员</td>
+              <td>系统设置</td>
+              <td><span class="badge badge-success">登录</span></td>
+              <td>登录系统</td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.100</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-info">共 3 条记录</div>
+        <div class="pagination-buttons">
+          <div class="page-btn active">1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

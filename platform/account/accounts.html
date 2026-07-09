@@ -16,7 +16,6 @@
       <button class="btn btn-primary" onclick="showToast('info', '添加账号功能开发中...')">+ 添加账号</button>
     </div>
 
-    <!-- 工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
         <input class="search-input" type="text" placeholder="搜索账号名称/邮箱..." oninput="filterAccounts()" id="accountSearch">
@@ -28,13 +27,34 @@
       </div>
     </div>
 
-    <!-- 表格 -->
+    <!-- 批量操作栏 -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+        <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="customColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            自定义列
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="table-card">
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th><div class="checkbox" onclick="toggleAllCheckboxes(this)"></div></th>
+              <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, 'accountTableBody')"></div></th>
               <th>账号</th>
               <th class="sortable" data-sort="name">姓名<span class="sort-icon"></span></th>
               <th>角色</th>
@@ -51,8 +71,49 @@
     </div>
   </div>
 
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"></div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <!-- 更多操作下拉 -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="puDoMoreAction('resetPwd')">批量重置密码</div>
+    <div class="more-actions-item" onclick="puDoMoreAction('export')">导出选中账号</div>
+  </div>
+
+  <script src="../common/page_utils.js"></script>
   <script>
-    var PAGE_ROUTES = window.parent && window.parent.PLATFORM_PAGE_CONFIG;
+    // ========== 页面配置 ==========
+    window.PU_CONFIG = {
+      columns: [
+        { key: 'account',  label: '账号',     defaultShow: true,  alwaysShow: true  },
+        { key: 'name',     label: '姓名',     defaultShow: true,  alwaysShow: false },
+        { key: 'role',     label: '角色',     defaultShow: true,  alwaysShow: false },
+        { key: 'org',      label: '组织',     defaultShow: true,  alwaysShow: false },
+        { key: 'phone',    label: '手机号',   defaultShow: false, alwaysShow: false },
+        { key: 'createdAt',label: '创建时间', defaultShow: true,  alwaysShow: false },
+        { key: 'status',   label: '状态',     defaultShow: true,  alwaysShow: true  },
+        { key: 'actions',  label: '操作',     defaultShow: true,  alwaysShow: true  }
+      ],
+      visibleCols: ['account','name','role','org','phone','createdAt','status','actions'],
+      batchActions: [
+        { name: 'enable',  label: '批量启用', handler: function(ids) { showToast('success', '已启用 ' + ids.length + ' 个账号'); } },
+        { name: 'disable', label: '批量停用', handler: function(ids) { showToast('success', '已停用 ' + ids.length + ' 个账号'); } },
+        { name: 'delete',  label: '批量删除', handler: function(ids) { showToast('success', '已删除 ' + ids.length + ' 个账号'); } }
+      ],
+      moreActions: [
+        { name: 'resetPwd', label: '批量重置密码', handler: function() { showToast('info', '批量重置密码'); } },
+        { name: 'export',   label: '导出选中账号', handler: function() { showToast('info', '导出选中账号'); } }
+      ],
+      onColumnsChange: function() { renderAccounts(); }
+    };
+
+    // ========== 示例数据 ==========
     var mockAccounts = [
       { id: 1, account: 'admin', name: '系统管理员', role: '超级管理员', org: '总部/技术部', phone: '13800138000', email: 'admin@example.com', status: 'active', createdAt: '2026-07-01' },
       { id: 2, account: 'zhangsan', name: '张三', role: '运营经理', org: '总部/运营部', phone: '13800138001', email: 'zhangsan@example.com', status: 'active', createdAt: '2026-07-03' },
@@ -104,49 +165,39 @@
       updateSortIcons();
 
       var tbody = document.getElementById('accountTableBody');
+      var cols = window.PU_CONFIG.visibleCols;
       if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-state-title">暂无匹配账号</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-state-title">暂无匹配账号</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
         return;
       }
 
       var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-
       var statusMap = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
 
       tbody.innerHTML = data.map(function(a) {
         var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
-        return '<tr>' +
-          '<td><div class="checkbox" onclick="toggleCheckbox(this)"></div></td>' +
-          '<td><strong>' + a.account + '</strong><br><span style="font-size:12px;color:hsl(var(--muted-foreground))">' + (a.email || '') + '</span></td>' +
-          '<td>' + a.name + '</td>' +
-          '<td>' + a.role + '</td>' +
-          '<td>' + a.org + '</td>' +
-          '<td>' + a.phone + '</td>' +
-          '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>' +
-          '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>' +
-          '<td><div class="action-group">' +
-            '<div class="action-btn" title="编辑" onclick="showToast(\'info\', \'编辑: ' + a.name + '\')">' + editIcon + '</div>' +
-          '</div></td>' +
+        var cells = '';
+        cols.forEach(function(key) {
+          if (key === 'account')    cells += '<td><strong>' + a.account + '</strong><br><span style="font-size:12px;color:hsl(var(--muted-foreground))">' + (a.email || '') + '</span></td>';
+          else if (key === 'name')  cells += '<td>' + a.name + '</td>';
+          else if (key === 'role')  cells += '<td>' + a.role + '</td>';
+          else if (key === 'org')   cells += '<td>' + a.org + '</td>';
+          else if (key === 'phone') cells += '<td>' + a.phone + '</td>';
+          else if (key === 'createdAt') cells += '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>';
+          else if (key === 'status') cells += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+          else if (key === 'actions') cells += '<td><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast(\'info\', \'编辑: ' + a.name + '\')">' + editIcon + '</div></div></td>';
+        });
+        return '<tr data-id="' + a.id + '">' +
+          '<td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' +
+          cells +
         '</tr>';
       }).join('');
+
+      // 初始化自定义列面板
+      puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
     }
 
     function filterAccounts() { renderAccounts(); }
-
-    function toggleCheckbox(el) {
-      el.classList.toggle('checked');
-      el.innerHTML = el.classList.contains('checked') ? '✓' : '';
-    }
-
-    function toggleAllCheckboxes(el) {
-      var isChecked = !el.classList.contains('checked');
-      el.classList.toggle('checked');
-      el.innerHTML = isChecked ? '✓' : '';
-      document.querySelectorAll('#accountTableBody .checkbox').forEach(function(cb) {
-        cb.classList.toggle('checked', isChecked);
-        cb.innerHTML = isChecked ? '✓' : '';
-      });
-    }
 
     document.addEventListener('click', function(e) {
       var th = e.target.closest('th.sortable');

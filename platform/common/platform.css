@@ -1092,3 +1092,194 @@ tr:hover td { background: hsl(220 15% 96%); }
 
 .action-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
 .action-btn.danger:hover { background: hsl(0 84% 90%); color: hsl(var(--error)); }
+
+/* ==================== 成功按钮 ==================== */
+.btn-success {
+  background: hsl(var(--success));
+  color: hsl(var(--success-foreground));
+  border-color: hsl(var(--success));
+}
+.btn-success:hover {
+  background: hsl(142 60% 30%);
+  box-shadow: 0 2px 8px hsl(var(--success) / 0.3);
+}
+
+/* ==================== 批量操作栏增强 ==================== */
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid hsl(var(--border));
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.bulk-selected-count {
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  font-weight: 500;
+}
+
+.bulk-selected-count .count {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==================== 自定义列面板 ==================== */
+.custom-col-wrapper {
+  position: relative;
+}
+
+.custom-col-panel {
+  display: none;
+  position: fixed;
+  width: 240px;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.custom-col-panel.show {
+  display: block;
+}
+
+.custom-col-header {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  border-bottom: 1px solid #F0F2F6;
+}
+
+.custom-col-body {
+  padding: 6px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.custom-col-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  user-select: none;
+}
+
+.custom-col-item:hover {
+  background: hsl(var(--primary-50));
+}
+
+.custom-col-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.custom-col-item.dragging {
+  opacity: 0.4;
+  background: hsl(var(--primary-100));
+}
+
+.custom-col-item.drag-over {
+  border-top: 2px solid hsl(var(--primary));
+}
+
+.custom-col-item .drag-handle {
+  display: flex;
+  align-items: center;
+  color: hsl(var(--muted-foreground));
+  cursor: grab;
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.custom-col-item .drag-handle:active {
+  cursor: grabbing;
+}
+
+.custom-col-item.disabled .drag-handle {
+  display: none;
+}
+
+.custom-col-item .col-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.custom-col-item.active .col-check {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.custom-col-item.active .col-check svg {
+  display: block;
+}
+
+.custom-col-item .col-check svg {
+  display: none;
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+.custom-col-footer {
+  padding: 8px 14px;
+  border-top: 1px solid #F0F2F6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ==================== 更多操作下拉 ==================== */
+.more-actions-dropdown {
+  position: fixed;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 99999;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.more-actions-item {
+  padding: 9px 16px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.more-actions-item:hover {
+  background: hsl(var(--primary-50));
+}
+
+/* ==================== 表格复选框 ==================== */
+th .checkbox {
+  display: inline-flex;
+}

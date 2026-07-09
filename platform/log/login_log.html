@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录日志 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">登录日志</div>
+        <div class="page-subtitle">查看账号登录及退出记录</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索账号/IP...">
+        <select class="filter-select">
+          <option value="">全部状态</option>
+          <option value="success">成功</option>
+          <option value="failed">失败</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>登录时间</th>
+              <th>账号</th>
+              <th>登录方式</th>
+              <th>状态</th>
+              <th>IP 地址</th>
+              <th>浏览器 / 设备</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 15:28:10</td>
+              <td>admin</td>
+              <td>密码登录</td>
+              <td><span class="badge badge-success">成功</span></td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.100</td>
+              <td>Chrome 126 / Windows</td>
+            </tr>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 14:05:33</td>
+              <td>zhangsan</td>
+              <td>密码登录</td>
+              <td><span class="badge badge-success">成功</span></td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.101</td>
+              <td>Firefox 128 / macOS</td>
+            </tr>
+            <tr>
+              <td style="color:hsl(var(--muted-foreground))">2026-07-09 10:12:45</td>
+              <td>lisi</td>
+              <td>密码登录</td>
+              <td><span class="badge badge-error">失败</span></td>
+              <td style="color:hsl(var(--muted-foreground))">192.168.1.200</td>
+              <td>Safari / iOS</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <div class="pagination-info">共 3 条记录</div>
+        <div class="pagination-buttons">
+          <div class="page-btn active">1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

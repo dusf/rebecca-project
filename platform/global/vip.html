@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIP体系 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">VIP体系</div>
+        <div class="page-subtitle">管理会员等级及权益规则</div>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('info', '添加VIP等级功能开发中...')">+ 添加VIP等级</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索等级名称...">
+        <select class="filter-select">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>等级</th>
+              <th>等级名称</th>
+              <th>成长值要求</th>
+              <th>折扣权益</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>V1</td>
+              <td><strong>普通会员</strong></td>
+              <td>0</td>
+              <td>无</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑VIP等级')">编辑</div></td>
+            </tr>
+            <tr>
+              <td>V2</td>
+              <td><strong>黄金会员</strong></td>
+              <td>1000</td>
+              <td>95折</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑VIP等级')">编辑</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

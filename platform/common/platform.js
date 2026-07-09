@@ -28,57 +28,69 @@ var PLATFORM_SIDEBAR_MENU = [
     section: '账号管理',
     items: [
       { page: 'accounts', label: '账号列表',
-        icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-      { page: 'roles', label: '角色管理',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
-      { page: 'permissions', label: '权限配置',
-        icon: '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' }
+        icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' }
     ]
   },
   {
-    section: '全局配置',
+    section: '全局',
     items: [
-      { page: 'fields', label: '通用字段',
-        icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>' },
-      { page: 'templates', label: '模版配置',
-        icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>' },
-      { page: 'dictionary', label: '数据字典',
-        icon: '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' }
+      { page: 'country', label: '国家',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
+      { page: 'language', label: '语言',
+        icon: '<svg viewBox="0 0 24 24"><path d="M5 8h6"/><path d="M8 8v8"/><path d="M14 16V8l5 8V8"/></svg>' },
+      { page: 'currency', label: '货币',
+        icon: '<svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+      { page: 'exchange-rate', label: '汇率',
+        icon: '<svg viewBox="0 0 24 24"><path d="M17 10H3l4-4"/><path d="M7 14h14l-4 4"/></svg>' },
+      { page: 'tax-rate', label: '税率',
+        icon: '<svg viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>' },
+      { page: 'shipping', label: '运费',
+        icon: '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="13" height="10"/><path d="M15 12h5l2 3v2h-7"/><circle cx="6.5" cy="17" r="2"/><circle cx="17.5" cy="17" r="2"/></svg>' },
+      { page: 'vip', label: 'VIP体系',
+        icon: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+      { page: 'category', label: '分类',
+        icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>' }
     ]
   },
   {
-    section: '系统设置',
+    section: '日志管理',
     items: [
-      { page: 'audit-log', label: '操作日志',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>' },
-      { page: 'system-config', label: '系统参数',
-        icon: '<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.64l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15-.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.64V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.64l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.64V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>' }
+      { page: 'operation-log', label: '操作日志',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
+      { page: 'login-log', label: '登录日志',
+        icon: '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>' }
     ]
   }
 ];
 
 // ==================== 页面路由映射 ====================
 var PLATFORM_PAGE_CONFIG = {
-  'accounts':     'account/accounts.html',
-  'roles':        'account/roles.html',
-  'permissions':  'account/permissions.html',
-  'fields':       'config/fields.html',
-  'templates':    'config/templates.html',
-  'dictionary':   'config/dictionary.html',
-  'audit-log':    'config/audit_log.html',
-  'system-config':'config/system_config.html'
+  'accounts':      'account/accounts.html',
+  'country':       'global/country.html',
+  'language':      'global/language.html',
+  'currency':      'global/currency.html',
+  'exchange-rate': 'global/exchange_rate.html',
+  'tax-rate':      'global/tax_rate.html',
+  'shipping':      'global/shipping.html',
+  'vip':           'global/vip.html',
+  'category':      'global/category.html',
+  'operation-log': 'log/operation_log.html',
+  'login-log':     'log/login_log.html'
 };
 
 // ==================== 面包屑配置 ====================
 var PLATFORM_BREADCRUMB_CONFIG = {
-  'accounts':     ['账号管理', '账号列表'],
-  'roles':        ['账号管理', '角色管理'],
-  'permissions':  ['账号管理', '权限配置'],
-  'fields':       ['全局配置', '通用字段'],
-  'templates':    ['全局配置', '模版配置'],
-  'dictionary':   ['全局配置', '数据字典'],
-  'audit-log':    ['系统设置', '操作日志'],
-  'system-config':['系统设置', '系统参数']
+  'accounts':      ['账号管理', '账号列表'],
+  'country':       ['全局', '国家'],
+  'language':      ['全局', '语言'],
+  'currency':      ['全局', '货币'],
+  'exchange-rate': ['全局', '汇率'],
+  'tax-rate':      ['全局', '税率'],
+  'shipping':      ['全局', '运费'],
+  'vip':           ['全局', 'VIP体系'],
+  'category':      ['全局', '分类'],
+  'operation-log': ['日志管理', '操作日志'],
+  'login-log':     ['日志管理', '登录日志']
 };
 
 // ==================== 侧边栏渲染 ====================

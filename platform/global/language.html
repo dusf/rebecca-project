@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语言 - 中台管理</title>
+  <link rel="stylesheet" href="../common/platform.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">语言</div>
+        <div class="page-subtitle">管理多语言站点支持的语言</div>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('info', '添加语言功能开发中...')">+ 添加语言</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索语言名称/语言代码...">
+        <select class="filter-select">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>语言</th>
+              <th>语言代码</th>
+              <th>默认货币</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>简体中文</strong></td>
+              <td>zh-CN</td>
+              <td>CNY</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑语言')">编辑</div></td>
+            </tr>
+            <tr>
+              <td><strong>English</strong></td>
+              <td>en-US</td>
+              <td>USD</td>
+              <td><span class="badge badge-success">启用</span></td>
+              <td><div class="action-btn" title="编辑" onclick="showToast('info', '编辑语言')">编辑</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

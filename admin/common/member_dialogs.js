@@ -306,27 +306,35 @@ window.doAddMember = function() {
 var inviteState = { selectedMemberIds: [], selectedShopIds: [], expandedOrgs: {}, searchQuery: '' };
 
 window.openInviteMemberModal = function() {
+  var isShopMode = window.MDHooks.inviteMode === 'shop';
   inviteState = { selectedMemberIds: [], selectedShopIds: [], expandedOrgs: {}, searchQuery: '' };
+
+  if (isShopMode) {
+    var currentShopId = getCurrentShopId();
+    if (currentShopId) inviteState.selectedShopIds = [currentShopId];
+  }
+
   var overlay = document.createElement('div');
   overlay.className = 'dialog-overlay';
   overlay.id = 'inviteMemberModalOverlay';
-  overlay.innerHTML = '<div class="dialog invite-dialog">' +
+  overlay.innerHTML = '<div class="dialog invite-dialog' + (isShopMode ? ' invite-dialog-shop' : '') + '">' +
     '<div class="dialog-header"><div class="dialog-title">邀请成员</div><button class="dialog-close" onclick="closeInviteMemberModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
-    '<div class="dialog-desc">选择成员并指定要加入的店铺，确认后成员将获得对应店铺的访问权限</div>' +
+    '<div class="dialog-desc">' + (isShopMode ? '选择组织机构下的成员，添加至当前店铺' : '选择成员并指定要加入的店铺，确认后成员将获得对应店铺的访问权限') + '</div>' +
     '<div class="dialog-body">' +
       '<div class="invite-panels">' +
-        '<div class="invite-left">' +
+        '<div class="invite-left' + (isShopMode ? ' full' : '') + '">' +
           '<div class="invite-search"><input class="invite-search-input" id="inviteSearchInput" placeholder="搜索姓名或手机号..." /></div>' +
           '<div class="invite-tree" id="inviteTree"></div>' +
         '</div>' +
+        (isShopMode ? '' :
         '<div class="invite-right">' +
           '<div class="invite-right-title"><span>选择店铺</span><button class="clear-link" onclick="clearInviteShops()">清空</button></div>' +
           '<div class="invite-shop-list" id="inviteShopList"></div>' +
-        '</div>' +
+        '</div>') +
       '</div>' +
     '</div>' +
     '<div class="invite-footer">' +
-      '<span class="invite-footer-info">已选择 <strong id="inviteSelectedCount">0</strong> 名成员，<strong id="inviteShopCount">0</strong> 家店铺</span>' +
+      '<span class="invite-footer-info">已选择 <strong id="inviteSelectedCount">0</strong> 名成员' + (isShopMode ? '' : '，<strong id="inviteShopCount">0</strong> 家店铺') + '</span>' +
       '<div class="dialog-actions" style="margin:0;">' +
         '<button class="btn btn-secondary" onclick="closeInviteMemberModal()">取消</button>' +
         '<button class="btn btn-primary" id="inviteConfirmBtn" onclick="doInviteMembers()" disabled>确认邀请</button>' +
@@ -336,7 +344,8 @@ window.openInviteMemberModal = function() {
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeInviteMemberModal(); });
   document.body.appendChild(overlay);
   renderInviteTree();
-  renderInviteShops();
+  if (!isShopMode) renderInviteShops();
+  updateInviteFooter();
   var si = document.getElementById('inviteSearchInput');
   if (si) { si.addEventListener('input', function() { inviteState.searchQuery = this.value; renderInviteTree(); }); }
   overlay.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInviteMemberModal(); });
@@ -455,13 +464,17 @@ function updateInviteFooter() {
   var mc = document.getElementById('inviteSelectedCount');
   var sc = document.getElementById('inviteShopCount');
   var btn = document.getElementById('inviteConfirmBtn');
+  var isShopMode = window.MDHooks.inviteMode === 'shop';
   if (mc) mc.textContent = inviteState.selectedMemberIds.length;
   if (sc) sc.textContent = inviteState.selectedShopIds.length;
-  if (btn) btn.disabled = inviteState.selectedMemberIds.length === 0 || inviteState.selectedShopIds.length === 0;
+  if (btn) btn.disabled = inviteState.selectedMemberIds.length === 0 || (!isShopMode && inviteState.selectedShopIds.length === 0);
 }
 
 window.doInviteMembers = function() {
-  if (inviteState.selectedMemberIds.length === 0 || inviteState.selectedShopIds.length === 0) return;
+  var isShopMode = window.MDHooks.inviteMode === 'shop';
+
+  if (inviteState.selectedMemberIds.length === 0) return;
+  if (!isShopMode && inviteState.selectedShopIds.length === 0) return;
 
   // 收集选中的成员详情
   var selectedMembers = inviteState.selectedMemberIds.map(function(mid) {
@@ -470,9 +483,15 @@ window.doInviteMembers = function() {
 
   // 收集选中的店铺详情
   var shops = loadShops();
-  var selectedShops = inviteState.selectedShopIds.map(function(sid) {
-    return shops.find(function(s) { return s.id === sid; });
-  }).filter(Boolean);
+  var selectedShops;
+  if (isShopMode) {
+    var currentShopId = getCurrentShopId();
+    selectedShops = shops.filter(function(s) { return s.id === currentShopId; });
+  } else {
+    selectedShops = inviteState.selectedShopIds.map(function(sid) {
+      return shops.find(function(s) { return s.id === sid; });
+    }).filter(Boolean);
+  }
 
   closeInviteMemberModal();
 
@@ -481,7 +500,7 @@ window.doInviteMembers = function() {
     window.MDHooks.onInviteMembers({
       memberIds: inviteState.selectedMemberIds,
       selectedMembers: selectedMembers,
-      shopIds: inviteState.selectedShopIds,
+      shopIds: selectedShops.map(function(s) { return s.id; }),
       selectedShops: selectedShops
     });
   }

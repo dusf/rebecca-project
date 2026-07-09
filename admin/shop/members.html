@@ -298,7 +298,9 @@
     };
 
     // ==================== 页面回调钩子（设置保存逻辑） ====================
-    // 这些钩子由 member_dialogs.js 在确认添加/邀请时调用
+    // 设置为店铺模式：邀请成员时无需选择店铺，直接加入当前店铺
+    window.MDHooks.inviteMode = 'shop';
+
     window.MDHooks.onAddMember = function(formData) {
       // 添加到当前店铺成员列表
       var now = new Date();
@@ -344,16 +346,13 @@
     window.MDHooks.onInviteMembers = function(data) {
       var now = new Date();
       var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
+      var members = loadMembers();
 
-      data.shopIds.forEach(function(shopId) {
-        var key = 'rebecca_members_' + shopId;
-        var mems = []; try { var d = localStorage.getItem(key); if (d) mems = JSON.parse(d); } catch(e) {}
-        data.selectedMembers.forEach(function(m) {
-          if (mems.some(function(ex) { return ex.accountId === m.accountId; })) return;
-          mems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: data.selectedShops.map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; }), type: 'invited', joinedAt: joinedAt });
-        });
-        localStorage.setItem(key, JSON.stringify(mems));
+      data.selectedMembers.forEach(function(m) {
+        if (members.some(function(ex) { return ex.accountId === m.accountId; })) return;
+        members.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: data.selectedShops.map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; }), type: 'invited', joinedAt: joinedAt });
       });
+      saveMembers(members);
 
       // 同步到全局账号
       var allAccounts = mdLoadAllAccounts();
@@ -366,7 +365,7 @@
 
       currentPage = 1;
       renderMembers();
-      showToast('success', '已邀请 ' + data.selectedMembers.length + ' 名成员加入 ' + data.selectedShops.length + ' 家店铺');
+      showToast('success', '已邀请 ' + data.selectedMembers.length + ' 名成员加入当前店铺');
     };
 
     // ==================== 移除成员 ====================/

@@ -969,7 +969,6 @@
               创建于 ${shop.createdAt}
             </div>
             <div class="shop-card-actions" onclick="event.stopPropagation()">
-              <button class="shop-card-btn" onclick="enterShop(${shop.id})">进入管理</button>
               <button class="shop-card-btn" onclick="enterShopMembers(${shop.id})">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 成员
@@ -1057,7 +1056,6 @@
               创建于 ${shop.createdAt}
             </div>
             <div class="shop-card-actions" onclick="event.stopPropagation()">
-              <button class="shop-card-btn" onclick="enterInvitedShop(${shop.id})">进入管理</button>
               <button class="shop-card-btn danger" onclick="rejectInvite(${shop.id})">退出</button>
             </div>
           </div>
@@ -1104,75 +1102,6 @@
       } else {
         window.location.href = 'members.html';
       }
-    }
-
-    // ==================== 进入店铺 ====================
-    function enterShop(shopId) {
-      const shop = shops.find(s => s.id === shopId);
-      if (!shop) return;
-      if (shop.status !== 'active') {
-        showToast('info', `"${shop.name}" 已停用，请先启用该店铺`);
-        return;
-      }
-      // 同步到全局店铺数据并跳转到后台管理首页
-      try {
-        var globalShops = JSON.parse(localStorage.getItem('rebecca_shops') || '[]');
-        var matched = globalShops.find(function(s) { return s.name === shop.name; });
-        if (matched) {
-          localStorage.setItem('rebecca_current_shop', matched.id);
-        } else {
-          // 店铺不存在于全局数据中，创建一条
-          var newId = 'shop_' + Date.now();
-          globalShops.push({
-            id: newId, name: shop.name, slug: shop.domain.split('.')[0],
-            description: '', logo: '', domain: shop.domain, customDomain: '',
-            domainStatus: 'active', status: 'active', color: shop.color,
-            createdAt: shop.createdAt, productCount: shop.productCount
-          });
-          localStorage.setItem('rebecca_shops', JSON.stringify(globalShops));
-          localStorage.setItem('rebecca_current_shop', newId);
-        }
-      } catch(e) {}
-      showToast('success', '正在进入 "' + shop.name + '"');
-      setTimeout(function() {
-        if (window.self !== window.top) {
-          window.parent.location.href = 'index.html';
-        } else {
-          window.location.href = 'index.html';
-        }
-      }, 500);
-    }
-
-    // ==================== 进入被邀请店铺 ====================
-    function enterInvitedShop(shopId) {
-      var shop = invitedShops.find(function(s) { return s.id === shopId; });
-      if (!shop) return;
-      // 同步到全局店铺数据并跳转到后台管理首页
-      try {
-        var globalShops = JSON.parse(localStorage.getItem('rebecca_shops') || '[]');
-        var matched = globalShops.find(function(s) { return s.name === shop.name; });
-        if (matched) {
-          localStorage.setItem('rebecca_current_shop', matched.id);
-        } else {
-          var newId = 'shop_' + Date.now();
-          globalShops.push({
-            id: newId, name: shop.name, slug: shop.domain.split('.')[0],
-            description: '', logo: '', domain: shop.domain, customDomain: '',
-            domainStatus: 'active', status: 'active', color: shop.color,
-            createdAt: shop.createdAt, productCount: shop.productCount
-          });
-          localStorage.setItem('rebecca_shops', JSON.stringify(globalShops));
-          localStorage.setItem('rebecca_current_shop', newId);
-        }
-      } catch(e) {}
-      showToast('success', '正在进入 "' + shop.name + '"');
-      setTimeout(function() {
-        if (window.self !== window.top) {
-          window.parent.location.href = 'index.html';
-        } else {
-          window.location.href = 'index.html';
-        }
-      }, 500);
     }
 
     // ==================== 退出被邀请店铺 ====================

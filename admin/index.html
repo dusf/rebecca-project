@@ -125,7 +125,7 @@
     var BREADCRUMB_CONFIG = {
       'dashboard':    ['仪表盘', '概览'],
       'products':     ['资产', '商品列表'],
-      'add-product':  ['资产', '添加商品'],
+      'add-product':  ['资产', {label: '商品列表', page: 'products'}, '添加商品'],
       'orders':       ['销售', '订单管理'],
       'series':       ['销售', '系列管理'],
       'promotions':   ['营销', '促销活动'],
@@ -259,14 +259,21 @@
       AD_CURRENT_URL = url;
     }
 
-    // 初始化：将初始 iframe 加入缓存
-    (function() {
+    // 初始化：激活默认 iframe 并渲染侧边栏/面包屑
+    function adminInit() {
       var initIframe = document.getElementById('contentFrame');
       if (initIframe) {
         initIframe.classList.add('active');
         AD_IFRAME_CACHE[AD_CURRENT_URL] = initIframe;
       }
-    })();
+      if (typeof CURRENT_PAGE !== 'undefined') {
+        if (typeof renderSidebar === 'function') renderSidebar(CURRENT_PAGE);
+        updateBreadcrumb(CURRENT_PAGE);
+      }
+    }
+
+    // DOM 就绪后初始化
+    document.addEventListener('DOMContentLoaded', adminInit);
   </script>
   <script src="common/js/commons.js"></script>
 </head>
@@ -303,5 +310,11 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="common/js/dialog_host.js"></script>
+  <!-- 页面初始化：在 body 末尾直接执行，避免 DOMContentLoaded 未触发导致 iframe 未显示 -->
+  <script>
+    (function() {
+      if (typeof adminInit === 'function') adminInit();
+    })();
+  </script>
 </body>
 </html>

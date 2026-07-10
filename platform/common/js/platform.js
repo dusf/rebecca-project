@@ -196,7 +196,7 @@ window.handleSidebarNav = function(page) {
 
 // ==================== iframe 加载（缓存池机制：切换菜单时保持页面状态，不重新加载） ====================
 var PLATFORM_IFRAME_CACHE = {};
-var PLATFORM_CURRENT_URL = 'account/accounts/accounts.html';
+var PLATFORM_CURRENT_URL = 'account/organization/organization.html';
 
 function loadIframe(url) {
   var container = document.querySelector('.iframe-container');
@@ -235,14 +235,24 @@ function loadIframe(url) {
   PLATFORM_CURRENT_URL = url;
 }
 
-// 初始化：将初始 iframe 加入缓存
-(function() {
+// ==================== 页面初始化 ====================
+function platformInit() {
+  // 激活初始 iframe（确保默认页面可见）
   var initIframe = document.getElementById('contentFrame');
   if (initIframe) {
     initIframe.classList.add('active');
     PLATFORM_IFRAME_CACHE[PLATFORM_CURRENT_URL] = initIframe;
   }
-})();
+
+  // 渲染侧边栏和面包屑
+  if (typeof CURRENT_PAGE !== 'undefined') {
+    renderSidebar(CURRENT_PAGE);
+    updateBreadcrumb(CURRENT_PAGE);
+  }
+}
+
+// DOM 就绪后初始化
+document.addEventListener('DOMContentLoaded', platformInit);
 
 // ==================== 事件委托：侧边栏点击 ====================
 document.addEventListener('DOMContentLoaded', function() {
@@ -257,11 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     handleSidebarNav(page);
   });
-
-  // 自动渲染侧边栏
-  if (typeof CURRENT_PAGE !== 'undefined') {
-    renderSidebar(CURRENT_PAGE);
-  }
 });
 
 // ==================== 对话框工具函数 ====================

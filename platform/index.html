@@ -34,8 +34,8 @@
   <script>
     // ==================== 页面配置 ====================
     // 当前活跃页面
-    var CURRENT_PAGE = 'accounts';
-    var currentActivePage = 'accounts';
+    var CURRENT_PAGE = 'organization';
+    var currentActivePage = 'organization';
   </script>
   <script src="common/js/platform.js"></script>
 </head>
@@ -52,7 +52,7 @@
           <div class="breadcrumb" id="breadcrumb">
             <span>账号管理</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-current">账号列表</span>
+            <span class="breadcrumb-current">组织机构</span>
           </div>
         </div>
       </header>
@@ -60,7 +60,7 @@
       <!-- iframe 容器 -->
       <div class="iframe-container">
         <div class="iframe-loader" id="iframeLoader"></div>
-        <iframe id="contentFrame" src="account/accounts/accounts.html" title="内容区"></iframe>
+        <iframe id="contentFrame" src="account/organization/organization.html" title="内容区"></iframe>
       </div>
     </div>
   </div>
@@ -72,5 +72,11 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="common/js/dialog_host.js"></script>
+  <!-- 页面初始化：在 body 末尾直接执行，避免 DOMContentLoaded 未触发导致 iframe 未显示 -->
+  <script>
+    (function() {
+      if (typeof platformInit === 'function') platformInit();
+    })();
+  </script>
 </body>
 </html>

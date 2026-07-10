@@ -1141,6 +1141,107 @@
       margin-top: 0;
     }
 
+    /* 动态规格块 */
+    .spec-block {
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      padding: 14px;
+      background: hsl(var(--background));
+    }
+
+    .spec-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .spec-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      outline: none;
+      min-width: 60px;
+      transition: border-color 0.15s;
+    }
+
+    .spec-title:hover {
+      border-color: hsl(var(--border));
+    }
+
+    .spec-title:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+      background: hsl(var(--card));
+    }
+
+    .spec-delete {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .spec-delete:hover {
+      background: hsl(0 84% 90%);
+      color: hsl(var(--error));
+    }
+
+    .spec-filters select:empty {
+      display: none;
+    }
+
+    /* SKU 批量操作栏（在卡片内部，去除多余背景和圆角） */
+    #skuBulkActionBar {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid hsl(var(--border));
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-top: 4px;
+    }
+
+    #skuBulkActionBar .bulk-actions {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    #skuBulkActionBar .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* 内联批量编辑面板 */
+    .bulk-inline-edit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .bulk-edit-label {
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      white-space: nowrap;
+    }
+
+    .bulk-inline-edit .form-input {
+      width: 160px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
     .spec-filters {
       display: flex;
       align-items: center;
@@ -1371,19 +1472,6 @@
 
     <!-- ==================== 主内容区 ==================== -->
     <div class="main-area">
-      <!-- 顶部头部 -->
-      <header class="header">
-        <div class="header-left">
-          <div class="breadcrumb" id="breadcrumb">
-            <span>资产</span>
-            <span class="breadcrumb-separator">/</span>
-            <a class="breadcrumb-link" href="javascript:void(0)" onclick="navigateToPage('product_list.html')">商品列表</a>
-            <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-current">添加商品</span>
-          </div>
-        </div>
-      </header>
-
       <!-- 内容区域 -->
       <div class="content">
         <!-- ==================== 添加商品页面 ==================== -->
@@ -1495,7 +1583,7 @@
 
                   <div class="form-group">
                     <label class="form-label">
-                      <span>商品属性富文本</span>
+                      <span>商品参数</span>
                       <span class="form-hint">发质、长度、密度、蕾丝类型、帽型、护理说明</span>
                     </label>
                     <div class="rich-editor-simple">
@@ -1552,52 +1640,55 @@
                     </div>
                   </div>
                 </div>
-                </div>
 
                 <!-- SKU 规格 -->
                 <div class="form-section-card">
                   <div class="form-section-card-header">
                     <div>
                       <div class="form-section-card-title">SKU 规格</div>
-                      <div class="form-section-card-subtitle">按颜色、尺码组合生成 SKU。商品SKU编码与库存系统SKU编码手动映射，价格以美元为基准。</div>
+                      <div class="form-section-card-subtitle">按规格组合生成 SKU，规格名称和选项值均可自定义。价格以美元为基准。</div>
                     </div>
-                    <button class="form-section-card-action" onclick="batchSetStock()">批量设置库存</button>
                   </div>
 
-                  <!-- 颜色 -->
-                  <div class="spec-section-title">颜色</div>
-                  <div class="tag-pills" id="colorTags">
-                    <div class="tag-pill">黑色<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <div class="tag-pill">棕色<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <div class="tag-pill">高光色<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <button class="tag-add-btn" onclick="showTagInput(this, 'color')">+ 添加颜色</button>
-                  </div>
+                  <!-- 新增规格按钮 -->
+                  <button class="form-section-card-action" onclick="addSpec()" style="margin-bottom: 12px;">+ 新增规格</button>
 
-                  <!-- 尺码 -->
-                  <div class="spec-section-title">尺码</div>
-                  <div class="tag-pills" id="sizeTags">
-                    <div class="tag-pill">18码<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <div class="tag-pill">22码<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <div class="tag-pill">26码<span class="remove" onclick="removeTag(this)">×</span></div>
-                    <button class="tag-add-btn" onclick="showTagInput(this, 'size')">+ 添加尺码</button>
+                  <!-- 动态规格列表 -->
+                  <div id="specsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- JS 动态生成 -->
                   </div>
 
                   <!-- 筛选与联动 -->
-                  <div class="spec-filters">
-                    <select id="filterColor" onchange="renderSkuTable()">
-                      <option value="">颜色</option>
-                    </select>
-                    <select id="filterSize" onchange="renderSkuTable()">
-                      <option value="">尺码</option>
-                    </select>
+                  <div class="spec-filters" id="specFiltersRow">
+                    <!-- JS 动态生成 -->
                     <div class="spec-link-toggle" onclick="toggleStockLink(this)">
                       <div class="checkbox checked" id="stockLinkToggle">✓</div>
                       <span>库存联动</span>
                     </div>
                   </div>
 
+                  <!-- SKU 批量操作栏 -->
+                  <div class="bulk-action-bar" id="skuBulkActionBar">
+                    <div class="bulk-selected-count">已选 <span class="count" id="skuSelectedCount">0</span> 项</div>
+                    <div class="bulk-actions" id="skuBulkActions">
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuImage()" disabled id="btnBatchImage">批量图片</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuName()" disabled id="btnBatchName">批量名称</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuInvCode()" disabled id="btnBatchInvCode">批量库存编码</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuStock()" disabled id="btnBatchStock">批量库存</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuQty()" disabled id="btnBatchQty">批量基数</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuPrice()" disabled id="btnBatchPrice">批量价格</button>
+                      <input type="file" id="batchImageInput" accept="image/*" style="display:none;" onchange="handleBatchImageUpload(event)" />
+                    </div>
+                    <div class="bulk-inline-edit" id="skuBulkInlineEdit" style="display: none;">
+                      <span class="bulk-edit-label" id="skuBulkEditLabel">批量名称：</span>
+                      <input type="text" class="form-input" id="skuBulkEditInput" placeholder="请输入值" />
+                      <button class="btn btn-primary btn-sm" onclick="confirmBulkEdit()">确认</button>
+                      <button class="btn btn-secondary btn-sm" onclick="cancelBulkEdit()">取消</button>
+                    </div>
+                  </div>
+
                   <!-- SKU 表格 -->
-                  <div class="table-card" style="border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden;">
+                  <div class="table-card" style="border-top: none; border-radius: 0 0 8px 8px; overflow: hidden;">
                     <div class="table-wrapper">
                       <table class="sku-table">
                         <thead>
@@ -1605,7 +1696,6 @@
                             <th><div class="checkbox" onclick="toggleAllSkuCheckboxes(this)"></div></th>
                             <th>图片</th>
                             <th>SKU 名称（英语）</th>
-                            <th>商品SKU编码</th>
                             <th>库存SKU编码</th>
                             <th>库存</th>
                             <th>购买基数</th>
@@ -1829,28 +1919,77 @@
       }
     }
 
-    // ==================== 标签增删（颜色/尺码） ====================
-    function removeTag(el) {
-      el.parentElement.remove();
+    // ==================== 动态规格管理 ====================
+    let specsData = [
+      { id: 'spec-1', name: '颜色', values: ['黑色', '棕色', '高光色'] },
+      { id: 'spec-2', name: '尺码', values: ['18码', '22码', '26码'] }
+    ];
+    let specIdCounter = 2;
+
+    function addSpec() {
+      specIdCounter++;
+      specsData.push({ id: 'spec-' + specIdCounter, name: '规格' + specIdCounter, values: [] });
+      renderSpecs();
       updateSpecFilters();
       renderSkuTable();
     }
 
+    function removeSpec(specId) {
+      specsData = specsData.filter(s => s.id !== specId);
+      renderSpecs();
+      updateSpecFilters();
+      renderSkuTable();
+    }
+
+    function updateSpecName(specId, newName) {
+      const spec = specsData.find(s => s.id === specId);
+      if (spec) spec.name = newName.trim() || spec.name;
+      updateSpecFilters();
+    }
+
+    function specNameChanged(specId, el) {
+      const newName = el.textContent.trim();
+      const spec = specsData.find(s => s.id === specId);
+      if (spec && newName !== spec.name) {
+        spec.name = newName || '未命名规格';
+        el.textContent = spec.name;
+        updateSpecFilters();
+      }
+    }
+
+    function renderSpecs() {
+      const container = document.getElementById('specsContainer');
+      container.innerHTML = specsData.map(spec => `
+        <div class="spec-block" data-spec-id="${spec.id}">
+          <div class="spec-title-row">
+            <span class="spec-title" contenteditable="true"
+                  onblur="specNameChanged('${spec.id}', this)">${spec.name}</span>
+            <span class="spec-delete" onclick="removeSpec('${spec.id}')" title="删除此规格">×</span>
+          </div>
+          <div class="tag-pills" id="tags-${spec.id}">
+            ${spec.values.map(v => `<div class="tag-pill">${v}<span class="remove" onclick="removeSpecTag('${spec.id}', '${v.replace(/'/g, "\\'")}')">×</span></div>`).join('')}
+            <button class="tag-add-btn" onclick="showSpecTagInput(this, '${spec.id}')">+ 添加${spec.name}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
     let activeTagInput = null;
-    function showTagInput(btn, type) {
+    function showSpecTagInput(btn, specId) {
       if (activeTagInput) hideTagInput();
+      const spec = specsData.find(s => s.id === specId);
       const input = document.createElement('input');
       input.className = 'tag-input';
-      input.placeholder = type === 'color' ? '颜色' : '尺码';
+      input.placeholder = spec ? spec.name : '值';
       input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-          addTag(btn, type, input.value);
+          addSpecTag(specId, input.value, btn);
         } else if (e.key === 'Escape') {
           hideTagInput();
         }
       });
       input.addEventListener('blur', function() {
-        if (input.value.trim()) addTag(btn, type, input.value);
+        if (input.value.trim()) addSpecTag(specId, input.value, btn);
         else hideTagInput();
       });
       btn.parentElement.insertBefore(input, btn);
@@ -1865,81 +2004,111 @@
       }
     }
 
-    function addTag(btn, type, value) {
+    function addSpecTag(specId, value, btn) {
       if (!value.trim()) return;
-      const pill = document.createElement('div');
-      pill.className = 'tag-pill';
-      pill.innerHTML = `${value.trim()}<span class="remove" onclick="removeTag(this)">×</span>`;
-      btn.parentElement.insertBefore(pill, btn);
+      const spec = specsData.find(s => s.id === specId);
+      if (spec && !spec.values.includes(value.trim())) {
+        spec.values.push(value.trim());
+        renderSpecs();
+        updateSpecFilters();
+        renderSkuTable();
+      }
       hideTagInput();
-      updateSpecFilters();
-      renderSkuTable();
     }
 
-    function getTags(type) {
-      const containerId = type === 'color' ? 'colorTags' : 'sizeTags';
-      return Array.from(document.getElementById(containerId).querySelectorAll('.tag-pill')).map(p => p.childNodes[0].textContent.trim());
+    function removeSpecTag(specId, tagValue) {
+      const spec = specsData.find(s => s.id === specId);
+      if (spec) {
+        spec.values = spec.values.filter(v => v !== tagValue);
+        renderSpecs();
+        updateSpecFilters();
+        renderSkuTable();
+      }
     }
 
+    // ==================== 筛选器 ====================
     function updateSpecFilters() {
-      const colors = getTags('color');
-      const sizes = getTags('size');
-      const colorSelect = document.getElementById('filterColor');
-      const sizeSelect = document.getElementById('filterSize');
-      const currentColor = colorSelect.value;
-      const currentSize = sizeSelect.value;
-      colorSelect.innerHTML = '<option value="">颜色</option>' + colors.map(c => `<option value="${c}">${c}</option>`).join('');
-      sizeSelect.innerHTML = '<option value="">尺码</option>' + sizes.map(s => `<option value="${s}">${s}</option>`).join('');
-      colorSelect.value = currentColor;
-      sizeSelect.value = currentSize;
+      const row = document.getElementById('specFiltersRow');
+      // 保留库存联动 toggle，重建前面的 select
+      const linkToggle = row.querySelector('.spec-link-toggle');
+      row.querySelectorAll('select').forEach(s => s.remove());
+      specsData.forEach(spec => {
+        const sel = document.createElement('select');
+        sel.id = 'filter-' + spec.id;
+        sel.onchange = function() { renderSkuTable(); };
+        sel.innerHTML = `<option value="">${spec.name}</option>`
+          + spec.values.map(v => `<option value="${v}">${v}</option>`).join('');
+        row.insertBefore(sel, linkToggle);
+      });
     }
 
     // ==================== SKU 规格生成 ====================
     let skuData = [];
     function renderSkuTable() {
-      const colors = getTags('color');
-      const sizes = getTags('size');
-      const filterColor = document.getElementById('filterColor').value;
-      const filterSize = document.getElementById('filterSize').value;
-      const tbody = document.getElementById('skuTableBody');
+      // 收集过滤条件
+      const filters = {};
+      specsData.forEach(spec => {
+        const sel = document.getElementById('filter-' + spec.id);
+        if (sel && sel.value) filters[spec.id] = sel.value;
+      });
 
-      if (colors.length === 0 || sizes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="sku-empty">请添加颜色和尺码后生成 SKU</div></td></tr>';
+      // 获取所有规格的值组合
+      const allValues = specsData.map(spec => {
+        let vals = spec.values;
+        if (filters[spec.id]) vals = vals.filter(v => v === filters[spec.id]);
+        return { specId: spec.id, specName: spec.name, values: vals };
+      });
+
+      const tbody = document.getElementById('skuTableBody');
+      const hasEmpty = allValues.some(sv => sv.values.length === 0);
+      if (hasEmpty || specsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="sku-empty">请为所有规格添加选项值后生成 SKU</div></td></tr>';
         return;
       }
 
-      let combos = [];
-      let idx = 1;
-      for (const c of colors) {
-        if (filterColor && c !== filterColor) continue;
-        for (const s of sizes) {
-          if (filterSize && s !== filterSize) continue;
-          const key = `${c}*${s}`;
-          const existing = skuData.find(item => item.key === key);
-          const basePrice = parseFloat(document.getElementById('productPrice').value) || 129;
-          combos.push(existing || {
-            key,
-            color: c,
-            size: s,
-            name: `${c}*${s}`,
-            code: `HG-${idx.toString().padStart(2, '0')}-BW22`,
-            stock: '',
-            qty: 1,
-            price: basePrice
-          });
-          idx++;
+      // 生成笛卡尔积
+      let combos = [{}];
+      for (const sv of allValues) {
+        const next = [];
+        for (const combo of combos) {
+          for (const v of sv.values) {
+            next.push({ ...combo, [sv.specId]: { name: sv.specName, value: v } });
+          }
         }
+        combos = next;
       }
-      skuData = combos;
 
-      tbody.innerHTML = combos.map((item, i) => `
+      const basePrice = parseFloat(document.getElementById('productPrice').value) || 129;
+      let idx = 1;
+      skuData = combos.map(combo => {
+        const keyParts = specsData.map(s => combo[s.id] ? `${combo[s.id].name}:${combo[s.id].value}` : '').filter(Boolean);
+        const key = keyParts.join('|');
+        const nameParts = specsData.map(s => combo[s.id] ? combo[s.id].value : '').filter(Boolean);
+        const name = nameParts.join('*');
+        const existing = skuData.find(item => item.key === key);
+        return existing || {
+          key,
+          name,
+          specs: combo,
+          code: `HG-${idx.toString().padStart(2, '0')}-BW22`,
+          stock: '',
+          invCode: '',
+          qty: 1,
+          price: basePrice
+        };
+        idx++;
+      });
+
+      tbody.innerHTML = skuData.map(item => `
         <tr data-key="${item.key}">
           <td><div class="checkbox" onclick="toggleSkuCheckbox(this)"></div></td>
-          <td><div class="img-upload-cell" onclick="showToast('info', '选择 SKU 图片')">+</div></td>
+          <td>
+            <div class="img-upload-cell" onclick="showToast('info', '选择 SKU 图片')"
+                 style="${item.img ? `background-image:url(${item.img});background-size:cover;background-position:center;` : ''}">${item.img ? '' : '+'}</div>
+          </td>
           <td><input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" /></td>
-          <td><input value="${item.code}" onchange="updateSkuData('${item.key}', 'code', this.value)" placeholder="如：HG-01-BW22" /></td>
           <td><input value="${item.invCode || ''}" onchange="updateSkuData('${item.key}', 'invCode', this.value)" placeholder="库存系统货品编码" /></td>
-          <td><input type="number" value="${item.stock}" placeholder="-" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
+          <td><input type="number" value="${item.stock}" placeholder="-" ${stockLinkEnabled ? 'disabled' : ''} style="${stockLinkEnabled ? 'opacity:0.5' : ''}" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
           <td><input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" /></td>
           <td>
             <div class="currency">
@@ -1949,6 +2118,7 @@
           </td>
         </tr>
       `).join('');
+      skuUpdateBulkBar();
     }
 
     function updateSkuData(key, field, value) {
@@ -1959,6 +2129,7 @@
     function toggleSkuCheckbox(el) {
       el.classList.toggle('checked');
       el.innerHTML = el.classList.contains('checked') ? '✓' : '';
+      skuUpdateBulkBar();
     }
 
     function toggleAllSkuCheckboxes(el) {
@@ -1969,31 +2140,160 @@
         cb.classList.toggle('checked', isChecked);
         cb.innerHTML = isChecked ? '✓' : '';
       });
+      skuUpdateBulkBar();
     }
 
+    function skuUpdateBulkBar() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      const count = checked.length;
+      document.getElementById('skuSelectedCount').textContent = count;
+      const buttons = document.querySelectorAll('#skuBulkActionBar .bulk-actions .btn');
+      buttons.forEach(b => { b.disabled = count === 0; });
+      // 如果开了库存联动，库存按钮始终 disabled
+      if (stockLinkEnabled) {
+        document.getElementById('btnBatchStock').disabled = true;
+      }
+    }
+
+    function getCheckedSkuKeys() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      if (checked.length === 0) {
+        showToast('info', '请先勾选需要操作的 SKU 行');
+        return [];
+      }
+      return Array.from(checked).map(cb => cb.closest('tr').dataset.key);
+    }
+
+    // ==================== 批量图片 ====================
+    function batchSkuImage() {
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      document.getElementById('batchImageInput').value = '';
+      document.getElementById('batchImageInput').click();
+    }
+
+    function handleBatchImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const keys = getCheckedSkuKeysInfo();
+      if (keys.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const imgUrl = e.target.result;
+        keys.forEach(info => {
+          const item = skuData.find(s => s.key === info.key);
+          if (item) item.img = imgUrl;
+          const cell = info.row.querySelector('.img-upload-cell');
+          if (cell) {
+            cell.style.backgroundImage = `url(${imgUrl})`;
+            cell.style.backgroundSize = 'cover';
+            cell.style.backgroundPosition = 'center';
+            cell.textContent = '';
+          }
+        });
+        showToast('success', `已批量设置 ${keys.length} 条 SKU 图片`);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function getCheckedSkuKeysInfo() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      return Array.from(checked).map(cb => ({
+        key: cb.closest('tr').dataset.key,
+        row: cb.closest('tr')
+      }));
+    }
+
+    // ==================== 批量内联编辑（替代 prompt 对话框） ====================
+    let bulkEditField = null;
+
+    function showBulkEdit(field, label, type) {
+      if (field === 'stock' && stockLinkEnabled) {
+        showToast('info', '库存联动已开启，请先关闭联动后再手动设置库存');
+        return;
+      }
+      bulkEditField = field;
+      const inputEl = document.getElementById('skuBulkEditInput');
+      document.getElementById('skuBulkEditLabel').textContent = label + '：';
+      inputEl.type = type === 'number' ? 'number' : 'text';
+      inputEl.placeholder = '请输入' + label.replace('批量', '');
+      inputEl.value = '';
+      document.getElementById('skuBulkActions').style.display = 'none';
+      document.getElementById('skuBulkInlineEdit').style.display = 'flex';
+      inputEl.focus();
+      inputEl.onkeydown = function(e) {
+        if (e.key === 'Enter') confirmBulkEdit();
+        else if (e.key === 'Escape') cancelBulkEdit();
+      };
+    }
+
+    function confirmBulkEdit() {
+      if (!bulkEditField) return;
+      const inputEl = document.getElementById('skuBulkEditInput');
+      const value = inputEl.value.trim();
+      if (value === '') {
+        showToast('info', '请输入值');
+        inputEl.focus();
+        return;
+      }
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      keys.forEach(key => {
+        updateSkuData(key, bulkEditField, value);
+      });
+      renderSkuTable();
+      showToast('success', `已批量设置 ${keys.length} 条 SKU ${inputEl.placeholder.replace('请输入', '')}`);
+      closeBulkEdit();
+    }
+
+    function cancelBulkEdit() {
+      closeBulkEdit();
+    }
+
+    function closeBulkEdit() {
+      bulkEditField = null;
+      document.getElementById('skuBulkInlineEdit').style.display = 'none';
+      document.getElementById('skuBulkActions').style.display = 'flex';
+    }
+
+    // ==================== 批量名称 ====================
+    function batchSkuName() {
+      showBulkEdit('name', '批量名称', 'text');
+    }
+
+    // ==================== 批量库存编码 ====================
+    function batchSkuInvCode() {
+      showBulkEdit('invCode', '批量库存编码', 'text');
+    }
+
+    // ==================== 批量库存 ====================
+    function batchSkuStock() {
+      showBulkEdit('stock', '批量库存', 'number');
+    }
+
+    // ==================== 批量基数 ====================
+    function batchSkuQty() {
+      showBulkEdit('qty', '批量基数', 'number');
+    }
+
+    // ==================== 批量价格 ====================
+    function batchSkuPrice() {
+      showBulkEdit('price', '批量价格', 'number');
+    }
+
+    let stockLinkEnabled = true;
     function toggleStockLink(el) {
       const checkbox = el.querySelector('.checkbox');
       checkbox.classList.toggle('checked');
-      checkbox.innerHTML = checkbox.classList.contains('checked') ? '✓' : '';
-      showToast('info', checkbox.classList.contains('checked') ? '库存联动已开启' : '库存联动已关闭');
-    }
-
-    function batchSetStock() {
-      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
-      if (checked.length === 0) {
-        showToast('info', '请先选择要设置的 SKU');
-        return;
-      }
-      const value = prompt('请输入库存数量');
-      if (value === null) return;
-      checked.forEach(cb => {
-        const row = cb.closest('tr');
-        const stockInput = row.querySelector('td:nth-child(6) input');
-        if (stockInput) stockInput.value = value;
-        const key = row.dataset.key;
-        updateSkuData(key, 'stock', value);
+      stockLinkEnabled = checkbox.classList.contains('checked');
+      checkbox.innerHTML = stockLinkEnabled ? '✓' : '';
+      // 更新库存输入框的 disabled 状态
+      document.querySelectorAll('#skuTableBody td:nth-child(5) input').forEach(inp => {
+        inp.disabled = stockLinkEnabled;
+        inp.style.opacity = stockLinkEnabled ? '0.5' : '1';
       });
-      showToast('success', `已批量设置 ${checked.length} 条 SKU 库存`);
+      skuUpdateBulkBar();
+      showToast('info', stockLinkEnabled ? '库存联动已开启，库存不可手动编辑' : '库存联动已关闭，可手动编辑库存');
     }
 
     // ==================== 媒体上传（支持预览、删除、拖拽排序） ====================
@@ -2278,6 +2578,7 @@
 
 
     // ==================== 初始化 ====================
+    renderSpecs();
     updateSpecFilters();
     renderSkuTable();
   </script>

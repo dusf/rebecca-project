@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>运费 - 中台管理</title>
-  <link rel="stylesheet" href="../common/platform.css">
+  <link rel="stylesheet" href="../../common/css/platform.css">
 </head>
 <body>
   <div class="content">
@@ -30,7 +30,7 @@
     <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th>模板名称</th><th>计费方式</th><th>配送区域</th><th>状态</th><th>操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="shippingPagination"></div></div>
   </div>
   <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
-  <script src="../common/page_utils.js"></script>
+  <script src="../../common/js/page_utils.js"></script>
   <script>
     window.PU_CONFIG={columns:[{key:'name',label:'模板名称',defaultShow:true,alwaysShow:true},{key:'method',label:'计费方式',defaultShow:true,alwaysShow:false},{key:'area',label:'配送区域',defaultShow:true,alwaysShow:false},{key:'status',label:'状态',defaultShow:true,alwaysShow:true},{key:'actions',label:'操作',defaultShow:true,alwaysShow:true}],visibleCols:['name','method','area','status','actions'],batchActions:[{name:'enable',handler:function(ids){showToast('success','已启用 '+ids.length+' 条')}},{name:'disable',handler:function(ids){showToast('success','已停用 '+ids.length+' 条')}},{name:'delete',handler:function(ids){showToast('success','已删除 '+ids.length+' 条')}}],onColumnsChange:function(){renderTable()}};
     var currentPage=1,pageSize=10,data=[{id:1,name:'全国包邮模板',method:'固定运费',area:'中国大陆',status:'active'},{id:2,name:'国际物流模板',method:'按重量',area:'全球',status:'active'},{id:3,name:'港澳台专线',method:'按体积',area:'港澳台',status:'active'},{id:4,name:'偏远地区加价',method:'按重量',area:'国内偏远地区',status:'disabled'}];

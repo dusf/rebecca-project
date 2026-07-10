@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>税率 - 中台管理</title>
-  <link rel="stylesheet" href="../common/platform.css">
+  <link rel="stylesheet" href="../../common/css/platform.css">
 </head>
 <body>
   <div class="content">
@@ -30,7 +30,7 @@
     <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th>规则名称</th><th>国家/地区</th><th>税率</th><th>适用类型</th><th>状态</th><th>操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="taxRatePagination"></div></div>
   </div>
   <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
-  <script src="../common/page_utils.js"></script>
+  <script src="../../common/js/page_utils.js"></script>
   <script>
     window.PU_CONFIG={columns:[{key:'name',label:'规则名称',defaultShow:true,alwaysShow:true},{key:'country',label:'国家/地区',defaultShow:true,alwaysShow:false},{key:'rate',label:'税率',defaultShow:true,alwaysShow:false},{key:'type',label:'适用类型',defaultShow:false,alwaysShow:false},{key:'status',label:'状态',defaultShow:true,alwaysShow:true},{key:'actions',label:'操作',defaultShow:true,alwaysShow:true}],visibleCols:['name','country','rate','type','status','actions'],batchActions:[{name:'enable',handler:function(ids){showToast('success','已启用 '+ids.length+' 条')}},{name:'disable',handler:function(ids){showToast('success','已停用 '+ids.length+' 条')}},{name:'delete',handler:function(ids){showToast('success','已删除 '+ids.length+' 条')}}],onColumnsChange:function(){renderTable()}};
     var currentPage=1,pageSize=10,data=[{id:1,name:'中国标准增值税',country:'中国',rate:'13%',type:'标准商品',status:'active'},{id:2,name:'美国消费税',country:'美国',rate:'8.5%',type:'标准商品',status:'active'},{id:3,name:'日本消费税',country:'日本',rate:'10%',type:'标准商品',status:'active'},{id:4,name:'中国农产品优惠税',country:'中国',rate:'9%',type:'农产品',status:'disabled'}];

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录日志 - 中台管理</title>
-  <link rel="stylesheet" href="../common/platform.css">
+  <link rel="stylesheet" href="../../common/css/platform.css">
 </head>
 <body>
   <div class="content">
@@ -27,7 +27,7 @@
     <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th>登录时间</th><th>账号</th><th>登录方式</th><th>状态</th><th>IP 地址</th><th>浏览器 / 设备</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="loginLogPagination"></div></div>
   </div>
   <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
-  <script src="../common/page_utils.js"></script>
+  <script src="../../common/js/page_utils.js"></script>
   <script>
     window.PU_CONFIG={columns:[{key:'time',label:'登录时间',defaultShow:true,alwaysShow:true},{key:'account',label:'账号',defaultShow:true,alwaysShow:false},{key:'method',label:'登录方式',defaultShow:true,alwaysShow:false},{key:'status',label:'状态',defaultShow:true,alwaysShow:true},{key:'ip',label:'IP地址',defaultShow:false,alwaysShow:false},{key:'device',label:'浏览器/设备',defaultShow:false,alwaysShow:false}],visibleCols:['time','account','method','status','ip','device'],batchActions:[{name:'export',handler:function(ids){showToast('success','已导出 '+ids.length+' 条')}}],onColumnsChange:function(){renderTable()}};
     var currentPage=1,pageSize=10,data=[{id:1,time:'2026-07-09 15:28:10',account:'admin',method:'密码登录',status:'success',ip:'192.168.1.100',device:'Chrome 126 / Windows'},{id:2,time:'2026-07-09 14:05:33',account:'zhangsan',method:'密码登录',status:'success',ip:'192.168.1.101',device:'Firefox 128 / macOS'},{id:3,time:'2026-07-09 10:12:45',account:'lisi',method:'密码登录',status:'failed',ip:'192.168.1.200',device:'Safari / iOS'}];

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>汇率 - 中台管理</title>
-  <link rel="stylesheet" href="../common/platform.css">
+  <link rel="stylesheet" href="../../common/css/platform.css">
 </head>
 <body>
   <div class="content">
@@ -29,7 +29,7 @@
     <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th>基准货币</th><th>目标货币</th><th>汇率</th><th>来源</th><th>更新时间</th><th>操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="exchangeRatePagination"></div></div>
   </div>
   <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
-  <script src="../common/page_utils.js"></script>
+  <script src="../../common/js/page_utils.js"></script>
   <script>
     window.PU_CONFIG={columns:[{key:'base',label:'基准货币',defaultShow:true,alwaysShow:true},{key:'target',label:'目标货币',defaultShow:true,alwaysShow:false},{key:'rate',label:'汇率',defaultShow:true,alwaysShow:false},{key:'source',label:'来源',defaultShow:true,alwaysShow:false},{key:'time',label:'更新时间',defaultShow:false,alwaysShow:false},{key:'actions',label:'操作',defaultShow:true,alwaysShow:true}],visibleCols:['base','target','rate','source','time','actions'],batchActions:[{name:'refresh',handler:function(ids){showToast('success','已刷新 '+ids.length+' 条')}},{name:'delete',handler:function(ids){showToast('success','已删除 '+ids.length+' 条')}}],onColumnsChange:function(){renderTable()}};
     var currentPage=1,pageSize=10,data=[{id:1,base:'CNY',target:'USD',rate:'0.1385',source:'api',time:'2026-07-09 12:00'},{id:2,base:'USD',target:'CNY',rate:'7.2200',source:'api',time:'2026-07-09 12:00'},{id:3,base:'EUR',target:'USD',rate:'1.0850',source:'api',time:'2026-07-09 12:00'},{id:4,base:'CNY',target:'JPY',rate:'20.4500',source:'manual',time:'2026-07-08 09:00'}];

@@ -36,8 +36,10 @@ var PLATFORM_SIDEBAR_MENU = [
     ]
   },
   {
-    section: '全局',
+    section: '通用参数',
     items: [
+      { page: 'zone', label: '地域',
+        icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M12 2a7 7 0 0 0-7 7 7 7 0 0 0 7 7 7 7 0 0 0 7-7 7 7 0 0 0-7-7z"/></svg>' },
       { page: 'country', label: '国家',
         icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
       { page: 'region', label: '地区',
@@ -71,20 +73,21 @@ var PLATFORM_SIDEBAR_MENU = [
 
 // ==================== 页面路由映射 ====================
 var PLATFORM_PAGE_CONFIG = {
-  'organization':  'account/organization.html',
-  'accounts':      'account/accounts.html',
-  'shop-accounts': 'account/shop_accounts.html',
-  'country':       'global/country.html',
-  'region':        'global/region.html',
-  'language':      'global/language.html',
-  'currency':      'global/currency.html',
-  'exchange-rate': 'global/exchange_rate.html',
-  'tax-rate':      'global/tax_rate.html',
-  'shipping':      'global/shipping.html',
-  'vip':           'global/vip.html',
-  'category':      'global/category.html',
-  'operation-log': 'log/operation_log.html',
-  'login-log':     'log/login_log.html'
+  'organization':  'account/organization/organization.html',
+  'accounts':      'account/accounts/accounts.html',
+  'shop-accounts': 'account/shop_accounts/shop_accounts.html',
+  'zone':          'global/zone/zone.html',
+  'country':       'global/country/country.html',
+  'region':        'global/region/region.html',
+  'language':      'global/language/language.html',
+  'currency':      'global/currency/currency.html',
+  'exchange-rate': 'global/exchange_rate/exchange_rate.html',
+  'tax-rate':      'global/tax_rate/tax_rate.html',
+  'shipping':      'global/shipping/shipping.html',
+  'vip':           'global/vip/vip.html',
+  'category':      'global/category/category.html',
+  'operation-log': 'log/operation_log/operation_log.html',
+  'login-log':     'log/login_log/login_log.html'
 };
 
 // ==================== 面包屑配置 ====================
@@ -92,15 +95,16 @@ var PLATFORM_BREADCRUMB_CONFIG = {
   'organization':  ['账号管理', '组织机构'],
   'accounts':      ['账号管理', '账号列表'],
   'shop-accounts': ['账号管理', '商家账号'],
-  'country':       ['全局', '国家'],
-  'region':        ['全局', '地区'],
-  'language':      ['全局', '语言'],
-  'currency':      ['全局', '货币'],
-  'exchange-rate': ['全局', '汇率'],
-  'tax-rate':      ['全局', '税率'],
-  'shipping':      ['全局', '运费'],
-  'vip':           ['全局', 'VIP体系'],
-  'category':      ['全局', '分类'],
+  'zone':          ['通用参数', '地域'],
+  'country':       ['通用参数', '国家'],
+  'region':        ['通用参数', '地区'],
+  'language':      ['通用参数', '语言'],
+  'currency':      ['通用参数', '货币'],
+  'exchange-rate': ['通用参数', '汇率'],
+  'tax-rate':      ['通用参数', '税率'],
+  'shipping':      ['通用参数', '运费'],
+  'vip':           ['通用参数', 'VIP体系'],
+  'category':      ['通用参数', '分类'],
   'operation-log': ['日志管理', '操作日志'],
   'login-log':     ['日志管理', '登录日志']
 };

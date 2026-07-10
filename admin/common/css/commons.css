@@ -1589,9 +1589,14 @@
     .dialog {
       background: hsl(var(--card));
       border-radius: 16px;
-      padding: 24px;
+      padding: 24px 24px 16px 24px;
       width: 420px;
       max-width: 90vw;
+      min-height: 660px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       box-shadow: 0 16px 40px rgba(0,0,0,0.2);
       animation: dialogIn 0.3s ease;
     }
@@ -1603,6 +1608,7 @@
     }
 
     .dialog-body {
+      flex: 1;
       font-size: 14px;
       line-height: 1.6;
     }
@@ -1617,6 +1623,8 @@
       display: flex;
       justify-content: flex-end;
       gap: 12px;
+      margin-top: auto;
+      padding-top: 16px;
     }
 
     .dialog-close {
@@ -1677,6 +1685,119 @@
       gap: 6px;
       max-height: 320px;
       overflow-y: auto;
+    }
+
+    /* Shopify 授权步骤指示器 */
+    .shopify-step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 0 20px 16px;
+      border-bottom: 1px solid hsl(var(--border));
+      margin-bottom: 12px;
+    }
+
+    .shopify-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .shopify-step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      border: 2px solid hsl(var(--border));
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--background));
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .shopify-step.active .shopify-step-num {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--primary));
+      color: white;
+    }
+
+    .shopify-step.completed .shopify-step-num {
+      border-color: hsl(var(--success));
+      background: hsl(var(--success));
+      color: white;
+    }
+
+    .shopify-step-label {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .shopify-step.active .shopify-step-label {
+      color: hsl(var(--foreground));
+      font-weight: 600;
+    }
+
+    .shopify-step.completed .shopify-step-label {
+      color: hsl(var(--success));
+    }
+
+    .shopify-step-divider {
+      width: 40px;
+      height: 2px;
+      background: hsl(var(--border));
+      margin: 0 6px;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .shopify-step-divider.completed {
+      background: hsl(var(--success));
+    }
+
+    @media (max-width: 600px) {
+      .shopify-step-indicator {
+        padding: 0 8px 12px;
+      }
+      .shopify-step-label {
+        font-size: 10px;
+      }
+      .shopify-step-num {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+      }
+      .shopify-step-divider {
+        width: 20px;
+      }
+    }
+
+    /* 全选 */
+    .picker-select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .picker-select-all .checkbox {
+      width: 16px;
+      height: 16px;
+    }
+
+    .picker-selected-count {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
     }
 
     .sync-site-row-v3 {
@@ -2162,5 +2283,247 @@
     .shop-dropdown-action-icon.settings {
       color: hsl(var(--muted-foreground));
     }
+
+    /* ==================== Shopify 同步进度面板 ==================== */
+    .sync-progress-panel {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px hsl(var(--shadow-color) / 0.08);
+      display: none;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    .sync-progress-panel.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sync-progress-panel.hiding {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    .sp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sp-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sp-header-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: hsl(var(--primary-50));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--primary));
+    }
+
+    .sp-header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .sp-header-subtitle {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 1px;
+    }
+
+    .sp-cancel-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      background: hsl(var(--background));
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+
+    .sp-cancel-btn:hover {
+      border-color: hsl(var(--error));
+      color: hsl(var(--error));
+      background: hsl(0 84% 95%);
+    }
+
+    /* 进度条 */
+    .sp-bar-track {
+      width: 100%;
+      height: 4px;
+      background: hsl(var(--muted));
+      border-radius: 2px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .sp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary-400)));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .sp-bar-fill.done {
+      background: linear-gradient(90deg, hsl(var(--success)), #5DC97A);
+    }
+
+    .sp-bar-fill.cancelled {
+      background: linear-gradient(90deg, #F0A040, #F0C060);
+    }
+
+    /* 系列列表 */
+    .sp-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .sp-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 4px;
+      font-size: 13px;
+      border-bottom: 1px solid hsl(var(--border) / 0.5);
+      transition: background 0.15s;
+    }
+
+    .sp-item:last-child {
+      border-bottom: none;
+    }
+
+    .sp-item-status {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sp-item-status.pending {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .sp-item-status.syncing {
+      color: hsl(var(--primary));
+    }
+
+    .sp-item-status.done {
+      color: hsl(var(--success));
+    }
+
+    .sp-item-status.failed {
+      color: hsl(var(--error));
+    }
+
+    .sp-item-status.skipped {
+      color: #F0A040;
+    }
+
+    .sp-item-name {
+      flex: 1;
+      color: hsl(var(--foreground));
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sp-item-tag {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    .sp-item-tag.done {
+      background: hsl(142 50% 92%);
+      color: hsl(142 55% 35%);
+    }
+
+    .sp-item-tag.failed {
+      background: hsl(0 84% 92%);
+      color: hsl(var(--error));
+    }
+
+    .sp-item-tag.skipped {
+      background: #FFF3E0;
+      color: #E67A00;
+    }
+
+    .sp-item .sp-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid hsl(var(--primary-100));
+      border-top-color: hsl(var(--primary));
+      border-radius: 50%;
+      animation: spSpin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 底部汇总 */
+    .sp-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      padding-top: 8px;
+      border-top: 1px solid hsl(var(--border) / 0.5);
+    }
+
+    .sp-footer-summary .sp-num {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    /* 按钮同步中状态 */
+    .btn.btn-syncing {
+      position: relative;
+      color: hsl(var(--primary)) !important;
+      border-color: hsl(var(--primary-200)) !important;
+      background: hsl(var(--primary-50)) !important;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .btn.btn-syncing:hover {
+      background: hsl(var(--primary-100)) !important;
+    }
+
+    .btn-syncing .btn-spin-icon {
+      display: inline-block;
+      animation: spSpin 0.8s linear infinite;
+    }
+
+
+
 
 

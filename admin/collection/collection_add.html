@@ -56,11 +56,11 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">状态</label>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <div class="toggle active" id="statusToggle" onclick="toggleStatusUI()"><div class="toggle-dot"></div></div>
-                    <span class="toggle-label" id="statusLabel">启用</span>
+                  <div class="status-toggle-row" id="statusToggle" onclick="toggleStatusUI()">
+                    <div class="toggle active"><div class="toggle-dot"></div></div>
+                    <span class="toggle-status-text" id="statusLabel">启用</span>
                   </div>
-                  <div class="form-hint">禁用后前端落地页将返回 404</div>
+                  <div class="form-hint status-hint">禁用后，该系列将不在前端展示，访问系列页面会返回404，店铺装修时也无法选择该系列。</div>
                 </div>
               </div>
               <div class="form-card">
@@ -121,7 +121,7 @@
                 <div style="font-size:13px;color:hsl(var(--muted-foreground));line-height:1.8;">
                   <div>&middot; 系列名称必填，限100字符</div>
                   <div>&middot; 一个产品可属于多个系列</div>
-                  <div>&middot; 禁用后前端落地页404</div>
+                  <div>&middot; 禁用后该系列不会在前端展示，页面返回404</div>
                   <div>&middot; 右侧配置SEO信息有助于搜索引擎排名</div>
                 </div>
               </div>

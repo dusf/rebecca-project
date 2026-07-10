@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="../common/css/commons.css?v=2">
   <style>
     /* ==================== 商品列表页专用样式 ==================== */
     /* 统计卡片 */
@@ -304,6 +304,7 @@
             <div style="display: flex; gap: 12px; align-items: center;">
               <button class="btn btn-secondary" onclick="refreshPage()" title="刷新数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新</button>
               <button class="btn btn-secondary" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
+              <button class="btn btn-secondary" onclick="openShopifyProductAuth()" style="background:hsl(142 50% 40%);color:#fff;" onmouseover="this.style.background='hsl(142 55% 33%)'" onmouseout="this.style.background='hsl(142 50% 40%)'">拉取shopify</button>
               <button class="btn btn-primary" onclick="navigateToPage('add_product.html')">添加商品</button>
             </div>
           </div>
@@ -391,6 +392,97 @@
     </div>
   </div>
 
+  <!-- ==================== Shopify 拉取商品：授权对话框 ==================== -->
+  <div class="dialog-overlay" id="shopifyProductAuthOverlay" style="display:none;">
+    <div class="dialog" style="width:480px;">
+      <div class="dialog-header">
+        <div class="dialog-title">Shopify 授权</div>
+        <button class="dialog-close" onclick="closeShopifyProductAuth()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="dialog-body">
+        <div class="shopify-step-indicator">
+          <div class="shopify-step active"><span class="shopify-step-num">1</span><span class="shopify-step-label">授权连接</span></div>
+          <div class="shopify-step-divider"></div>
+          <div class="shopify-step"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
+          <div class="shopify-step-divider"></div>
+          <div class="shopify-step"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步商品</span></div>
+        </div>
+        <div style="padding: 20px 0; text-align: center;">
+          <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: hsl(142 50% 92%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--success))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div style="font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 8px;">连接 Shopify 店铺</div>
+          <div style="font-size: 13px; color: hsl(var(--muted-foreground)); margin-bottom: 24px; line-height: 1.6;">
+            授权后可拉取 Shopify 店铺的商品数据，快速同步到当前<br/>商城后台的商品列表中。
+          </div>
+          <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 14px; text-align: left; margin-bottom: 20px;">
+            <div style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 6px;">授权店铺域名</div>
+            <input class="form-input" type="text" id="shopifyProductStoreDomain" placeholder="your-store.myshopify.com" style="font-size: 13px;" />
+          </div>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onclick="closeShopifyProductAuth()">取消</button>
+        <button class="btn btn-primary" id="shopifyProductAuthConfirmBtn" onclick="confirmShopifyProductAuth()">确认授权</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shopify 拉取商品：站点选择对话框 -->
+  <div class="dialog-overlay" id="shopifyProductSiteOverlay" style="display:none;">
+    <div class="dialog sync-dialog-v3">
+      <div class="dialog-header">
+        <div class="dialog-title">选择 Shopify 站点</div>
+        <button class="dialog-close" onclick="closeShopifyProductSiteSelect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="dialog-body">
+        <div class="shopify-step-indicator">
+          <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">授权连接</span></div>
+          <div class="shopify-step-divider completed"></div>
+          <div class="shopify-step active"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
+          <div class="shopify-step-divider"></div>
+          <div class="shopify-step"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步商品</span></div>
+        </div>
+        <div class="dialog-desc" style="margin-bottom: 16px;">请选择要拉取商品的 Shopify 站点</div>
+        <div class="sync-site-list-v3" id="shopifyProductSiteList"></div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onclick="closeShopifyProductSiteSelect()">取消</button>
+        <button class="btn btn-primary" id="shopifyProductSiteNextBtn" onclick="goToShopifyProducts()" disabled>下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shopify 拉取商品：商品选择对话框 -->
+  <div class="dialog-overlay" id="shopifyProductSelectOverlay" style="display:none;">
+    <div class="dialog sync-dialog-v3">
+      <div class="dialog-header">
+        <div class="dialog-title">选择要同步的商品</div>
+        <button class="dialog-close" onclick="closeShopifyProductSelect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="dialog-body">
+        <div class="shopify-step-indicator">
+          <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">授权连接</span></div>
+          <div class="shopify-step-divider completed"></div>
+          <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">选择站点</span></div>
+          <div class="shopify-step-divider completed"></div>
+          <div class="shopify-step active"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步商品</span></div>
+        </div>
+        <div class="dialog-desc" style="margin-bottom: 8px;">站点：<strong id="shopifyProductSelectedSiteName">-</strong></div>
+        <div class="picker-select-all" style="margin-bottom: 8px;">
+          <div class="checkbox" id="shopifyProductSelectAllCb" onclick="shopifyProductToggleSelectAll()"></div>
+          <span>全选</span>
+          <span class="picker-selected-count" id="shopifyProductSelectedCount">已选 0 个</span>
+        </div>
+        <div class="sync-series-list" id="shopifyProductList"></div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onclick="closeShopifyProductSelect()">取消</button>
+        <button class="btn btn-primary" id="shopifyProductSyncBtn" onclick="syncShopifyProducts()" disabled>同步选中的商品</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast 容器 -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -424,5 +516,7 @@
     <div class="more-actions-item" onclick="batchSetStatus('draft')">批量设为草稿</div>
     <div class="more-actions-item" onclick="addToProductSeries()">添加到产品系列中</div>
   </div>
+
+  <script src="js/shopify_pull.js"></script>
 </body>
 </html>

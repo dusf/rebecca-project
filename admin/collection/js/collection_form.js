@@ -61,9 +61,10 @@ function removeCover(e) {
 
 // ==================== 状态切换 ====================
 function toggleStatusUI() {
-  var t = document.getElementById('statusToggle');
+  var t = document.getElementById('statusToggle').querySelector('.toggle');
   t.classList.toggle('active');
   document.getElementById('statusLabel').textContent = t.classList.contains('active') ? '启用' : '禁用';
+  document.getElementById('statusLabel').classList.toggle('disabled', !t.classList.contains('active'));
 }
 
 // ==================== 关联产品渲染 ====================
@@ -414,7 +415,7 @@ function saveCollection() {
   var dup = collections.find(function(c) { return c.slug === slug && c.id !== editingId; });
   if (dup) { showToast('error', '该网址名称已被使用，请修改'); return; }
 
-  var status = document.getElementById('statusToggle').classList.contains('active') ? 'enabled' : 'disabled';
+  var status = document.getElementById('statusToggle').querySelector('.toggle').classList.contains('active') ? 'enabled' : 'disabled';
   var sortMethod = document.getElementById('sortMethod').value;
 
   if (isEditMode) {
@@ -476,8 +477,9 @@ function cancelForm() {
       document.getElementById('seoSlug').value = col.slug || '';
       document.getElementById('sortMethod').value = col.sortMethod || 'created-desc';
       if (col.status === 'disabled') {
-        document.getElementById('statusToggle').classList.remove('active');
+        document.getElementById('statusToggle').querySelector('.toggle').classList.remove('active');
         document.getElementById('statusLabel').textContent = '禁用';
+        document.getElementById('statusLabel').classList.add('disabled');
       }
       if (col.cover) setCoverPreview(col.cover);
       assocProducts = (col.assocProducts || []).slice();

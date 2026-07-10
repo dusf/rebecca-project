@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 产品系列</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="css/collection.css">
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL',
+          versionCode:'1.0.0',
+          channelID:'share',
+          delay:1000,
+          sessionDuration:30*60*1000,
+          isOversea:false,
+          needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href,
+          'referrer':document.referrer,
+          'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    <div class="main-area">
+      <div class="content">
+        <div class="page active" id="page-collections">
+          <!-- 页面头部 -->
+          <div class="page-header">
+            <div>
+              <div class="page-title">产品系列<span class="count-badge" id="totalCount">(0)</span></div>
+              <div class="page-subtitle">管理店铺产品系列，支持条件筛选和手动挑选产品</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <button class="btn btn-secondary" onclick="refreshCollections()" title="刷新数据">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新
+              </button>
+              <button class="btn btn-primary" onclick="navigateToPage('collection_add.html')">创建系列</button>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-input">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(var(--muted-foreground));flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="搜索系列名称..." id="collectionSearch" oninput="filterCollections()" />
+              </div>
+              <select class="filter-select" id="statusFilter" onchange="filterCollections()">
+                <option value="">全部状态</option>
+                <option value="enabled">已启用</option>
+                <option value="disabled">已禁用</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="table-card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:72px;">封面图</th>
+                    <th>系列名称</th>
+                    <th style="width:100px;">产品数量</th>
+                    <th style="width:100px;">状态</th>
+                    <th style="width:130px;">创建时间</th>
+                    <th style="width:220px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="collectionTableBody">
+                </tbody>
+              </table>
+            </div>
+            <!-- 空状态 -->
+            <div id="collectionEmpty" style="display:none;">
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                </div>
+                <div class="empty-state-title">暂无产品系列</div>
+                <div class="empty-state-desc">创建产品系列，将商品按维度组织展示给客户</div>
+                <button class="btn btn-primary" onclick="navigateToPage('collection_add.html')">创建系列</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认对话框 -->
+  <div class="dialog-overlay" id="deleteConfirmOverlay" style="display:none;">
+    <div class="dialog">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;">
+        <div class="dialog-title">确认删除</div>
+        <span style="cursor:pointer;font-size:20px;color:hsl(var(--muted-foreground))" onclick="closeDeleteConfirm()">×</span>
+      </div>
+      <div class="dialog-desc" id="deleteConfirmMsg"></div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteConfirm()">取消</button>
+        <button class="btn btn-destructive" id="confirmDeleteBtn">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>var CURRENT_PAGE = 'series';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 系列数据 ====================
+    // 从 localStorage 加载，若没有则使用默认数据
+    function loadCollections() {
+      try {
+        var saved = localStorage.getItem('rebecca_collections_' + (getCurrentShopId ? getCurrentShopId() : 'default'));
+        if (saved) return JSON.parse(saved);
+      } catch(e) {}
+      // 默认模拟数据
+      return [
+        { id: 'col-1', name: '夏季促销', cover: '', slug: 'summer-sale', status: 'enabled', productCount: 12, createdAt: '2026-06-15', sortOrder: 1 },
+        { id: 'col-2', name: '新品上市', cover: '', slug: 'new-arrivals', status: 'enabled', productCount: 8, createdAt: '2026-06-20', sortOrder: 2 },
+        { id: 'col-3', name: '热销爆款', cover: '', slug: 'hot-items', status: 'enabled', productCount: 24, createdAt: '2026-07-01', sortOrder: 3 },
+        { id: 'col-4', name: '清仓特卖', cover: '', slug: 'clearance-sale', status: 'disabled', productCount: 15, createdAt: '2026-05-10', sortOrder: 4 },
+        { id: 'col-5', name: '会员专享', cover: '', slug: 'member-exclusive', status: 'enabled', productCount: 6, createdAt: '2026-07-05', sortOrder: 5 }
+      ];
+    }
+
+    function saveCollections(collections) {
+      try {
+        localStorage.setItem('rebecca_collections_' + (getCurrentShopId ? getCurrentShopId() : 'default'), JSON.stringify(collections));
+      } catch(e) {}
+    }
+
+    var collections = loadCollections();
+
+    // ==================== 渲染 ====================
+    function renderCollections() {
+      var filter = document.getElementById('statusFilter').value;
+      var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
+
+      var filtered = collections.filter(function(c) {
+        if (filter && c.status !== filter) return false;
+        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+
+      // 更新总数
+      document.getElementById('totalCount').textContent = '(' + collections.length + ')';
+
+      // 更新表格
+      var tbody = document.getElementById('collectionTableBody');
+      var emptyEl = document.getElementById('collectionEmpty');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      tbody.innerHTML = filtered.map(function(c) {
+        var coverColors = ['#C9A96E', '#6B8F71', '#5B7FBF', '#C06070', '#8B7A9E', '#D4A76A', '#5A9E8F', '#7B9EC7'];
+        var coverColor = coverColors[parseInt(c.id.split('-')[1]) % coverColors.length] || '#C9A96E';
+        var statusText = c.status === 'enabled' ? '启用' : '禁用';
+        var statusClass = c.status === 'enabled' ? 'enabled' : 'disabled';
+
+        return '<tr>' +
+          '<td>' +
+            '<div class="col-cover-cell" style="' + (c.cover ? 'background-image:url(' + c.cover + ');background-size:cover;background-position:center' : 'background:linear-gradient(135deg,' + coverColor + ',' + coverColor + '88)') + '">' +
+              (!c.cover ? '<span class="placeholder" style="color:rgba(255,255,255,0.7);font-size:12px;">' + c.name.charAt(0) + '</span>' : '') +
+            '</div>' +
+          '</td>' +
+          '<td><a class="series-name-link" onclick="editCollection(\'' + c.id + '\')">' + c.name + '</a></td>' +
+          '<td style="text-align:center">' + c.productCount + '</td>' +
+          '<td><span class="status-tag ' + statusClass + '"><span class="dot"></span>' + statusText + '</span></td>' +
+          '<td style="color:hsl(var(--muted-foreground));font-size:13px;">' + c.createdAt + '</td>' +
+          '<td>' +
+            '<div style="display:flex;gap:6px;align-items:center;">' +
+              '<button class="btn btn-secondary btn-sm" onclick="editCollection(\'' + c.id + '\')">编辑</button>' +
+              '<button class="btn btn-secondary btn-sm" title="查看落地页" onclick="viewCollection(\'' + c.id + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>' +
+              (c.status === 'enabled'
+                ? '<button class="btn btn-secondary btn-sm" onclick="toggleCollectionStatus(\'' + c.id + '\')">禁用</button>'
+                : '<button class="btn btn-secondary btn-sm" onclick="toggleCollectionStatus(\'' + c.id + '\')">启用</button>'
+              ) +
+              '<button class="btn btn-secondary btn-sm" style="color:hsl(var(--error));" onclick="confirmDeleteCollection(\'' + c.id + '\')">删除</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function filterCollections() {
+      renderCollections();
+    }
+
+    function refreshCollections() {
+      collections = loadCollections();
+      renderCollections();
+      showToast('success', '数据已刷新');
+    }
+
+    // ==================== 查看系列落地页 ====================
+    function viewCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      // 获取店铺域名
+      var shop = getCurrentShop ? getCurrentShop() : null;
+      var domain = shop ? (shop.customDomain || shop.domain || '') : '';
+      if (!domain) { showToast('error', '未配置店铺域名'); return; }
+      if (!/^https?:\/\//i.test(domain)) domain = 'https://' + domain;
+      domain = domain.replace(/\/+$/, '');
+      var url = domain + '/collections/' + encodeURIComponent(collection.slug || '');
+      window.open(url, '_blank');
+    }
+
+    // ==================== 编辑系列 ====================
+    function editCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (collection) {
+        navigateToPage('collection_edit.html?id=' + id);
+      }
+    }
+
+    // ==================== 切换状态 ====================
+    function toggleCollectionStatus(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      collection.status = collection.status === 'enabled' ? 'disabled' : 'enabled';
+      saveCollections(collections);
+      renderCollections();
+      showToast('success', collection.status === 'enabled' ? '已启用' : '已禁用');
+    }
+
+    // ==================== 删除确认 ====================
+    var pendingDeleteId = null;
+    function confirmDeleteCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      pendingDeleteId = id;
+      document.getElementById('deleteConfirmMsg').textContent = '确定删除系列「' + collection.name + '」？删除后该系列下的产品关联将解除，前端落地页将无法访问。';
+      document.getElementById('deleteConfirmOverlay').style.display = 'flex';
+      document.getElementById('confirmDeleteBtn').onclick = function() {
+        deleteCollection(pendingDeleteId);
+        closeDeleteConfirm();
+      };
+      document.getElementById('deleteConfirmOverlay').onclick = function(e) {
+        if (e.target === document.getElementById('deleteConfirmOverlay')) closeDeleteConfirm();
+      };
+    }
+
+    function closeDeleteConfirm() {
+      document.getElementById('deleteConfirmOverlay').style.display = 'none';
+      pendingDeleteId = null;
+    }
+
+    function deleteCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      collections = collections.filter(function(c) { return c.id !== id; });
+      saveCollections(collections);
+      renderCollections();
+      showToast('success', '系列「' + (collection ? collection.name : '') + '」已删除');
+    }
+
+    // ==================== 初始化 ====================
+    renderCollections();
+  </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店铺商城后台管理系统 - 添加商品</title>
+  <title>店铺商城后台管理系统 - 编辑商品</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1479,20 +1479,20 @@
           <div class="add-product-container">
             <!-- 页面头部 -->
             <div class="add-product-header">
-              <div class="page-title">添加商品</div>
+              <div class="page-title">编辑商品</div>
               <div class="add-product-actions">
-                <button class="btn btn-secondary" onclick="navigateToPage('product_list.html')">返回</button>
-                <button class="btn btn-primary" onclick="submitProduct()">保存</button>
+                <button class="btn btn-secondary" onclick="navigateToPage('product_list.html')">取消</button>
+                <button class="btn btn-primary" onclick="updateProduct()">保存修改</button>
               </div>
             </div>
 
             <!-- 信息提示栏 -->
             <div class="info-bar">
               <div class="info-bar-content">
-                <div class="info-bar-title">新版商城商品资料</div>
-                <div class="info-bar-desc">内容、属性、媒体、SKU 和 SEO 在同一页面维护；支持多语言版本录入、评论 CSV 导入、库存 SKU 映射。</div>
+                <div class="info-bar-title">商品详情编辑</div>
+                <div class="info-bar-desc">修改商品内容、属性、媒体、SKU 和 SEO 信息，支持多语言版本更新、库存 SKU 映射。</div>
               </div>
-              <div class="info-bar-tag">美元基准价</div>
+              <div class="info-bar-tag" id="spuTag">--</div>
             </div>
 
             <!-- 语言切换 Tab -->
@@ -1511,7 +1511,7 @@
                   <div class="form-section-card-header">
                     <div>
                       <div class="form-section-card-title">基本信息</div>
-                      <div class="form-section-card-subtitle">商品编码创建后由系统生成，添加页只维护运营可编辑字段。</div>
+                      <div class="form-section-card-subtitle">商品编码由系统生成不可修改，编辑页可维护运营可编辑字段及 SKU 商品编码。</div>
                     </div>
                   </div>
 

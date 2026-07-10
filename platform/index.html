@@ -10,6 +10,26 @@
   <link rel="stylesheet" href="common/css/platform.css">
   <style>
     /* ==================== index.html 专用样式 ==================== */
+    .iframe-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      background: transparent;
+    }
+
+    .iframe-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+    }
+
+    .iframe-container iframe.active {
+      display: block;
+    }
   </style>
   <script>
     // ==================== 页面配置 ====================
@@ -45,7 +65,12 @@
     </div>
   </div>
 
+  <!-- 对话框宿主容器 — 对话框在此渲染以确保遮罩覆盖整个浏览器视口 -->
+  <div id="dialogHost"></div>
+
   <!-- Toast 容器 -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <script src="common/js/dialog_host.js"></script>
 </body>
 </html>

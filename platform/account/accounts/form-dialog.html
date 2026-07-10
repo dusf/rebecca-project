@@ -1,0 +1,48 @@
+<!-- 添加/编辑账号对话框 -->
+<div class="dialog-overlay" id="acctFormDialogOverlay" style="display:none;" onclick="closeAcctFormDialog()">
+  <div class="dialog" style="width:500px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="acctFormDialogTitle">添加账号</div>
+      <button class="dialog-close" onclick="closeAcctFormDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="acctFormMode" value="add">
+      <input type="hidden" id="acctFormEditId" value="">
+      <div class="form-group">
+        <label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label>
+        <input class="form-input" type="text" id="acctFormPhone" placeholder="请输入手机号（作为登录账号）" maxlength="11">
+      </div>
+      <div class="form-group">
+        <label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label>
+        <input class="form-input" type="text" id="acctFormName" placeholder="请输入姓名" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="acctFormPwdLabel">密码 <span style="color:hsl(var(--error))">*</span></label>
+        <input class="form-input" type="password" id="acctFormPassword" placeholder="请输入登录密码" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属组织 <span style="color:hsl(var(--error))">*</span></label>
+        <select class="form-input" id="acctFormOrg">
+          <option value="">-- 请选择 --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label>
+        <input class="form-input" type="email" id="acctFormEmail" placeholder="请输入邮箱地址" maxlength="50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <select class="form-input" id="acctFormStatus">
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeAcctFormDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitAcctForm()">确定</button>
+    </div>
+  </div>
+</div>

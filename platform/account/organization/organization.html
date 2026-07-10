@@ -14,7 +14,10 @@
         <div class="page-title">组织机构</div>
         <div class="page-subtitle">管理集团/公司/部门/小组的组织层级结构，拖拽排序需要遵守直系父子层级规则</div>
       </div>
-      <button class="btn btn-primary" onclick="handleAdd()">+ 添加组织</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary" onclick="refreshPage()" title="刷新数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新</button>
+        <button class="btn btn-primary" onclick="handleAdd()">+ 添加组织</button>
+      </div>
     </div>
 
     <div class="toolbar">

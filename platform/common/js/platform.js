@@ -194,20 +194,55 @@ window.handleSidebarNav = function(page) {
   }
 };
 
-// ==================== iframe 加载 ====================
-function loadIframe(url) {
-  var iframe = document.getElementById('contentFrame');
-  var loader = document.getElementById('iframeLoader');
-  if (!iframe) return;
+// ==================== iframe 加载（缓存池机制：切换菜单时保持页面状态，不重新加载） ====================
+var PLATFORM_IFRAME_CACHE = {};
+var PLATFORM_CURRENT_URL = 'account/accounts/accounts.html';
 
+function loadIframe(url) {
+  var container = document.querySelector('.iframe-container');
+  if (!container) return;
+
+  // 导航前关闭所有打开的对话框
+  if (typeof dlgOnNavigate === 'function') dlgOnNavigate();
+
+  // 隐藏当前 iframe
+  if (PLATFORM_CURRENT_URL && PLATFORM_IFRAME_CACHE[PLATFORM_CURRENT_URL]) {
+    PLATFORM_IFRAME_CACHE[PLATFORM_CURRENT_URL].classList.remove('active');
+  }
+
+  // 如果已缓存，直接显示
+  if (PLATFORM_IFRAME_CACHE[url]) {
+    PLATFORM_IFRAME_CACHE[url].classList.add('active');
+    PLATFORM_CURRENT_URL = url;
+    return;
+  }
+
+  // 新建 iframe
+  var loader = document.getElementById('iframeLoader');
   if (loader) loader.classList.add('active');
 
+  var iframe = document.createElement('iframe');
   iframe.src = url;
+  iframe.title = '内容区';
+  iframe.className = 'active';
 
   iframe.onload = function() {
     if (loader) loader.classList.remove('active');
   };
+
+  container.appendChild(iframe);
+  PLATFORM_IFRAME_CACHE[url] = iframe;
+  PLATFORM_CURRENT_URL = url;
 }
+
+// 初始化：将初始 iframe 加入缓存
+(function() {
+  var initIframe = document.getElementById('contentFrame');
+  if (initIframe) {
+    initIframe.classList.add('active');
+    PLATFORM_IFRAME_CACHE[PLATFORM_CURRENT_URL] = initIframe;
+  }
+})();
 
 // ==================== 事件委托：侧边栏点击 ====================
 document.addEventListener('DOMContentLoaded', function() {

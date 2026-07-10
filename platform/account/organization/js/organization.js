@@ -11,9 +11,9 @@ window.PU_CONFIG = {
   ],
   visibleCols: ['name','type','parent','sort','status','actions'],
   batchActions: [
-    { name:'enable', handler:function(ids){ showToast('success','已启用 '+ids.length+' 条') } },
-    { name:'disable',handler:function(ids){ showToast('success','已停用 '+ids.length+' 条') } },
-    { name:'delete', handler:function(ids){ showToast('success','已删除 '+ids.length+' 条') } }
+    { name:'enable',  handler: batchEnable  },
+    { name:'disable', handler: batchDisable },
+    { name:'delete',  handler: batchDelete  }
   ],
   onColumnsChange: function(){ renderTable(); }
 };
@@ -374,221 +374,114 @@ function handleAdd() { openOrgFormDialog('add', null); }
 
 function handleEdit(id) { openOrgFormDialog('edit', id); }
 
+// 对话框委托给父页面（parent frame），以实现全屏遮罩
 function openOrgFormDialog(mode, id) {
-  var overlay = document.getElementById('orgFormDialogOverlay');
-  var title = document.getElementById('orgFormDialogTitle');
-  var typeSel = document.getElementById('orgFormType');
-  var nameInp = document.getElementById('orgFormName');
-  var parentSel = document.getElementById('orgFormParent');
-  var statusSel = document.getElementById('orgFormStatus');
-
-  document.getElementById('orgFormMode').value = mode;
-  document.getElementById('orgFormEditId').value = id || '';
-
-  if (mode === 'edit' && id) {
-    title.textContent = '编辑组织';
-    var node = findNode(id);
-    if (!node) { showToast('error', '组织不存在'); return; }
-    typeSel.value = node.type;
-    nameInp.value = node.name;
-    statusSel.value = node.status;
-    var hasChildren = orgData.some(function(item) { return item.parent === id; });
-    typeSel.disabled = hasChildren;
-    updateParentOptions(node.type, id);
-    parentSel.value = node.parent || '';
-  } else {
-    title.textContent = '添加组织';
-    typeSel.disabled = false;
-    typeSel.value = 'company';
-    nameInp.value = '';
-    statusSel.value = 'active';
-    updateParentOptions('company', null);
+  if (window.parent && window.parent.openOrgFormDialog) {
+    window.parent.openOrgFormDialog(mode, id);
   }
-
-  overlay.style.display = 'flex';
 }
 
-function closeOrgFormDialog() {
-  document.getElementById('orgFormDialogOverlay').style.display = 'none';
-}
+// ---- 供父页面调用的数据处理函数 ----
 
-function submitOrgForm() {
-  var mode = document.getElementById('orgFormMode').value;
-  var editId = document.getElementById('orgFormEditId').value;
-  var type = document.getElementById('orgFormType').value;
-  var name = document.getElementById('orgFormName').value.trim();
-  var parent = document.getElementById('orgFormParent').value;
-  var status = document.getElementById('orgFormStatus').value;
+/** 添加组织（由父页面对话框提交触发） */
+window.orgAddItem = function(type, name, parent, status) {
+  var prefixMap = { group: 'G', company: 'C', dept: 'D', team: 'T' };
+  var prefix = prefixMap[type];
+  var maxNum = 0;
+  orgData.forEach(function(item) { if (item.id.charAt(0) === prefix) { var num = parseInt(item.id.substring(1)); if (num > maxNum) maxNum = num; } });
+  var newId = prefix + (maxNum + 1);
+  var siblings = orgData.filter(function(item) { return item.parent === parent; });
+  var maxS = 0;
+  siblings.forEach(function(s) { if (s.sort > maxS) maxS = s.sort; });
+  var autoSort = maxS + 1;
+  orgData.push({ id: newId, name: name, type: type, parent: parent, sort: autoSort, status: status });
+  showToast('success', '添加成功');
+};
 
-  if (!name) { showToast('warning', '请输入组织名称'); return; }
+/** 更新组织（由父页面对话框提交触发） */
+window.orgUpdateItem = function(id, type, name, parent, status) {
+  var node = findNode(id);
+  if (!node) { showToast('error', '组织不存在'); return; }
+  node.name = name;
+  // 如果有子节点，类型不允许修改（disabled），dialog_host 负责保留原类型
+  var hasChildren = orgData.some(function(item) { return item.parent === id; });
+  if (!hasChildren) node.type = type;
 
-  var parentLevel = -1;
-  if (parent) {
-    var pNode = findNode(parent);
-    if (!pNode) { showToast('error', '上级组织不存在'); return; }
-    parentLevel = ORG_TYPE_LEVEL[pNode.type];
-  }
-  var myLevel = ORG_TYPE_LEVEL[type];
-  if (type !== 'group' && !parent) { showToast('warning', '该类型组织必须选择上级组织'); return; }
-  if (parent && parentLevel !== myLevel - 1) { showToast('warning', '上级组织类型不匹配，请遵循直系父子层级规则'); return; }
-
-  // 自动计算排序号（同级兄弟节点中最大排序号 + 1）
-  function calcAutoSort(parentId) {
-    var siblings = orgData.filter(function(item) { return item.parent === parentId; });
+  // 若上级组织发生变更，重新计算排序号
+  var newParent = parent || null;
+  if (node.parent !== newParent) {
+    var oldParent = node.parent;
+    node.parent = newParent;
+    var siblings = orgData.filter(function(item) { return item.parent === newParent; });
     var maxS = 0;
     siblings.forEach(function(s) { if (s.sort > maxS) maxS = s.sort; });
-    return maxS + 1;
+    node.sort = maxS + 1;
+    if (oldParent) renumberSorts(oldParent);
   }
-
-  if (mode === 'add') {
-    var prefixMap = { group: 'G', company: 'C', dept: 'D', team: 'T' };
-    var prefix = prefixMap[type];
-    var maxNum = 0;
-    orgData.forEach(function(item) { if (item.id.charAt(0) === prefix) { var num = parseInt(item.id.substring(1)); if (num > maxNum) maxNum = num; } });
-    var newId = prefix + (maxNum + 1);
-    var autoSort = calcAutoSort(parent || null);
-    orgData.push({ id: newId, name: name, type: type, parent: parent || null, sort: autoSort, status: status });
-    showToast('success', '添加成功');
-  } else {
-    var node = findNode(editId);
-    if (!node) { showToast('error', '组织不存在'); return; }
-    node.name = name;
-    if (!document.getElementById('orgFormType').disabled) node.type = type;
-    // 若上级组织发生变更，重新计算排序号
-    if (node.parent !== (parent || null)) {
-      var oldParent = node.parent;
-      node.parent = parent || null;
-      node.sort = calcAutoSort(node.parent);
-      if (oldParent) renumberSorts(oldParent);
-    }
-    node.status = status;
-    showToast('success', '保存成功');
-  }
-
-  closeOrgFormDialog();
-  renderTable();
-}
-
-function updateParentOptions(selType, excludeId) {
-  var parentSel = document.getElementById('orgFormParent');
-  var parentLevel = ORG_TYPE_LEVEL[selType] - 1;
-  if (selType === 'group') {
-    parentSel.innerHTML = '<option value="">-- 无（顶级） --</option>';
-    parentSel.disabled = true;
-    return;
-  }
-  parentSel.disabled = false;
-  var excludeIds = [excludeId];
-  if (excludeId) excludeIds = excludeIds.concat(getDescendantIds(excludeId));
-  var candidates = orgData.filter(function(item) {
-    if (excludeIds.indexOf(item.id) !== -1) return false;
-    return ORG_TYPE_LEVEL[item.type] === parentLevel;
-  });
-  var html = '<option value="">-- 请选择 --</option>';
-  candidates.forEach(function(item) { html += '<option value="' + item.id + '">' + item.name + '</option>'; });
-  parentSel.innerHTML = html;
-  if (candidates.length === 0) parentSel.innerHTML = '<option value="">-- 无可用上级 --</option>';
-}
-
-function onOrgFormTypeChange() {
-  var type = document.getElementById('orgFormType').value;
-  var editId = document.getElementById('orgFormEditId').value || null;
-  updateParentOptions(type, editId);
-}
+  node.status = status;
+  showToast('success', '保存成功');
+};
 
 // ====== 删除组织对话框 ======
 function handleDelete(id) {
-  var node = findNode(id);
-  if (!node) { showToast('error', '组织不存在'); return; }
-  document.getElementById('orgDeleteId').value = id;
-  var childIds = getDescendantIds(id);
-  var msg = '';
-  if (childIds.length > 0) {
-    var childNames = childIds.map(function(cid) { return getNodeName(cid); }).join('、');
-    msg = '<p>确定要删除 <strong>' + node.name + '</strong> 及其下属的 <strong>' + childIds.length + '</strong> 个组织吗？</p><p style="color:hsl(var(--error));margin-top:6px;">下属组织包括：' + childNames + '</p><p style="margin-top:10px;">此操作不可恢复。</p>';
-  } else {
-    msg = '<p>确定要删除 <strong>' + node.name + '</strong> 吗？</p><p style="margin-top:6px;">此操作不可恢复。</p>';
+  if (window.parent && window.parent.openOrgDeleteDialog) {
+    window.parent.openOrgDeleteDialog(id);
   }
-  document.getElementById('orgDeleteMsg').innerHTML = msg;
-  document.getElementById('orgDeleteDialogOverlay').style.display = 'flex';
 }
 
-function closeOrgDeleteDialog() {
-  document.getElementById('orgDeleteDialogOverlay').style.display = 'none';
-}
-
-function confirmOrgDelete() {
-  var id = document.getElementById('orgDeleteId').value;
-  var node = findNode(id);
-  if (!node) return;
+/** 删除组织（由父页面对话框确认触发） */
+window.orgDeleteItem = function(id) {
   var descIds = getDescendantIds(id);
   var allIds = [id].concat(descIds);
   orgData = orgData.filter(function(item) { return allIds.indexOf(item.id) === -1; });
-  closeOrgDeleteDialog();
-  renderTable();
   showToast('success', '已删除 ' + allIds.length + ' 个组织');
-}
+};
 
 // ====== 批量操作 ======
-window.PU_CONFIG.batchActions = [
-  {
-    name: 'enable',
-    handler: function(ids) {
-      var count = 0;
-      ids.forEach(function(id) { var n = findNode(id); if (n && n.status !== 'active') { n.status = 'active'; count++; } });
-      renderTable();
-      showToast('success', '已启用 ' + count + ' 条');
-    }
-  },
-  {
-    name: 'disable',
-    handler: function(ids) {
-      var count = 0;
-      ids.forEach(function(id) { var n = findNode(id); if (n && n.status !== 'disabled') { n.status = 'disabled'; count++; } });
-      renderTable();
-      showToast('success', '已停用 ' + count + ' 条');
-    }
-  },
-  {
-    name: 'delete',
-    handler: function(ids) {
-      var allIds = [];
-      ids.forEach(function(id) { allIds.push(id); allIds = allIds.concat(getDescendantIds(id)); });
-      var uniqueIds = [];
-      allIds.forEach(function(id) { if (uniqueIds.indexOf(id) === -1) uniqueIds.push(id); });
-      orgData = orgData.filter(function(item) { return uniqueIds.indexOf(item.id) === -1; });
-      renderTable();
-      showToast('success', '已删除 ' + uniqueIds.length + ' 个组织');
-    }
-  }
-];
-
-// ====== 初始化 ======
-function loadDialogs() {
-  return Promise.all([
-    fetch('form-dialog.html').then(function(r) { return r.text(); }),
-    fetch('delete-dialog.html').then(function(r) { return r.text(); })
-  ]);
+function batchEnable(ids) {
+  var count = 0;
+  ids.forEach(function(id) { var n = findNode(id); if (n && n.status !== 'active') { n.status = 'active'; count++; } });
+  renderTable();
+  showToast('success', '已启用 ' + count + ' 条');
 }
 
+function batchDisable(ids) {
+  var count = 0;
+  ids.forEach(function(id) { var n = findNode(id); if (n && n.status !== 'disabled') { n.status = 'disabled'; count++; } });
+  renderTable();
+  showToast('success', '已停用 ' + count + ' 条');
+}
+
+function batchDelete(ids) {
+  if (window.parent && window.parent.openOrgBatchDeleteDialog) {
+    window.parent.openOrgBatchDeleteDialog(ids);
+  }
+}
+
+/** 批量删除组织（由父页面对话框确认触发） */
+window.orgBatchDeleteItems = function(ids) {
+  orgData = orgData.filter(function(item) { return ids.indexOf(item.id) === -1; });
+  showToast('success', '已删除 ' + ids.length + ' 个组织');
+};
+
+// ====== 自定义列面板初始化 ======
+function initCustomCols() {
+  var config = window.PU_CONFIG;
+  if (config && config.columns) {
+    puBuildCustomColPanel(config.columns, config.visibleCols);
+  }
+}
+
+// ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', function() {
-  loadDialogs().then(function(htmls) {
-    var container = document.createElement('div');
-    container.innerHTML = htmls[0] + htmls[1];
-    document.body.appendChild(container);
-
-    renderTable();
-    document.getElementById('searchInput').addEventListener('input', renderTable);
-    document.getElementById('typeFilter').addEventListener('change', renderTable);
-    document.getElementById('statusFilter').addEventListener('change', renderTable);
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        var formOverlay = document.getElementById('orgFormDialogOverlay');
-        var deleteOverlay = document.getElementById('orgDeleteDialogOverlay');
-        if (formOverlay && formOverlay.style.display === 'flex') closeOrgFormDialog();
-        if (deleteOverlay && deleteOverlay.style.display === 'flex') closeOrgDeleteDialog();
-      }
-    });
-  });
+  initCustomCols();
+  renderTable();
+  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('typeFilter').addEventListener('change', renderTable);
+  document.getElementById('statusFilter').addEventListener('change', renderTable);
 });
+
+function refreshPage() {
+  renderTable();
+  showToast('success', '数据已刷新');
+}

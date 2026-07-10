@@ -18,9 +18,16 @@
     }
 
     .iframe-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
+      display: none;
+    }
+
+    .iframe-container iframe.active {
       display: block;
     }
 
@@ -209,22 +216,57 @@
       loadIframe(url);
     };
 
-    // 加载 iframe
-    function loadIframe(url) {
-      var iframe = document.getElementById('contentFrame');
-      var loader = document.getElementById('iframeLoader');
-      if (!iframe) return;
+    // 加载 iframe（缓存池机制：切换菜单时保持页面状态，不重新加载）
+    var AD_IFRAME_CACHE = {};
+    var AD_CURRENT_URL = 'product/product_list.html';
 
-      // 显示加载条
+    function loadIframe(url) {
+      var container = document.querySelector('.iframe-container');
+      if (!container) return;
+
+      // 导航前关闭所有打开的对话框遮罩
+      if (typeof adOnNavigate === 'function') adOnNavigate();
+
+      // 隐藏当前 iframe
+      if (AD_CURRENT_URL && AD_IFRAME_CACHE[AD_CURRENT_URL]) {
+        AD_IFRAME_CACHE[AD_CURRENT_URL].classList.remove('active');
+      }
+
+      // 如果已缓存，直接显示
+      if (AD_IFRAME_CACHE[url]) {
+        AD_IFRAME_CACHE[url].classList.add('active');
+        AD_CURRENT_URL = url;
+        if (typeof adRebindObserver === 'function') adRebindObserver();
+        return;
+      }
+
+      // 新建 iframe
+      var loader = document.getElementById('iframeLoader');
       if (loader) loader.classList.add('active');
 
+      var iframe = document.createElement('iframe');
       iframe.src = url;
+      iframe.title = '内容区';
+      iframe.className = 'active';
 
-      // 监听加载完成
       iframe.onload = function() {
         if (loader) loader.classList.remove('active');
+        if (typeof adRebindObserver === 'function') adRebindObserver();
       };
+
+      container.appendChild(iframe);
+      AD_IFRAME_CACHE[url] = iframe;
+      AD_CURRENT_URL = url;
     }
+
+    // 初始化：将初始 iframe 加入缓存
+    (function() {
+      var initIframe = document.getElementById('contentFrame');
+      if (initIframe) {
+        initIframe.classList.add('active');
+        AD_IFRAME_CACHE[AD_CURRENT_URL] = initIframe;
+      }
+    })();
   </script>
   <script src="common/js/commons.js"></script>
 </head>
@@ -254,7 +296,12 @@
     </div>
   </div>
 
+  <!-- 对话框宿主容器 — 遮罩背板在此渲染以确保覆盖整个浏览器视口 -->
+  <div id="dialogHost"></div>
+
   <!-- Toast 容器 -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <script src="common/js/dialog_host.js"></script>
 </body>
 </html>

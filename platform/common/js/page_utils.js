@@ -54,13 +54,12 @@
     return config.tbodId || 'tableBody';
   }
 
-  /** 更新批量操作栏状态 */
+  /** 更新批量操作栏状态（批量操作栏始终可见，仅更新数量和按钮启用状态） */
   window.puUpdateBulkBar = function() {
     var tbodyId = puGetTbodId();
     var count = puGetCheckedCount(tbodyId);
     var countEl = document.getElementById('puSelectedCount');
     if (countEl) countEl.textContent = count;
-    // 启用/禁用批量按钮
     var bar = document.getElementById('bulkActionBar');
     if (bar) {
       bar.querySelectorAll('.bulk-actions .btn').forEach(function(btn) {

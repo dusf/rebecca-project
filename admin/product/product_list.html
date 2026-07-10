@@ -302,6 +302,7 @@
               </div>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
+              <button class="btn btn-secondary" onclick="refreshPage()" title="刷新数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新</button>
               <button class="btn btn-secondary" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
               <button class="btn btn-primary" onclick="navigateToPage('add_product.html')">添加商品</button>
             </div>
@@ -411,6 +412,11 @@
     buildCustomColPanel();
     renderTableHead();
     renderProducts();
+
+    function refreshPage() {
+      renderProducts();
+      showToast('success', '数据已刷新');
+    }
   </script>
 
   <!-- 更多操作下拉菜单（挂载到 body 级别，避免被表格遮挡） -->

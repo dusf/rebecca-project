@@ -86,5 +86,8 @@ body.dragging-active {
 tr.drag-invalid { cursor: not-allowed; }
 tr.drag-invalid td { cursor: not-allowed; }
 
-/* 对话框表单间距 */
+/* 对话框表单间距 — 最后一个表单域不留底部间距，由 .dialog-actions 的 padding-top 统一控制 */
 .dialog-body .form-group:last-of-type { margin-bottom: 0; }
+
+
+

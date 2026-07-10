@@ -1,0 +1,90 @@
+/* 组织类型标签 */
+.org-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.org-type.group    { background: hsl(215 35% 92%); color: hsl(215 35% 42%); }
+.org-type.company  { background: hsl(142 50% 92%); color: hsl(142 76% 32%); }
+.org-type.dept     { background: hsl(38 80% 92%);  color: hsl(38 92% 36%); }
+.org-type.team     { background: hsl(270 40% 92%); color: hsl(270 40% 48%); }
+
+/* 名称列左内边距缩小 */
+.table-card.org-tree-table td.col-name { padding-left: 4px !important; }
+
+/* 树形缩进 */
+.tree-name-cell.indent-l1 { padding-left: 28px; }
+.tree-name-cell.indent-l2 { padding-left: 52px; }
+.tree-name-cell.indent-l3 { padding-left: 76px; }
+
+.tree-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground));
+}
+.tree-toggle:hover {
+  background: hsl(220 10% 88%);
+  color: hsl(var(--foreground));
+}
+.tree-toggle svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
+}
+.tree-toggle.expanded svg { transform: rotate(90deg); }
+.tree-toggle.leaf { visibility: hidden; pointer-events: none; }
+
+/* 拖拽时禁止选中 */
+body.dragging-active {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* SVG 不拦截拖拽事件 */
+.drag-handle-icon svg {
+  pointer-events: none;
+}
+
+/* 组织机构表格固定列宽 */
+#orgTreeTable { table-layout: fixed !important; width: 100% !important; min-width: 0 !important; }
+
+/* 前置列：拖拽 + 复选框 */
+#orgTreeTable th.pre-col,
+#orgTreeTable td.pre-col { 
+  box-sizing: border-box !important;
+  padding: 0 !important; 
+  width: 4% !important; 
+  min-width: 60px !important; 
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#orgTreeTable col.pre-col { width: 4% !important; min-width: 60px !important; }
+#orgTreeTable th.pre-col .pre-col-wrap { display: flex; align-items: center; gap: 8px; padding: 12px 4px 12px 16px; }
+#orgTreeTable td.pre-col .pre-col-wrap { display: flex; align-items: center; gap: 8px; padding: 14px 4px 14px 16px; }
+#orgTreeTable td.pre-col .pre-col-wrap .drag-handle-icon { width: 14px; height: 22px; flex-shrink: 0; }
+#orgTreeTable td.pre-col .pre-col-wrap .checkbox,
+#orgTreeTable th.pre-col .pre-col-wrap .checkbox { flex-shrink: 0; }
+
+/* 无效拖拽目标 */
+tr.drag-invalid { cursor: not-allowed; }
+tr.drag-invalid td { cursor: not-allowed; }
+
+/* 对话框表单间距 */
+.dialog-body .form-group:last-of-type { margin-bottom: 0; }

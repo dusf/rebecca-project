@@ -1061,6 +1061,18 @@ tr:hover td { background: hsl(220 15% 96%); }
   box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
 }
 
+/* select.form-input 统一使用自定义下拉箭头，右侧留出图标间距 */
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 34px 0 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2390A3B8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
 .form-textarea {
   width: 100%;
   padding: 10px 14px;

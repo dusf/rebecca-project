@@ -1,0 +1,20 @@
+<!-- 删除地区确认对话框 -->
+<div class="dialog-overlay" id="regionDeleteDialogOverlay" style="display:none;" onclick="closeRegionDeleteDialog()">
+  <div class="dialog" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="regionDeleteDialogTitle">删除地区</div>
+      <button class="dialog-close" onclick="closeRegionDeleteDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="regionDeleteId" value="">
+      <input type="hidden" id="regionDeleteIsBatch" value="false">
+      <div class="dialog-desc" id="regionDeleteMsg"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeRegionDeleteDialog()">取消</button>
+      <button class="btn btn-destructive" onclick="confirmRegionDelete()">删除</button>
+    </div>
+  </div>
+</div>

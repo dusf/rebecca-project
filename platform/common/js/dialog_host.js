@@ -610,6 +610,11 @@
     'parameters/zone/zone-country-dialog.html'
   ];
 
+  // ==================== 地区对话框 ====================
+  var REGION_DLG_URLS = [
+    'parameters/region/delete-dialog.html'
+  ];
+
   // ---- 地域表单对话框 ----
   window.openZoneFormDialog = function(mode, id) {
     ensureDialogs('zone', ZONE_DLG_URLS, function() {
@@ -837,6 +842,68 @@
     // 使用 addCountriesToZone 返回的最新国家字符串直接渲染，避免再次读取 iframe 数据时状态不一致
     renderZoneCountryList(updatedCountries);
     if (typeof showToast === 'function') showToast('success', '已添加 ' + selectedNames.length + ' 个国家');
+  };
+
+  // ---- 地区删除对话框 ----
+
+  window.openRegionDeleteDialog = function(id) {
+    ensureDialogs('region', REGION_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var node = fw.getRegionNode(id);
+      if (!node) { showToast('error', '地区不存在'); return; }
+
+      document.getElementById('regionDeleteId').value = id;
+      document.getElementById('regionDeleteIsBatch').value = 'false';
+      document.getElementById('regionDeleteDialogTitle').textContent = '删除地区';
+      var hasChildren = fw.regionHasChildren(id);
+      var msg = hasChildren
+        ? '<p>确定要删除「<strong>' + node.name + '</strong>」及其<strong>所有下级地区</strong>吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>'
+        : '<p>确定要删除「<strong>' + node.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('regionDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('regionDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeRegionDeleteDialog = function() {
+    var ov = document.getElementById('regionDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmRegionDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('regionDeleteId').value;
+    var isBatch = document.getElementById('regionDeleteIsBatch').value === 'true';
+    closeRegionDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      fw.regionBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个地区');
+    } else {
+      fw.regionDeleteItem(id);
+      showToast('success', '地区已删除');
+    }
+    fw.renderRegionDetail();
+  };
+
+  window.openRegionBatchDeleteDialog = function(ids) {
+    ensureDialogs('region', REGION_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的地区'); return; }
+
+      document.getElementById('regionDeleteId').value = JSON.stringify(ids);
+      document.getElementById('regionDeleteIsBatch').value = 'true';
+      document.getElementById('regionDeleteDialogTitle').textContent = '批量删除地区';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个地区吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('regionDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('regionDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
   };
 
   // ==================== Escape 关闭对话框 ====================

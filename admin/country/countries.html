@@ -550,7 +550,6 @@
               <div class="page-subtitle" id="pageSubtitle">配置全球国家及其行政区划，供前端下单时选择收货地址</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
-              <button class="btn btn-secondary" onclick="refreshPage()" title="刷新数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新</button>
               <button class="btn btn-secondary" onclick="batchImportRegions()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 批量导入
@@ -573,6 +572,7 @@
           <!-- 工具栏 -->
           <div class="country-toolbar">
             <div class="country-toolbar-left">
+              <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
               <input type="text" class="search-input" style="width:260px;min-width:260px;margin:0;" placeholder="搜索国家名称或代码..." id="countrySearch" oninput="renderCountryTable()" />
               <select class="filter-select" id="continentFilter" onchange="renderCountryTable()">
                 <option value="">全部大洲</option>

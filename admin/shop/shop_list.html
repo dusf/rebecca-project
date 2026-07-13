@@ -730,7 +730,6 @@
     <div class="shop-list-title-row">
       <h1 class="shop-list-title">店铺管理</h1>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-secondary" onclick="refreshPage()" title="刷新数据" style="padding:6px 10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
         <button class="btn btn-primary" id="createShopBtn" onclick="openCreateDialog()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           创建店铺
@@ -740,13 +739,16 @@
     <p class="shop-list-subtitle">管理你的所有店铺及受邀店铺</p>
 
     <!-- Tab 切换 -->
-    <div class="shop-tabs">
-      <button class="shop-tab active" data-tab="my" onclick="switchTab('my')">
-        我的店铺<span class="tab-count" id="myTabCount">0</span>
-      </button>
-      <button class="shop-tab" data-tab="invited" onclick="switchTab('invited')">
-        被邀请的<span class="tab-count" id="invitedTabCount">0</span>
-      </button>
+    <div class="shop-tabs" style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <button class="shop-tab active" data-tab="my" onclick="switchTab('my')">
+          我的店铺<span class="tab-count" id="myTabCount">0</span>
+        </button>
+        <button class="shop-tab" data-tab="invited" onclick="switchTab('invited')">
+          被邀请的<span class="tab-count" id="invitedTabCount">0</span>
+        </button>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前Tab刷新数据" style="margin-right:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
     </div>
 
     <div class="shop-grid" id="shopGrid">

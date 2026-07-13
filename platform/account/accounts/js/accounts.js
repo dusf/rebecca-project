@@ -115,7 +115,7 @@ function renderTable() {
       else if (key === 'email') cells += '<td style="color:hsl(var(--muted-foreground))">' + (a.email || '--') + '</td>';
       else if (key === 'createdAt') cells += '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>';
       else if (key === 'status') cells += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
-      else if (key === 'actions') cells += '<td><div class="action-group"><div class="action-btn" title="编辑" onclick="handleEdit(' + a.id + ')">' + editIcon + '</div></div></td>';
+      else if (key === 'actions') cells += '<td><div class="action-group"><div class="action-btn" title="编辑" onclick="handleEdit(' + a.id + ')">' + editIcon + '</div><div class="action-btn danger" title="删除" onclick="handleDelete(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div></td>';
     });
     return '<tr data-id="' + a.id + '">' +
       '<td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' +
@@ -145,6 +145,15 @@ function handleEdit(id) {
   if (window.parent && window.parent.openAcctFormDialog) {
     window.parent.openAcctFormDialog('edit', id);
   }
+}
+
+function handleDelete(id) {
+  var acct = findAcct(id);
+  if (!acct) return;
+  if (!confirm('确定要删除账号「' + acct.name + '（' + acct.phone + '）」吗？此操作不可恢复。')) return;
+  accountData = accountData.filter(function(a) { return a.id !== id; });
+  renderTable();
+  showToast('success', '账号已删除');
 }
 
 // ====== 供父页面调用的数据处理函数 ======

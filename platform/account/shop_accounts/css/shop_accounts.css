@@ -45,6 +45,20 @@
 .member-name {
   font-weight: 600;
   color: hsl(var(--foreground));
+  line-height: 1.3;
+}
+
+.member-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.member-account-id {
+  font-family: monospace;
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
 }
 
 /* 组织机构列 */
@@ -192,95 +206,6 @@
 
 .action-more-item:hover {
   background: hsl(var(--muted));
-}
-
-/* 自定义列设置 */
-.column-custom-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 36px;
-  padding: 0 14px;
-  border: 1.5px solid hsl(var(--border));
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  background: #fff;
-  color: hsl(var(--muted-foreground));
-  font-family: var(--font-sans);
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.column-custom-btn:hover {
-  border-color: hsl(var(--primary));
-  color: hsl(var(--primary));
-}
-
-.column-custom-btn svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-.column-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  background: #fff;
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  z-index: 300;
-  min-width: 180px;
-  padding: 6px 0;
-  display: none;
-}
-
-.column-menu.show {
-  display: block;
-}
-
-.column-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  color: hsl(var(--foreground));
-  transition: background 0.1s;
-}
-
-.column-menu-item:hover {
-  background: hsl(var(--muted));
-}
-
-.column-menu-item .cm-check {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  border: 2px solid hsl(var(--border));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #fff;
-  font-size: 11px;
-}
-
-.column-menu-item.checked .cm-check {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-}
-
-.column-menu-item.disabled {
-  color: hsl(var(--muted-foreground));
-  cursor: not-allowed;
-}
-
-.column-menu-item.disabled .cm-check {
-  opacity: 0.4;
 }
 
 /* 空状态 */

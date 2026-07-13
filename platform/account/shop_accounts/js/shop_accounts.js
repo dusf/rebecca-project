@@ -29,7 +29,6 @@ var sortDir = 'desc';
 // 自定义列可见性
 var columnsVisible = {
   info: true,
-  accountId: true,
   phone: true,
   org: true,
   stores: true,
@@ -250,8 +249,7 @@ function renderMembers() {
 
     return '<tr>'
       + '<td class="col-cb">' + checkboxHtml + '</td>'
-      + (columnsVisible.info    ? '<td class="col-info"><div class="member-info-cell"><div class="member-avatar avatar-c' + ((start + i) % 6) + '">' + (m.name || '?').charAt(0) + '</div><div class="member-name">' + m.name + '</div></div></td>' : '')
-      + (columnsVisible.accountId ? '<td class="col-accountId"><span class="mono-text">' + (m.accountId || '-') + '</span></td>' : '')
+      + (columnsVisible.info    ? '<td class="col-info"><div class="member-info-cell"><div class="member-avatar avatar-c' + ((start + i) % 6) + '">' + (m.name || '?').charAt(0) + '</div><div class="member-info-text"><div class="member-name">' + m.name + '</div><div class="member-account-id">' + (m.accountId || '-') + '</div></div></div></td>' : '')
       + (columnsVisible.phone    ? '<td class="col-phone">' + (m.phone || '-') + '</td>' : '')
       + (columnsVisible.org      ? '<td class="col-org"><div class="org-cell">' + orgHtml + '</div></td>' : '')
       + (columnsVisible.stores   ? '<td class="col-stores">' + storeHtml + '</td>' : '')
@@ -702,41 +700,73 @@ window.confirmDeleteMember = function(id) {
 
 // ==================== 自定义列 ====================
 var columnDefs = [
-  { key: 'info', label: '成员信息', required: true },
-  { key: 'accountId', label: '账号ID' },
-  { key: 'phone', label: '手机号' },
-  { key: 'org', label: '组织机构' },
-  { key: 'stores', label: '所在店铺' },
-  { key: 'joinedAt', label: '创建时间' },
-  { key: 'action', label: '操作', required: true }
+  { key: 'info', label: '成员信息', alwaysShow: true },
+  { key: 'phone', label: '手机号', defaultShow: true },
+  { key: 'org', label: '组织机构', defaultShow: true },
+  { key: 'stores', label: '所在店铺', defaultShow: true },
+  { key: 'joinedAt', label: '创建时间', defaultShow: true },
+  { key: 'action', label: '操作', alwaysShow: true }
 ];
 
-window.toggleColumnMenu = function() {
-  var menu = document.getElementById('columnMenu');
-  if (!menu) return;
-  if (menu.classList.contains('show')) {
-    menu.classList.remove('show');
-    return;
-  }
-  menu.innerHTML = columnDefs.map(function(col) {
-    var checked = columnsVisible[col.key];
-    var disabled = col.required;
-    var cls = 'column-menu-item' + (checked ? ' checked' : '') + (disabled ? ' disabled' : '');
-    return '<div class="' + cls + '" onclick="' + (disabled ? '' : 'toggleColumn(\'' + col.key + '\')') + '">'
-      + '<span class="cm-check">' + (checked ? '✓' : '') + '</span>'
-      + '<span>' + col.label + '</span>'
-      + '</div>';
+function buildCustomColPanel() {
+  var body = document.getElementById('customColBody');
+  if (!body) return;
+  body.innerHTML = columnDefs.map(function(c) {
+    var disabled = c.alwaysShow ? 'disabled' : '';
+    var active = columnsVisible[c.key] ? 'active' : '';
+    var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>';
+    return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '">' +
+      dragIcon +
+      '<div class="col-check" onclick="toggleCustomCol(this.parentElement, event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+      '<span style="flex:1">' + c.label + '</span>' +
+    '</div>';
   }).join('');
-  menu.classList.add('show');
-};
+}
 
-window.toggleColumn = function(key) {
-  if (columnsVisible[key] === undefined) return;
-  columnsVisible[key] = !columnsVisible[key];
+window.toggleCustomCol = function(el, e) {
+  if (e) { e.stopPropagation(); }
+  var key = el.dataset.key;
+  var c = columnDefs.find(function(col) { return col.key === key; });
+  if (c && c.alwaysShow) return;
+
+  if (el.classList.contains('active')) {
+    el.classList.remove('active');
+    columnsVisible[key] = false;
+  } else {
+    el.classList.add('active');
+    columnsVisible[key] = true;
+  }
   renderColumns();
   renderMembers();
-  var menu = document.getElementById('columnMenu');
-  if (menu) menu.classList.remove('show');
+};
+
+window.toggleCustomColPanel = function() {
+  var panel = document.getElementById('customColPanel');
+  var btn = document.querySelector('#customColWrapper button');
+  if (!panel || !btn) return;
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    panel.style.display = 'none';
+  } else {
+    buildCustomColPanel();
+    var rect = btn.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 4) + 'px';
+    panel.style.left = Math.max(8, rect.right - 240) + 'px';
+    panel.style.display = 'block';
+    panel.classList.add('show');
+  }
+};
+
+window.resetCustomCols = function() {
+  columnDefs.forEach(function(c) {
+    if (c.alwaysShow) columnsVisible[c.key] = true;
+    else columnsVisible[c.key] = c.defaultShow !== false;
+  });
+  buildCustomColPanel();
+  renderColumns();
+  renderMembers();
+  var panel = document.getElementById('customColPanel');
+  if (panel) { panel.classList.remove('show'); panel.style.display = 'none'; }
 };
 
 function renderColumns() {
@@ -745,17 +775,17 @@ function renderColumns() {
     var key = th.getAttribute('data-key');
     th.style.display = columnsVisible[key] ? '' : 'none';
   });
-  // checkbox列
   var cbTh = document.querySelector('th.col-cb');
   if (cbTh) cbTh.style.display = '';
 }
 
-// 点击外部关闭列菜单
+// 点击外部关闭自定义列面板
 document.addEventListener('click', function(e) {
-  var menu = document.getElementById('columnMenu');
-  var btn = document.getElementById('columnCustomBtn');
-  if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
-    menu.classList.remove('show');
+  var panel = document.getElementById('customColPanel');
+  var wrapper = document.getElementById('customColWrapper');
+  if (panel && wrapper && !wrapper.contains(e.target) && !panel.contains(e.target)) {
+    panel.classList.remove('show');
+    panel.style.display = 'none';
   }
 });
 

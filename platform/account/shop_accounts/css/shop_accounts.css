@@ -154,46 +154,44 @@
   margin-left: 4px;
 }
 
-/* 操作按钮 */
-.action-btn-sm {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+/* 行级更多菜单 */
+.action-more-wrapper {
+  position: relative;
+}
+
+.action-btn.more {
+  color: hsl(var(--muted-foreground));
+}
+
+.action-btn.more:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.action-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 500;
+  min-width: 120px;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+.action-more-item {
+  padding: 8px 14px;
+  font-size: 13px;
   cursor: pointer;
-  border: none;
-  transition: all 0.15s;
-  font-family: var(--font-sans);
+  color: hsl(var(--foreground));
+  transition: background 0.1s;
 }
 
-.action-btn-sm.assign {
-  background: hsl(var(--primary-50));
-  color: hsl(var(--primary));
-}
-
-.action-btn-sm.assign:hover {
-  background: hsl(var(--primary-100));
-}
-
-.action-btn-sm.edit {
-  background: hsl(45 93% 95%);
-  color: hsl(38 92% 40%);
-}
-
-.action-btn-sm.edit:hover {
-  background: hsl(45 93% 90%);
-}
-
-.action-btn-sm.delete {
-  background: hsl(0 84% 95%);
-  color: hsl(var(--error));
-}
-
-.action-btn-sm.delete:hover {
-  background: hsl(0 84% 90%);
+.action-more-item:hover {
+  background: hsl(var(--muted));
 }
 
 /* 自定义列设置 */

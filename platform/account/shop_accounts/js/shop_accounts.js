@@ -232,10 +232,20 @@ function renderMembers() {
         + '</div></div>';
     }
 
-    var actionHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-      + '<button class="action-btn-sm assign" onclick="openSingleAssign(\'' + m.id + '\')">指派店铺</button>'
-      + '<button class="action-btn-sm edit" onclick="editMember(\'' + m.id + '\')">编辑</button>'
-      + '<button class="action-btn-sm delete" onclick="deleteMember(\'' + m.id + '\')">删除</button>'
+    var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+    var actionMenuId = 'rowMore_' + m.id;
+
+    var actionHtml = '<div class="action-group">'
+      + '<div class="action-btn" title="编辑" onclick="editMember(\'' + m.id + '\')">' + editIcon + '</div>'
+      + '<div class="action-btn danger" title="删除" onclick="deleteMember(\'' + m.id + '\')">' + deleteIcon + '</div>'
+      + '<div class="action-more-wrapper">'
+      + '<div class="action-btn more" title="更多" onclick="event.stopPropagation();toggleRowMore(\'' + actionMenuId + '\')">' + moreIcon + '</div>'
+      + '<div class="action-more-menu" id="' + actionMenuId + '" style="display:none;">'
+      + '<div class="action-more-item" onclick="openSingleAssign(\'' + m.id + '\');closeAllRowMore()">指派店铺</div>'
+      + '</div>'
+      + '</div>'
       + '</div>';
 
     return '<tr>'
@@ -747,6 +757,28 @@ document.addEventListener('click', function(e) {
   if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
     menu.classList.remove('show');
   }
+});
+
+// ==================== 行级更多菜单 ====================
+window.toggleRowMore = function(menuId) {
+  var menu = document.getElementById(menuId);
+  if (!menu) return;
+  if (menu.style.display === 'block') {
+    menu.style.display = 'none';
+    return;
+  }
+  closeAllRowMore();
+  menu.style.display = 'block';
+};
+
+window.closeAllRowMore = function() {
+  var menus = document.querySelectorAll('.action-more-menu');
+  menus.forEach(function(m) { m.style.display = 'none'; });
+};
+
+document.addEventListener('click', function(e) {
+  var wrapper = e.target.closest('.action-more-wrapper');
+  if (!wrapper) closeAllRowMore();
 });
 
 window.refreshPage = function() {

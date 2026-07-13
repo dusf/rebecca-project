@@ -20,8 +20,8 @@ window.PU_CONFIG = {
     { name: 'delete',  handler: batchDelete  }
   ],
   moreActions: [
-    { name: 'resetPwd', handler: function() { showToast('info', '批量重置密码'); } },
-    { name: 'export',   handler: function() { showToast('info', '导出选中账号'); } }
+    { name: 'resetPwd', handler: batchResetPwd },
+    { name: 'export',   handler: batchExport }
   ],
   onColumnsChange: function() { renderTable(); }
 };
@@ -231,10 +231,11 @@ function handleDelete(id) {
 
 // ====== 供父页面调用的数据处理函数 ======
 
-/** 查找账号 */
+/** 查找账号（id 参数可能为字符串，统一转为数字比较） */
 function findAcct(id) {
+  var numId = parseInt(id);
   for (var i = 0; i < accountData.length; i++) {
-    if (accountData[i].id === id) return accountData[i];
+    if (accountData[i].id === numId) return accountData[i];
   }
   return null;
 }
@@ -283,7 +284,8 @@ window.acctDeleteItem = function(id) {
 
 /** 批量删除账号（由父页面删除对话框确认触发） */
 window.acctBatchDeleteItems = function(ids) {
-  accountData = accountData.filter(function(a) { return ids.indexOf(a.id) === -1; });
+  var numIds = ids.map(function(id) { return parseInt(id); });
+  accountData = accountData.filter(function(a) { return numIds.indexOf(a.id) === -1; });
   showToast('success', '已删除 ' + ids.length + ' 个账号');
 };
 
@@ -307,6 +309,55 @@ function batchDelete(ids) {
     window.parent.openAcctBatchDeleteDialog(ids);
   }
 }
+
+// ====== 更多操作 ======
+
+/** 批量重置密码 */
+function batchResetPwd() {
+  var ids = puGetCheckedIds(window.PU_CONFIG.tbodId);
+  if (ids.length === 0) { showToast('info', '请先选择要操作的账号'); return; }
+  var newPwd = generateRandomPwd();
+  var count = 0;
+  ids.forEach(function(id) {
+    var a = findAcct(id);
+    if (a) { a.password = newPwd; count++; }
+  });
+  renderTable();
+  showToast('success', '已为 ' + count + ' 个账号重置密码，新密码为：' + newPwd);
+}
+
+/** 导出选中账号为 CSV */
+function batchExport() {
+  var ids = puGetCheckedIds(window.PU_CONFIG.tbodId);
+  if (ids.length === 0) { showToast('info', '请先选择要导出的账号'); return; }
+  var rows = [];
+  ids.forEach(function(id) {
+    var a = findAcct(id);
+    if (!a) return;
+    rows.push([a.phone, a.name, a.org, a.email, a.createdAt, a.status === 'active' ? '启用' : '停用']);
+  });
+  if (rows.length === 0) { showToast('info', '无有效数据可导出'); return; }
+  var csv = '\uFEFF手机号,姓名,组织,邮箱,创建时间,状态\n' + rows.map(function(r) { return r.join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '账号导出_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('success', '已导出 ' + rows.length + ' 条账号');
+}
+
+/** 生成随机密码（8位，含大小写字母和数字） */
+function generateRandomPwd() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var pwd = '';
+  for (var i = 0; i < 8; i++) { pwd += chars[Math.floor(Math.random() * chars.length)]; }
+  return pwd;
+}
+
 
 
 

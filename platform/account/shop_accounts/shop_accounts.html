@@ -27,7 +27,7 @@
 
     <!-- 筛选行 -->
     <div class="filter-row">
-      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/账号ID..." style="width:260px;" oninput="renderMembers()" />
+      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/邮箱/账号ID..." style="width:260px;" oninput="renderMembers()" />
       <select class="filter-select" id="storeFilter" onchange="renderMembers()">
         <option value="">全部店铺</option>
       </select>
@@ -59,6 +59,7 @@
               <th class="col-cb" style="width:40px"><div class="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></div></th>
               <th class="col-info" data-key="info">成员信息</th>
               <th class="col-phone" data-key="phone">手机号</th>
+              <th class="col-email" data-key="email">邮箱</th>
               <th class="col-org" data-key="org">组织机构</th>
               <th class="col-stores" data-key="stores" style="width:180px">所在店铺</th>
               <th class="sortable sorted col-joinedAt" data-sort="joinedAt" data-key="joinedAt" style="width:150px">创建时间<span class="sort-icon"></span></th>

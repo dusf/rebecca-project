@@ -30,6 +30,7 @@ var sortDir = 'desc';
 var columnsVisible = {
   info: true,
   phone: true,
+  email: true,
   org: true,
   stores: true,
   joinedAt: true,
@@ -119,7 +120,8 @@ function getFilteredMembers(allMembers) {
     if (search) {
       var matchSearch = (m.name || '').toLowerCase().indexOf(search) !== -1
         || (m.phone || '').indexOf(search) !== -1
-        || (m.accountId || '').toLowerCase().indexOf(search) !== -1;
+        || (m.accountId || '').toLowerCase().indexOf(search) !== -1
+        || (m.email || '').toLowerCase().indexOf(search) !== -1;
       if (!matchSearch) return false;
     }
     if (storeFilter) {
@@ -251,6 +253,7 @@ function renderMembers() {
       + '<td class="col-cb">' + checkboxHtml + '</td>'
       + (columnsVisible.info    ? '<td class="col-info"><div class="member-info-cell"><div class="member-avatar avatar-c' + ((start + i) % 6) + '">' + (m.name || '?').charAt(0) + '</div><div class="member-info-text"><div class="member-name">' + m.name + '</div><div class="member-account-id">' + (m.accountId || '-') + '</div></div></div></td>' : '')
       + (columnsVisible.phone    ? '<td class="col-phone">' + (m.phone || '-') + '</td>' : '')
+      + (columnsVisible.email    ? '<td class="col-email"><span class="muted-text">' + (m.email || '-') + '</span></td>' : '')
       + (columnsVisible.org      ? '<td class="col-org"><div class="org-cell">' + orgHtml + '</div></td>' : '')
       + (columnsVisible.stores   ? '<td class="col-stores">' + storeHtml + '</td>' : '')
       + (columnsVisible.joinedAt ? '<td class="col-joinedAt"><span class="muted-text">' + (m.joinedAt || '-') + '</span></td>' : '')
@@ -314,6 +317,7 @@ window.openAddMemberModal = function() {
       body:
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
+        '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdAddEmail" placeholder="请输入邮箱地址"></div>' +
         '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
         '<div class="form-group"><label class="form-label">密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdAddPassword" placeholder="请输入登录密码"></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopAddMemberOrgTreeSelect"></div></div>',
@@ -345,6 +349,7 @@ window.doAddMember = function() {
   var phone = document.getElementById('mdAddPhone').value.trim();
   var accountId = document.getElementById('mdAddAccountId').value.trim();
   var password = document.getElementById('mdAddPassword').value;
+  var email = document.getElementById('mdAddEmail').value.trim();
   var org = shopAddMemberOrgPicker ? shopAddMemberOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
@@ -361,6 +366,7 @@ window.doAddMember = function() {
     accountId: accountId,
     name: name,
     phone: phone,
+    email: email || '',
     password: password,
     org: org || '瑞贝卡集团',
     stores: [],
@@ -629,6 +635,7 @@ window.editMember = function(id) {
       body:
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditName" value="' + member.name + '" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditPhone" value="' + member.phone + '" placeholder="请输入手机号"></div>' +
+        '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdEditEmail" value="' + (member.email || '') + '" placeholder="请输入邮箱地址"></div>' +
         '<div class="form-group"><label class="form-label">账号ID</label><input class="form-input" id="mdEditAccountId" value="' + member.accountId + '" readonly></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopEditMemberOrgTreeSelect"></div></div>',
       actions:
@@ -661,6 +668,7 @@ window.doEditMember = function(id) {
 
   var name = document.getElementById('mdEditName').value.trim();
   var phone = document.getElementById('mdEditPhone').value.trim();
+  var email = document.getElementById('mdEditEmail').value.trim();
   var org = shopEditOrgPicker ? shopEditOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
@@ -668,6 +676,7 @@ window.doEditMember = function(id) {
 
   member.name = name;
   member.phone = phone;
+  member.email = email;
   member.org = org || member.org;
 
   if (window.parent.closeDialog) window.parent.closeDialog('shopEditMemberDialog');
@@ -706,6 +715,7 @@ window.confirmDeleteMember = function(id) {
 var columnDefs = [
   { key: 'info', label: '成员信息', alwaysShow: true },
   { key: 'phone', label: '手机号', defaultShow: true },
+  { key: 'email', label: '邮箱', defaultShow: true },
   { key: 'org', label: '组织机构', defaultShow: true },
   { key: 'stores', label: '所在店铺', defaultShow: true },
   { key: 'joinedAt', label: '创建时间', defaultShow: true },

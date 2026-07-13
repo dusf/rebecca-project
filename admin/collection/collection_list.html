@@ -49,7 +49,7 @@
               <button class="btn btn-secondary" onclick="refreshCollections()" title="刷新数据">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新
               </button>
-              <button class="btn btn-secondary" id="shopifyPullBtn" onclick="handleShopifyPull()" title="拉取Shopify系列数据">
+              <button class="btn btn-secondary" id="shopifyPullBtn" onclick="window.parent.ShopifyAuth.open()" title="拉取Shopify系列数据">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-pull-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span class="btn-pull-text">拉取Shopify</span>
               </button>
               <button class="btn btn-primary" onclick="navigateToPage('collection_add.html')">创建系列</button>
@@ -149,104 +149,6 @@
       <div class="dialog-actions">
         <button class="btn btn-secondary" onclick="closeDeleteConfirm()">取消</button>
         <button class="btn btn-destructive" id="confirmDeleteBtn">确认删除</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Shopify 授权对话框 -->
-  <div class="dialog-overlay" id="shopifyAuthOverlay" style="display:none;">
-    <div class="dialog" style="width:480px;">
-      <div class="dialog-header">
-        <div class="dialog-title">Shopify 授权</div>
-        <button class="dialog-close" onclick="closeShopifyAuth()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div class="dialog-body">
-        <!-- 步骤指示器 -->
-        <div class="shopify-step-indicator">
-          <div class="shopify-step active"><span class="shopify-step-num">1</span><span class="shopify-step-label">授权连接</span></div>
-          <div class="shopify-step-divider"></div>
-          <div class="shopify-step"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
-          <div class="shopify-step-divider"></div>
-          <div class="shopify-step"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步系列</span></div>
-        </div>
-        <div style="padding: 20px 0; text-align: center;">
-          <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: hsl(142 50% 92%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--success))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div style="font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 8px;">连接 Shopify 店铺</div>
-          <div style="font-size: 13px; color: hsl(var(--muted-foreground)); margin-bottom: 24px; line-height: 1.6;">
-            授权后可拉取 Shopify 店铺的产品系列数据，包括智能系列和<br/>手动系列，快速同步到当前商城后台。
-          </div>
-          <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 14px; text-align: left; margin-bottom: 20px;">
-            <div style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 6px;">授权店铺域名</div>
-            <input class="form-input" type="text" id="shopifyStoreDomain" placeholder="your-store.myshopify.com" style="font-size: 13px;" />
-          </div>
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button class="btn btn-secondary" onclick="closeShopifyAuth()">取消</button>
-        <button class="btn btn-primary" id="shopifyAuthConfirmBtn" onclick="confirmShopifyAuth()">确认授权</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Shopify 店铺站点选择对话框 -->
-  <div class="dialog-overlay" id="shopifySiteOverlay" style="display:none;">
-    <div class="dialog sync-dialog-v3">
-      <div class="dialog-header">
-        <div class="dialog-title">选择 Shopify 站点</div>
-        <button class="dialog-close" onclick="closeShopifySiteSelect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div class="dialog-body">
-        <!-- 步骤指示器 -->
-        <div class="shopify-step-indicator">
-          <div class="shopify-step completed"><span class="shopify-step-num">✓</span><span class="shopify-step-label">授权连接</span></div>
-          <div class="shopify-step-divider completed"></div>
-          <div class="shopify-step active"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
-          <div class="shopify-step-divider"></div>
-          <div class="shopify-step"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步系列</span></div>
-        </div>
-        <div class="dialog-desc" style="margin-bottom: 16px;">请选择要拉取系列的 Shopify 站点</div>
-        <div class="sync-site-list-v3" id="shopifySiteList">
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button class="btn btn-secondary" onclick="closeShopifySiteSelect()">取消</button>
-        <button class="btn btn-primary" id="shopifySiteNextBtn" onclick="goToShopifyCollections()" disabled>下一步</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Shopify 系列列表选择对话框 -->
-  <div class="dialog-overlay" id="shopifySeriesOverlay" style="display:none;">
-    <div class="dialog sync-dialog-v3">
-      <div class="dialog-header">
-        <div class="dialog-title">选择要同步的系列</div>
-        <button class="dialog-close" onclick="closeShopifySeriesSelect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div class="dialog-body">
-        <!-- 步骤指示器 -->
-        <div class="shopify-step-indicator">
-          <div class="shopify-step completed"><span class="shopify-step-num">✓</span><span class="shopify-step-label">授权连接</span></div>
-          <div class="shopify-step-divider completed"></div>
-          <div class="shopify-step completed"><span class="shopify-step-num">✓</span><span class="shopify-step-label">选择站点</span></div>
-          <div class="shopify-step-divider completed"></div>
-          <div class="shopify-step active"><span class="shopify-step-num">3</span><span class="shopify-step-label">同步系列</span></div>
-        </div>
-        <div class="dialog-desc" style="margin-bottom: 8px;">站点：<strong id="shopifySelectedSiteName">-</strong></div>
-        <!-- 全选 -->
-        <div class="picker-select-all" style="margin-bottom: 8px;">
-          <div class="checkbox" id="shopifySeriesSelectAllCb" onclick="shopifyToggleSelectAllSeries()"></div>
-          <span>全选</span>
-          <span class="picker-selected-count" id="shopifySeriesSelectedCount">已选 0 个</span>
-        </div>
-        <!-- 系列列表 -->
-        <div class="sync-series-list" id="shopifySeriesList">
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button class="btn btn-secondary" onclick="closeShopifySeriesSelect()">取消</button>
-        <button class="btn btn-primary" id="shopifySeriesSyncBtn" onclick="syncShopifyCollections()" disabled>同步选中的系列</button>
       </div>
     </div>
   </div>
@@ -506,15 +408,14 @@
       showToast('success', '系列「' + (collection ? collection.name : '') + '」已删除');
     }
 
-    // ==================== Shopify 拉取系列 ====================
-    // Shopify 模拟店铺站点数据
+    // ==================== Shopify 拉取系列（数据 + 钩子） ====================
+    // 父页面 shopify_dialog.js 通过 iframe.contentWindow.ShopifyAuthHooks 读取
     var shopifyStores = [
       { id: 'site-1', name: 'QVR品牌站', domain: 'qvr.myshopify.com', productCount: 128 },
       { id: 'site-2', name: 'Fashion Plus', domain: 'fashion-plus.myshopify.com', productCount: 56 },
       { id: 'site-3', name: 'Tokyo Select', domain: 'tokyo-select.myshopify.com', productCount: 42 }
     ];
 
-    // Shopify 模拟系列数据（按站点）
     var shopifyCollectionsMap = {
       'site-1': [
         { id: 'sc-1-1', title: '夏季促销', type: 'smart', productCount: 12 },
@@ -535,144 +436,37 @@
       ]
     };
 
-    var shopifyAuthStoreDomain = '';
-    var shopifySelectedSiteId = null;
-    var shopifySeriesSelected = {};  // { scId: true }
+    window.ShopifyAuthHooks = {
+      stores: shopifyStores,
+      getItems: function(siteId) { return shopifyCollectionsMap[siteId] || []; },
+      step3Label: '同步系列',
+      step3Title: '选择要同步的系列',
+      syncBtnLabel: '同步选中的系列',
+      step1Desc: '授权后可拉取 Shopify 店铺的产品系列数据，包括智能系列和<br/>手动系列，快速同步到当前商城后台。',
+      setStoreDomain: function(domain) {},
+      onSync: function(selectedIds, siteId) {
+        var seriesList = shopifyCollectionsMap[siteId] || [];
+        var selected = seriesList.filter(function(sc) { return selectedIds.indexOf(sc.id) !== -1; });
+        if (selected.length === 0) return;
 
-    // 打开授权
-    function openShopifyAuth() {
-      document.getElementById('shopifyStoreDomain').value = '';
-      shopifyAuthStoreDomain = '';
-      document.getElementById('shopifyAuthOverlay').style.display = 'flex';
-      document.getElementById('shopifyAuthOverlay').onclick = function(e) {
-        if (e.target === document.getElementById('shopifyAuthOverlay')) closeShopifyAuth();
-      };
-    }
+        // 初始化同步任务
+        syncTaskActive = true;
+        syncTaskCancelled = false;
+        syncTaskList = selected.slice();
+        syncTaskDone = [];
+        syncTaskFailed = [];
+        syncTaskSkipped = [];
+        syncCurrentIdx = 0;
 
-    function closeShopifyAuth() {
-      document.getElementById('shopifyAuthOverlay').style.display = 'none';
-    }
-
-    function confirmShopifyAuth() {
-      var domain = document.getElementById('shopifyStoreDomain').value.trim();
-      if (!domain) {
-        showToast('error', '请输入 Shopify 店铺域名');
-        return;
+        updatePullBtnState();
+        document.getElementById('spSubtitle').textContent = '正在从 Shopify 拉取 ' + selected.length + ' 个系列...';
+        document.getElementById('spBarFill').className = 'sp-bar-fill';
+        document.getElementById('spCancelBtn').style.display = '';
+        renderSyncList();
+        showSyncProgress();
+        processNextSync();
       }
-      shopifyAuthStoreDomain = domain;
-      closeShopifyAuth();
-      // 模拟授权成功，打开站点选择
-      openShopifySiteSelect();
-    }
-
-    // 站点选择
-    function openShopifySiteSelect() {
-      shopifySelectedSiteId = null;
-      document.getElementById('shopifySiteNextBtn').disabled = true;
-      renderShopifySiteList();
-      document.getElementById('shopifySiteOverlay').style.display = 'flex';
-      document.getElementById('shopifySiteOverlay').onclick = function(e) {
-        if (e.target === document.getElementById('shopifySiteOverlay')) closeShopifySiteSelect();
-      };
-    }
-
-    function closeShopifySiteSelect() {
-      document.getElementById('shopifySiteOverlay').style.display = 'none';
-    }
-
-    function renderShopifySiteList() {
-      var list = document.getElementById('shopifySiteList');
-      list.innerHTML = shopifyStores.map(function(store) {
-        var selected = shopifySelectedSiteId === store.id ? ' selected' : '';
-        return '<div class="sync-site-row-v3' + selected + '" data-site-id="' + store.id + '" onclick="selectShopifySite(\'' + store.id + '\')">' +
-          '<div class="sync-site-info-v3">' +
-            '<div class="sync-site-name-v3">' + store.name + '<span class="sync-site-badge">' + store.productCount + '件商品</span></div>' +
-            '<div class="sync-site-domain-v3">' + store.domain + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-
-    function selectShopifySite(siteId) {
-      shopifySelectedSiteId = siteId;
-      document.getElementById('shopifySiteNextBtn').disabled = false;
-      renderShopifySiteList();
-    }
-
-    function goToShopifyCollections() {
-      if (!shopifySelectedSiteId) return;
-      var site = shopifyStores.find(function(s) { return s.id === shopifySelectedSiteId; });
-      if (!site) return;
-      document.getElementById('shopifySelectedSiteName').textContent = site.name;
-      shopifySeriesSelected = {};
-      closeShopifySiteSelect();
-      renderShopifySeriesList();
-      updateShopifySeriesBar();
-      document.getElementById('shopifySeriesOverlay').style.display = 'flex';
-      document.getElementById('shopifySeriesOverlay').onclick = function(e) {
-        if (e.target === document.getElementById('shopifySeriesOverlay')) closeShopifySeriesSelect();
-      };
-    }
-
-    function closeShopifySeriesSelect() {
-      document.getElementById('shopifySeriesOverlay').style.display = 'none';
-    }
-
-    function renderShopifySeriesList() {
-      var seriesList = shopifyCollectionsMap[shopifySelectedSiteId] || [];
-      var listEl = document.getElementById('shopifySeriesList');
-      // Shopify 系列没有分组概念，直接平铺展示
-      var html = '<div class="sync-series-children">';
-      seriesList.forEach(function(sc) {
-        var selected = shopifySeriesSelected[sc.id] ? ' selected' : '';
-        html += '<div class="sync-series-child' + selected + '" onclick="shopifyToggleSeries(\'' + sc.id + '\')">';
-        html += '<div class="sync-series-child-check">' + (selected ? '&#10003;' : '') + '</div>';
-        html += '<span style="flex:1">' + sc.title + '</span>';
-        html += '<span style="font-size:11px;color:hsl(var(--muted-foreground))">' + sc.productCount + '件</span>';
-        html += '</div>';
-      });
-      html += '</div>';
-      listEl.innerHTML = html;
-      updateShopifySeriesSelectAllCb();
-    }
-
-    function shopifyToggleSeries(scId) {
-      if (shopifySeriesSelected[scId]) {
-        delete shopifySeriesSelected[scId];
-      } else {
-        shopifySeriesSelected[scId] = true;
-      }
-      renderShopifySeriesList();
-      updateShopifySeriesBar();
-    }
-
-    function shopifyToggleSelectAllSeries() {
-      var seriesList = shopifyCollectionsMap[shopifySelectedSiteId] || [];
-      var allSelected = seriesList.length > 0 && seriesList.every(function(sc) { return shopifySeriesSelected[sc.id]; });
-      if (allSelected) {
-        seriesList.forEach(function(sc) { delete shopifySeriesSelected[sc.id]; });
-      } else {
-        seriesList.forEach(function(sc) { shopifySeriesSelected[sc.id] = true; });
-      }
-      renderShopifySeriesList();
-      updateShopifySeriesBar();
-    }
-
-    function updateShopifySeriesSelectAllCb() {
-      var seriesList = shopifyCollectionsMap[shopifySelectedSiteId] || [];
-      var allSel = seriesList.length > 0 && seriesList.every(function(sc) { return shopifySeriesSelected[sc.id]; });
-      var cb = document.getElementById('shopifySeriesSelectAllCb');
-      if (cb) {
-        cb.classList.toggle('checked', allSel);
-        cb.innerHTML = allSel ? '&#10003;' : '';
-      }
-    }
-
-    function updateShopifySeriesBar() {
-      var cnt = Object.keys(shopifySeriesSelected).filter(function(k) { return shopifySeriesSelected[k]; }).length;
-      document.getElementById('shopifySeriesSelectedCount').textContent = '已选 ' + cnt + ' 个';
-      document.getElementById('shopifySeriesSyncBtn').disabled = cnt === 0;
-    }
+    };
 
     // ==================== Shopify 同步任务管理 ====================
     var syncTaskActive = false;
@@ -683,14 +477,6 @@
     var syncTaskSkipped = [];
     var syncCurrentIdx = 0;
     var syncTimer = null;
-
-    function handleShopifyPull() {
-      if (syncTaskActive) {
-        toggleSyncProgress();
-      } else {
-        openShopifyAuth();
-      }
-    }
 
     function updatePullBtnState() {
       var btn = document.getElementById('shopifyPullBtn');
@@ -732,37 +518,6 @@
       } else {
         showSyncProgress();
       }
-    }
-
-    function syncShopifyCollections() {
-      var seriesList = shopifyCollectionsMap[shopifySelectedSiteId] || [];
-      var selected = seriesList.filter(function(sc) { return shopifySeriesSelected[sc.id]; });
-      if (selected.length === 0) return;
-
-      // 关闭第三步对话框
-      closeShopifySeriesSelect();
-
-      // 初始化任务状态
-      syncTaskActive = true;
-      syncTaskCancelled = false;
-      syncTaskList = selected.slice();
-      syncTaskDone = [];
-      syncTaskFailed = [];
-      syncTaskSkipped = [];
-      syncCurrentIdx = 0;
-
-      // 按钮进入同步状态
-      updatePullBtnState();
-
-      // 显示进度面板
-      document.getElementById('spSubtitle').textContent = '正在从 Shopify 拉取 ' + selected.length + ' 个系列...';
-      document.getElementById('spBarFill').className = 'sp-bar-fill';
-      document.getElementById('spCancelBtn').style.display = '';
-      renderSyncList();
-      showSyncProgress();
-
-      // 开始逐条处理
-      processNextSync();
     }
 
     function renderSyncList() {

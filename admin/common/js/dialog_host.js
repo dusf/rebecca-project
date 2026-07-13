@@ -10,13 +10,6 @@
 var iframeContainer = document.querySelector('.iframe-container');
 var observer = null;
 var backdrop = null;
-var dialogIframe = null;           // 当前打开对话框所在的 iframe
-var savedIframeZIndex = '';        // 保存 iframe 原始 z-index
-var savedIframePosition = '';      // 保存 iframe 原始 position
-var savedIframeTop = '';           // 保存 iframe 原始 top
-var savedIframeLeft = '';          // 保存 iframe 原始 left
-var savedIframeWidth = '';         // 保存 iframe 原始 width
-var savedIframeHeight = '';        // 保存 iframe 原始 height
 
 var WATCH_SELECTORS = '.dialog-overlay, .confirm-overlay';
 
@@ -49,57 +42,38 @@ if (iframeContainer) {
   containerObserver.observe(iframeContainer, { childList: true });
 }
 
-  // ---- 全屏遮罩背板 + iframe 全视口扩展 ----
-  // 将当前 iframe 扩展到全屏，使子页面中的 .dialog-overlay（position:fixed）
-  // 能真正覆盖整个浏览器视口，对话框居中显示。
-  // 同时创建全屏遮罩背板覆盖侧边栏和顶栏区域。
+  // ---- 遮罩背板（仅覆盖侧边栏和顶栏，对话框自身的遮罩由子页面 .dialog-overlay 处理） ----
+  // Shopify 授权对话框已通过 shopify_dialog.js 在父页面 #dialogHost 中渲染全屏遮罩，
+  // 不走此 MutationObserver 路径。
   function showBackdrop() {
     if (backdrop) return;
     var host = document.getElementById('dialogHost');
     if (!host) { host = document.createElement('div'); host.id = 'dialogHost'; document.body.appendChild(host); }
 
-    // 全屏遮罩背板 — 覆盖整个视口（含侧边栏和顶栏）
     backdrop = document.createElement('div');
     backdrop.id = 'adBackdrop';
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.5);pointer-events:none;';
+    var sidebar = document.querySelector('.sidebar');
+    var header = document.querySelector('.header');
+    var sidebarW = sidebar ? sidebar.offsetWidth : 0;
+    var headerH = header ? header.offsetHeight : 0;
+    backdrop.style.cssText =
+      'position:fixed;top:0;left:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.5);pointer-events:none;' +
+      'width:' + sidebarW + 'px;';
     host.appendChild(backdrop);
-
-    // 将当前 active iframe 铺满视口，使子页面对话框能覆盖整个浏览器窗口
-    dialogIframe = getActiveIframe();
-    if (dialogIframe) {
-      savedIframeZIndex    = dialogIframe.style.zIndex;
-      savedIframePosition  = dialogIframe.style.position;
-      savedIframeTop       = dialogIframe.style.top;
-      savedIframeLeft      = dialogIframe.style.left;
-      savedIframeWidth     = dialogIframe.style.width;
-      savedIframeHeight    = dialogIframe.style.height;
-      dialogIframe.style.position = 'fixed';
-      dialogIframe.style.top      = '0';
-      dialogIframe.style.left     = '0';
-      dialogIframe.style.width    = '100vw';
-      dialogIframe.style.height   = '100vh';
-      dialogIframe.style.zIndex   = '9999';
+    if (headerH > 0) {
+      var topBar = document.createElement('div');
+      topBar.id = 'adBackdropTop';
+      topBar.style.cssText =
+        'position:fixed;top:0;left:' + sidebarW + 'px;right:0;height:' + headerH + 'px;z-index:9998;' +
+        'background:rgba(0,0,0,0.5);pointer-events:none;';
+      host.appendChild(topBar);
     }
   }
 
   function hideBackdrop() {
     if (backdrop) { backdrop.remove(); backdrop = null; }
-    if (dialogIframe) {
-      // 恢复 iframe 所有原始样式
-      dialogIframe.style.position = savedIframePosition;
-      dialogIframe.style.top      = savedIframeTop;
-      dialogIframe.style.left     = savedIframeLeft;
-      dialogIframe.style.width    = savedIframeWidth;
-      dialogIframe.style.height   = savedIframeHeight;
-      dialogIframe.style.zIndex   = savedIframeZIndex;
-      dialogIframe = null;
-      savedIframeZIndex   = '';
-      savedIframePosition = '';
-      savedIframeTop      = '';
-      savedIframeLeft     = '';
-      savedIframeWidth    = '';
-      savedIframeHeight   = '';
-    }
+    var topBar = document.getElementById('adBackdropTop');
+    if (topBar) { topBar.remove(); }
   }
 
   // ---- 检查 iframe 中是否还有可见对话框 ----

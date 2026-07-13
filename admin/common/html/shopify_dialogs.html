@@ -1,0 +1,83 @@
+<!-- ==================== Shopify 授权对话框（三步骤） ==================== -->
+<!-- 此文件由 shopify_dialog.js 通过 fetch 加载到父页面 #dialogHost 中 -->
+<!-- 确保对话框覆盖整个浏览器视口（含侧边栏），与平台管理架构一致 -->
+
+<!-- 步骤一：授权连接 -->
+<div class="dialog-overlay" id="shopifyAuthOverlay" style="display:none;" onclick="ShopifyAuth.close()">
+  <div class="dialog" style="width:480px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title">Shopify 授权</div>
+      <button class="dialog-close" onclick="ShopifyAuth.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div class="shopify-step-indicator">
+        <div class="shopify-step active" id="step1Auth"><span class="shopify-step-num">1</span><span class="shopify-step-label">授权连接</span></div>
+        <div class="shopify-step-divider" id="stepDiv1"></div>
+        <div class="shopify-step" id="step2Site"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
+        <div class="shopify-step-divider" id="stepDiv2"></div>
+        <div class="shopify-step" id="step3Sync"><span class="shopify-step-num">3</span><span class="shopify-step-label" id="step3Label">同步商品</span></div>
+      </div>
+      <div style="padding: 20px 0; text-align: center;">
+        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: hsl(142 50% 92%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--success))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div style="font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 8px;">连接 Shopify 店铺</div>
+        <div style="font-size: 13px; color: hsl(var(--muted-foreground)); margin-bottom: 24px; line-height: 1.6;" id="shopifyAuthDesc">
+          授权后可拉取 Shopify 店铺的数据，快速同步到当前<br/>商城后台管理列表中。
+        </div>
+        <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 14px; text-align: left; margin-bottom: 20px;">
+          <div style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 6px;">授权店铺域名</div>
+          <input class="form-input" type="text" id="shopifyStoreDomain" placeholder="your-store.myshopify.com" style="font-size: 13px;" />
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="ShopifyAuth.close()">取消</button>
+      <button class="btn btn-primary" id="shopifyAuthConfirmBtn" onclick="ShopifyAuth.confirmAuth()">确认授权</button>
+    </div>
+  </div>
+</div>
+
+<!-- 步骤二：站点选择 -->
+<div class="dialog-overlay" id="shopifySiteOverlay" style="display:none;" onclick="ShopifyAuth.close()">
+  <div class="dialog sync-dialog-v3" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title">选择 Shopify 站点</div>
+      <button class="dialog-close" onclick="ShopifyAuth.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <!-- 站点选择内的步骤指示器在 JS 中动态复用 step1/step2 等元素 -->
+      <div class="dialog-desc" style="margin-bottom: 16px;">请选择要拉取数据的 Shopify 站点</div>
+      <div class="sync-site-list-v3" id="shopifySiteList"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="ShopifyAuth.close()">取消</button>
+      <button class="btn btn-primary" id="shopifySiteNextBtn" onclick="ShopifyAuth.goToStep3()" disabled>下一步</button>
+    </div>
+  </div>
+</div>
+
+<!-- 步骤三：条目选择 -->
+<div class="dialog-overlay" id="shopifyItemOverlay" style="display:none;" onclick="ShopifyAuth.close()">
+  <div class="dialog sync-dialog-v3" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="shopifyItemTitle">选择要同步的条目</div>
+      <button class="dialog-close" onclick="ShopifyAuth.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div class="dialog-desc" style="margin-bottom: 8px;">站点：<strong id="shopifySelectedSiteName">-</strong></div>
+      <!-- 全选 -->
+      <div class="picker-select-all" style="margin-bottom: 8px;">
+        <div class="checkbox" id="shopifySelectAllCb" onclick="ShopifyAuth.toggleSelectAll()"></div>
+        <span>全选</span>
+        <span class="picker-selected-count" id="shopifySelectedCount">已选 0 个</span>
+      </div>
+      <!-- 列表容器 -->
+      <div class="sync-series-list" id="shopifyItemList"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="ShopifyAuth.close()">取消</button>
+      <button class="btn btn-primary" id="shopifySyncBtn" onclick="ShopifyAuth.confirmSync()" disabled>同步选中</button>
+    </div>
+  </div>
+</div>

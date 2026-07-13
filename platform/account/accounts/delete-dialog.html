@@ -1,0 +1,20 @@
+<!-- 删除账号确认对话框 -->
+<div class="dialog-overlay" id="acctDeleteDialogOverlay" style="display:none;" onclick="closeAcctDeleteDialog()">
+  <div class="dialog" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="acctDeleteDialogTitle">删除账号</div>
+      <button class="dialog-close" onclick="closeAcctDeleteDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="acctDeleteId" value="">
+      <input type="hidden" id="acctDeleteIsBatch" value="false">
+      <div class="dialog-desc" id="acctDeleteMsg"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeAcctDeleteDialog()">取消</button>
+      <button class="btn btn-destructive" onclick="confirmAcctDelete()">删除</button>
+    </div>
+  </div>
+</div>

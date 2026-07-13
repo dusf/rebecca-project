@@ -214,7 +214,6 @@ function loadIframe(url) {
   if (PLATFORM_IFRAME_CACHE[url]) {
     PLATFORM_IFRAME_CACHE[url].classList.add('active');
     PLATFORM_CURRENT_URL = url;
-    if (typeof attachFrameObserver === 'function') attachFrameObserver();
     return;
   }
 
@@ -229,7 +228,6 @@ function loadIframe(url) {
 
   iframe.onload = function() {
     if (loader) loader.classList.remove('active');
-    if (typeof attachFrameObserver === 'function') attachFrameObserver();
   };
 
   container.appendChild(iframe);

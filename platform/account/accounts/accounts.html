@@ -27,7 +27,7 @@
           <option value="active">启用</option>
           <option value="disabled">停用</option>
         </select>
-        <div class="org-cascader" id="orgFilterCascader" title="所属组织"></div>
+        <div style="position:relative;display:inline-flex;flex-shrink:0;" title="所属组织"><div id="orgFilterTreeSelect"></div></div>
         <input class="search-input" type="date" onchange="filterAccounts()" id="dateStart" title="创建时间起" style="width:150px;min-width:150px;">
         <span style="color:hsl(var(--muted-foreground));font-size:13px;">至</span>
         <input class="search-input" type="date" onchange="filterAccounts()" id="dateEnd" title="创建时间止" style="width:150px;min-width:150px;">
@@ -97,7 +97,7 @@
   </div>
 
   <script src="../../common/js/page_utils.js"></script>
-  <script src="../../common/js/org_cascader.js"></script>
+  <script src="../../common/js/org_tree_select.js"></script>
   <script src="js/accounts.js"></script>
 </body>
 </html>

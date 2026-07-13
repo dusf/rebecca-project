@@ -679,23 +679,32 @@ body {
 input[type="date"].search-input {
   width: 150px;
   min-width: 150px;
-  padding: 0 34px 0 14px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2390A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
-  -webkit-appearance: none;
-  appearance: none;
+  padding: 0 38px 0 14px;
   cursor: pointer;
+  position: relative;
 }
 
 input[type="date"].search-input::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 10px;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   opacity: 0;
   cursor: pointer;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+input[type="date"].search-input::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2390A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") center/contain no-repeat;
+  pointer-events: none;
 }
 
 input[type="date"].search-input::-webkit-datetime-edit-fields-wrapper,
@@ -705,6 +714,145 @@ input[type="date"].search-input::-webkit-date-and-time-value {
 
 input[type="date"].search-input::-webkit-inner-spin-button {
   display: none;
+}
+
+/* ==================== 组织树形选择器（替代级联 select） ==================== */
+.org-tree-trigger {
+  display: inline-flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1.5px solid hsl(220 10% 84%);
+  border-radius: 10px;
+  height: 38px;
+  padding: 0 34px 0 14px;
+  min-width: 180px;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 38px;
+  max-width: 280px;
+}
+
+.org-tree-trigger:hover {
+  border-color: hsl(220 15% 72%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.org-tree-trigger-text {
+  color: hsl(220 10% 55%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-tree-trigger.has-value .org-tree-trigger-text {
+  color: hsl(var(--foreground));
+}
+
+.org-tree-trigger-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: hsl(220 10% 55%);
+  pointer-events: none;
+}
+
+/* 树形下拉面板 */
+.org-tree-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 260px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  padding: 4px 0;
+}
+
+.org-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background 0.12s;
+  user-select: none;
+}
+
+.org-tree-item:hover {
+  background: hsl(var(--primary-50));
+}
+
+.org-tree-item.org-tree-selected {
+  background: hsl(var(--primary-100));
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.org-tree-item.org-tree-clear {
+  color: hsl(var(--muted-foreground));
+  border-bottom: 1px solid #F0F2F6;
+  margin-bottom: 2px;
+}
+
+.org-tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.org-tree-toggle svg {
+  width: 12px;
+  height: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.org-tree-toggle:not(.org-tree-toggle-leaf) svg {
+  transition: transform 0.2s;
+}
+
+.org-tree-toggle.org-tree-collapsed svg {
+  transform: rotate(-90deg);
+}
+
+.org-tree-toggle-leaf {
+  visibility: hidden;
+}
+
+.org-tree-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 表单中的树形选择器 — 触发器撑满宽度 */
+.form-group .org-tree-trigger {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ==================== 组织级联选择器 ==================== */

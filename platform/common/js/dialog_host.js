@@ -254,20 +254,20 @@
       var nameInp  = document.getElementById('acctFormName');
       var pwdInp   = document.getElementById('acctFormPassword');
       var pwdLabel = document.getElementById('acctFormPwdLabel');
-      var orgCascaderContainer = document.getElementById('acctFormOrgCascader');
+      var orgTreeContainer = document.getElementById('acctFormOrgTreeSelect');
       var emailInp = document.getElementById('acctFormEmail');
       var statSel  = document.getElementById('acctFormStatus');
 
       document.getElementById('acctFormMode').value    = mode;
       document.getElementById('acctFormEditId').value  = id || '';
 
-      // 初始化组织级联选择器：从缓存的组织机构 iframe 中读取 orgData
+      // 初始化组织树形选择器：从缓存的组织机构 iframe 中读取 orgData
       var orgUrl = 'account/organization/organization.html';
       var orgFrame = window.PLATFORM_IFRAME_CACHE && window.PLATFORM_IFRAME_CACHE[orgUrl];
       var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
         ? orgFrame.contentWindow.orgData : [];
-      if (window.acctFormOrgCascader) window.acctFormOrgCascader.destroy();
-      window.acctFormOrgCascader = OrgCascader.create(orgCascaderContainer, {
+      if (window.acctFormOrgPicker) window.acctFormOrgPicker.destroy();
+      window.acctFormOrgPicker = OrgTreeSelect.create(orgTreeContainer, {
         data: orgData,
         placeholder: '-- 请选择 --'
       });
@@ -275,7 +275,7 @@
       if (mode === 'edit' && id) {
         title.textContent = '编辑账号';
         var acct = fw.findAcct(id);
-        if (!acct) { showToast('error', '账号不存在'); return; }
+        if (!acct) { if (typeof showToast === 'function') showToast('error', '账号不存在'); else console.error('账号不存在'); return; }
         phoneInp.value = acct.phone;
         nameInp.value  = acct.name;
         pwdInp.value   = '';
@@ -283,7 +283,7 @@
         pwdLabel.innerHTML = '密码 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（留空不修改）</span>';
         emailInp.value = acct.email || '';
         statSel.value  = acct.status;
-        if (acct.org) window.acctFormOrgCascader.setValue(acct.org);
+        if (acct.org) window.acctFormOrgPicker.setValue(acct.org);
       } else {
         title.textContent = '添加账号';
         phoneInp.value   = '';
@@ -314,15 +314,15 @@
     var phone    = document.getElementById('acctFormPhone').value.trim();
     var name     = document.getElementById('acctFormName').value.trim();
     var password = document.getElementById('acctFormPassword').value;
-    var org      = window.acctFormOrgCascader ? window.acctFormOrgCascader.getValue() : '';
+    var org      = window.acctFormOrgPicker ? window.acctFormOrgPicker.getValue() : '';
     var email    = document.getElementById('acctFormEmail').value.trim();
     var status   = document.getElementById('acctFormStatus').value;
 
-    if (!phone)  { showToast('warning', '请输入手机号'); return; }
-    if (!name)   { showToast('warning', '请输入姓名'); return; }
-    if (mode === 'add' && !password) { showToast('warning', '请输入登录密码'); return; }
-    if (!org)    { showToast('warning', '请选择所属组织'); return; }
-    if (!/^1\d{10}$/.test(phone)) { showToast('warning', '请输入正确的手机号格式'); return; }
+    if (!phone)  { fw.showToast('warning', '请输入手机号'); return; }
+    if (!name)   { fw.showToast('warning', '请输入姓名'); return; }
+    if (mode === 'add' && !password) { fw.showToast('warning', '请输入登录密码'); return; }
+    if (!org)    { fw.showToast('warning', '请选择所属组织'); return; }
+    if (!/^1\d{10}$/.test(phone)) { fw.showToast('warning', '请输入正确的手机号格式'); return; }
 
     if (mode === 'add') {
       fw.acctAddItem(phone, name, password, org, email, status);

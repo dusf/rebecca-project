@@ -62,8 +62,8 @@ function updateSortIcons() {
   });
 }
 
-// ====== 组织级联选择器 ======
-var orgFilterCascader = null;
+// ====== 组织树形选择器 ======
+var orgFilterPicker = null;
 
 function getOrgData() {
   var fw = window.parent.getFW ? window.parent.getFW() : null;
@@ -75,12 +75,12 @@ function getOrgData() {
   return data;
 }
 
-function initOrgFilterCascader() {
-  var container = document.getElementById('orgFilterCascader');
-  if (!container || typeof OrgCascader === 'undefined') return;
+function initOrgFilterTreeSelect() {
+  var container = document.getElementById('orgFilterTreeSelect');
+  if (!container || typeof OrgTreeSelect === 'undefined') return;
   var orgData = getOrgData();
-  if (orgFilterCascader) orgFilterCascader.destroy();
-  orgFilterCascader = OrgCascader.create(container, {
+  if (orgFilterPicker) orgFilterPicker.destroy();
+  orgFilterPicker = OrgTreeSelect.create(container, {
     data: orgData,
     placeholder: '全部组织',
     allowEmpty: true,
@@ -101,7 +101,7 @@ function renderTable() {
   var data = accountData.slice();
   var search = (document.getElementById('accountSearch') || {}).value || '';
   var status = (document.getElementById('statusFilter') || {}).value || '';
-  var org = orgFilterCascader ? orgFilterCascader.getValue() : '';
+  var org = orgFilterPicker ? orgFilterPicker.getValue() : '';
   var dateStart = (document.getElementById('dateStart') || {}).value || '';
   var dateEnd = (document.getElementById('dateEnd') || {}).value || '';
 
@@ -221,9 +221,9 @@ window.acctAddItem = function(phone, name, password, org, email, status) {
     status: status,
     createdAt: new Date().toISOString().slice(0, 10)
   });
-  var savedOrg = orgFilterCascader ? orgFilterCascader.getValue() : '';
-  initOrgFilterCascader();
-  if (orgFilterCascader && savedOrg) orgFilterCascader.setValue(savedOrg);
+  var savedOrg = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  initOrgFilterTreeSelect();
+  if (orgFilterPicker && savedOrg) orgFilterPicker.setValue(savedOrg);
   renderTable();
   showToast('success', '账号添加成功');
 };
@@ -238,9 +238,9 @@ window.acctUpdateItem = function(id, phone, name, password, org, email, status) 
   acct.email = email || '';
   if (password) acct.password = password;
   acct.status = status;
-  var savedOrg = orgFilterCascader ? orgFilterCascader.getValue() : '';
-  initOrgFilterCascader();
-  if (orgFilterCascader && savedOrg) orgFilterCascader.setValue(savedOrg);
+  var savedOrg = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  initOrgFilterTreeSelect();
+  if (orgFilterPicker && savedOrg) orgFilterPicker.setValue(savedOrg);
   renderTable();
   showToast('success', '账号保存成功');
 };
@@ -286,7 +286,7 @@ document.addEventListener('click', function(e) {
 
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', function() {
-  initOrgFilterCascader();
+  initOrgFilterTreeSelect();
   renderTable();
 });
 

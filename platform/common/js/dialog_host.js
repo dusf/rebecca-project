@@ -261,8 +261,11 @@
       document.getElementById('acctFormMode').value    = mode;
       document.getElementById('acctFormEditId').value  = id || '';
 
-      // 填充组织下拉选项
-      var orgData = fw.acctGetOrgData ? fw.acctGetOrgData() : [];
+      // 填充组织下拉选项：从缓存的组织机构 iframe 中读取 orgData
+      var orgUrl = 'account/organization/organization.html';
+      var orgFrame = window.PLATFORM_IFRAME_CACHE && window.PLATFORM_IFRAME_CACHE[orgUrl];
+      var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+        ? orgFrame.contentWindow.orgData : [];
       var orgHtml = '<option value="">-- 请选择 --</option>';
       orgData.forEach(function(item) {
         orgHtml += '<option value="' + item.name + '">' + item.name + '</option>';

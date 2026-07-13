@@ -30,7 +30,7 @@ var ORG_TYPES = {
 var ORG_TYPE_LEVEL = { group: 0, company: 1, dept: 2, team: 3 };
 
 // ====== 示例数据 ======
-var orgData = [
+var orgData = window.orgData = [
   { id: 'G1',  name: '瑞贝卡集团',   type: 'group',   parent: null, sort: 1, status: 'active'   },
   { id: 'C1',  name: '瑞贝卡科技',   type: 'company', parent: 'G1',  sort: 1, status: 'active'   },
   { id: 'D1',  name: '技术研发部',   type: 'dept',    parent: 'C1',  sort: 1, status: 'active'   },

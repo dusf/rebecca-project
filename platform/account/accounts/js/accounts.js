@@ -5,15 +5,15 @@
 window.PU_CONFIG = {
   tbodId: 'accountTableBody',
   columns: [
+    { key: 'info',      label: '成员信息',  defaultShow: true,  alwaysShow: true  },
     { key: 'phone',     label: '手机号',   defaultShow: true,  alwaysShow: true  },
-    { key: 'name',      label: '姓名',     defaultShow: true,  alwaysShow: false },
     { key: 'org',       label: '组织',     defaultShow: true,  alwaysShow: false },
     { key: 'email',     label: '邮箱',     defaultShow: false, alwaysShow: false },
     { key: 'createdAt', label: '创建时间', defaultShow: true,  alwaysShow: false },
     { key: 'status',    label: '状态',     defaultShow: true,  alwaysShow: false },
     { key: 'actions',   label: '操作',     defaultShow: true,  alwaysShow: true  }
   ],
-  visibleCols: ['phone','name','org','email','createdAt','status','actions'],
+  visibleCols: ['info','phone','org','email','createdAt','status','actions'],
   batchActions: [
     { name: 'enable',  handler: batchEnable  },
     { name: 'disable', handler: batchDisable },
@@ -27,11 +27,11 @@ window.PU_CONFIG = {
 
 // ====== 示例数据 ======
 var accountData = [
-  { id: 1, phone: '13800138000', name: '系统管理员', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'admin@example.com', password: '***', status: 'active',   createdAt: '2026-07-01' },
-  { id: 2, phone: '13800138001', name: '张三',       org: '瑞贝卡集团/瑞贝卡科技/产品设计部', email: '',                      password: '***', status: 'active',   createdAt: '2026-07-03' },
-  { id: 3, phone: '13800138002', name: '李四',       org: '瑞贝卡集团/瑞贝卡电商/运营部',     email: 'lisi@example.com',    password: '***', status: 'active',   createdAt: '2026-07-05' },
-  { id: 4, phone: '13800138003', name: '王五',       org: '瑞贝卡集团/瑞贝卡电商/客服部',     email: '',                      password: '***', status: 'disabled', createdAt: '2026-07-06' },
-  { id: 5, phone: '13800138004', name: '赵六',       org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'zhaoliu@example.com', password: '***', status: 'active',   createdAt: '2026-07-08' }
+  { id: 1, accountId: 'AC20260700001', phone: '13800138000', name: '系统管理员', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'admin@example.com', password: '***', status: 'active',   createdAt: '2026-07-01' },
+  { id: 2, accountId: 'AC20260700002', phone: '13800138001', name: '张三',       org: '瑞贝卡集团/瑞贝卡科技/产品设计部', email: '',                      password: '***', status: 'active',   createdAt: '2026-07-03' },
+  { id: 3, accountId: 'AC20260700003', phone: '13800138002', name: '李四',       org: '瑞贝卡集团/瑞贝卡电商/运营部',     email: 'lisi@example.com',    password: '***', status: 'active',   createdAt: '2026-07-05' },
+  { id: 4, accountId: 'AC20260700004', phone: '13800138003', name: '王五',       org: '瑞贝卡集团/瑞贝卡电商/客服部',     email: '',                      password: '***', status: 'disabled', createdAt: '2026-07-06' },
+  { id: 5, accountId: 'AC20260700005', phone: '13800138004', name: '赵六',       org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'zhaoliu@example.com', password: '***', status: 'active',   createdAt: '2026-07-08' }
 ];
 
 var sortField = 'createdAt';
@@ -62,7 +62,23 @@ function updateSortIcons() {
 }
 
 // 可排序的列 key 集合
-var SORTABLE_COLS = { phone: true, name: true, createdAt: true };
+var SORTABLE_COLS = { phone: true, createdAt: true };
+
+/** 生成账号ID（格式：AC + 年月 + 5位序号） */
+function generateAccountId() {
+  var now = new Date();
+  var prefix = 'AC' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0');
+  var maxNum = 0;
+  accountData.forEach(function(a) {
+    if (a.accountId && a.accountId.indexOf(prefix) === 0) {
+      var num = parseInt(a.accountId.substring(prefix.length), 10);
+      if (num > maxNum) maxNum = num;
+    }
+  });
+  var s = '' + (maxNum + 1);
+  while (s.length < 5) s = '0' + s;
+  return prefix + s;
+}
 
 /** 动态重建表头，与数据行使用同一顺序，消除自定义列的列头/数据错位问题 */
 function rebuildAccountTableHead() {
@@ -140,6 +156,7 @@ function renderTable() {
     data = data.filter(function(a) {
       return a.phone.toLowerCase().indexOf(s) !== -1 ||
              a.name.toLowerCase().indexOf(s) !== -1 ||
+             (a.accountId || '').toLowerCase().indexOf(s) !== -1 ||
              (a.email || '').toLowerCase().indexOf(s) !== -1;
     });
   }
@@ -184,8 +201,8 @@ function renderTable() {
     var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
     var cells = '';
     cols.forEach(function(key) {
-      if (key === 'phone')     cells += '<td><strong>' + a.phone + '</strong></td>';
-      else if (key === 'name') cells += '<td>' + a.name + '</td>';
+      if (key === 'info') cells += '<td><div class="member-info-cell"><div class="member-avatar avatar-c' + (a.id % 6) + '">' + (a.name || '?').charAt(0) + '</div><div class="member-info-text"><div class="member-name">' + a.name + '</div><div class="member-account-id">' + (a.accountId || '-') + '</div></div></div></td>';
+      else if (key === 'phone') cells += '<td><strong>' + a.phone + '</strong></td>';
       else if (key === 'org')  cells += '<td>' + a.org + '</td>';
       else if (key === 'email') cells += '<td style="color:hsl(var(--muted-foreground))">' + (a.email || '--') + '</td>';
       else if (key === 'createdAt') cells += '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>';
@@ -246,6 +263,7 @@ function findAcct(id) {
 window.acctAddItem = function(phone, name, password, org, email, status) {
   accountData.push({
     id: nextAcctId++,
+    accountId: generateAccountId(),
     phone: phone,
     name: name,
     org: org,

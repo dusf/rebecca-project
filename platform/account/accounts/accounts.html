@@ -21,7 +21,7 @@
 
     <div class="toolbar">
       <div class="toolbar-left">
-        <input class="search-input" type="text" placeholder="搜索手机号/姓名/邮箱..." oninput="filterAccounts()" id="accountSearch">
+        <input class="search-input" type="text" placeholder="搜索姓名/手机号/账号ID/邮箱..." oninput="filterAccounts()" id="accountSearch">
         <select class="filter-select" onchange="filterAccounts()" id="statusFilter">
           <option value="">全部状态</option>
           <option value="active">启用</option>
@@ -65,8 +65,8 @@
           <thead>
             <tr>
               <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, 'accountTableBody')"></div></th>
+              <th>成员信息</th>
               <th class="sortable" data-sort="phone">手机号<span class="sort-icon"></span></th>
-              <th class="sortable" data-sort="name">姓名<span class="sort-icon"></span></th>
               <th>组织</th>
               <th>邮箱</th>
               <th class="sortable sorted" data-sort="createdAt">创建时间<span class="sort-icon">▼</span></th>

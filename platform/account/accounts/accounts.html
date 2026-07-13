@@ -27,6 +27,12 @@
           <option value="active">启用</option>
           <option value="disabled">停用</option>
         </select>
+        <select class="filter-select" onchange="filterAccounts()" id="orgFilter">
+          <option value="">全部组织</option>
+        </select>
+        <input class="search-input" type="date" onchange="filterAccounts()" id="dateStart" title="创建时间起" style="width:140px;min-width:140px;">
+        <span style="color:hsl(var(--muted-foreground));font-size:13px;">至</span>
+        <input class="search-input" type="date" onchange="filterAccounts()" id="dateEnd" title="创建时间止" style="width:140px;min-width:140px;">
       </div>
     </div>
 

@@ -62,6 +62,27 @@ function updateSortIcons() {
   });
 }
 
+// ====== 组织下拉填充 ======
+function populateOrgFilter() {
+  var sel = document.getElementById('orgFilter');
+  if (!sel) return;
+  var seen = {};
+  var opts = [];
+  accountData.forEach(function(a) {
+    if (a.org && !seen[a.org]) {
+      seen[a.org] = true;
+      opts.push(a.org);
+    }
+  });
+  opts.sort();
+  var currentVal = sel.value;
+  sel.innerHTML = '<option value="">全部组织</option>';
+  opts.forEach(function(o) {
+    sel.innerHTML += '<option value="' + o + '">' + o + '</option>';
+  });
+  sel.value = currentVal;
+}
+
 // ====== 过滤 ======
 function filterAccounts() {
   currentPage = 1;
@@ -73,6 +94,9 @@ function renderTable() {
   var data = accountData.slice();
   var search = (document.getElementById('accountSearch') || {}).value || '';
   var status = (document.getElementById('statusFilter') || {}).value || '';
+  var org = (document.getElementById('orgFilter') || {}).value || '';
+  var dateStart = (document.getElementById('dateStart') || {}).value || '';
+  var dateEnd = (document.getElementById('dateEnd') || {}).value || '';
 
   if (search) {
     var s = search.toLowerCase();
@@ -84,6 +108,15 @@ function renderTable() {
   }
   if (status) {
     data = data.filter(function(a) { return a.status === status; });
+  }
+  if (org) {
+    data = data.filter(function(a) { return a.org === org; });
+  }
+  if (dateStart) {
+    data = data.filter(function(a) { return a.createdAt >= dateStart; });
+  }
+  if (dateEnd) {
+    data = data.filter(function(a) { return a.createdAt <= dateEnd; });
   }
 
   data = sortAccounts(data);
@@ -178,6 +211,8 @@ window.acctAddItem = function(phone, name, password, org, email, status) {
     status: status,
     createdAt: new Date().toISOString().slice(0, 10)
   });
+  populateOrgFilter();
+  renderTable();
   showToast('success', '账号添加成功');
 };
 
@@ -191,6 +226,8 @@ window.acctUpdateItem = function(id, phone, name, password, org, email, status) 
   acct.email = email || '';
   if (password) acct.password = password;
   acct.status = status;
+  populateOrgFilter();
+  renderTable();
   showToast('success', '账号保存成功');
 };
 
@@ -239,6 +276,7 @@ document.addEventListener('click', function(e) {
 
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', function() {
+  populateOrgFilter();
   renderTable();
 });
 

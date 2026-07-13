@@ -1,0 +1,71 @@
+<!-- 添加/编辑国家对话框 -->
+<div class="dialog-overlay" id="countryFormDialogOverlay" style="display:none;" onclick="closeCountryFormDialog()">
+  <div class="dialog" style="width:500px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="countryFormDialogTitle">添加国家</span>
+      <button class="dialog-close" onclick="closeCountryFormDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="countryFormMode" value="add">
+      <input type="hidden" id="countryFormEditId" value="">
+      <div class="form-group">
+        <label class="form-label">国家名称<span class="required-star">*</span></label>
+        <input class="form-input" id="countryFormName" placeholder="例如：中国">
+      </div>
+      <div class="form-group">
+        <label class="form-label">国家代码<span class="required-star">*</span></label>
+        <input class="form-input" id="countryFormCode" placeholder="例如：CN（ISO 3166-1 alpha-2）">
+        <div class="form-hint">使用 ISO 3166-1 两位字母代码</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属地域<span class="required-star">*</span></label>
+        <select class="form-input" id="countryFormZone">
+          <option value="">请选择地域</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">默认语言</label>
+        <select class="form-input" id="countryFormLang">
+          <option value="">请选择默认语言（可选）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">默认货币</label>
+        <select class="form-input" id="countryFormCurrency">
+          <option value="">请选择默认货币（可选）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">行政区划级别</label>
+        <div class="form-hint" style="margin-bottom:8px;">定义该国家的行政区划层级，例如中国：省/直辖市 → 市 → 区/县</div>
+        <div class="level-inputs">
+          <div class="level-row">
+            <span class="level-index">一级</span>
+            <input class="form-input" id="countryFormLevel1" placeholder="例如：省/直辖市">
+          </div>
+          <div class="level-row">
+            <span class="level-index">二级</span>
+            <input class="form-input" id="countryFormLevel2" placeholder="例如：市">
+          </div>
+          <div class="level-row">
+            <span class="level-index">三级</span>
+            <input class="form-input" id="countryFormLevel3" placeholder="例如：区/县">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <select class="form-input" id="countryFormStatus">
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeCountryFormDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitCountryForm()">保存</button>
+    </div>
+  </div>
+</div>

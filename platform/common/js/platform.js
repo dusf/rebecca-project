@@ -1,6 +1,9 @@
 // ==================== 中台后台 公共脚本 ====================
 // 此文件包含 Toast、侧边栏导航等所有页面共享的逻辑
 
+// ==================== iframe 缓存 ====================
+window.PLATFORM_IFRAME_CACHE = {};
+
 // ==================== Toast 通知 ====================
 function showToast(type, message) {
   const container = document.getElementById('toastContainer');
@@ -194,7 +197,7 @@ window.handleSidebarNav = function(page) {
   }
 };
 
-// ==================== iframe 加载（每次切换菜单重新加载，不缓存） ====================
+// ==================== iframe 加载（切换菜单时优先使用缓存，未缓存时重新加载） ====================
 
 function loadIframe(url) {
   var container = document.querySelector('.iframe-container');
@@ -203,9 +206,23 @@ function loadIframe(url) {
   // 导航前关闭所有打开的对话框
   if (typeof dlgOnNavigate === 'function') dlgOnNavigate();
 
-  // 移除所有旧 iframe
-  var existing = container.querySelectorAll('iframe');
-  existing.forEach(function(el) { el.remove(); });
+  // 隐藏当前显示的 iframe
+  var existing = container.querySelectorAll('iframe.active');
+  existing.forEach(function(el) { el.classList.remove('active'); });
+
+  // 检查缓存
+  var cacheKey = url.split('?')[0]; // 去掉时间戳参数
+  if (window.PLATFORM_IFRAME_CACHE[cacheKey]) {
+    var cachedIframe = window.PLATFORM_IFRAME_CACHE[cacheKey];
+    // 清除预加载隐藏状态
+    cachedIframe.classList.remove('preload-hidden');
+    // 如果缓存的 iframe 是预加载的（挂在 body 上），移到 .iframe-container
+    if (!container.contains(cachedIframe)) {
+      container.appendChild(cachedIframe);
+    }
+    cachedIframe.classList.add('active');
+    return;
+  }
 
   // 新建 iframe
   var loader = document.getElementById('iframeLoader');
@@ -221,7 +238,23 @@ function loadIframe(url) {
   };
 
   container.appendChild(iframe);
+  // 缓存 iframe
+  window.PLATFORM_IFRAME_CACHE[cacheKey] = iframe;
 }
+
+// ==================== 后台预加载参数页 iframe（让脚本执行并推送数据到 parent） ====================
+
+window.preloadParamIframe = function(url) {
+  var cacheKey = url.split('?')[0];
+  // 已缓存则跳过
+  if (window.PLATFORM_IFRAME_CACHE[cacheKey]) return;
+  // 创建隐藏 iframe 加载页面（页面脚本执行后会把 data 推送到 window.parent）
+  var iframe = document.createElement('iframe');
+  iframe.src = url + '?_t=' + Date.now();
+  iframe.className = 'preload-hidden';
+  document.body.appendChild(iframe);
+  window.PLATFORM_IFRAME_CACHE[cacheKey] = iframe;
+};
 
 // ==================== 页面初始化 ====================
 function platformInit() {

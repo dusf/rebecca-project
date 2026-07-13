@@ -367,6 +367,16 @@ body {
   display: block;
 }
 
+/* 后台预加载的 iframe — 不可见但脚本正常执行 */
+iframe.preload-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .iframe-loader {
   position: absolute;
   top: 0;

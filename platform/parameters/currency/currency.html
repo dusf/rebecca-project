@@ -134,7 +134,10 @@
     }
 
     // ========== 供父页面调用的数据函数 ==========
+    window.currencyData = data;
     window.findCurrency = findCurrency;
+    // 同步到 parent，供 dialog_host 中国家属性的其他对话框读取
+    if (window.parent && window.parent !== window) window.parent.PARAM_CURR_DATA = data;
 
     window.currencyDeleteItem = function(id) {
       id = parseInt(id, 10);

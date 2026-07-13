@@ -417,8 +417,30 @@
     var currentCountryId = null;
     var collapsedSet = {};
 
+    // ========== 从国家页面同步国家数据到 regionConfig ==========
+    function syncCountriesFromCountryPage() {
+      if (!window.parent || !window.parent.PARAM_COUNTRY_DATA) return;
+      var countries = window.parent.PARAM_COUNTRY_DATA;
+      if (!countries || !countries.length) return;
+      countries.forEach(function(c) {
+        var exists = regionConfig.some(function(rc) { return rc.id === c.id; });
+        if (!exists) {
+          regionConfig.push({
+            id: c.id,
+            name: c.name,
+            code: c.code,
+            levels: c.levels || ['一级', '二级', '三级'],
+            data: []
+          });
+        }
+      });
+    }
+
     // ========== 渲染国家下拉选择器 ==========
     function renderCountrySelect() {
+      // 从国家页面同步国家数据
+      syncCountriesFromCountryPage();
+
       var sel = document.getElementById('countrySelect');
       var html = '<option value="">请选择国家</option>';
       regionConfig.forEach(function(c) {
@@ -645,12 +667,20 @@
         showToast('warning', '请先选择国家');
         return;
       }
-      showToast('info', '添加地区功能开发中...');
+      if (window.parent && window.parent.openRegionFormDialog) {
+        window.parent.openRegionFormDialog('add', null);
+      } else {
+        showToast('error', '对话框未就绪，请刷新页面');
+      }
     }
 
     // ========== 操作：编辑 ==========
     function handleEdit(id) {
-      showToast('info', '编辑地区: ' + getNodeName(id));
+      if (window.parent && window.parent.openRegionFormDialog) {
+        window.parent.openRegionFormDialog('edit', id);
+      } else {
+        showToast('error', '对话框未就绪，请刷新页面');
+      }
     }
 
     // ========== 操作：删除（委托给父页面对话框，全屏遮罩） ==========
@@ -684,6 +714,36 @@
         });
       }
     };
+
+    // 自增 ID 计数器
+    var regionAutoId = 100;
+    function regionNextId() { return 'RG' + (regionAutoId++); }
+
+    window.regionAddItem = function(name, level, parent, status) {
+      var country = getCurrentCountry();
+      if (!country) return;
+      var newItem = {
+        id: regionNextId(),
+        name: name,
+        level: level,
+        parent: parent || null,
+        status: status || 'active'
+      };
+      country.data.push(newItem);
+    };
+
+    window.regionUpdateItem = function(id, name, level, parent, status) {
+      var r = findRegion(id);
+      if (!r) return;
+      r.name = name;
+      r.level = level;
+      r.parent = parent || null;
+      r.status = status;
+    };
+
+    // 暴露给 dialog_host 调用的查询函数
+    window.getCurrentCountry = getCurrentCountry;
+    window.findRegion = findRegion;
 
     window.renderRegionDetail = function() {
       renderDetail();

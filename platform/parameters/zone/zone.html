@@ -150,6 +150,10 @@
       { id: 7, name: '大洋洲', code: 'OC', countries: '澳大利亚、新西兰', status: 'active' }
     ];
 
+    // 暴露到 window 和 parent，供 dialog_host 中其他国家对话框读取地域数据
+    window.zoneData = data;
+    if (window.parent && window.parent !== window) window.parent.PARAM_ZONE_DATA = data;
+
     var nextId = 8;
     var editingZoneId = null;
 

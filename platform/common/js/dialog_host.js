@@ -614,6 +614,7 @@
 
   // ==================== 地区对话框 ====================
   var REGION_DLG_URLS = [
+    'parameters/region/form-dialog.html',
     'parameters/region/delete-dialog.html'
   ];
 
@@ -906,6 +907,119 @@
     if (fw.renderZoneTable) fw.renderZoneTable();
   };
 
+  // ---- 地区表单对话框 ----
+
+  window.openRegionFormDialog = function(mode, id) {
+    ensureDialogs('region', REGION_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) { console.error('[dialog_host] openRegionFormDialog: getFW 返回 null'); return; }
+
+      var title   = document.getElementById('regionFormDialogTitle');
+      var nameInp = document.getElementById('regionFormName');
+      var levSel  = document.getElementById('regionFormLevel');
+      var parSel  = document.getElementById('regionFormParent');
+      var statSel = document.getElementById('regionFormStatus');
+
+      document.getElementById('regionFormMode').value   = mode;
+      document.getElementById('regionFormEditId').value = id || '';
+
+      // 获取当前国家的层级标签
+      var country = fw.getCurrentCountry();
+      if (!country) { showToast('warning', '请先选择国家'); return; }
+
+      // 填充层级下拉
+      var levels = country.levels || [];
+      var levHtml = '<option value="">请选择层级</option>';
+      for (var i = 0; i < levels.length; i++) {
+        levHtml += '<option value="' + i + '">' + levels[i] + '</option>';
+      }
+      levSel.innerHTML = levHtml;
+
+      // 填充上级地区下拉（初始为空，随层级变化更新）
+      parSel.innerHTML = '<option value="">无（顶级地区）</option>';
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑地区';
+        var r = fw.findRegion(id);
+        if (!r) { showToast('error', '地区不存在'); return; }
+        nameInp.value = r.name;
+        levSel.value = r.level;
+        statSel.value = r.status;
+        // 触发层级变化以填充上级地区下拉
+        onRegionLevelChange();
+        // 设置上级地区值
+        parSel.value = r.parent || '';
+      } else {
+        title.textContent = '添加地区';
+        nameInp.value = '';
+        levSel.value = '';
+        statSel.value = 'active';
+      }
+
+      var overlay = document.getElementById('regionFormDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeRegionFormDialog = function() {
+    var ov = document.getElementById('regionFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  // 层级变化时，更新上级地区下拉选项
+  window.onRegionLevelChange = function() {
+    var levSel = document.getElementById('regionFormLevel');
+    var parSel = document.getElementById('regionFormParent');
+    var selectedLevel = parseInt(levSel.value, 10);
+
+    var fw = getFW();
+    if (!fw) return;
+
+    var country = fw.getCurrentCountry();
+    if (!country) return;
+
+    var html = '<option value="">无（顶级地区）</option>';
+
+    if (selectedLevel > 0 && country.data) {
+      var parentLevel = selectedLevel - 1;
+      var parents = country.data.filter(function(d) { return d.level === parentLevel; });
+      // 排除当前编辑的地区自身
+      var editId = document.getElementById('regionFormEditId').value;
+      parents = parents.filter(function(d) { return d.id !== editId; });
+      parents.sort(function(a, b) { return a.name.localeCompare(b.name); });
+      parents.forEach(function(p) {
+        html += '<option value="' + p.id + '">' + p.name + '</option>';
+      });
+    }
+
+    parSel.innerHTML = html;
+  };
+
+  window.submitRegionForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode   = document.getElementById('regionFormMode').value;
+    var editId = document.getElementById('regionFormEditId').value;
+    var name   = (document.getElementById('regionFormName').value || '').trim();
+    var level  = parseInt(document.getElementById('regionFormLevel').value, 10);
+    var parent = document.getElementById('regionFormParent').value || null;
+    var status = document.getElementById('regionFormStatus').value;
+
+    if (!name) { showToast('warning', '请输入地区名称'); return; }
+    if (isNaN(level)) { showToast('warning', '请选择层级'); return; }
+
+    if (mode === 'add') {
+      fw.regionAddItem(name, level, parent, status);
+    } else {
+      fw.regionUpdateItem(editId, name, level, parent, status);
+    }
+
+    closeRegionFormDialog();
+    fw.renderRegionDetail();
+    showToast('success', mode === 'add' ? '地区已添加' : '地区已更新');
+  };
+
   // ---- 地区删除对话框 ----
 
   window.openRegionDeleteDialog = function(id) {
@@ -1115,6 +1229,261 @@
       showToast('success', '语言已删除');
     }
     fw.renderLanguageTable();
+  };
+
+  // ==================== 国家对话框 ====================
+  var COUNTRY_DLG_URLS = [
+    'parameters/country/form-dialog.html',
+    'parameters/country/delete-dialog.html'
+  ];
+
+  // ---- 国家表单对话框 ----
+
+  window.openCountryFormDialog = function(mode, id) {
+    ensureDialogs('country', COUNTRY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title   = document.getElementById('countryFormDialogTitle');
+      var nameInp = document.getElementById('countryFormName');
+      var codeInp = document.getElementById('countryFormCode');
+      var zoneSel = document.getElementById('countryFormZone');
+      var langSel = document.getElementById('countryFormLang');
+      var currSel = document.getElementById('countryFormCurrency');
+      var statSel = document.getElementById('countryFormStatus');
+
+      document.getElementById('countryFormMode').value    = mode;
+      document.getElementById('countryFormEditId').value  = id || '';
+
+      // 填充所属地域下拉选项
+      dlgFillCountryZoneOptions(zoneSel);
+
+      // 填充默认语言下拉选项
+      dlgFillCountryLangOptions(langSel);
+
+      // 填充默认货币下拉选项
+      dlgFillCountryCurrencyOptions(currSel);
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑国家';
+        var c = fw.findCountry(id);
+        if (!c) { showToast('error', '国家不存在'); return; }
+        nameInp.value = c.name;
+        codeInp.value = c.code;
+        zoneSel.value = c.zone || '';
+        langSel.value = c.lang || '';
+        currSel.value = c.currency || '';
+        statSel.value = c.status;
+        document.getElementById('countryFormLevel1').value = (c.levels && c.levels[0]) || '';
+        document.getElementById('countryFormLevel2').value = (c.levels && c.levels[1]) || '';
+        document.getElementById('countryFormLevel3').value = (c.levels && c.levels[2]) || '';
+      } else {
+        title.textContent = '添加国家';
+        nameInp.value = '';
+        codeInp.value = '';
+        zoneSel.value = '';
+        langSel.value = '';
+        currSel.value = '';
+        statSel.value = 'active';
+        document.getElementById('countryFormLevel1').value = '';
+        document.getElementById('countryFormLevel2').value = '';
+        document.getElementById('countryFormLevel3').value = '';
+      }
+
+      var overlay = document.getElementById('countryFormDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCountryFormDialog = function() {
+    var ov = document.getElementById('countryFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitCountryForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode   = document.getElementById('countryFormMode').value;
+    var editId = document.getElementById('countryFormEditId').value;
+    var name   = (document.getElementById('countryFormName').value || '').trim();
+    var code   = (document.getElementById('countryFormCode').value || '').trim().toUpperCase();
+    var zone   = document.getElementById('countryFormZone').value;
+    var lang   = document.getElementById('countryFormLang').value;
+    var currency = document.getElementById('countryFormCurrency').value;
+    var status = document.getElementById('countryFormStatus').value;
+
+    if (!name) { showToast('warning', '请输入国家名称'); return; }
+    if (!code) { showToast('warning', '请输入国家代码'); return; }
+    if (!zone) { showToast('warning', '请选择所属地域'); return; }
+
+    var levels = [];
+    var l1 = document.getElementById('countryFormLevel1').value.trim();
+    var l2 = document.getElementById('countryFormLevel2').value.trim();
+    var l3 = document.getElementById('countryFormLevel3').value.trim();
+    if (l1) levels.push(l1);
+    if (l2) levels.push(l2);
+    if (l3) levels.push(l3);
+    if (!levels.length) levels = ['一级', '二级', '三级'];
+
+    if (mode === 'add') {
+      fw.countryAddItem(name, code, zone, lang, currency, status, levels);
+    } else {
+      fw.countryUpdateItem(editId, name, code, zone, lang, currency, status, levels);
+    }
+
+    closeCountryFormDialog();
+    fw.renderCountryTable();
+    showToast('success', mode === 'add' ? '国家已添加' : '国家已更新');
+  };
+
+  // ---- 填充地域下拉选项 ----
+  function dlgFillCountryZoneOptions(zoneSel) {
+    // 优先从 parent window 读取 zone 页面的真实数据
+    var zones = window.PARAM_ZONE_DATA || [];
+    // 其次尝试从 iframe 缓存读取
+    if (!zones.length && window.PLATFORM_IFRAME_CACHE) {
+      var cache = window.PLATFORM_IFRAME_CACHE;
+      var zoneUrl = 'parameters/zone/zone.html';
+      if (cache[zoneUrl] && cache[zoneUrl].contentWindow && cache[zoneUrl].contentWindow.zoneData) {
+        zones = cache[zoneUrl].contentWindow.zoneData;
+      }
+    }
+    // 兜底：如果预加载还没完成，使用默认地域列表
+    if (!zones.length) {
+      zones = [
+        { name: '东南亚' }, { name: '北美' }, { name: '欧洲' }, { name: '东亚' },
+        { name: '南亚' }, { name: '中东' }, { name: '非洲' }, { name: '大洋洲' }, { name: '南美' }
+      ];
+    }
+    var currentVal = zoneSel.value;
+    var html = '<option value="">请选择地域</option>';
+    zones.forEach(function(z) {
+      html += '<option value="' + z.name + '"' + (z.name === currentVal ? ' selected' : '') + '>' + z.name + '</option>';
+    });
+    zoneSel.innerHTML = html;
+    if (currentVal) zoneSel.value = currentVal;
+  }
+
+  // ---- 填充默认语言下拉选项 ----
+  function dlgFillCountryLangOptions(langSel) {
+    // 优先从 parent window 读取语言页面的真实数据
+    var langs = window.PARAM_LANG_DATA || [];
+    // 其次尝试从 iframe 缓存读取
+    if (!langs.length && window.PLATFORM_IFRAME_CACHE) {
+      var cache = window.PLATFORM_IFRAME_CACHE;
+      var langUrl = 'parameters/language/language.html';
+      if (cache[langUrl] && cache[langUrl].contentWindow && cache[langUrl].contentWindow.languageData) {
+        langs = cache[langUrl].contentWindow.languageData;
+      }
+    }
+    // 兜底
+    if (!langs.length) {
+      langs = [
+        { name: '简体中文', code: 'zh-CN' },
+        { name: 'English', code: 'en-US' },
+        { name: '日本語', code: 'ja-JP' },
+        { name: 'Français', code: 'fr-FR' }
+      ];
+    }
+    var currentVal = langSel.value;
+    var html = '<option value="">请选择默认语言（可选）</option>';
+    langs.forEach(function(l) {
+      var display = l.name + ' (' + l.code + ')';
+      html += '<option value="' + display + '"' + (display === currentVal ? ' selected' : '') + '>' + display + '</option>';
+    });
+    langSel.innerHTML = html;
+    if (currentVal) langSel.value = currentVal;
+  }
+
+  // ---- 填充默认货币下拉选项 ----
+  function dlgFillCountryCurrencyOptions(currSel) {
+    // 优先从 parent window 读取货币页面的真实数据
+    var currencies = window.PARAM_CURR_DATA || [];
+    // 其次尝试从 iframe 缓存读取
+    if (!currencies.length && window.PLATFORM_IFRAME_CACHE) {
+      var cache = window.PLATFORM_IFRAME_CACHE;
+      var currUrl = 'parameters/currency/currency.html';
+      if (cache[currUrl] && cache[currUrl].contentWindow && cache[currUrl].contentWindow.currencyData) {
+        currencies = cache[currUrl].contentWindow.currencyData;
+      }
+    }
+    // 兜底
+    if (!currencies.length) {
+      currencies = [
+        { name: '人民币', code: 'CNY' },
+        { name: '美元', code: 'USD' },
+        { name: '欧元', code: 'EUR' },
+        { name: '日元', code: 'JPY' }
+      ];
+    }
+    var currentVal = currSel.value;
+    var html = '<option value="">请选择默认货币（可选）</option>';
+    currencies.forEach(function(c) {
+      var display = c.name + ' (' + c.code + ')';
+      html += '<option value="' + display + '"' + (display === currentVal ? ' selected' : '') + '">' + display + '</option>';
+    });
+    currSel.innerHTML = html;
+    if (currentVal) currSel.value = currentVal;
+  }
+
+  // ---- 国家删除对话框 ----
+
+  window.openCountryDeleteDialog = function(id) {
+    ensureDialogs('country', COUNTRY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var c = fw.findCountry(id);
+      if (!c) { showToast('error', '国家不存在'); return; }
+
+      document.getElementById('countryDeleteId').value = id;
+      document.getElementById('countryDeleteIsBatch').value = 'false';
+      document.getElementById('countryDeleteDialogTitle').textContent = '删除国家';
+      var msg = '<p>确定要删除「<strong>' + c.name + '（' + c.code + '）</strong>」及其所有地区数据吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('countryDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('countryDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openCountryBatchDeleteDialog = function(ids) {
+    ensureDialogs('country', COUNTRY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的国家'); return; }
+
+      document.getElementById('countryDeleteId').value = JSON.stringify(ids);
+      document.getElementById('countryDeleteIsBatch').value = 'true';
+      document.getElementById('countryDeleteDialogTitle').textContent = '批量删除国家';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个国家及其所有地区数据吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('countryDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('countryDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCountryDeleteDialog = function() {
+    var ov = document.getElementById('countryDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmCountryDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('countryDeleteId').value;
+    var isBatch = document.getElementById('countryDeleteIsBatch').value === 'true';
+    closeCountryDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      fw.countryBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个国家');
+    } else {
+      fw.countryDeleteItem(id);
+      showToast('success', '国家已删除');
+    }
+    fw.renderCountryTable();
   };
 
   // ==================== 货币对话框 ====================

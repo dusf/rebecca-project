@@ -57,7 +57,8 @@
   // ==================== 账号对话框 ====================
   var ACCT_DLG_URLS = [
     'account/accounts/form-dialog.html',
-    'account/accounts/delete-dialog.html'
+    'account/accounts/delete-dialog.html',
+    'account/accounts/reset-pwd-dialog.html'
   ];
 
   // ---- 表单对话框 ----
@@ -392,6 +393,39 @@
       var overlay = document.getElementById('acctDeleteDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
+  };
+
+  // ---- 账号批量重置密码对话框 ----
+
+  window.openAcctBatchResetPwdDialog = function(ids) {
+    ensureDialogs('acct', ACCT_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { fw.showToast('info', '请先选择要操作的账号'); return; }
+
+      document.getElementById('acctResetPwdIds').value = JSON.stringify(ids);
+      var msg = '<p>确定要为以下 <strong>' + ids.length + '</strong> 个账号重置登录密码吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">重置后将生成新的随机密码。</p>';
+      document.getElementById('acctResetPwdMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('acctResetPwdDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeAcctBatchResetPwdDialog = function() {
+    var ov = document.getElementById('acctResetPwdDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmAcctBatchResetPwd = function() {
+    var fw = getFW();
+    var idsJson = document.getElementById('acctResetPwdIds').value;
+    var ids = JSON.parse(idsJson);
+    closeAcctBatchResetPwdDialog();
+    if (fw) {
+      fw.acctBatchResetPwdItems(ids);
+      fw.renderTable();
+    }
   };
 
   // 暴露 getFW 供子页面获取 frame window 引用

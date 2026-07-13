@@ -20,8 +20,7 @@ window.PU_CONFIG = {
     { name: 'delete',  handler: batchDelete  }
   ],
   moreActions: [
-    { name: 'resetPwd', handler: batchResetPwd },
-    { name: 'export',   handler: batchExport }
+    { name: 'resetPwd', handler: batchResetPwd }
   ],
   onColumnsChange: function() { renderTable(); }
 };
@@ -312,43 +311,27 @@ function batchDelete(ids) {
 
 // ====== 更多操作 ======
 
-/** 批量重置密码 */
+/** 批量重置密码（打开确认对话框） */
 function batchResetPwd() {
   var ids = puGetCheckedIds(window.PU_CONFIG.tbodId);
   if (ids.length === 0) { showToast('info', '请先选择要操作的账号'); return; }
+  if (window.parent && window.parent.openAcctBatchResetPwdDialog) {
+    window.parent.openAcctBatchResetPwdDialog(ids);
+  }
+}
+
+/** 批量重置密码 — 实际执行（由父页面对话框确认触发） */
+window.acctBatchResetPwdItems = function(ids) {
   var newPwd = generateRandomPwd();
   var count = 0;
-  ids.forEach(function(id) {
-    var a = findAcct(id);
+  var numIds = ids.map(function(id) { return parseInt(id); });
+  numIds.forEach(function(numId) {
+    var a = findAcct(numId);
     if (a) { a.password = newPwd; count++; }
   });
   renderTable();
   showToast('success', '已为 ' + count + ' 个账号重置密码，新密码为：' + newPwd);
-}
-
-/** 导出选中账号为 CSV */
-function batchExport() {
-  var ids = puGetCheckedIds(window.PU_CONFIG.tbodId);
-  if (ids.length === 0) { showToast('info', '请先选择要导出的账号'); return; }
-  var rows = [];
-  ids.forEach(function(id) {
-    var a = findAcct(id);
-    if (!a) return;
-    rows.push([a.phone, a.name, a.org, a.email, a.createdAt, a.status === 'active' ? '启用' : '停用']);
-  });
-  if (rows.length === 0) { showToast('info', '无有效数据可导出'); return; }
-  var csv = '\uFEFF手机号,姓名,组织,邮箱,创建时间,状态\n' + rows.map(function(r) { return r.join(','); }).join('\n');
-  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = '账号导出_' + new Date().toISOString().slice(0, 10) + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('success', '已导出 ' + rows.length + ' 条账号');
-}
+};
 
 /** 生成随机密码（8位，含大小写字母和数字） */
 function generateRandomPwd() {

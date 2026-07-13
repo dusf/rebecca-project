@@ -156,6 +156,10 @@ window.openAddMemberModal = function() {
           '<div class="form-error" id="addPhoneError">请输入手机号</div>' +
         '</div>' +
         '<div class="form-group">' +
+          '<label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label>' +
+          '<input class="form-input" id="addMemberEmail" placeholder="请输入邮箱地址" />' +
+        '</div>' +
+        '<div class="form-group">' +
           '<label class="form-label">组织机构</label>' +
           '<select class="form-input" id="addMemberOrgDept" onchange="onAddDeptChange()">' +
             '<option value="">请选择分公司/部门</option>' +
@@ -257,6 +261,7 @@ window.toggleAddStoreCheck = function(el) {
 window.doAddMember = function() {
   var name = document.getElementById('addMemberName').value.trim();
   var phone = document.getElementById('addMemberPhone').value.trim();
+  var email = document.getElementById('addMemberEmail').value.trim();
   var accountId = mdGenerateAccountId();
   var orgDept = document.getElementById('addMemberOrgDept').value;
   var orgTeam = document.getElementById('addMemberOrgTeam').value;
@@ -288,7 +293,7 @@ window.doAddMember = function() {
   var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
 
   var formData = {
-    name: name, phone: phone, accountId: accountId,
+    name: name, phone: phone, email: email || '', accountId: accountId,
     orgDept: orgDept, orgTeam: orgTeam, orgSubTeam: orgSubTeam || '',
     stores: stores, joinedAt: joinedAt
   };

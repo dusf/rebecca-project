@@ -4,7 +4,7 @@ window.MDHooks.onAddMember = function(formData) {
   // 同步到全局账号
   var allAccounts = mdLoadAllAccounts();
   if (!allAccounts.some(function(a) { return a.accountId === formData.accountId; })) {
-    allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam, createdAt: new Date().toISOString() });
+    allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam, createdAt: new Date().toISOString() });
   }
   mdSaveAllAccounts(allAccounts);
 
@@ -14,7 +14,7 @@ window.MDHooks.onAddMember = function(formData) {
     var key = 'rebecca_members_' + store.id;
     var storeMems = []; try { var d = localStorage.getItem(key); if (d) storeMems = JSON.parse(d); } catch(e) {}
     if (!storeMems.some(function(ex) { return ex.accountId === formData.accountId; })) {
-      storeMems.push({ id: newId, accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam, stores: formData.stores, type: 'invited', joinedAt: formData.joinedAt });
+      storeMems.push({ id: newId, accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam, stores: formData.stores, type: 'invited', joinedAt: formData.joinedAt });
       localStorage.setItem(key, JSON.stringify(storeMems));
     }
   });
@@ -34,7 +34,7 @@ window.MDHooks.onInviteMembers = function(data) {
     data.selectedMembers.forEach(function(m) {
       if (mems.some(function(ex) { return ex.accountId === m.accountId; })) return;
       var stores = data.selectedShops.map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; });
-      mems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: stores, type: 'invited', joinedAt: joinedAt });
+      mems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, email: m.email || '', orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: stores, type: 'invited', joinedAt: joinedAt });
     });
     localStorage.setItem(key, JSON.stringify(mems));
   });
@@ -43,7 +43,7 @@ window.MDHooks.onInviteMembers = function(data) {
   var allAccounts = mdLoadAllAccounts();
   data.selectedMembers.forEach(function(m) {
     if (!allAccounts.some(function(a) { return a.accountId === m.accountId; })) {
-      allAccounts.push({ accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, createdAt: new Date().toISOString() });
+      allAccounts.push({ accountId: m.accountId, name: m.name, phone: m.phone, email: m.email || '', orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, createdAt: new Date().toISOString() });
     }
   });
   mdSaveAllAccounts(allAccounts);
@@ -85,6 +85,7 @@ function loadAllGlobalMembers() {
               accountId: m.accountId,
               name: m.name,
               phone: m.phone || '',
+              email: m.email || '',
               orgDept: m.orgDept || '',
               orgTeam: m.orgTeam || '',
               orgSubTeam: m.orgSubTeam || '',
@@ -179,6 +180,7 @@ function getFilteredMembers(allMembers) {
     if (search) {
       var matchSearch = (m.name || '').toLowerCase().indexOf(search) !== -1
         || (m.phone || '').indexOf(search) !== -1
+        || (m.email || '').toLowerCase().indexOf(search) !== -1
         || (m.accountId || '').toLowerCase().indexOf(search) !== -1;
       if (!matchSearch) return false;
     }
@@ -336,6 +338,7 @@ function renderMembers() {
       + '<td><div class="member-avatar-cell"><div class="member-avatar" style="background:' + color + '">' + m.name.charAt(0) + '</div><div><div class="member-name">' + m.name + '</div></div></div></td>'
       + '<td><span style="font-family:monospace;font-size:13px;">' + (m.accountId || '-') + '</span></td>'
       + '<td>' + (m.phone || '-') + '</td>'
+      + '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + (m.email || '-') + '</span></td>'
       + '<td><div class="org-cell">' + orgHtml + '</div></td>'
       + '<td>' + storeHtml + '</td>'
       + '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + (m.joinedAt || '-') + '</span></td>'

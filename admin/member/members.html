@@ -20,10 +20,6 @@
         </div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button class="btn-secondary-lg" onclick="openAddMemberModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          添加成员
-        </button>
         <button class="btn-primary-lg" onclick="openInviteMemberModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           邀请成员
@@ -33,7 +29,7 @@
 
     <!-- 筛选行 -->
     <div class="filter-row">
-      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/账号..." style="width:240px;" oninput="renderMembers()" />
+      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/邮箱/账号..." style="width:240px;" oninput="renderMembers()" />
       <select class="filter-select" id="storeFilter" onchange="renderMembers()">
         <option value="">全部店铺</option>
       </select>
@@ -62,6 +58,7 @@
               <th>成员信息</th>
               <th>账号ID</th>
               <th>手机号</th>
+              <th>邮箱</th>
               <th>组织机构</th>
               <th style="width:180px">所在店铺</th>
               <th class="sortable sorted" data-sort="joinedAt" style="width:130px">加入时间<span class="sort-icon"></span></th>

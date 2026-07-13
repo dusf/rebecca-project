@@ -55,10 +55,6 @@
         <div class="page-subtitle" id="shopContext">店铺成员管理</div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button class="invite-btn secondary" id="addMemberBtn" onclick="openAddMemberModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          添加成员
-        </button>
         <button class="invite-btn" id="inviteBtn" onclick="openInviteMemberModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           邀请成员
@@ -85,6 +81,7 @@
               <th>成员信息</th>
               <th>账号ID</th>
               <th>手机号</th>
+              <th>邮箱</th>
               <th>组织机构</th>
               <th class="sortable sorted" data-sort="joinedAt" style="width:130px">加入时间<span class="sort-icon"></span></th>
               <th style="width:80px">操作</th>
@@ -95,7 +92,7 @@
         <div class="empty-state" id="emptyState" style="display:none">
           <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div class="empty-title">暂无成员</div>
-          <div class="empty-desc">点击「添加成员」创建新成员，或「邀请成员」从已有账号中邀请</div>
+          <div class="empty-desc">点击「邀请成员」从已有账号中邀请</div>
         </div>
       </div>
       <!-- ==================== 分页 ==================== -->
@@ -120,7 +117,7 @@
 
     function getDefaultMembers() {
       return [{
-        id: 'member_001', accountId: 'AC20260700001', name: '系统管理员', phone: '13800000001',
+        id: 'member_001', accountId: 'AC20260700001', name: '系统管理员', phone: '13800000001', email: 'admin@rebecca.com',
         orgDept: '总部/数码事业部', orgTeam: '数码组', orgSubTeam: '', type: 'creator',
         stores: [{ id: 'shop_001', name: 'QVR品牌站', domain: 'qvr.rebeccashop.com', color: '#D4845A' }],
         joinedAt: '2026-07-01 09:00'
@@ -250,9 +247,7 @@
       }
 
       var inviteBtn = document.getElementById('inviteBtn');
-      var addBtn = document.getElementById('addMemberBtn');
       if (inviteBtn) inviteBtn.style.display = isCreator ? 'inline-flex' : 'none';
-      if (addBtn) addBtn.style.display = isCreator ? 'inline-flex' : 'none';
 
       // 分页计算
       var totalPages = Math.ceil(members.length / pageSize) || 1;
@@ -301,6 +296,7 @@
           '<td><div class="member-avatar-cell"><div class="member-avatar" style="background:' + color + '">' + m.name.charAt(0) + '</div><div><div class="member-name">' + m.name + '</div></div></div></td>' +
           '<td><span style="font-family:monospace;font-size:13px;">' + (m.accountId || '-') + '</span></td>' +
           '<td>' + (m.phone || '-') + '</td>' +
+          '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + (m.email || '-') + '</span></td>' +
           '<td><div class="org-cell">' + orgHtml + '</div></td>' +
           '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + m.joinedAt + '</span></td>' +
           '<td>' + actionHtml + '</td>' +
@@ -356,6 +352,7 @@
         accountId: formData.accountId,
         name: formData.name,
         phone: formData.phone,
+        email: formData.email || '',
         orgDept: formData.orgDept,
         orgTeam: formData.orgTeam,
         orgSubTeam: formData.orgSubTeam || '',
@@ -370,7 +367,7 @@
       // 同步到全局账号
       var allAccounts = mdLoadAllAccounts();
       if (!allAccounts.some(function(a) { return a.accountId === formData.accountId; })) {
-        allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', createdAt: new Date().toISOString() });
+        allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', createdAt: new Date().toISOString() });
       }
       mdSaveAllAccounts(allAccounts);
 
@@ -379,7 +376,7 @@
         var key = 'rebecca_members_' + store.id;
         var storeMems = []; try { var d = localStorage.getItem(key); if (d) storeMems = JSON.parse(d); } catch(e) {}
         if (!storeMems.some(function(ex) { return ex.accountId === formData.accountId; })) {
-          storeMems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: formData.accountId, name: formData.name, phone: formData.phone, orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', stores: formData.stores, type: 'invited', joinedAt: joinedAt });
+          storeMems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', stores: formData.stores, type: 'invited', joinedAt: joinedAt });
           localStorage.setItem(key, JSON.stringify(storeMems));
         }
       });

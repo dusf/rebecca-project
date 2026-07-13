@@ -253,7 +253,7 @@ function renderMembers() {
       + '<div class="action-more-wrapper">'
       + '<div class="action-btn more" title="更多" onclick="event.stopPropagation();toggleRowMore(\'' + actionMenuId + '\')">' + moreIcon + '</div>'
       + '<div class="action-more-menu" id="' + actionMenuId + '" style="display:none;">'
-      + '<div class="action-more-item" onclick="openSingleAssign(\'' + m.id + '\');closeAllRowMore()">指派店铺</div>'
+      + '<div class="action-more-item" onclick="openSingleAssign(\'' + m.id + '\');closeAllRowMore()">添加店铺</div>'
       + '<div class="action-more-item" onclick="toggleMemberStatus(\'' + m.id + '\');closeAllRowMore()">' + (m.status === 'active' ? '停用' : '启用') + '</div>'
       + '<div class="action-more-item" onclick="openResetPassword(\'' + m.id + '\');closeAllRowMore()">重置密码</div>'
       + '</div>'
@@ -492,27 +492,228 @@ window.doInviteMembers = function() {
   renderMembers();
 };
 
-// ==================== 指派店铺 ====================
+// ==================== 添加店铺 ====================
+
+// ---------- 操作列 - 单个成员店铺管理 ----------
+var singleAssignMemberId = null;
+var singleAssignCurrentStores = [];
+
 window.openSingleAssign = function(id) {
-  selectedMemberIds = [id];
-  openAssignStoreModal();
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+  singleAssignMemberId = id;
+  singleAssignCurrentStores = (member.stores || []).slice();
+  renderSingleAssignDialog();
 };
 
+function renderSingleAssignDialog() {
+  var member = memberData.find(function(m) { return m.id === singleAssignMemberId; });
+  if (!member) return;
+
+  var currentStoreList = singleAssignCurrentStores.map(function(sid) {
+    var shop = getShopById(sid);
+    return shop || { id: sid, name: sid, color: '#8B9A7C', domain: '' };
+  });
+
+  var storeRows = currentStoreList.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:24px;color:hsl(var(--muted-foreground));">暂未添加店铺</td></tr>'
+    : currentStoreList.map(function(s) {
+        return '<tr>' +
+          '<td><span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span></td>' +
+          '<td>' + s.name + '</td>' +
+          '<td style="color:hsl(var(--muted-foreground));font-size:12px;">' + (s.domain || '-') + '</td>' +
+          '<td style="text-align:right;"><button class="btn btn-text btn-sm" style="color:hsl(var(--error));" onclick="window.parent.getFW().undoSingleAssignStore(\'' + s.id + '\')">撤销</button></td>' +
+          '</tr>';
+      }).join('');
+
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopSingleAssignStoreDialog',
+      title: '添加店铺',
+      width: '560px',
+      desc: '为 <strong>' + member.name + '</strong>（' + member.accountId + '）管理店铺',
+      body:
+        '<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">' +
+        '<span style="font-size:13px;color:hsl(var(--muted-foreground));">当前已添加 <strong id="singleAssignStoreCount">' + singleAssignCurrentStores.length + '</strong> 家店铺</span>' +
+        '<button class="btn btn-primary btn-sm" onclick="window.parent.getFW().openSingleSelectStoreSubDialog()">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+        '添加店铺</button>' +
+        '</div>' +
+        '<div class="table-wrapper" style="max-height:340px;overflow-y:auto;">' +
+        '<table>' +
+        '<thead><tr><th style="width:32px;"></th><th>店铺名称</th><th style="width:180px;">店铺域名</th><th style="width:70px;">操作</th></tr></thead>' +
+        '<tbody id="singleAssignStoreTableBody">' + storeRows + '</tbody>' +
+        '</table>' +
+        '</div>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.getFW().cancelSingleAssign()">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().saveSingleAssign()">保存</button>'
+    });
+  }
+}
+
+window.undoSingleAssignStore = function(storeId) {
+  singleAssignCurrentStores = singleAssignCurrentStores.filter(function(sid) { return sid !== storeId; });
+  refreshSingleAssignDialogBody();
+};
+
+function refreshSingleAssignDialogBody() {
+  var member = memberData.find(function(m) { return m.id === singleAssignMemberId; });
+  if (!member) return;
+
+  var currentStoreList = singleAssignCurrentStores.map(function(sid) {
+    var shop = getShopById(sid);
+    return shop || { id: sid, name: sid, color: '#8B9A7C', domain: '' };
+  });
+
+  var storeRows = currentStoreList.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:24px;color:hsl(var(--muted-foreground));">暂未添加店铺</td></tr>'
+    : currentStoreList.map(function(s) {
+        return '<tr>' +
+          '<td><span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span></td>' +
+          '<td>' + s.name + '</td>' +
+          '<td style="color:hsl(var(--muted-foreground));font-size:12px;">' + (s.domain || '-') + '</td>' +
+          '<td style="text-align:right;"><button class="btn btn-text btn-sm" style="color:hsl(var(--error));" onclick="window.parent.getFW().undoSingleAssignStore(\'' + s.id + '\')">撤销</button></td>' +
+          '</tr>';
+      }).join('');
+
+  var tbody = window.parent.document.getElementById('singleAssignStoreTableBody');
+  if (tbody) tbody.innerHTML = storeRows;
+
+  var countEl = window.parent.document.getElementById('singleAssignStoreCount');
+  if (countEl) countEl.textContent = singleAssignCurrentStores.length;
+}
+
+// ---------- 子对话框：选择要添加的店铺 ----------
+window.openSingleSelectStoreSubDialog = function() {
+  var availableShops = loadShops().filter(function(s) {
+    return singleAssignCurrentStores.indexOf(s.id) === -1;
+  });
+
+  if (availableShops.length === 0) {
+    if (window.parent.showToast) window.parent.showToast('info', '所有店铺已添加');
+    return;
+  }
+
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopSingleSelectStoreSubDialog',
+      title: '选择店铺',
+      width: '520px',
+      body:
+        '<input type="text" class="form-input" id="singleSubStoreSearch" placeholder="搜索店铺名称" style="margin-bottom:8px;" oninput="window.parent.getFW().filterSingleSubStores(this.value)">' +
+        '<div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><button type="button" class="btn btn-text btn-sm" onclick="window.parent.getFW().selectAllSingleSubStores()">全选</button><button type="button" class="btn btn-text btn-sm" onclick="window.parent.getFW().clearSingleSubStores()">清空</button></div>' +
+        '<span style="font-size:12px;color:hsl(var(--muted-foreground));">已选 <strong id="singleSubStoreCount">0</strong> 家</span>' +
+        '</div>' +
+        '<div class="store-check-grid" id="singleSubStoreGrid" style="max-height:300px;overflow-y:auto;">' +
+        availableShops.map(function(s) {
+          return '<div class="store-check-item" data-shop-id="' + s.id + '" data-shop-name="' + s.name + '" onclick="window.parent.getFW().toggleSingleSubStoreItem(this)">' +
+            '<span class="sci-checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+            '<span class="sci-name">' + s.name + '</span>' +
+            '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span>' +
+            '</div>';
+        }).join('') +
+        '</div>' +
+        '<div class="store-check-empty" id="singleSubStoreEmpty" style="display:none;">没有匹配的店铺</div>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopSingleSelectStoreSubDialog\')">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().confirmSingleSubStores()">确认添加</button>'
+    });
+  }
+};
+
+window.toggleSingleSubStoreItem = function(el) {
+  el.classList.toggle('selected');
+  updateSingleSubStoreCount();
+};
+
+function updateSingleSubStoreCount() {
+  var count = window.parent.document.querySelectorAll('#singleSubStoreGrid .store-check-item.selected').length;
+  var el = window.parent.document.getElementById('singleSubStoreCount');
+  if (el) el.textContent = count;
+}
+
+window.filterSingleSubStores = function(keyword) {
+  var lower = (keyword || '').toLowerCase();
+  var items = window.parent.document.querySelectorAll('#singleSubStoreGrid .store-check-item');
+  var visible = 0;
+  items.forEach(function(item) {
+    var name = (item.getAttribute('data-shop-name') || '').toLowerCase();
+    var show = !lower || name.indexOf(lower) !== -1;
+    item.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  var empty = window.parent.document.getElementById('singleSubStoreEmpty');
+  if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+};
+
+window.selectAllSingleSubStores = function() {
+  var items = window.parent.document.querySelectorAll('#singleSubStoreGrid .store-check-item');
+  items.forEach(function(item) {
+    if (item.style.display === 'none') return;
+    item.classList.add('selected');
+  });
+  updateSingleSubStoreCount();
+};
+
+window.clearSingleSubStores = function() {
+  var items = window.parent.document.querySelectorAll('#singleSubStoreGrid .store-check-item');
+  items.forEach(function(item) { item.classList.remove('selected'); });
+  updateSingleSubStoreCount();
+};
+
+window.confirmSingleSubStores = function() {
+  var selectedEls = window.parent.document.querySelectorAll('#singleSubStoreGrid .store-check-item.selected');
+  selectedEls.forEach(function(el) {
+    var shopId = el.getAttribute('data-shop-id');
+    if (singleAssignCurrentStores.indexOf(shopId) === -1) {
+      singleAssignCurrentStores.push(shopId);
+    }
+  });
+
+  window.parent.closeDialog('shopSingleSelectStoreSubDialog');
+  refreshSingleAssignDialogBody();
+};
+
+window.cancelSingleAssign = function() {
+  singleAssignMemberId = null;
+  singleAssignCurrentStores = [];
+  window.parent.closeDialog('shopSingleAssignStoreDialog');
+};
+
+window.saveSingleAssign = function() {
+  var member = memberData.find(function(m) { return m.id === singleAssignMemberId; });
+  if (!member) {
+    window.parent.closeDialog('shopSingleAssignStoreDialog');
+    return;
+  }
+
+  member.stores = singleAssignCurrentStores.slice();
+
+  window.parent.closeDialog('shopSingleAssignStoreDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已更新「' + member.name + '」的店铺');
+  singleAssignMemberId = null;
+  singleAssignCurrentStores = [];
+  renderMembers();
+};
+
+// ---------- 批量添加店铺（更多操作） ----------
 window.openBatchAssignStore = function() {
   if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }
-  openAssignStoreModal();
+  openBatchAssignStoreModal();
 };
 
-function openAssignStoreModal() {
+function openBatchAssignStoreModal() {
   var shops = loadShops();
   if (shops.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '暂无可选店铺'); return; }
 
   if (window.parent && window.parent.openDialog) {
     window.parent.openDialog({
-      id: 'shopAssignStoreDialog',
-      title: '指派店铺',
+      id: 'shopBatchAssignStoreDialog',
+      title: '添加店铺',
       width: '520px',
-      desc: '为选中的 <strong id="assignCount">' + selectedMemberIds.length + '</strong> 名成员指派店铺 <span style="font-size:12px;color:hsl(var(--muted-foreground))">（在当前店铺的成员列表中添加该成员）</span>',
+      desc: '为选中的 <strong id="assignCount">' + selectedMemberIds.length + '</strong> 名成员添加店铺 <span style="font-size:12px;color:hsl(var(--muted-foreground))">（在当前店铺的成员列表中添加该成员）</span>',
       body:
         '<div class="form-group">' +
         '<label class="form-label">选择店铺（可多选）</label>' +
@@ -534,8 +735,8 @@ function openAssignStoreModal() {
         '<div class="form-error" id="assignStoreError">请至少选择一家店铺</div>' +
         '</div>',
       actions:
-        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAssignStoreDialog\')">取消</button>' +
-        '<button class="btn btn-primary" onclick="window.parent.getFW().doAssignStores()">确认指派</button>'
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopBatchAssignStoreDialog\')">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doAssignStores()">确认添加</button>'
     });
   }
 }
@@ -569,7 +770,6 @@ window.filterAssignStores = function(keyword) {
 
 window.selectAllAssignStores = function() {
   var keyword = window.parent.document.getElementById('assignStoreSearch');
-  var lower = (keyword && keyword.value || '').toLowerCase();
   var items = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item');
   items.forEach(function(item) {
     if (item.style.display === 'none') return;
@@ -604,8 +804,8 @@ window.doAssignStores = function() {
     }
   });
 
-  if (window.parent.closeDialog) window.parent.closeDialog('shopAssignStoreDialog');
-  if (window.parent.showToast) window.parent.showToast('success', '已为 ' + selectedMemberIds.length + ' 名成员指派店铺');
+  if (window.parent.closeDialog) window.parent.closeDialog('shopBatchAssignStoreDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已为 ' + selectedMemberIds.length + ' 名成员添加店铺');
   selectedMemberIds = [];
   currentPage = 1;
   renderMembers();

@@ -1,0 +1,20 @@
+<!-- 删除语言确认对话框 -->
+<div class="dialog-overlay" id="languageDeleteDialogOverlay" style="display:none;" onclick="closeLanguageDeleteDialog()">
+  <div class="dialog" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="languageDeleteDialogTitle">删除语言</div>
+      <button class="dialog-close" onclick="closeLanguageDeleteDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="languageDeleteId" value="">
+      <input type="hidden" id="languageDeleteIsBatch" value="false">
+      <div class="dialog-desc" id="languageDeleteMsg"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeLanguageDeleteDialog()">取消</button>
+      <button class="btn btn-destructive" onclick="confirmLanguageDelete()">删除</button>
+    </div>
+  </div>
+</div>

@@ -129,7 +129,7 @@
       batchActions: [
         { name: 'enable', handler: function(ids) { showToast('success', '已启用 ' + ids.length + ' 条'); } },
         { name: 'disable', handler: function(ids) { showToast('success', '已停用 ' + ids.length + ' 条'); } },
-        { name: 'delete', handler: function(ids) { showToast('success', '已删除 ' + ids.length + ' 条'); } }
+        { name: 'delete', handler: function(ids) { zoneBatchDelete(ids); } }
       ],
       moreActions: [
         { name: 'export', handler: function() { showToast('info', '导出选中地域'); } }
@@ -291,18 +291,38 @@
       renderTable();
     };
 
+    // ========== 操作：删除（委托给父页面对话框，全屏遮罩） ==========
     function deleteZone(id) {
-      var zone = null;
-      for (var i = 0; i < data.length; i++) {
-        if (data[i].id === id) { zone = data[i]; break; }
+      if (window.parent && window.parent.openZoneDeleteDialog) {
+        window.parent.openZoneDeleteDialog(id);
       }
-      if (!zone) return;
-      if (!confirm('确定要删除地域「' + zone.name + '」吗？')) return;
-
-      data = data.filter(function(d) { return d.id !== id; });
-      showToast('success', '已删除');
-      renderTable();
     }
+
+    function zoneBatchDelete(ids) {
+      if (window.parent && window.parent.openZoneBatchDeleteDialog) {
+        window.parent.openZoneBatchDeleteDialog(ids);
+      }
+    }
+
+    // ========== 供父页面调用的桥接函数 ==========
+    window.findZone = function(id) {
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].id === id) return data[i];
+      }
+      return null;
+    };
+
+    window.zoneDeleteSingle = function(id) {
+      data = data.filter(function(d) { return d.id !== id; });
+    };
+
+    window.zoneBatchDeleteItems = function(ids) {
+      data = data.filter(function(d) { return ids.indexOf(d.id) === -1; });
+    };
+
+    window.renderZoneTable = function() {
+      renderTable();
+    };
 
     // ========== 刷新页面数据 ==========
     function refreshPage() {

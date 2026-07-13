@@ -44,8 +44,9 @@
       if (typeof initSearchableSelects === 'function') initSearchableSelects();
       callback();
     }).catch(function(err) {
-      console.error('对话框加载失败:', err);
+      console.error('对话框加载失败:', key, urls, err);
       DLG_LOADED[key] = false;
+      if (typeof showToast === 'function') showToast('error', '对话框组件加载失败，可能需要检查服务器连接（fetch 路径：' + urls[0] + '）');
     });
   }
 
@@ -607,7 +608,8 @@
   // ==================== 地域对话框 ====================
   var ZONE_DLG_URLS = [
     'parameters/zone/zone-form-dialog.html',
-    'parameters/zone/zone-country-dialog.html'
+    'parameters/zone/zone-country-dialog.html',
+    'parameters/zone/delete-dialog.html'
   ];
 
   // ==================== 地区对话框 ====================
@@ -844,26 +846,97 @@
     if (typeof showToast === 'function') showToast('success', '已添加 ' + selectedNames.length + ' 个国家');
   };
 
+  // ---- 地域删除对话框 ----
+
+  window.openZoneDeleteDialog = function(id) {
+    ensureDialogs('zone', ZONE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!fw.findZone) { console.error('[dialog_host] openZoneDeleteDialog: iframe 中缺少 findZone 函数'); return; }
+      var zone = fw.findZone(id);
+      if (!zone) { showToast('error', '地域不存在'); return; }
+
+      document.getElementById('zoneDeleteId').value = id;
+      document.getElementById('zoneDeleteIsBatch').value = 'false';
+      document.getElementById('zoneDeleteDialogTitle').textContent = '删除地域';
+      var msg = '<p>确定要删除「<strong>' + zone.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('zoneDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('zoneDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openZoneBatchDeleteDialog = function(ids) {
+    ensureDialogs('zone', ZONE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的地域'); return; }
+
+      document.getElementById('zoneDeleteId').value = JSON.stringify(ids);
+      document.getElementById('zoneDeleteIsBatch').value = 'true';
+      document.getElementById('zoneDeleteDialogTitle').textContent = '批量删除地域';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个地域吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('zoneDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('zoneDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeZoneDeleteDialog = function() {
+    var ov = document.getElementById('zoneDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmZoneDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('zoneDeleteId').value;
+    var isBatch = document.getElementById('zoneDeleteIsBatch').value === 'true';
+    closeZoneDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      if (fw.zoneBatchDeleteItems) fw.zoneBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个地域');
+    } else {
+      if (fw.zoneDeleteSingle) fw.zoneDeleteSingle(id);
+      showToast('success', '地域已删除');
+    }
+    if (fw.renderZoneTable) fw.renderZoneTable();
+  };
+
   // ---- 地区删除对话框 ----
 
   window.openRegionDeleteDialog = function(id) {
     ensureDialogs('region', REGION_DLG_URLS, function() {
       var fw = getFW();
-      if (!fw) return;
+      if (!fw) { console.error('[dialog_host] openRegionDeleteDialog: getFW 返回 null，请确认 iframe 是否正确加载'); return; }
+      if (!fw.getRegionNode) { console.error('[dialog_host] openRegionDeleteDialog: iframe 中缺少 getRegionNode 函数，region.html 可能未正确初始化'); return; }
       var node = fw.getRegionNode(id);
       if (!node) { showToast('error', '地区不存在'); return; }
 
-      document.getElementById('regionDeleteId').value = id;
-      document.getElementById('regionDeleteIsBatch').value = 'false';
-      document.getElementById('regionDeleteDialogTitle').textContent = '删除地区';
+      var titleEl = document.getElementById('regionDeleteDialogTitle');
+      var idEl = document.getElementById('regionDeleteId');
+      var batchEl = document.getElementById('regionDeleteIsBatch');
+      var msgEl = document.getElementById('regionDeleteMsg');
+      var overlay = document.getElementById('regionDeleteDialogOverlay');
+      if (!titleEl || !idEl || !msgEl || !overlay) {
+        console.error('[dialog_host] openRegionDeleteDialog: 对话框 DOM 元素缺失，delete-dialog.html 可能未成功注入。titleEl=', titleEl, 'idEl=', idEl, 'msgEl=', msgEl, 'overlay=', overlay);
+        showToast('error', '对话框加载失败，请刷新页面后重试');
+        return;
+      }
+
+      idEl.value = id;
+      batchEl.value = 'false';
+      titleEl.textContent = '删除地区';
       var hasChildren = fw.regionHasChildren(id);
       var msg = hasChildren
         ? '<p>确定要删除「<strong>' + node.name + '</strong>」及其<strong>所有下级地区</strong>吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>'
         : '<p>确定要删除「<strong>' + node.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
-      document.getElementById('regionDeleteMsg').innerHTML = msg;
+      msgEl.innerHTML = msg;
 
-      var overlay = document.getElementById('regionDeleteDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
+      overlay.style.display = 'flex';
     });
   };
 
@@ -892,18 +965,293 @@
   window.openRegionBatchDeleteDialog = function(ids) {
     ensureDialogs('region', REGION_DLG_URLS, function() {
       var fw = getFW();
-      if (!fw) return;
+      if (!fw) { console.error('[dialog_host] openRegionBatchDeleteDialog: getFW 返回 null'); return; }
       if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的地区'); return; }
 
-      document.getElementById('regionDeleteId').value = JSON.stringify(ids);
-      document.getElementById('regionDeleteIsBatch').value = 'true';
-      document.getElementById('regionDeleteDialogTitle').textContent = '批量删除地区';
-      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个地区吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
-      document.getElementById('regionDeleteMsg').innerHTML = msg;
-
+      var titleEl = document.getElementById('regionDeleteDialogTitle');
+      var idEl = document.getElementById('regionDeleteId');
+      var batchEl = document.getElementById('regionDeleteIsBatch');
+      var msgEl = document.getElementById('regionDeleteMsg');
       var overlay = document.getElementById('regionDeleteDialogOverlay');
+      if (!titleEl || !idEl || !msgEl || !overlay) {
+        console.error('[dialog_host] openRegionBatchDeleteDialog: 对话框 DOM 元素缺失，delete-dialog.html 可能未成功注入');
+        showToast('error', '对话框加载失败，请刷新页面后重试');
+        return;
+      }
+
+      idEl.value = JSON.stringify(ids);
+      batchEl.value = 'true';
+      titleEl.textContent = '批量删除地区';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个地区吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      msgEl.innerHTML = msg;
+
+      overlay.style.display = 'flex';
+    });
+  };
+
+  // ==================== 语言对话框 ====================
+  var LANGUAGE_DLG_URLS = [
+    'parameters/language/form-dialog.html',
+    'parameters/language/delete-dialog.html'
+  ];
+
+  // ---- 语言表单对话框 ----
+
+  window.openLanguageFormDialog = function(mode, id) {
+    ensureDialogs('language', LANGUAGE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title   = document.getElementById('languageFormDialogTitle');
+      var nameInp = document.getElementById('languageFormName');
+      var codeInp = document.getElementById('languageFormCode');
+      var statSel = document.getElementById('languageFormStatus');
+
+      document.getElementById('languageFormMode').value    = mode;
+      document.getElementById('languageFormEditId').value  = id || '';
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑语言';
+        var lang = fw.findLanguage(id);
+        if (!lang) { showToast('error', '语言不存在'); return; }
+        nameInp.value = lang.name;
+        codeInp.value = lang.code;
+        statSel.value = lang.status;
+      } else {
+        title.textContent = '添加语言';
+        nameInp.value = '';
+        codeInp.value = '';
+        statSel.value = 'active';
+      }
+
+      var overlay = document.getElementById('languageFormDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
+  };
+
+  window.closeLanguageFormDialog = function() {
+    var ov = document.getElementById('languageFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitLanguageForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode   = document.getElementById('languageFormMode').value;
+    var editId = document.getElementById('languageFormEditId').value;
+    var name   = (document.getElementById('languageFormName').value || '').trim();
+    var code   = (document.getElementById('languageFormCode').value || '').trim();
+    var status = document.getElementById('languageFormStatus').value;
+
+    if (!name) { showToast('warning', '请输入语言名称'); return; }
+    if (!code) { showToast('warning', '请输入语言代码'); return; }
+
+    if (mode === 'add') {
+      fw.languageAddItem(name, code, status);
+    } else {
+      fw.languageUpdateItem(editId, name, code, status);
+    }
+
+    closeLanguageFormDialog();
+    fw.renderLanguageTable();
+    showToast('success', mode === 'add' ? '语言已添加' : '语言已更新');
+  };
+
+  // ---- 语言删除对话框 ----
+
+  window.openLanguageDeleteDialog = function(id) {
+    ensureDialogs('language', LANGUAGE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var lang = fw.findLanguage(id);
+      if (!lang) { showToast('error', '语言不存在'); return; }
+
+      document.getElementById('languageDeleteId').value = id;
+      document.getElementById('languageDeleteIsBatch').value = 'false';
+      document.getElementById('languageDeleteDialogTitle').textContent = '删除语言';
+      var msg = '<p>确定要删除「<strong>' + lang.name + '（' + lang.code + '）</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('languageDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('languageDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openLanguageBatchDeleteDialog = function(ids) {
+    ensureDialogs('language', LANGUAGE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的语言'); return; }
+
+      document.getElementById('languageDeleteId').value = JSON.stringify(ids);
+      document.getElementById('languageDeleteIsBatch').value = 'true';
+      document.getElementById('languageDeleteDialogTitle').textContent = '批量删除语言';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个语言吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('languageDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('languageDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeLanguageDeleteDialog = function() {
+    var ov = document.getElementById('languageDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmLanguageDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('languageDeleteId').value;
+    var isBatch = document.getElementById('languageDeleteIsBatch').value === 'true';
+    closeLanguageDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      fw.languageBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个语言');
+    } else {
+      fw.languageDeleteItem(id);
+      showToast('success', '语言已删除');
+    }
+    fw.renderLanguageTable();
+  };
+
+  // ==================== 货币对话框 ====================
+  var CURRENCY_DLG_URLS = [
+    'parameters/currency/form-dialog.html',
+    'parameters/currency/delete-dialog.html'
+  ];
+
+  // ---- 货币表单对话框 ----
+
+  window.openCurrencyFormDialog = function(mode, id) {
+    ensureDialogs('currency', CURRENCY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title    = document.getElementById('currencyFormDialogTitle');
+      var nameInp  = document.getElementById('currencyFormName');
+      var codeInp  = document.getElementById('currencyFormCode');
+      var symbInp  = document.getElementById('currencyFormSymbol');
+      var precSel  = document.getElementById('currencyFormPrec');
+      var statSel  = document.getElementById('currencyFormStatus');
+
+      document.getElementById('currencyFormMode').value    = mode;
+      document.getElementById('currencyFormEditId').value  = id || '';
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑货币';
+        var cur = fw.findCurrency(id);
+        if (!cur) { showToast('error', '货币不存在'); return; }
+        nameInp.value = cur.name;
+        codeInp.value = cur.code;
+        symbInp.value = cur.symbol;
+        precSel.value = cur.prec;
+        statSel.value = cur.status;
+      } else {
+        title.textContent = '添加货币';
+        nameInp.value = '';
+        codeInp.value = '';
+        symbInp.value = '';
+        precSel.value = '2';
+        statSel.value = 'active';
+      }
+
+      var overlay = document.getElementById('currencyFormDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCurrencyFormDialog = function() {
+    var ov = document.getElementById('currencyFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitCurrencyForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode   = document.getElementById('currencyFormMode').value;
+    var editId = document.getElementById('currencyFormEditId').value;
+    var name   = (document.getElementById('currencyFormName').value || '').trim();
+    var code   = (document.getElementById('currencyFormCode').value || '').trim();
+    var symbol = (document.getElementById('currencyFormSymbol').value || '').trim();
+    var prec   = document.getElementById('currencyFormPrec').value;
+    var status = document.getElementById('currencyFormStatus').value;
+
+    if (!name)   { showToast('warning', '请输入货币名称'); return; }
+    if (!code)   { showToast('warning', '请输入货币代码'); return; }
+    if (!symbol) { showToast('warning', '请输入货币符号'); return; }
+
+    if (mode === 'add') {
+      fw.currencyAddItem(name, code, symbol, prec, status);
+    } else {
+      fw.currencyUpdateItem(editId, name, code, symbol, prec, status);
+    }
+
+    closeCurrencyFormDialog();
+    fw.renderCurrencyTable();
+    showToast('success', mode === 'add' ? '货币已添加' : '货币已更新');
+  };
+
+  // ---- 货币删除对话框 ----
+
+  window.openCurrencyDeleteDialog = function(id) {
+    ensureDialogs('currency', CURRENCY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var cur = fw.findCurrency(id);
+      if (!cur) { showToast('error', '货币不存在'); return; }
+
+      document.getElementById('currencyDeleteId').value = id;
+      document.getElementById('currencyDeleteIsBatch').value = 'false';
+      document.getElementById('currencyDeleteDialogTitle').textContent = '删除货币';
+      var msg = '<p>确定要删除「<strong>' + cur.name + '（' + cur.code + '）</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('currencyDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('currencyDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openCurrencyBatchDeleteDialog = function(ids) {
+    ensureDialogs('currency', CURRENCY_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的货币'); return; }
+
+      document.getElementById('currencyDeleteId').value = JSON.stringify(ids);
+      document.getElementById('currencyDeleteIsBatch').value = 'true';
+      document.getElementById('currencyDeleteDialogTitle').textContent = '批量删除货币';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个货币吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('currencyDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('currencyDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCurrencyDeleteDialog = function() {
+    var ov = document.getElementById('currencyDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmCurrencyDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('currencyDeleteId').value;
+    var isBatch = document.getElementById('currencyDeleteIsBatch').value === 'true';
+    closeCurrencyDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      fw.currencyBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个货币');
+    } else {
+      fw.currencyDeleteItem(id);
+      showToast('success', '货币已删除');
+    }
+    fw.renderCurrencyTable();
   };
 
   // ==================== Escape 关闭对话框 ====================

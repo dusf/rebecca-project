@@ -653,7 +653,7 @@
       showToast('info', '编辑地区: ' + getNodeName(id));
     }
 
-    // ========== 操作：删除（委托给父页面对话框） ==========
+    // ========== 操作：删除（委托给父页面对话框，全屏遮罩） ==========
     function handleDelete(id) {
       if (window.parent && window.parent.openRegionDeleteDialog) {
         window.parent.openRegionDeleteDialog(id);
@@ -810,5 +810,6 @@
       renderCountrySelect();
     });
   </script>
+
 </body>
 </html>

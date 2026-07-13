@@ -1,0 +1,35 @@
+<!-- 添加/编辑语言对话框 -->
+<div class="dialog-overlay" id="languageFormDialogOverlay" style="display:none;" onclick="closeLanguageFormDialog()">
+  <div class="dialog" style="width:440px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="languageFormDialogTitle">添加语言</span>
+      <button class="dialog-close" onclick="closeLanguageFormDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="languageFormMode" value="add">
+      <input type="hidden" id="languageFormEditId" value="">
+      <div class="form-group">
+        <label class="form-label">语言名称<span class="required-star">*</span></label>
+        <input class="form-input" id="languageFormName" placeholder="例如：简体中文">
+      </div>
+      <div class="form-group">
+        <label class="form-label">语言代码<span class="required-star">*</span></label>
+        <input class="form-input" id="languageFormCode" placeholder="例如：zh-CN">
+        <div class="form-hint">使用标准语言标签，如 zh-CN、en-US、ja-JP</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <select class="form-input" id="languageFormStatus">
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeLanguageFormDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitLanguageForm()">保存</button>
+    </div>
+  </div>
+</div>

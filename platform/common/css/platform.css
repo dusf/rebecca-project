@@ -1177,6 +1177,10 @@ tr:hover td { background: hsl(220 15% 96%); }
   margin-bottom: 0;
 }
 
+.dialog > .dialog-desc {
+  padding: 0 24px;
+}
+
 .dialog-actions,
 .dialog-footer {
   display: flex;

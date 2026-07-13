@@ -219,23 +219,69 @@
   flex-shrink: 0;
 }
 
+/* 店铺选择：搜索 + 工具栏 + 可滚动列表 */
+.store-check-search {
+  margin-bottom: 12px;
+}
+
+.store-check-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.store-check-toolbar .toolbar-links {
+  display: flex;
+  gap: 16px;
+}
+
+.store-check-toolbar .toolbar-link {
+  color: hsl(var(--primary));
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.store-check-toolbar .toolbar-link:hover {
+  color: hsl(var(--primary-700));
+  text-decoration: underline;
+}
+
+.store-check-toolbar .toolbar-count {
+  color: hsl(var(--muted-foreground));
+}
+
+.store-check-toolbar .toolbar-count strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
 .store-check-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .store-check-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border: 1.5px solid hsl(var(--border));
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s;
-  font-size: 13px;
+  font-size: 14px;
   color: hsl(var(--foreground));
+  background: hsl(var(--card));
 }
 
 .store-check-item:hover {
@@ -249,11 +295,57 @@
   box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
 }
 
+.store-check-item .sci-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  color: #fff;
+}
+
+.store-check-item.selected .sci-checkbox {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.store-check-item .sci-checkbox svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.15s;
+}
+
+.store-check-item.selected .sci-checkbox svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.store-check-item .sci-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sci-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.store-check-empty {
+  text-align: center;
+  padding: 24px;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  display: none;
 }
 
 .form-error {
@@ -262,6 +354,7 @@
   margin-top: 10px;
   display: none;
 }
+
 
 /* 空状态 */
 .empty-state {

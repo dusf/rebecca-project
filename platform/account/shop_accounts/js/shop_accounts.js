@@ -450,24 +450,82 @@ function openAssignStoreModal() {
       width: '520px',
       desc: '为选中的 <strong id="assignCount">' + selectedMemberIds.length + '</strong> 名成员指派店铺 <span style="font-size:12px;color:hsl(var(--muted-foreground))">（在当前店铺的成员列表中添加该成员）</span>',
       body:
-        '<div class="form-group"><label class="form-label">选择店铺（可多选）</label><div class="store-check-grid" id="assignStoreCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:260px;overflow-y:auto;">' +
+        '<div class="form-group">' +
+        '<label class="form-label">选择店铺（可多选）</label>' +
+        '<input type="text" class="form-input store-check-search" id="assignStoreSearch" placeholder="搜索店铺名称" oninput="window.parent.getFW().filterAssignStores(this.value)">' +
+        '<div class="store-check-toolbar">' +
+        '<div class="toolbar-links"><button type="button" class="toolbar-link" onclick="window.parent.getFW().selectAllAssignStores()">全选</button><button type="button" class="toolbar-link" onclick="window.parent.getFW().clearAssignStores()">清空</button></div>' +
+        '<span class="toolbar-count">已选 <strong id="assignSelectedCount">0</strong> 家</span>' +
+        '</div>' +
+        '<div class="store-check-grid" id="assignStoreCheckGrid">' +
         shops.map(function(s) {
-          return '<div class="store-check-item" data-shop-id="' + s.id + '" onclick="window.parent.getFW().toggleCheckItem(this)">' +
-            '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span><span>' + s.name + '</span></div>';
+          return '<div class="store-check-item" data-shop-id="' + s.id + '" data-shop-name="' + s.name + '" onclick="window.parent.getFW().toggleAssignStoreItem(this)">' +
+            '<span class="sci-checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+            '<span class="sci-name">' + s.name + '</span>' +
+            '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span>' +
+            '</div>';
         }).join('') +
         '</div>' +
-        '<div class="form-error" id="assignStoreError" style="display:none;margin-top:10px;">请至少选择一家店铺</div></div>',
+        '<div class="store-check-empty" id="assignStoreEmpty">没有匹配的店铺</div>' +
+        '<div class="form-error" id="assignStoreError">请至少选择一家店铺</div>' +
+        '</div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAssignStoreDialog\')">取消</button>' +
-        '<button class="btn btn-primary" onclick="doAssignStores()">确认指派</button>'
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doAssignStores()">确认指派</button>'
     });
   }
 }
 
+window.toggleAssignStoreItem = function(el) {
+  el.classList.toggle('selected');
+  updateAssignSelectedCount();
+  var err = window.parent.document.getElementById('assignStoreError');
+  if (err) err.style.display = 'none';
+};
+
+function updateAssignSelectedCount() {
+  var count = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item.selected').length;
+  var el = window.parent.document.getElementById('assignSelectedCount');
+  if (el) el.textContent = count;
+}
+
+window.filterAssignStores = function(keyword) {
+  var items = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item');
+  var lower = (keyword || '').toLowerCase();
+  var visible = 0;
+  items.forEach(function(item) {
+    var name = (item.getAttribute('data-shop-name') || '').toLowerCase();
+    var show = !lower || name.indexOf(lower) !== -1;
+    item.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  var empty = window.parent.document.getElementById('assignStoreEmpty');
+  if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+};
+
+window.selectAllAssignStores = function() {
+  var keyword = window.parent.document.getElementById('assignStoreSearch');
+  var lower = (keyword && keyword.value || '').toLowerCase();
+  var items = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item');
+  items.forEach(function(item) {
+    if (item.style.display === 'none') return;
+    item.classList.add('selected');
+  });
+  updateAssignSelectedCount();
+  var err = window.parent.document.getElementById('assignStoreError');
+  if (err) err.style.display = 'none';
+};
+
+window.clearAssignStores = function() {
+  var items = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item');
+  items.forEach(function(item) { item.classList.remove('selected'); });
+  updateAssignSelectedCount();
+};
+
 window.doAssignStores = function() {
-  var selectedEls = document.querySelectorAll('#assignStoreCheckGrid .store-check-item.selected');
+  var selectedEls = window.parent.document.querySelectorAll('#assignStoreCheckGrid .store-check-item.selected');
   if (selectedEls.length === 0) {
-    var err = document.getElementById('assignStoreError');
+    var err = window.parent.document.getElementById('assignStoreError');
     if (err) err.style.display = 'block';
     return;
   }
@@ -488,6 +546,7 @@ window.doAssignStores = function() {
   currentPage = 1;
   renderMembers();
 };
+
 
 window.batchRemove = function() {
   if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }

@@ -100,7 +100,7 @@ function showToast(type, message) {
     body.innerHTML = columns.map(function(c) {
       var disabled = c.alwaysShow ? 'disabled' : '';
       var active = visibleCols.indexOf(c.key) !== -1 ? 'active' : '';
-      var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>';
+      var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '常显列不可隐藏' : '拖拽排序') + '">⋮⋮</span>';
       return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '">' +
         dragIcon +
         '<div class="col-check" onclick="puToggleCol(this.parentElement, event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +

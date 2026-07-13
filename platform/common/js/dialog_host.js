@@ -604,6 +604,241 @@
     select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  // ==================== 地域对话框 ====================
+  var ZONE_DLG_URLS = [
+    'parameters/zone/zone-form-dialog.html',
+    'parameters/zone/zone-country-dialog.html'
+  ];
+
+  // ---- 地域表单对话框 ----
+  window.openZoneFormDialog = function(mode, id) {
+    ensureDialogs('zone', ZONE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title = document.getElementById('zoneFormDialogTitle');
+      var nameInp = document.getElementById('zoneFormName');
+      var codeInp = document.getElementById('zoneFormCode');
+      var statSel = document.getElementById('zoneFormStatus');
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑地域';
+        var zone = fw.findZone(id);
+        if (!zone) { if (typeof showToast === 'function') showToast('error', '地域不存在'); else console.error('地域不存在'); return; }
+        nameInp.value = zone.name;
+        codeInp.value = zone.code;
+        statSel.value = zone.status;
+      } else {
+        title.textContent = '添加地域';
+        nameInp.value = '';
+        codeInp.value = '';
+        statSel.value = 'active';
+      }
+
+      var overlay = document.getElementById('zoneFormDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeZoneFormDialog = function() {
+    var ov = document.getElementById('zoneFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitZoneForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var name = (document.getElementById('zoneFormName').value || '').trim();
+    var code = (document.getElementById('zoneFormCode').value || '').trim().toUpperCase();
+    var status = document.getElementById('zoneFormStatus').value;
+
+    if (!name) { if (typeof showToast === 'function') showToast('error', '请输入地域名称'); else alert('请输入地域名称'); return; }
+    if (!code) { if (typeof showToast === 'function') showToast('error', '请输入地域代码'); else alert('请输入地域代码'); return; }
+
+    fw.saveZoneFromParent(name, code, status);
+  };
+
+  // ---- 地域国家管理对话框 ----
+  window.openZoneCountryDialog = function(zoneId) {
+    ensureDialogs('zone', ZONE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var zone = fw.findZone(zoneId);
+      if (!zone) { if (typeof showToast === 'function') showToast('error', '地域不存在'); else console.error('地域不存在'); return; }
+
+      document.getElementById('zoneCountryZoneName').textContent = zone.name;
+      // 存储当前操作的地域ID
+      document.getElementById('zoneCountryDialogOverlay').setAttribute('data-zone-id', zoneId);
+
+      renderZoneCountryList();
+
+      var overlay = document.getElementById('zoneCountryDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeZoneCountryDialog = function() {
+    var ov = document.getElementById('zoneCountryDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  // 渲染已添加国家列表
+  // countriesStr 可选：传入更新后的国家字符串可直接渲染，避免再次读取 iframe 数据
+  window.renderZoneCountryList = function(countriesStr) {
+    var overlay = document.getElementById('zoneCountryDialogOverlay');
+    var zoneId = overlay ? parseInt(overlay.getAttribute('data-zone-id'), 10) : null;
+    console.log('[renderZoneCountryList] zoneId=', zoneId, 'countriesStr=', countriesStr);
+    if (!zoneId) return;
+
+    var fw = getFW();
+    if (!fw) { console.warn('[renderZoneCountryList] getFW failed'); return; }
+
+    var countryNames = [];
+    if (typeof countriesStr === 'string') {
+      countryNames = countriesStr.split('、').filter(function(n) { return n.trim(); });
+    } else {
+      var zone = fw.findZone(zoneId);
+      if (!zone) { console.warn('[renderZoneCountryList] zone not found'); return; }
+      countryNames = zone.countries ? zone.countries.split('、').filter(function(n) { return n.trim(); }) : [];
+    }
+    console.log('[renderZoneCountryList] countryNames=', countryNames);
+    var tbody = document.getElementById('zoneCountryListBody');
+    var emptyEl = document.getElementById('zoneCountryListEmpty');
+    if (!tbody || !emptyEl) { console.warn('[renderZoneCountryList] tbody/empty not found'); return; }
+
+    if (countryNames.length === 0) {
+      tbody.innerHTML = '';
+      emptyEl.style.display = 'block';
+    } else {
+      emptyEl.style.display = 'none';
+      tbody.innerHTML = countryNames.map(function(name, i) {
+        return '<tr>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td>' + name + '</td>' +
+          '<td>' + (fw.getCountryCode(name) || '—') + '</td>' +
+          '<td><button class="btn btn-text btn-sm" style="color:hsl(var(--error));" onclick="removeZoneCountry(\'' + zoneId + '\',\'' + name.replace(/'/g, "\\'") + '\')">撤销</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+  };
+
+  // 撤销单个国家
+  window.removeZoneCountry = function(zoneId, countryName) {
+    var fw = getFW();
+    if (!fw) return;
+    fw.removeCountryFromZone(parseInt(zoneId, 10), countryName);
+    renderZoneCountryList();
+  };
+
+  // ---- 添加国家子对话框 ----
+  window.openAddCountrySubDialog = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var overlay = document.getElementById('zoneCountryDialogOverlay');
+    var zoneId = overlay ? overlay.getAttribute('data-zone-id') : null;
+    zoneId = zoneId ? parseInt(zoneId, 10) : null;
+    if (!zoneId) return;
+
+    var zone = fw.findZone(zoneId);
+    if (!zone) return;
+
+    // 获取已添加的国家名称列表
+    var existingNames = zone.countries ? zone.countries.split('、').filter(function(n) { return n.trim(); }) : [];
+
+    // 获取所有可用国家（排除已添加的）
+    var allCountries = fw.getAllCountries();
+    var availableCountries = allCountries.filter(function(c) {
+      return existingNames.indexOf(c.name) === -1;
+    });
+
+    var tbody = document.getElementById('addCountrySelectBody');
+    var emptyEl = document.getElementById('addCountrySelectEmpty');
+
+    if (availableCountries.length === 0) {
+      tbody.innerHTML = '';
+      emptyEl.style.display = 'block';
+    } else {
+      emptyEl.style.display = 'none';
+      tbody.innerHTML = availableCountries.map(function(c) {
+        return '<tr>' +
+          '<td><input type="checkbox" class="add-country-check" value="' + c.name.replace(/"/g, '&quot;') + '" onchange="updateAddCountrySelectedCount()" style="width:16px;height:16px;cursor:pointer;"></td>' +
+          '<td>' + c.name + '</td>' +
+          '<td>' + c.code + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    document.getElementById('addCountrySelectAll').checked = false;
+    updateAddCountrySelectedCount();
+
+    var subOverlay = document.getElementById('addCountrySubDialogOverlay');
+    if (subOverlay) subOverlay.style.display = 'flex';
+  };
+
+  window.closeAddCountrySubDialog = function() {
+    var ov = document.getElementById('addCountrySubDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.toggleSelectAllCountries = function(checked) {
+    var boxes = document.querySelectorAll('#addCountrySelectBody .add-country-check');
+    boxes.forEach(function(b) { b.checked = checked; });
+    updateAddCountrySelectedCount();
+  };
+
+  window.updateAddCountrySelectedCount = function() {
+    var boxes = document.querySelectorAll('#addCountrySelectBody .add-country-check');
+    var count = 0;
+    boxes.forEach(function(b) { if (b.checked) count++; });
+    var el = document.getElementById('addCountrySelectedCount');
+    if (el) el.textContent = count;
+  };
+
+  window.confirmAddCountries = function() {
+    var fw = getFW();
+    if (!fw) { console.warn('[confirmAddCountries] getFW failed'); return; }
+
+    var boxes = document.querySelectorAll('#addCountrySelectBody .add-country-check');
+    var selectedNames = [];
+    boxes.forEach(function(b) {
+      if (b.checked) selectedNames.push(b.value);
+    });
+
+    if (selectedNames.length === 0) {
+      if (typeof showToast === 'function') showToast('info', '请至少选择一个国家'); else alert('请至少选择一个国家');
+      return;
+    }
+
+    var overlay = document.getElementById('zoneCountryDialogOverlay');
+    var zoneId = overlay ? parseInt(overlay.getAttribute('data-zone-id'), 10) : null;
+    console.log('[confirmAddCountries] zoneId=', zoneId, 'selectedNames=', selectedNames);
+    if (!zoneId) {
+      if (typeof showToast === 'function') showToast('error', '未找到当前地域');
+      return;
+    }
+
+    try {
+      var updatedCountries = fw.addCountriesToZone(zoneId, selectedNames);
+      console.log('[confirmAddCountries] updatedCountries=', updatedCountries);
+      if (!updatedCountries) {
+        if (typeof showToast === 'function') showToast('error', '添加国家失败，请重试');
+        return;
+      }
+    } catch (err) {
+      console.error('[confirmAddCountries] addCountriesToZone error:', err);
+      if (typeof showToast === 'function') showToast('error', '添加国家失败: ' + err.message);
+      return;
+    }
+
+    closeAddCountrySubDialog();
+    // 使用 addCountriesToZone 返回的最新国家字符串直接渲染，避免再次读取 iframe 数据时状态不一致
+    renderZoneCountryList(updatedCountries);
+    if (typeof showToast === 'function') showToast('success', '已添加 ' + selectedNames.length + ' 个国家');
+  };
+
   // ==================== Escape 关闭对话框 ====================
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;

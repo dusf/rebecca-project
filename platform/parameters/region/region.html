@@ -630,16 +630,50 @@
     }
 
     // ========== 操作：删除 ==========
+    var pendingDeleteId = null;
+
     function handleDelete(id) {
       var name = getNodeName(id);
-      if (!confirm('确定要删除「' + name + '」及其下级地区吗？')) return;
+      if (!name || name === '--') return;
+      pendingDeleteId = id;
+
+      // 检查是否有下级地区
+      var country = getCurrentCountry();
+      var hasChildren = country && country.data.some(function(d) { return d.parent === id; });
+      var desc = hasChildren
+        ? '<p>确定要删除「<strong>' + name + '</strong>」及其<strong>所有下级地区</strong>吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>'
+        : '<p>确定要删除「<strong>' + name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+
+      if (window.parent && window.parent.openDialog) {
+        window.parent.openDialog({
+          id: 'regionDeleteConfirmDialog',
+          title: '删除地区',
+          width: '440px',
+          body: desc,
+          actions:
+            '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'regionDeleteConfirmDialog\')">取消</button>' +
+            '<button class="btn btn-destructive" onclick="window.parent.getFW().confirmRegionDelete()">确认删除</button>'
+        });
+      }
+    }
+
+    window.confirmRegionDelete = function() {
+      var id = pendingDeleteId;
+      if (!id) return;
+      pendingDeleteId = null;
+
+      var name = getNodeName(id);
       for (var i = 0; i < regionConfig.length; i++) {
         regionConfig[i].data = regionConfig[i].data.filter(function(d) { return d.id !== id && d.parent !== id; });
+      }
+
+      if (window.parent && window.parent.closeDialog) {
+        window.parent.closeDialog('regionDeleteConfirmDialog');
       }
       renderDetail();
       renderCountrySelect();
       showToast('success', '已删除「' + name + '」');
-    }
+    };
 
     // ========== 操作：切换状态 ==========
     function handleToggleStatus(id) {

@@ -62,25 +62,32 @@ function updateSortIcons() {
   });
 }
 
-// ====== 组织下拉填充 ======
-function populateOrgFilter() {
-  var sel = document.getElementById('orgFilter');
-  if (!sel) return;
-  var seen = {};
-  var opts = [];
-  accountData.forEach(function(a) {
-    if (a.org && !seen[a.org]) {
-      seen[a.org] = true;
-      opts.push(a.org);
+// ====== 组织级联选择器 ======
+var orgFilterCascader = null;
+
+function getOrgData() {
+  var fw = window.parent.getFW ? window.parent.getFW() : null;
+  if (fw && fw.orgData) return fw.orgData;
+  var orgUrl = 'account/organization/organization.html';
+  var orgFrame = window.parent.PLATFORM_IFRAME_CACHE && window.parent.PLATFORM_IFRAME_CACHE[orgUrl];
+  var data = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+    ? orgFrame.contentWindow.orgData : [];
+  return data;
+}
+
+function initOrgFilterCascader() {
+  var container = document.getElementById('orgFilterCascader');
+  if (!container || typeof OrgCascader === 'undefined') return;
+  var orgData = getOrgData();
+  if (orgFilterCascader) orgFilterCascader.destroy();
+  orgFilterCascader = OrgCascader.create(container, {
+    data: orgData,
+    placeholder: '全部组织',
+    allowEmpty: true,
+    onChange: function() {
+      filterAccounts();
     }
   });
-  opts.sort();
-  var currentVal = sel.value;
-  sel.innerHTML = '<option value="">全部组织</option>';
-  opts.forEach(function(o) {
-    sel.innerHTML += '<option value="' + o + '">' + o + '</option>';
-  });
-  sel.value = currentVal;
 }
 
 // ====== 过滤 ======
@@ -94,7 +101,7 @@ function renderTable() {
   var data = accountData.slice();
   var search = (document.getElementById('accountSearch') || {}).value || '';
   var status = (document.getElementById('statusFilter') || {}).value || '';
-  var org = (document.getElementById('orgFilter') || {}).value || '';
+  var org = orgFilterCascader ? orgFilterCascader.getValue() : '';
   var dateStart = (document.getElementById('dateStart') || {}).value || '';
   var dateEnd = (document.getElementById('dateEnd') || {}).value || '';
 
@@ -110,7 +117,9 @@ function renderTable() {
     data = data.filter(function(a) { return a.status === status; });
   }
   if (org) {
-    data = data.filter(function(a) { return a.org === org; });
+    data = data.filter(function(a) {
+      return a.org === org || a.org.indexOf(org + '/') === 0;
+    });
   }
   if (dateStart) {
     data = data.filter(function(a) { return a.createdAt >= dateStart; });
@@ -211,7 +220,9 @@ window.acctAddItem = function(phone, name, password, org, email, status) {
     status: status,
     createdAt: new Date().toISOString().slice(0, 10)
   });
-  populateOrgFilter();
+  var savedOrg = orgFilterCascader ? orgFilterCascader.getValue() : '';
+  initOrgFilterCascader();
+  if (orgFilterCascader && savedOrg) orgFilterCascader.setValue(savedOrg);
   renderTable();
   showToast('success', '账号添加成功');
 };
@@ -226,7 +237,9 @@ window.acctUpdateItem = function(id, phone, name, password, org, email, status) 
   acct.email = email || '';
   if (password) acct.password = password;
   acct.status = status;
-  populateOrgFilter();
+  var savedOrg = orgFilterCascader ? orgFilterCascader.getValue() : '';
+  initOrgFilterCascader();
+  if (orgFilterCascader && savedOrg) orgFilterCascader.setValue(savedOrg);
   renderTable();
   showToast('success', '账号保存成功');
 };
@@ -252,11 +265,7 @@ function batchDelete(ids) {
   showToast('success', '已删除 ' + ids.length + ' 个账号');
 }
 
-// ====== 组织数据（供对话框使用） ======
-window.acctGetOrgData = function() {
-  var fw = window.parent.getFW ? window.parent.getFW() : null;
-  return fw && fw.orgData ? fw.orgData : [];
-};
+
 
 // ====== 排序点击事件 ======
 document.addEventListener('click', function(e) {
@@ -276,7 +285,7 @@ document.addEventListener('click', function(e) {
 
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', function() {
-  populateOrgFilter();
+  initOrgFilterCascader();
   renderTable();
 });
 

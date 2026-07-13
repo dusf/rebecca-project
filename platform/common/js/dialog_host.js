@@ -254,23 +254,23 @@
       var nameInp  = document.getElementById('acctFormName');
       var pwdInp   = document.getElementById('acctFormPassword');
       var pwdLabel = document.getElementById('acctFormPwdLabel');
-      var orgSel   = document.getElementById('acctFormOrg');
+      var orgCascaderContainer = document.getElementById('acctFormOrgCascader');
       var emailInp = document.getElementById('acctFormEmail');
       var statSel  = document.getElementById('acctFormStatus');
 
       document.getElementById('acctFormMode').value    = mode;
       document.getElementById('acctFormEditId').value  = id || '';
 
-      // 填充组织下拉选项：从缓存的组织机构 iframe 中读取 orgData
+      // 初始化组织级联选择器：从缓存的组织机构 iframe 中读取 orgData
       var orgUrl = 'account/organization/organization.html';
       var orgFrame = window.PLATFORM_IFRAME_CACHE && window.PLATFORM_IFRAME_CACHE[orgUrl];
       var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
         ? orgFrame.contentWindow.orgData : [];
-      var orgHtml = '<option value="">-- 请选择 --</option>';
-      orgData.forEach(function(item) {
-        orgHtml += '<option value="' + item.name + '">' + item.name + '</option>';
+      if (window.acctFormOrgCascader) window.acctFormOrgCascader.destroy();
+      window.acctFormOrgCascader = OrgCascader.create(orgCascaderContainer, {
+        data: orgData,
+        placeholder: '-- 请选择 --'
       });
-      orgSel.innerHTML = orgHtml;
 
       if (mode === 'edit' && id) {
         title.textContent = '编辑账号';
@@ -283,7 +283,7 @@
         pwdLabel.innerHTML = '密码 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（留空不修改）</span>';
         emailInp.value = acct.email || '';
         statSel.value  = acct.status;
-        orgSel.value   = acct.org;
+        if (acct.org) window.acctFormOrgCascader.setValue(acct.org);
       } else {
         title.textContent = '添加账号';
         phoneInp.value   = '';
@@ -293,7 +293,6 @@
         pwdLabel.innerHTML = '密码 <span style="color:hsl(var(--error))">*</span>';
         emailInp.value   = '';
         statSel.value    = 'active';
-        orgSel.value     = '';
       }
 
       var overlay = document.getElementById('acctFormDialogOverlay');
@@ -315,7 +314,7 @@
     var phone    = document.getElementById('acctFormPhone').value.trim();
     var name     = document.getElementById('acctFormName').value.trim();
     var password = document.getElementById('acctFormPassword').value;
-    var org      = document.getElementById('acctFormOrg').value;
+    var org      = window.acctFormOrgCascader ? window.acctFormOrgCascader.getValue() : '';
     var email    = document.getElementById('acctFormEmail').value.trim();
     var status   = document.getElementById('acctFormStatus').value;
 

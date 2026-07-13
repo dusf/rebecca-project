@@ -46,7 +46,13 @@
       <button class="dialog-close" onclick="ShopifyAuth.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="dialog-body">
-      <!-- 站点选择内的步骤指示器在 JS 中动态复用 step1/step2 等元素 -->
+      <div class="shopify-step-indicator">
+        <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">授权连接</span></div>
+        <div class="shopify-step-divider completed"></div>
+        <div class="shopify-step active"><span class="shopify-step-num">2</span><span class="shopify-step-label">选择站点</span></div>
+        <div class="shopify-step-divider"></div>
+        <div class="shopify-step"><span class="shopify-step-num">3</span><span class="shopify-step-label" id="step3LabelSite">同步商品</span></div>
+      </div>
       <div class="dialog-desc" style="margin-bottom: 16px;">请选择要拉取数据的 Shopify 站点</div>
       <div class="sync-site-list-v3" id="shopifySiteList"></div>
     </div>
@@ -65,6 +71,13 @@
       <button class="dialog-close" onclick="ShopifyAuth.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="dialog-body">
+      <div class="shopify-step-indicator">
+        <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">授权连接</span></div>
+        <div class="shopify-step-divider completed"></div>
+        <div class="shopify-step completed"><span class="shopify-step-num">&#10003;</span><span class="shopify-step-label">选择站点</span></div>
+        <div class="shopify-step-divider completed"></div>
+        <div class="shopify-step active"><span class="shopify-step-num">3</span><span class="shopify-step-label" id="step3LabelItem">同步商品</span></div>
+      </div>
       <div class="dialog-desc" style="margin-bottom: 8px;">站点：<strong id="shopifySelectedSiteName">-</strong></div>
       <!-- 全选 -->
       <div class="picker-select-all" style="margin-bottom: 8px;">

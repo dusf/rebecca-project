@@ -54,42 +54,19 @@
   }
 
   // ==================== 步骤指示器更新 ====================
+  // 每个步骤的对话框自带静态步骤指示器，无需 JS 动态切换。
+  // 只需在打开对话框时动态设置步骤3标签（产品端:"同步商品"/系列端:"同步系列"）。
+
   function updateSteps(currentStep) {
-    // Step 1 元素
-    var s1 = document.getElementById('step1Auth');
-    var sd1 = document.getElementById('stepDiv1');
-    // Step 2 元素
-    var s2 = document.getElementById('step2Site');
-    var sd2 = document.getElementById('stepDiv2');
-    // Step 3 元素
-    var s3 = document.getElementById('step3Sync');
-
-    // 全部重置
-    [s1, s2, s3].forEach(function(el) {
-      if (el) { el.classList.remove('active', 'completed'); }
-    });
-    [sd1, sd2].forEach(function(el) {
-      if (el) { el.classList.remove('completed'); }
-    });
-
-    if (currentStep === 1) {
-      if (s1) s1.classList.add('active');
-    } else if (currentStep === 2) {
-      if (s1) s1.classList.add('completed');
-      if (sd1) sd1.classList.add('completed');
-      if (s2) s2.classList.add('active');
-    } else if (currentStep === 3) {
-      if (s1) s1.classList.add('completed');
-      if (sd1) sd1.classList.add('completed');
-      if (s2) s2.classList.add('completed');
-      if (sd2) sd2.classList.add('completed');
-      if (s3) s3.classList.add('active');
-    }
+    // 步骤指示器在各对话框 HTML 中已静态写好，此函数仅用于兼容性保留。
+    // 三个对话框各自独立，切换时只需关闭旧的、打开新的即可。
   }
 
   function setStep3Label(label) {
-    var el = document.getElementById('step3Label');
-    if (el && label) el.textContent = label;
+    var els = document.querySelectorAll('[id^="step3Label"]');
+    for (var i = 0; i < els.length; i++) {
+      if (label) els[i].textContent = label;
+    }
   }
 
   // ==================== 渲染站点列表 ====================

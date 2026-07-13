@@ -56,13 +56,6 @@
     'account/organization/batch-delete-dialog.html'
   ];
 
-  // ==================== 账号对话框 ====================
-  var ACCT_DLG_URLS = [
-    'account/accounts/form-dialog.html',
-    'account/accounts/delete-dialog.html',
-    'account/accounts/reset-pwd-dialog.html'
-  ];
-
   // ---- 表单对话框 ----
 
   window.openOrgFormDialog = function(mode, id) {
@@ -262,197 +255,47 @@
     if (fw) { fw.orgBatchDeleteItems(uniqueIds); fw.renderTable(); }
   };
 
-  // ---- 账号表单对话框 ----
-
-  window.openAcctFormDialog = function(mode, id) {
-    ensureDialogs('acct', ACCT_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-
-      var title   = document.getElementById('acctFormDialogTitle');
-      var phoneInp = document.getElementById('acctFormPhone');
-      var nameInp  = document.getElementById('acctFormName');
-      var pwdInp   = document.getElementById('acctFormPassword');
-      var pwdLabel = document.getElementById('acctFormPwdLabel');
-      var orgTreeContainer = document.getElementById('acctFormOrgTreeSelect');
-      var emailInp = document.getElementById('acctFormEmail');
-      var statSel  = document.getElementById('acctFormStatus');
-
-      document.getElementById('acctFormMode').value    = mode;
-      document.getElementById('acctFormEditId').value  = id || '';
-
-      // 初始化组织树形选择器：从缓存的组织机构 iframe 中读取 orgData
-      var orgUrl = 'account/organization/organization.html';
-      var orgFrame = window.PLATFORM_IFRAME_CACHE && window.PLATFORM_IFRAME_CACHE[orgUrl];
-      var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
-        ? orgFrame.contentWindow.orgData : [];
-      if (window.acctFormOrgPicker) window.acctFormOrgPicker.destroy();
-      window.acctFormOrgPicker = OrgTreeSelect.create(orgTreeContainer, {
-        data: orgData,
-        placeholder: '-- 请选择 --'
-      });
-
-      if (mode === 'edit' && id) {
-        title.textContent = '编辑账号';
-        var acct = fw.findAcct(id);
-        if (!acct) { if (typeof showToast === 'function') showToast('error', '账号不存在'); else console.error('账号不存在'); return; }
-        phoneInp.value = acct.phone;
-        nameInp.value  = acct.name;
-        pwdInp.value   = '';
-        pwdInp.placeholder = '留空则不修改密码';
-        pwdLabel.innerHTML = '密码 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（留空不修改）</span>';
-        emailInp.value = acct.email || '';
-        statSel.value  = acct.status;
-        if (acct.org) window.acctFormOrgPicker.setValue(acct.org);
-      } else {
-        title.textContent = '添加账号';
-        phoneInp.value   = '';
-        nameInp.value    = '';
-        pwdInp.value     = '';
-        pwdInp.placeholder = '请输入登录密码';
-        pwdLabel.innerHTML = '密码 <span style="color:hsl(var(--error))">*</span>';
-        emailInp.value   = '';
-        statSel.value    = 'active';
-      }
-
-      var overlay = document.getElementById('acctFormDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeAcctFormDialog = function() {
-    var ov = document.getElementById('acctFormDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  window.submitAcctForm = function() {
-    var fw = getFW();
-    if (!fw) return;
-
-    var mode     = document.getElementById('acctFormMode').value;
-    var editId   = parseInt(document.getElementById('acctFormEditId').value) || null;
-    var phone    = document.getElementById('acctFormPhone').value.trim();
-    var name     = document.getElementById('acctFormName').value.trim();
-    var password = document.getElementById('acctFormPassword').value;
-    var org      = window.acctFormOrgPicker ? window.acctFormOrgPicker.getValue() : '';
-    var email    = document.getElementById('acctFormEmail').value.trim();
-    var status   = document.getElementById('acctFormStatus').value;
-
-    if (!phone)  { showToast('warning', '请输入手机号'); return; }
-    if (!name)   { showToast('warning', '请输入姓名'); return; }
-    if (mode === 'add' && !password) { showToast('warning', '请输入登录密码'); return; }
-    if (!org)    { showToast('warning', '请选择所属组织'); return; }
-    if (!/^1\d{10}$/.test(phone)) { showToast('warning', '请输入正确的手机号格式'); return; }
-
-    if (mode === 'add') {
-      fw.acctAddItem(phone, name, password, org, email, status);
-    } else {
-      fw.acctUpdateItem(editId, phone, name, password, org, email, status);
-    }
-
-    closeAcctFormDialog();
-    fw.renderTable();
-  };
-
-  // ---- 账号删除对话框 ----
-
-  window.openAcctDeleteDialog = function(id) {
-    ensureDialogs('acct', ACCT_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      var acct = fw.findAcct(id);
-      if (!acct) { showToast('error', '账号不存在'); return; }
-
-      document.getElementById('acctDeleteId').value = id;
-      document.getElementById('acctDeleteIsBatch').value = 'false';
-      document.getElementById('acctDeleteDialogTitle').textContent = '删除账号';
-      var msg = '<p>确定要删除账号「<strong>' + acct.name + '（' + acct.phone + '）</strong>」吗？</p><p style="margin-top:6px;">此操作不可恢复。</p>';
-      document.getElementById('acctDeleteMsg').innerHTML = msg;
-
-      var overlay = document.getElementById('acctDeleteDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeAcctDeleteDialog = function() {
-    var ov = document.getElementById('acctDeleteDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  window.confirmAcctDelete = function() {
-    var fw = getFW();
-    var id = document.getElementById('acctDeleteId').value;
-    var isBatch = document.getElementById('acctDeleteIsBatch').value === 'true';
-    closeAcctDeleteDialog();
-    if (!fw) return;
-    if (isBatch) {
-      var ids = JSON.parse(id);
-      fw.acctBatchDeleteItems(ids);
-      showToast('success', '已删除 ' + ids.length + ' 个账号');
-    } else {
-      fw.acctDeleteItem(parseInt(id));
-      showToast('success', '账号已删除');
-    }
-    fw.renderTable();
-  };
-
-  // ---- 账号批量删除（复用同一个对话框） ----
-
-  window.openAcctBatchDeleteDialog = function(ids) {
-    ensureDialogs('acct', ACCT_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的账号'); return; }
-
-      document.getElementById('acctDeleteId').value = JSON.stringify(ids);
-      document.getElementById('acctDeleteIsBatch').value = 'true';
-      document.getElementById('acctDeleteDialogTitle').textContent = '批量删除账号';
-      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个账号吗？</p><p style="margin-top:6px;">此操作不可恢复。</p>';
-      document.getElementById('acctDeleteMsg').innerHTML = msg;
-
-      var overlay = document.getElementById('acctDeleteDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  // ---- 账号批量重置密码对话框 ----
-
-  window.openAcctBatchResetPwdDialog = function(ids) {
-    ensureDialogs('acct', ACCT_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      if (!ids || ids.length === 0) { showToast('info', '请先选择要操作的账号'); return; }
-
-      document.getElementById('acctResetPwdIds').value = JSON.stringify(ids);
-      var msg = '<p>确定要为以下 <strong>' + ids.length + '</strong> 个账号重置登录密码吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">重置后将生成新的随机密码。</p>';
-      document.getElementById('acctResetPwdMsg').innerHTML = msg;
-
-      var overlay = document.getElementById('acctResetPwdDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeAcctBatchResetPwdDialog = function() {
-    var ov = document.getElementById('acctResetPwdDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  window.confirmAcctBatchResetPwd = function() {
-    var fw = getFW();
-    var idsJson = document.getElementById('acctResetPwdIds').value;
-    var ids = JSON.parse(idsJson);
-    closeAcctBatchResetPwdDialog();
-    if (fw) {
-      var result = fw.acctBatchResetPwdItems(ids);
-      fw.renderTable();
-      if (result && result.count > 0) {
-        showToast('success', '已为 ' + result.count + ' 个账号重置密码，新密码为：' + result.newPwd);
-      }
-    }
-  };
-
   // 暴露 getFW 供子页面获取 frame window 引用
   window.getFW = getFW;
+
+  // ==================== MutationObserver：监听 iframe 内 dialog-overlay 显示全屏遮罩 ====================
+  var iframeObserver = null;
+  var dialogBackdrop = null;
+
+  function getBackdrop() {
+    if (!dialogBackdrop) {
+      dialogBackdrop = document.createElement('div');
+      dialogBackdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.5);pointer-events:none;display:none;';
+      var host = document.getElementById('dialogHost');
+      if (!host) { host = document.createElement('div'); host.id = 'dialogHost'; document.body.appendChild(host); }
+      host.appendChild(dialogBackdrop);
+    }
+    return dialogBackdrop;
+  }
+
+  function syncBackdrop() {
+    var f = getFrame();
+    if (!f || !f.contentDocument || !f.contentDocument.body) return;
+    var overlays = f.contentDocument.body.querySelectorAll('.dialog-overlay');
+    var visible = false;
+    overlays.forEach(function(ov) {
+      if (ov.style.display !== 'none' && ov.offsetParent !== null) visible = true;
+    });
+    getBackdrop().style.display = visible ? 'block' : 'none';
+  }
+
+  window.attachFrameObserver = function attachFrameObserver() {
+    var f = getFrame();
+    if (!f || !f.contentDocument || !f.contentDocument.body) return;
+    if (iframeObserver) iframeObserver.disconnect();
+    iframeObserver = new MutationObserver(function() { syncBackdrop(); });
+    iframeObserver.observe(f.contentDocument.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+    syncBackdrop();
+  };
+
+  // 初始加载时自动绑定
+  var f = getFrame();
+  if (f) { f.addEventListener('load', attachFrameObserver); }
 
   // ==================== 可搜索下拉选择器（父页面对话框使用） ====================
 
@@ -614,8 +457,8 @@
   });
 
   // ==================== 导航时自动关闭对话框 ====================
-  // 在 loadIframe 被调用后由 index.html 触发
   window.dlgOnNavigate = function() {
+    if (iframeObserver) iframeObserver.disconnect();
     dlgCloseAll();
   };
 

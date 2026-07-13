@@ -3,100 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>中台账号 - 中台管理</title>
+  <title>商城账号 - 中台管理</title>
   <link rel="stylesheet" href="../../common/css/platform.css">
   <link rel="stylesheet" href="css/accounts.css">
 </head>
 <body>
-  <div class="content">
-    <div class="page-header">
+  <div class="container">
+    <div class="page-toolbar">
       <div>
-        <div class="page-title">中台账号</div>
-        <div class="page-subtitle">管理员为他人开设中台登录账号，使用手机号作为登录凭证</div>
+        <div class="page-title">
+          商城账号<span class="count-badge" id="memberCount"></span>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-primary" onclick="handleAdd()">+ 添加账号</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary-lg" onclick="openAddMemberModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          添加成员
+        </button>
       </div>
     </div>
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <input class="search-input" type="text" placeholder="搜索手机号/姓名/邮箱..." oninput="filterAccounts()" id="accountSearch">
-        <select class="filter-select" onchange="filterAccounts()" id="statusFilter">
-          <option value="">全部状态</option>
-          <option value="active">启用</option>
-          <option value="disabled">停用</option>
-        </select>
-        <div style="position:relative;display:inline-flex;flex-shrink:0;" title="所属组织"><div id="orgFilterTreeSelect"></div></div>
-        <input class="search-input" type="date" onchange="filterAccounts()" id="dateStart" title="创建时间起" style="width:150px;min-width:150px;">
-        <span style="color:hsl(var(--muted-foreground));font-size:13px;">至</span>
-        <input class="search-input" type="date" onchange="filterAccounts()" id="dateEnd" title="创建时间止" style="width:150px;min-width:150px;">
-      </div>
+    <!-- 筛选行 -->
+    <div class="filter-row">
+      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/账号..." style="width:240px;" oninput="renderMembers()" />
+      <select class="filter-select" id="storeFilter" name="storeFilter" onchange="renderMembers()">
+        <option value="">全部店铺</option>
+      </select>
+      <select class="filter-select" id="orgFilter" name="orgFilter" onchange="renderMembers()">
+        <option value="">全部组织机构</option>
+      </select>
     </div>
 
     <!-- 批量操作栏（始终可见） -->
     <div class="bulk-action-bar" id="bulkActionBar">
-      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-selected-count">已选 <span class="count" id="batchCount">0</span> 人</div>
       <div class="bulk-actions">
-        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
-        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
-        <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
-        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
-          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-            更多操作
-          </button>
-        </div>
-        <div class="custom-col-wrapper" id="customColWrapper">
-          <button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            自定义列
-          </button>
-        </div>
-        <div class="custom-col-wrapper">
-          <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
-        </div>
+        <button class="btn btn-primary btn-sm" onclick="openBatchAssignStore()" disabled id="btnBatchAssign">指派店铺</button>
+        <button class="btn btn-destructive btn-sm" onclick="batchRemove()" disabled id="btnBatchRemove">批量处理</button>
+        <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
       </div>
     </div>
 
+    <!-- 数据表格 -->
     <div class="table-card">
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, 'accountTableBody')"></div></th>
-              <th class="sortable" data-sort="phone">手机号<span class="sort-icon"></span></th>
-              <th class="sortable" data-sort="name">姓名<span class="sort-icon"></span></th>
-              <th>组织</th>
-              <th>邮箱</th>
-              <th class="sortable sorted" data-sort="createdAt">创建时间<span class="sort-icon">▼</span></th>
-              <th>状态</th>
-              <th>操作</th>
+              <th style="width:40px"><div class="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></div></th>
+              <th>成员信息</th>
+              <th>账号ID</th>
+              <th>手机号</th>
+              <th>组织机构</th>
+              <th style="width:180px">所在店铺</th>
+              <th class="sortable sorted" data-sort="joinedAt" style="width:130px">加入时间<span class="sort-icon"></span></th>
+              <th style="width:140px">操作</th>
             </tr>
           </thead>
-          <tbody id="accountTableBody"></tbody>
+          <tbody id="memberTableBody"></tbody>
         </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="empty-title">暂无成员</div>
+          <div class="empty-desc">点击"添加成员"创建商城账号</div>
+        </div>
       </div>
-      <div class="pagination-bar" id="accountsPagination"></div>
+      <div class="pagination-bar">
+        <span class="pagination-info" id="paginationInfo">共 0 条</span>
+        <div class="pagination-buttons" id="paginationButtons"></div>
+      </div>
     </div>
-  </div>
-
-  <!-- 自定义列面板 -->
-  <div class="custom-col-panel" id="customColPanel">
-    <div class="custom-col-header">选择显示列</div>
-    <div class="custom-col-body" id="customColBody"></div>
-    <div class="custom-col-footer">
-      <button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button>
-    </div>
-  </div>
-
-  <!-- 更多操作下拉 -->
-  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
-    <div class="more-actions-item" onclick="puDoMoreAction('resetPwd')">批量重置密码</div>
   </div>
 
   <script src="../../common/js/page_utils.js"></script>
-  <script src="../../common/js/org_tree_select.js"></script>
   <script src="js/accounts.js"></script>
+  <script>function refreshPage() { renderMembers(); showToast('success', '数据已刷新'); }</script>
 </body>
 </html>

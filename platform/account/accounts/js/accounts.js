@@ -224,10 +224,9 @@ function handleEdit(id) {
 function handleDelete(id) {
   var acct = findAcct(id);
   if (!acct) return;
-  if (!confirm('确定要删除账号「' + acct.name + '（' + acct.phone + '）」吗？此操作不可恢复。')) return;
-  accountData = accountData.filter(function(a) { return a.id !== id; });
-  renderTable();
-  showToast('success', '账号已删除');
+  if (window.parent && window.parent.openAcctDeleteDialog) {
+    window.parent.openAcctDeleteDialog(id);
+  }
 }
 
 // ====== 供父页面调用的数据处理函数 ======
@@ -276,6 +275,18 @@ window.acctUpdateItem = function(id, phone, name, password, org, email, status) 
   showToast('success', '账号保存成功');
 };
 
+/** 删除单个账号（由父页面删除对话框确认触发） */
+window.acctDeleteItem = function(id) {
+  accountData = accountData.filter(function(a) { return a.id !== id; });
+  showToast('success', '账号已删除');
+};
+
+/** 批量删除账号（由父页面删除对话框确认触发） */
+window.acctBatchDeleteItems = function(ids) {
+  accountData = accountData.filter(function(a) { return ids.indexOf(a.id) === -1; });
+  showToast('success', '已删除 ' + ids.length + ' 个账号');
+};
+
 // ====== 批量操作 ======
 function batchEnable(ids) {
   var count = 0;
@@ -292,9 +303,9 @@ function batchDisable(ids) {
 }
 
 function batchDelete(ids) {
-  accountData = accountData.filter(function(a) { return ids.indexOf(a.id) === -1; });
-  renderTable();
-  showToast('success', '已删除 ' + ids.length + ' 个账号');
+  if (window.parent && window.parent.openAcctBatchDeleteDialog) {
+    window.parent.openAcctBatchDeleteDialog(ids);
+  }
 }
 
 

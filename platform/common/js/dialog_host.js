@@ -56,7 +56,8 @@
 
   // ==================== 账号对话框 ====================
   var ACCT_DLG_URLS = [
-    'account/accounts/form-dialog.html'
+    'account/accounts/form-dialog.html',
+    'account/accounts/delete-dialog.html'
   ];
 
   // ---- 表单对话框 ----
@@ -332,6 +333,65 @@
 
     closeAcctFormDialog();
     fw.renderTable();
+  };
+
+  // ---- 账号删除对话框 ----
+
+  window.openAcctDeleteDialog = function(id) {
+    ensureDialogs('acct', ACCT_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var acct = fw.findAcct(id);
+      if (!acct) { fw.showToast('error', '账号不存在'); return; }
+
+      document.getElementById('acctDeleteId').value = id;
+      document.getElementById('acctDeleteIsBatch').value = 'false';
+      document.getElementById('acctDeleteDialogTitle').textContent = '删除账号';
+      var msg = '<p>确定要删除账号「<strong>' + acct.name + '（' + acct.phone + '）</strong>」吗？</p><p style="margin-top:6px;">此操作不可恢复。</p>';
+      document.getElementById('acctDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('acctDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeAcctDeleteDialog = function() {
+    var ov = document.getElementById('acctDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmAcctDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('acctDeleteId').value;
+    var isBatch = document.getElementById('acctDeleteIsBatch').value === 'true';
+    closeAcctDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id); // batch 时 acctDeleteId 存的是 JSON 数组
+      fw.acctBatchDeleteItems(ids);
+    } else {
+      fw.acctDeleteItem(parseInt(id));
+    }
+    fw.renderTable();
+  };
+
+  // ---- 账号批量删除（复用同一个对话框） ----
+
+  window.openAcctBatchDeleteDialog = function(ids) {
+    ensureDialogs('acct', ACCT_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { fw.showToast('info', '请先选择要删除的账号'); return; }
+
+      document.getElementById('acctDeleteId').value = JSON.stringify(ids);
+      document.getElementById('acctDeleteIsBatch').value = 'true';
+      document.getElementById('acctDeleteDialogTitle').textContent = '批量删除账号';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个账号吗？</p><p style="margin-top:6px;">此操作不可恢复。</p>';
+      document.getElementById('acctDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('acctDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
   };
 
   // 暴露 getFW 供子页面获取 frame window 引用

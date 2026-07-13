@@ -166,6 +166,7 @@ function renderTable() {
   }).join('');
 
   puRestoreCheckedIds('accountTableBody', checkedIds);
+  puSyncTableHead(window.PU_CONFIG);
   puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
   puRenderPagination({
     total: data.length,

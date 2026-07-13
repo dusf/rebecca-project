@@ -96,14 +96,15 @@
       var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>';
       return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '">' +
         dragIcon +
-        '<div class="col-check" onclick="puToggleCol(this.parentElement)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+        '<div class="col-check" onclick="puToggleCol(this.parentElement, event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
         '<span style="flex:1">' + c.label + '</span>' +
       '</div>';
     }).join('');
   };
 
   /** 切换列显示 */
-  window.puToggleCol = function(el) {
+  window.puToggleCol = function(el, e) {
+    if (e) { e.stopPropagation(); }
     var key = el.dataset.key;
     var config = window.PU_CONFIG;
     if (!config || !config.columns) return;
@@ -148,6 +149,50 @@
       panel.style.left = Math.max(8, rect.right - 240) + 'px';
       panel.style.display = 'block';
       panel.classList.add('show');
+    }
+  };
+
+  /** 同步表头列可见性：根据 visibleCols 显示/隐藏 thead th */
+  window.puSyncTableHead = function(config) {
+    var theadTr = document.querySelector('.table-card table thead tr');
+    if (!theadTr || !config || !config.columns || !config.visibleCols) return;
+    var visibleCols = config.visibleCols;
+    var ths = theadTr.querySelectorAll('th');
+    for (var i = 0; i < ths.length; i++) {
+      var th = ths[i];
+      var key = th.getAttribute('data-col');
+      if (!key) continue;
+      if (visibleCols.indexOf(key) === -1) {
+        th.style.display = 'none';
+      } else {
+        th.style.display = '';
+      }
+    }
+    // 同步 colgroup cols
+    var colgroup = document.querySelector('.table-card table colgroup');
+    if (colgroup) {
+      var cols = colgroup.querySelectorAll('col');
+      var colIdx = 0;
+      for (var j = 0; j < ths.length; j++) {
+        var thForCol = ths[j];
+        var cKey = thForCol.getAttribute('data-col');
+        // 非 data-col 的 th（如 checkbox/pre-col）占第 0 列
+        if (cKey) {
+          // 该 th 对应的 col
+          while (colIdx < cols.length) {
+            if (visibleCols.indexOf(cKey) === -1) {
+              cols[colIdx].style.display = 'none';
+            } else {
+              cols[colIdx].style.display = '';
+            }
+            colIdx++;
+            break;
+          }
+        } else {
+          // 非 data-col 列（pre-col/checkbox），始终显示
+          if (colIdx < cols.length) colIdx++;
+        }
+      }
     }
   };
 

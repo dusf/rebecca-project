@@ -146,9 +146,11 @@ function renderTable() {
   var tree = buildTree(filtered);
   var tbody = document.getElementById('orgTableBody');
   var checkedIds = puSaveCheckedIds('orgTableBody');
+  var vCols = window.PU_CONFIG.visibleCols;
+  var totalColCount = vCols.length + 1; // +1 for pre-col
 
   if (tree.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配的组织</div><div class="empty-state-desc">尝试调整筛选条件或添加新的组织机构</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + totalColCount + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配的组织</div><div class="empty-state-desc">尝试调整筛选条件或添加新的组织机构</div></div></td></tr>';
     puUpdateBulkBar();
     return;
   }
@@ -170,6 +172,38 @@ function renderTable() {
   };
 
   var gripSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.3"/><circle cx="11" cy="3" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="5" cy="13" r="1.3"/><circle cx="11" cy="13" r="1.3"/></svg>';
+
+  // 列渲染函数
+  function rendName(node, indentCls, toggleHtml) {
+    return '<td class="col-name"><div class="tree-name-cell' + (indentCls ? ' ' + indentCls : '') + '">' + toggleHtml + '<span>' + node.name + '</span></div></td>';
+  }
+  function rendType(t) {
+    return '<td><span class="org-type ' + t.cls + '">' + t.label + '</span></td>';
+  }
+  function rendParent(parentName) {
+    return '<td style="color:hsl(var(--muted-foreground))">' + parentName + '</td>';
+  }
+  function rendSort(sort) {
+    return '<td>' + sort + '</td>';
+  }
+  function rendStatus(s) {
+    return '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+  }
+  function rendActions(node) {
+    return '<td><div class="action-group">' +
+      '<div class="action-btn" title="编辑" onclick="handleEdit(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>' +
+      '<div class="action-btn danger" title="删除" onclick="handleDelete(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+    '</div></td>';
+  }
+
+  var renderMap = {
+    name:    rendName,
+    type:    rendType,
+    parent:  rendParent,
+    sort:    rendSort,
+    status:  rendStatus,
+    actions: rendActions
+  };
 
   var html = '';
   rows.forEach(function(row) {
@@ -200,20 +234,21 @@ function renderTable() {
 
     html += '<tr data-id="' + node.id + '" data-type="' + node.type + '" data-parent="' + (node.parent || '') + '" data-level="' + ORG_TYPE_LEVEL[node.type] + '">';
     html += preHtml;
-    html += '<td class="col-name"><div class="tree-name-cell' + (indentCls ? ' ' + indentCls : '') + '">' + toggleHtml + '<span>' + node.name + '</span></div></td>';
-    html += '<td><span class="org-type ' + t.cls + '">' + t.label + '</span></td>';
-    html += '<td style="color:hsl(var(--muted-foreground))">' + parentName + '</td>';
-    html += '<td>' + node.sort + '</td>';
-    html += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
-    html += '<td><div class="action-group">' +
-      '<div class="action-btn" title="编辑" onclick="handleEdit(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>' +
-      '<div class="action-btn danger" title="删除" onclick="handleDelete(\'' + node.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
-    '</div></td>';
+    vCols.forEach(function(key) {
+      var fn = renderMap[key];
+      if (key === 'name')    html += fn(node, indentCls, toggleHtml);
+      else if (key === 'type')    html += fn(t);
+      else if (key === 'parent')  html += fn(parentName);
+      else if (key === 'sort')    html += fn(node.sort);
+      else if (key === 'status')  html += fn(s);
+      else if (key === 'actions') html += fn(node);
+    });
     html += '</tr>';
   });
 
   tbody.innerHTML = html;
   puRestoreCheckedIds('orgTableBody', checkedIds);
+  puSyncTableHead(window.PU_CONFIG);
 
   // 展开/折叠
   tbody.querySelectorAll('.tree-toggle:not(.leaf)').forEach(function(el) {

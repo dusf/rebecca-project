@@ -55,13 +55,13 @@
           <thead>
             <tr>
               <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, 'accountTableBody')"></div></th>
-              <th>商家ID</th>
-              <th class="sortable" data-sort="name">商家名称<span class="sort-icon"></span></th>
-              <th>联系人</th>
-              <th class="sortable" data-sort="phone">手机号<span class="sort-icon"></span></th>
-              <th class="sortable sorted" data-sort="createdAt">入驻时间<span class="sort-icon">▼</span></th>
-              <th>状态</th>
-              <th>操作</th>
+              <th data-col="shopId">商家ID</th>
+              <th class="sortable" data-sort="name" data-col="name">商家名称<span class="sort-icon"></span></th>
+              <th data-col="contact">联系人</th>
+              <th class="sortable" data-sort="phone" data-col="phone">手机号<span class="sort-icon"></span></th>
+              <th class="sortable sorted" data-sort="createdAt" data-col="createdAt">入驻时间<span class="sort-icon">▼</span></th>
+              <th data-col="status">状态</th>
+              <th data-col="actions">操作</th>
             </tr>
           </thead>
           <tbody id="accountTableBody"></tbody>
@@ -208,6 +208,7 @@
       // 恢复复选框选中状态
       puRestoreCheckedIds('accountTableBody', checkedIds);
 
+      puSyncTableHead(window.PU_CONFIG);
       // 初始化自定义列面板
       puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
 

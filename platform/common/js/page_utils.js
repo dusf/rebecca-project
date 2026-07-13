@@ -69,7 +69,7 @@ function showToast(type, message) {
     if (countEl) countEl.textContent = count;
     var bar = document.getElementById('bulkActionBar');
     if (bar) {
-      bar.querySelectorAll('.bulk-actions .btn').forEach(function(btn) {
+      bar.querySelectorAll('.bulk-actions > .btn').forEach(function(btn) {
         if (count === 0) {
           btn.setAttribute('disabled', '');
         } else {

@@ -15,13 +15,6 @@
   color: hsl(var(--foreground));
 }
 
-.count-badge {
-  font-size: 13px;
-  color: hsl(var(--muted-foreground));
-  margin-left: 8px;
-  font-weight: 400;
-}
-
 /* 成员信息列 */
 .member-info-cell {
   display: flex;

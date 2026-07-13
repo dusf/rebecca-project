@@ -162,6 +162,9 @@ function renderTable() {
   updateSortIcons();
   filteredData = data;
 
+  var countEl = document.getElementById('accountCount');
+  if (countEl) countEl.textContent = '(' + data.length + '个)';
+
   var pageData = puSlicePage(data, currentPage, pageSize);
   var tbody = document.getElementById('accountTableBody');
   var cols = window.PU_CONFIG.visibleCols;

@@ -143,6 +143,8 @@ function filterData() {
 // ====== 渲染表格 ======
 function renderTable() {
   var filtered = filterData();
+  var countEl = document.getElementById('orgCount');
+  if (countEl) countEl.textContent = '(' + filtered.length + '个)';
   var tree = buildTree(filtered);
   var tbody = document.getElementById('orgTableBody');
   var checkedIds = puSaveCheckedIds('orgTableBody');

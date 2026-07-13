@@ -441,6 +441,13 @@ body {
   margin-top: 4px;
 }
 
+.count-badge {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  margin-left: 8px;
+  font-weight: 400;
+}
+
 /* ==================== 统计卡片 ==================== */
 .stats-grid {
   display: grid;

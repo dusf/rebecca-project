@@ -10,13 +10,7 @@
 var iframeContainer = document.querySelector('.iframe-container');
 var observer = null;
 var backdrop = null;
-var dialogIframe = null;           // 当前打开对话框所在的 iframe
-var savedIframeZIndex = '';        // 保存 iframe 原始 z-index
-var savedIframePosition = '';      // 保存 iframe 原始 position
-var savedIframeTop = '';           // 保存 iframe 原始 top
-var savedIframeLeft = '';          // 保存 iframe 原始 left
-var savedIframeWidth = '';         // 保存 iframe 原始 width
-var savedIframeHeight = '';        // 保存 iframe 原始 height
+var dialogIframe = null;           // 当前打开对话框所在的 iframe（仅引用，不扩展）
 
 var WATCH_SELECTORS = '.dialog-overlay, .confirm-overlay';
 
@@ -49,7 +43,7 @@ if (iframeContainer) {
   containerObserver.observe(iframeContainer, { childList: true });
 }
 
-  // ---- 全屏遮罩背板 ----
+  // ---- 全屏遮罩背板（仅覆盖侧边栏和顶栏，不影响 iframe 内容区） ----
   function showBackdrop() {
     if (backdrop) return;
     var host = document.getElementById('dialogHost');
@@ -57,40 +51,34 @@ if (iframeContainer) {
 
     backdrop = document.createElement('div');
     backdrop.id = 'adBackdrop';
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.5);pointer-events:none;';
+    // 遮罩仅覆盖侧边栏和顶栏区域，iframe 内容区的暗化由子页面的 .dialog-overlay 自身处理
+    var sidebar = document.querySelector('.sidebar');
+    var header = document.querySelector('.header');
+    var sidebarW = sidebar ? sidebar.offsetWidth : 0;
+    var headerH = header ? header.offsetHeight : 0;
+    backdrop.style.cssText =
+      'position:fixed;top:0;left:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.5);pointer-events:none;' +
+      'width:' + sidebarW + 'px;' +
+      'clip-path:inset(0 0 0 0);';
+    // 如果侧边栏存在，再在顶栏位置加一条横带
+    if (headerH > 0) {
+      var topBar = document.createElement('div');
+      topBar.id = 'adBackdropTop';
+      topBar.style.cssText =
+        'position:fixed;top:0;left:' + sidebarW + 'px;right:0;height:' + headerH + 'px;z-index:9998;' +
+        'background:rgba(0,0,0,0.5);pointer-events:none;';
+      host.appendChild(topBar);
+    }
     host.appendChild(backdrop);
 
-    // 将当前 active iframe 铺满视口 + 提升到遮罩层之上，确保对话框全屏居中
     dialogIframe = getActiveIframe();
-    if (dialogIframe) {
-      savedIframeZIndex    = dialogIframe.style.zIndex;
-      savedIframePosition  = dialogIframe.style.position;
-      savedIframeTop       = dialogIframe.style.top;
-      savedIframeLeft      = dialogIframe.style.left;
-      savedIframeWidth     = dialogIframe.style.width;
-      savedIframeHeight    = dialogIframe.style.height;
-      dialogIframe.style.cssText += 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border:none;';
-    }
   }
 
   function hideBackdrop() {
     if (backdrop) { backdrop.remove(); backdrop = null; }
-    if (dialogIframe) {
-      // 恢复 iframe 所有原始样式
-      dialogIframe.style.position = savedIframePosition;
-      dialogIframe.style.top     = savedIframeTop;
-      dialogIframe.style.left    = savedIframeLeft;
-      dialogIframe.style.width   = savedIframeWidth;
-      dialogIframe.style.height  = savedIframeHeight;
-      dialogIframe.style.zIndex  = savedIframeZIndex;
-      dialogIframe = null;
-      savedIframeZIndex   = '';
-      savedIframePosition = '';
-      savedIframeTop      = '';
-      savedIframeLeft     = '';
-      savedIframeWidth    = '';
-      savedIframeHeight   = '';
-    }
+    var topBar = document.getElementById('adBackdropTop');
+    if (topBar) { topBar.remove(); }
+    dialogIframe = null;
   }
 
   // ---- 检查 iframe 中是否还有可见对话框 ----

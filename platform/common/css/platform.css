@@ -515,6 +515,8 @@ body {
 }
 
 /* ==================== 按钮 ==================== */
+.btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
 .btn {
   display: inline-flex;
   align-items: center;

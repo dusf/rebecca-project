@@ -315,6 +315,7 @@ window.openAddMemberModal = function() {
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
         '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
+        '<div class="form-group"><label class="form-label">密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdAddPassword" placeholder="请输入登录密码"></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopAddMemberOrgTreeSelect"></div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAddMemberDialog\')">取消</button>' +
@@ -343,11 +344,13 @@ window.doAddMember = function() {
   var name = document.getElementById('mdAddName').value.trim();
   var phone = document.getElementById('mdAddPhone').value.trim();
   var accountId = document.getElementById('mdAddAccountId').value.trim();
+  var password = document.getElementById('mdAddPassword').value;
   var org = shopAddMemberOrgPicker ? shopAddMemberOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
   if (!phone || !/^1\d{10}$/.test(phone)) { if (window.parent.showToast) window.parent.showToast('warning', '请输入正确的手机号'); return; }
   if (!accountId) { if (window.parent.showToast) window.parent.showToast('warning', '账号ID不能为空'); return; }
+  if (!password) { if (window.parent.showToast) window.parent.showToast('warning', '请输入登录密码'); return; }
   if (memberData.some(function(m) { return m.accountId === accountId; })) { if (window.parent.showToast) window.parent.showToast('warning', '账号ID已存在'); return; }
 
   var now = new Date();
@@ -358,6 +361,7 @@ window.doAddMember = function() {
     accountId: accountId,
     name: name,
     phone: phone,
+    password: password,
     org: org || '瑞贝卡集团',
     stores: [],
     joinedAt: joinedAt

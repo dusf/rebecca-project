@@ -279,6 +279,8 @@ document.addEventListener('click', function(e) {
 });
 
 // ==================== 添加成员 ====================
+var shopAddMemberOrgPicker = null;
+
 window.openAddMemberModal = function() {
   if (window.parent && window.parent.openDialog) {
     window.parent.openDialog({
@@ -289,21 +291,35 @@ window.openAddMemberModal = function() {
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
         '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
-        '<div class="form-group"><label class="form-label">组织机构</label><input class="form-input" id="mdAddOrg" placeholder="例：瑞贝卡集团/瑞贝卡科技/技术研发部"></div>' +
-        '<div class="form-group"><label class="form-label">所属店铺</label><select class="form-input" id="mdAddStore"><option value="">-- 请选择 --</option>' + mockShops.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') + '</select></div>',
+        '<div class="form-group"><label class="form-label">组织机构</label><div id="shopAddMemberOrgTreeSelect"></div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAddMemberDialog\')">取消</button>' +
-        '<button class="btn btn-primary" onclick="doAddMember()">确认添加</button>'
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doAddMember()">确认添加</button>'
     });
+    // 对话框渲染到父页面后初始化组织树形选择器
+    initShopAddMemberOrgPicker();
   }
 };
+
+function initShopAddMemberOrgPicker() {
+  var container = window.parent.document.getElementById('shopAddMemberOrgTreeSelect');
+  if (!container || !window.parent.OrgTreeSelect) return;
+  var orgUrl = 'account/organization/organization.html';
+  var orgFrame = window.parent.PLATFORM_IFRAME_CACHE && window.parent.PLATFORM_IFRAME_CACHE[orgUrl];
+  var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+    ? orgFrame.contentWindow.orgData : [];
+  if (shopAddMemberOrgPicker) shopAddMemberOrgPicker.destroy();
+  shopAddMemberOrgPicker = window.parent.OrgTreeSelect.create(container, {
+    data: orgData,
+    placeholder: '-- 请选择 --'
+  });
+}
 
 window.doAddMember = function() {
   var name = document.getElementById('mdAddName').value.trim();
   var phone = document.getElementById('mdAddPhone').value.trim();
   var accountId = document.getElementById('mdAddAccountId').value.trim();
-  var org = document.getElementById('mdAddOrg').value.trim();
-  var storeId = document.getElementById('mdAddStore').value;
+  var org = shopAddMemberOrgPicker ? shopAddMemberOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
   if (!phone || !/^1\d{10}$/.test(phone)) { if (window.parent.showToast) window.parent.showToast('warning', '请输入正确的手机号'); return; }
@@ -319,7 +335,7 @@ window.doAddMember = function() {
     name: name,
     phone: phone,
     org: org || '瑞贝卡集团',
-    stores: storeId ? [storeId] : [],
+    stores: [],
     joinedAt: joinedAt
   });
 

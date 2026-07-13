@@ -5,15 +5,15 @@
 window.PU_CONFIG = {
   tbodId: 'accountTableBody',
   columns: [
-    { key: 'memberInfo', label: '成员信息', defaultShow: true,  alwaysShow: true  },
-    { key: 'accountId',  label: '账号ID',   defaultShow: true,  alwaysShow: false },
-    { key: 'phone',      label: '手机号',   defaultShow: true,  alwaysShow: true  },
-    { key: 'org',        label: '组织机构', defaultShow: true,  alwaysShow: false },
-    { key: 'store',      label: '所在店铺', defaultShow: true,  alwaysShow: false },
-    { key: 'createdAt',  label: '加入时间', defaultShow: true,  alwaysShow: false },
-    { key: 'actions',    label: '操作',     defaultShow: true,  alwaysShow: true  }
+    { key: 'phone',     label: '手机号',   defaultShow: true,  alwaysShow: true  },
+    { key: 'name',      label: '姓名',     defaultShow: true,  alwaysShow: false },
+    { key: 'org',       label: '组织',     defaultShow: true,  alwaysShow: false },
+    { key: 'email',     label: '邮箱',     defaultShow: false, alwaysShow: false },
+    { key: 'createdAt', label: '创建时间', defaultShow: true,  alwaysShow: false },
+    { key: 'status',    label: '状态',     defaultShow: true,  alwaysShow: false },
+    { key: 'actions',   label: '操作',     defaultShow: true,  alwaysShow: true  }
   ],
-  visibleCols: ['memberInfo','accountId','phone','org','store','createdAt','actions'],
+  visibleCols: ['phone','name','org','email','createdAt','status','actions'],
   batchActions: [
     { name: 'enable',  handler: batchEnable  },
     { name: 'disable', handler: batchDisable },
@@ -27,11 +27,11 @@ window.PU_CONFIG = {
 
 // ====== 示例数据 ======
 var accountData = [
-  { id: 1, phone: '13800138000', name: '系统管理员', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'admin@example.com', password: '***', status: 'active',   createdAt: '2026-07-01', accountId: 'AC20260700001', store: '瑞贝卡官方旗舰店' },
-  { id: 2, phone: '13800138001', name: '张三',       org: '瑞贝卡集团/瑞贝卡科技/产品设计部', email: '',                      password: '***', status: 'active',   createdAt: '2026-07-03', accountId: 'AC20260700002', store: '瑞贝卡数码专营店' },
-  { id: 3, phone: '13800138002', name: '李四',       org: '瑞贝卡集团/瑞贝卡电商/运营部',     email: 'lisi@example.com',    password: '***', status: 'active',   createdAt: '2026-07-05', accountId: 'AC20260700003', store: '--' },
-  { id: 4, phone: '13800138003', name: '王五',       org: '瑞贝卡集团/瑞贝卡电商/客服部',     email: '',                      password: '***', status: 'disabled', createdAt: '2026-07-06', accountId: 'AC20260700004', store: '瑞贝卡家居生活馆' },
-  { id: 5, phone: '13800138004', name: '赵六',       org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'zhaoliu@example.com', password: '***', status: 'active',   createdAt: '2026-07-08', accountId: 'AC20260700005', store: '--' }
+  { id: 1, phone: '13800138000', name: '系统管理员', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'admin@example.com', password: '***', status: 'active',   createdAt: '2026-07-01' },
+  { id: 2, phone: '13800138001', name: '张三',       org: '瑞贝卡集团/瑞贝卡科技/产品设计部', email: '',                      password: '***', status: 'active',   createdAt: '2026-07-03' },
+  { id: 3, phone: '13800138002', name: '李四',       org: '瑞贝卡集团/瑞贝卡电商/运营部',     email: 'lisi@example.com',    password: '***', status: 'active',   createdAt: '2026-07-05' },
+  { id: 4, phone: '13800138003', name: '王五',       org: '瑞贝卡集团/瑞贝卡电商/客服部',     email: '',                      password: '***', status: 'disabled', createdAt: '2026-07-06' },
+  { id: 5, phone: '13800138004', name: '赵六',       org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'zhaoliu@example.com', password: '***', status: 'active',   createdAt: '2026-07-08' }
 ];
 
 var sortField = 'createdAt';
@@ -62,7 +62,7 @@ function updateSortIcons() {
 }
 
 // 可排序的列 key 集合
-var SORTABLE_COLS = { phone: true, createdAt: true };
+var SORTABLE_COLS = { phone: true, name: true, createdAt: true };
 
 /** 动态重建表头，与数据行使用同一顺序，消除自定义列的列头/数据错位问题 */
 function rebuildAccountTableHead() {
@@ -175,22 +175,19 @@ function renderTable() {
   }
 
   var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-  var initials = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var statusMap = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
 
   tbody.innerHTML = pageData.map(function(a) {
+    var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
     var cells = '';
     cols.forEach(function(key) {
-      if (key === 'memberInfo') {
-        var initial = (a.name || '?').charAt(0).toUpperCase();
-        var colorIdx = (a.id || 0) % 6;
-        cells += '<td><div class="member-info-cell"><div class="member-avatar avatar-c' + colorIdx + '">' + initial + '</div><div class="member-name">' + a.name + '</div></div></td>';
-      }
-      else if (key === 'accountId') cells += '<td style="color:hsl(var(--muted-foreground));font-size:13px;">' + (a.accountId || '--') + '</td>';
-      else if (key === 'phone')     cells += '<td>' + a.phone + '</td>';
-      else if (key === 'org')       cells += '<td>' + a.org + '</td>';
-      else if (key === 'store')     cells += '<td style="color:hsl(var(--muted-foreground))">' + (a.store || '--') + '</td>';
+      if (key === 'phone')     cells += '<td><strong>' + a.phone + '</strong></td>';
+      else if (key === 'name') cells += '<td>' + a.name + '</td>';
+      else if (key === 'org')  cells += '<td>' + a.org + '</td>';
+      else if (key === 'email') cells += '<td style="color:hsl(var(--muted-foreground))">' + (a.email || '--') + '</td>';
       else if (key === 'createdAt') cells += '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>';
-      else if (key === 'actions')   cells += '<td><div class="action-group"><div class="action-btn" title="编辑" onclick="handleEdit(' + a.id + ')">' + editIcon + '</div><div class="action-btn danger" title="删除" onclick="handleDelete(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div></td>';
+      else if (key === 'status') cells += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      else if (key === 'actions') cells += '<td><div class="action-group"><div class="action-btn" title="编辑" onclick="handleEdit(' + a.id + ')">' + editIcon + '</div><div class="action-btn danger" title="删除" onclick="handleDelete(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div></div></td>';
     });
     return '<tr data-id="' + a.id + '">' +
       '<td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' +
@@ -208,8 +205,6 @@ function renderTable() {
     containerId: 'accountsPagination',
     onPageChange: function(page) { currentPage = page; renderTable(); }
   });
-  var countEl = document.getElementById('memberCount');
-  if (countEl) countEl.textContent = data.length;
 }
 
 // ====== 打开添加/编辑对话框（委托给父页面） ======
@@ -247,43 +242,21 @@ function findAcct(id) {
 /** 添加账号（由父页面对话框提交触发） */
 window.acctAddItem = function(phone, name, password, org, email, status) {
   accountData.push({
-    id: nextAcctId,
+    id: nextAcctId++,
     phone: phone,
     name: name,
     org: org,
     email: email || '',
     password: password,
     status: status,
-    store: '--',
-    accountId: generateAcctId(),
     createdAt: new Date().toISOString().slice(0, 10)
   });
-  nextAcctId++;
   var savedOrg = orgFilterPicker ? orgFilterPicker.getValue() : '';
   initOrgFilterTreeSelect();
   if (orgFilterPicker && savedOrg) orgFilterPicker.setValue(savedOrg);
   renderTable();
   showToast('success', '账号添加成功');
 };
-
-/** 生成账号ID：AC + 年月 + 5位序号 */
-function generateAcctId() {
-  var now = new Date();
-  var prefix = 'AC' + now.getFullYear() + mpad(now.getMonth() + 1);
-  var maxNum = 0;
-  accountData.forEach(function(a) {
-    if (a.accountId && a.accountId.indexOf(prefix) === 0) {
-      var num = parseInt(a.accountId.substring(prefix.length), 10);
-      if (num > maxNum) maxNum = num;
-    }
-  });
-  var nextNum = maxNum + 1;
-  var s = '' + nextNum;
-  while (s.length < 5) s = '0' + s;
-  return prefix + s;
-}
-
-function mpad(n) { return n < 10 ? '0' + n : '' + n; }
 
 /** 更新账号（由父页面对话框提交触发） */
 window.acctUpdateItem = function(id, phone, name, password, org, email, status) {

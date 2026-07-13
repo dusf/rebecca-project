@@ -286,11 +286,11 @@ window.openAddMemberModal = function() {
       title: '添加成员',
       width: '480px',
       body:
-        '<div class="form-row"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
-        '<div class="form-row"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
-        '<div class="form-row"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
-        '<div class="form-row"><label class="form-label">组织机构</label><input class="form-input" id="mdAddOrg" placeholder="例：瑞贝卡集团/瑞贝卡科技/技术研发部"></div>' +
-        '<div class="form-row"><label class="form-label">所属店铺</label><select class="form-select" id="mdAddStore"><option value="">-- 请选择 --</option>' + mockShops.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') + '</select></div>',
+        '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
+        '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
+        '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
+        '<div class="form-group"><label class="form-label">组织机构</label><input class="form-input" id="mdAddOrg" placeholder="例：瑞贝卡集团/瑞贝卡科技/技术研发部"></div>' +
+        '<div class="form-group"><label class="form-label">所属店铺</label><select class="form-input" id="mdAddStore"><option value="">-- 请选择 --</option>' + mockShops.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') + '</select></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAddMemberDialog\')">取消</button>' +
         '<button class="btn btn-primary" onclick="doAddMember()">确认添加</button>'
@@ -355,8 +355,8 @@ window.openInviteMemberModal = function() {
       title: '邀请成员',
       width: '520px',
       body:
-        '<div class="form-row"><label class="form-label">选择成员（可多选）</label><div class="member-check-grid" id="memberCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:200px;overflow-y:auto;padding:4px;">' + getInviteMemberOptions() + '</div></div>' +
-        '<div class="form-row"><label class="form-label">选择店铺（可多选）</label><div class="store-check-grid" id="storeCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' + getInviteStoreOptions() + '</div></div>',
+        '<div class="form-group"><label class="form-label">选择成员（可多选）</label><div class="member-check-grid" id="memberCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:200px;overflow-y:auto;padding:4px;">' + getInviteMemberOptions() + '</div></div>' +
+        '<div class="form-group"><label class="form-label">选择店铺（可多选）</label><div class="store-check-grid" id="storeCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' + getInviteStoreOptions() + '</div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopInviteMemberDialog\')">取消</button>' +
         '<button class="btn btn-primary" onclick="doInviteMembers()">确认邀请</button>'
@@ -450,14 +450,13 @@ function openAssignStoreModal() {
       width: '520px',
       desc: '为选中的 <strong id="assignCount">' + selectedMemberIds.length + '</strong> 名成员指派店铺 <span style="font-size:12px;color:hsl(var(--muted-foreground))">（在当前店铺的成员列表中添加该成员）</span>',
       body:
-        '<label class="form-label">选择店铺（可多选）</label>' +
-        '<div class="store-check-grid" id="assignStoreCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:260px;overflow-y:auto;">' +
+        '<div class="form-group"><label class="form-label">选择店铺（可多选）</label><div class="store-check-grid" id="assignStoreCheckGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:260px;overflow-y:auto;">' +
         shops.map(function(s) {
           return '<div class="store-check-item" data-shop-id="' + s.id + '" onclick="window.parent.getFW().toggleCheckItem(this)">' +
             '<span class="sci-dot" style="background:' + (s.color || '#8B9A7C') + '"></span><span>' + s.name + '</span></div>';
         }).join('') +
         '</div>' +
-        '<div class="form-error" id="assignStoreError" style="display:none;margin-top:10px;">请至少选择一家店铺</div>',
+        '<div class="form-error" id="assignStoreError" style="display:none;margin-top:10px;">请至少选择一家店铺</div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAssignStoreDialog\')">取消</button>' +
         '<button class="btn btn-primary" onclick="doAssignStores()">确认指派</button>'

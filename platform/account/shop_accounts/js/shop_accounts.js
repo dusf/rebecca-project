@@ -98,10 +98,12 @@ function closeAllStorePopups() {
   document.querySelectorAll('.store-popup.show').forEach(function(p) { p.classList.remove('show'); });
 }
 
+var orgFilterPicker = null;
+
 function getFilteredMembers(allMembers) {
   var search = ((document.getElementById('searchInput').value || '').trim()).toLowerCase();
   var storeFilter = document.getElementById('storeFilter').value;
-  var orgFilter = document.getElementById('orgFilter').value;
+  var orgFilter = orgFilterPicker ? orgFilterPicker.getValue() : '';
 
   return allMembers.filter(function(m) {
     if (search) {
@@ -121,16 +123,22 @@ function getFilteredMembers(allMembers) {
   });
 }
 
-function getOrgPaths(allMembers) {
-  var paths = {};
-  allMembers.forEach(function(m) {
-    if (m.org) {
-      var parts = m.org.split('/');
-      var full = parts.slice(0, 2).join('/');
-      if (full) paths[full] = true;
+function initOrgFilterTreeSelect() {
+  var container = document.getElementById('orgFilterTreeSelect');
+  if (!container || typeof window.parent.OrgTreeSelect === 'undefined') return;
+  var orgUrl = 'account/organization/organization.html';
+  var orgFrame = window.parent.PLATFORM_IFRAME_CACHE && window.parent.PLATFORM_IFRAME_CACHE[orgUrl];
+  var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+    ? orgFrame.contentWindow.orgData : [];
+  if (orgFilterPicker) orgFilterPicker.destroy();
+  orgFilterPicker = window.parent.OrgTreeSelect.create(container, {
+    data: orgData,
+    placeholder: '全部组织机构',
+    allowEmpty: true,
+    onChange: function() {
+      renderMembers();
     }
   });
-  return Object.keys(paths).sort();
 }
 
 function sortMembers(members) {
@@ -171,13 +179,6 @@ function renderMembers() {
   storeFilter.innerHTML = '<option value="">全部店铺</option>'
     + shops.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
   storeFilter.value = currentStoreVal;
-
-  var orgFilter = document.getElementById('orgFilter');
-  var currentOrgVal = orgFilter.value;
-  var orgPaths = getOrgPaths(allMembers);
-  orgFilter.innerHTML = '<option value="">全部组织机构</option>'
-    + orgPaths.map(function(p) { return '<option value="' + p + '">' + p + '</option>'; }).join('');
-  orgFilter.value = currentOrgVal;
 
   var totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
@@ -576,5 +577,6 @@ window.refreshPage = function() {
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', function() {
+  initOrgFilterTreeSelect();
   renderMembers();
 });

@@ -683,6 +683,13 @@ body {
   background-size: 14px;
 }
 
+.filter-org-tree {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
 input[type="date"].search-input {
   width: 150px;
   min-width: 150px;

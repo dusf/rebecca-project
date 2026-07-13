@@ -116,19 +116,37 @@
       config.visibleCols = config.visibleCols.filter(function(k) { return k !== key; });
     } else {
       el.classList.add('active');
-      config.visibleCols.push(key);
+      // 按 columns 原始顺序插入，而非 push 到末尾
+      var ordered = puGetOrderedVisibleCols(config, key);
+      config.visibleCols = ordered;
     }
     if (typeof config.onColumnsChange === 'function') {
       config.onColumnsChange();
     }
   };
 
-  /** 重置自定义列 */
+  /**
+   * 返回按 columns 配置原始顺序排列的可见列 key 列表。
+   * @param {object} config - PU_CONFIG 对象
+   * @param {string} [extraKey] - 额外需要加入的列 key（用于 puToggleCol 重新显示列时）
+   */
+  function puGetOrderedVisibleCols(config, extraKey) {
+    var colKeys = config.columns.map(function(c) { return c.key; });
+    var set = {};
+    config.visibleCols.forEach(function(k) { set[k] = true; });
+    if (extraKey) set[extraKey] = true;
+    var result = [];
+    for (var i = 0; i < colKeys.length; i++) {
+      if (set[colKeys[i]]) result.push(colKeys[i]);
+    }
+    return result;
+  }
+
+  /** 重置自定义列：恢复为默认显示列，按 columns 原始顺序排列 */
   window.puResetCustomCols = function() {
     var config = window.PU_CONFIG;
     if (!config || !config.columns) return;
-    config.visibleCols = config.columns.filter(function(c) { return c.defaultShow !== false && !c.alwaysShow; }).map(function(c) { return c.key; });
-    config.visibleCols = config.columns.filter(function(c) { return c.alwaysShow; }).map(function(c) { return c.key; }).concat(config.visibleCols);
+    config.visibleCols = config.columns.filter(function(c) { return c.defaultShow !== false; }).map(function(c) { return c.key; });
     puBuildCustomColPanel(config.columns, config.visibleCols);
     if (typeof config.onColumnsChange === 'function') {
       config.onColumnsChange();

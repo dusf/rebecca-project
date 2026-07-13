@@ -62,6 +62,37 @@ function updateSortIcons() {
   });
 }
 
+// 可排序的列 key 集合
+var SORTABLE_COLS = { phone: true, name: true, createdAt: true };
+
+/** 动态重建表头，与数据行使用同一顺序，消除自定义列的列头/数据错位问题 */
+function rebuildAccountTableHead() {
+  var theadTr = document.querySelector('.table-card table thead tr');
+  if (!theadTr) return;
+  var config = window.PU_CONFIG;
+  // 按 columns 配置的原始顺序排列可见列
+  var unordered = config.visibleCols;
+  var orderedCols = [];
+  for (var i = 0; i < config.columns.length; i++) {
+    var k = config.columns[i].key;
+    if (unordered.indexOf(k) !== -1) orderedCols.push(k);
+  }
+
+  var html = '<th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, \'accountTableBody\')"></div></th>';
+  orderedCols.forEach(function(key) {
+    var c = config.columns.find(function(col) { return col.key === key; });
+    if (!c) return;
+    if (SORTABLE_COLS[key]) {
+      var sorted = key === sortField ? ' sorted' : '';
+      var icon = key === sortField ? (sortDir === 'asc' ? '▲' : '▼') : '';
+      html += '<th class="sortable' + sorted + '" data-sort="' + key + '">' + c.label + '<span class="sort-icon">' + icon + '</span></th>';
+    } else {
+      html += '<th>' + c.label + '</th>';
+    }
+  });
+  theadTr.innerHTML = html;
+}
+
 // ====== 组织树形选择器 ======
 var orgFilterPicker = null;
 
@@ -166,7 +197,7 @@ function renderTable() {
   }).join('');
 
   puRestoreCheckedIds('accountTableBody', checkedIds);
-  puSyncTableHead(window.PU_CONFIG);
+  rebuildAccountTableHead();
   puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
   puRenderPagination({
     total: data.length,

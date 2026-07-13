@@ -278,14 +278,12 @@ window.acctUpdateItem = function(id, phone, name, password, org, email, status) 
 /** 删除单个账号（由父页面删除对话框确认触发） */
 window.acctDeleteItem = function(id) {
   accountData = accountData.filter(function(a) { return a.id !== id; });
-  showToast('success', '账号已删除');
 };
 
 /** 批量删除账号（由父页面删除对话框确认触发） */
 window.acctBatchDeleteItems = function(ids) {
   var numIds = ids.map(function(id) { return parseInt(id); });
   accountData = accountData.filter(function(a) { return numIds.indexOf(a.id) === -1; });
-  showToast('success', '已删除 ' + ids.length + ' 个账号');
 };
 
 // ====== 批量操作 ======
@@ -320,7 +318,7 @@ function batchResetPwd() {
   }
 }
 
-/** 批量重置密码 — 实际执行（由父页面对话框确认触发） */
+/** 批量重置密码 — 实际执行（由父页面对话框确认触发），返回 { count, newPwd } */
 window.acctBatchResetPwdItems = function(ids) {
   var newPwd = generateRandomPwd();
   var count = 0;
@@ -330,7 +328,7 @@ window.acctBatchResetPwdItems = function(ids) {
     if (a) { a.password = newPwd; count++; }
   });
   renderTable();
-  showToast('success', '已为 ' + count + ' 个账号重置密码，新密码为：' + newPwd);
+  return { count: count, newPwd: newPwd };
 };
 
 /** 生成随机密码（8位，含大小写字母和数字） */

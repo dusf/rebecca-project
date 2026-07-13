@@ -82,7 +82,7 @@
       if (mode === 'edit' && id) {
         title.textContent = '编辑组织';
         var node = fw.findNode(id);
-        if (!node) { fw.showToast('error', '组织不存在'); return; }
+        if (!node) { showToast('error', '组织不存在'); return; }
         typeSel.value = node.type;
         nameInp.value = node.name;
         statSel.value = node.status;
@@ -120,17 +120,17 @@
     var parent = document.getElementById('orgFormParent').value;
     var status = document.getElementById('orgFormStatus').value;
 
-    if (!name) { fw.showToast('warning', '请输入组织名称'); return; }
+    if (!name) { showToast('warning', '请输入组织名称'); return; }
 
     var parentLevel = -1;
     if (parent) {
       var pNode = fw.findNode(parent);
-      if (!pNode) { fw.showToast('error', '上级组织不存在'); return; }
+      if (!pNode) { showToast('error', '上级组织不存在'); return; }
       parentLevel = fw.ORG_TYPE_LEVEL[pNode.type];
     }
     var myLevel = fw.ORG_TYPE_LEVEL[type];
-    if (type !== 'group' && !parent) { fw.showToast('warning', '该类型组织必须选择上级组织'); return; }
-    if (parent && parentLevel !== myLevel - 1) { fw.showToast('warning', '上级组织类型不匹配，请遵循直系父子层级规则'); return; }
+    if (type !== 'group' && !parent) { showToast('warning', '该类型组织必须选择上级组织'); return; }
+    if (parent && parentLevel !== myLevel - 1) { showToast('warning', '上级组织类型不匹配，请遵循直系父子层级规则'); return; }
 
     if (mode === 'add') {
       fw.orgAddItem(type, name, parent || null, status);
@@ -193,7 +193,7 @@
       var fw = getFW();
       if (!fw) return;
       var node = fw.findNode(id);
-      if (!node) { fw.showToast('error', '组织不存在'); return; }
+      if (!node) { showToast('error', '组织不存在'); return; }
       document.getElementById('orgDeleteId').value = id;
       var childIds = fw.getDescendantIds(id);
       var msg = '';
@@ -338,11 +338,11 @@
     var email    = document.getElementById('acctFormEmail').value.trim();
     var status   = document.getElementById('acctFormStatus').value;
 
-    if (!phone)  { fw.showToast('warning', '请输入手机号'); return; }
-    if (!name)   { fw.showToast('warning', '请输入姓名'); return; }
-    if (mode === 'add' && !password) { fw.showToast('warning', '请输入登录密码'); return; }
-    if (!org)    { fw.showToast('warning', '请选择所属组织'); return; }
-    if (!/^1\d{10}$/.test(phone)) { fw.showToast('warning', '请输入正确的手机号格式'); return; }
+    if (!phone)  { showToast('warning', '请输入手机号'); return; }
+    if (!name)   { showToast('warning', '请输入姓名'); return; }
+    if (mode === 'add' && !password) { showToast('warning', '请输入登录密码'); return; }
+    if (!org)    { showToast('warning', '请选择所属组织'); return; }
+    if (!/^1\d{10}$/.test(phone)) { showToast('warning', '请输入正确的手机号格式'); return; }
 
     if (mode === 'add') {
       fw.acctAddItem(phone, name, password, org, email, status);
@@ -361,7 +361,7 @@
       var fw = getFW();
       if (!fw) return;
       var acct = fw.findAcct(id);
-      if (!acct) { fw.showToast('error', '账号不存在'); return; }
+      if (!acct) { showToast('error', '账号不存在'); return; }
 
       document.getElementById('acctDeleteId').value = id;
       document.getElementById('acctDeleteIsBatch').value = 'false';
@@ -386,10 +386,12 @@
     closeAcctDeleteDialog();
     if (!fw) return;
     if (isBatch) {
-      var ids = JSON.parse(id); // batch 时 acctDeleteId 存的是 JSON 数组
+      var ids = JSON.parse(id);
       fw.acctBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个账号');
     } else {
       fw.acctDeleteItem(parseInt(id));
+      showToast('success', '账号已删除');
     }
     fw.renderTable();
   };
@@ -400,7 +402,7 @@
     ensureDialogs('acct', ACCT_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
-      if (!ids || ids.length === 0) { fw.showToast('info', '请先选择要删除的账号'); return; }
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的账号'); return; }
 
       document.getElementById('acctDeleteId').value = JSON.stringify(ids);
       document.getElementById('acctDeleteIsBatch').value = 'true';
@@ -419,7 +421,7 @@
     ensureDialogs('acct', ACCT_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
-      if (!ids || ids.length === 0) { fw.showToast('info', '请先选择要操作的账号'); return; }
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要操作的账号'); return; }
 
       document.getElementById('acctResetPwdIds').value = JSON.stringify(ids);
       var msg = '<p>确定要为以下 <strong>' + ids.length + '</strong> 个账号重置登录密码吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">重置后将生成新的随机密码。</p>';
@@ -441,8 +443,11 @@
     var ids = JSON.parse(idsJson);
     closeAcctBatchResetPwdDialog();
     if (fw) {
-      fw.acctBatchResetPwdItems(ids);
+      var result = fw.acctBatchResetPwdItems(ids);
       fw.renderTable();
+      if (result && result.count > 0) {
+        showToast('success', '已为 ' + result.count + ' 个账号重置密码，新密码为：' + result.newPwd);
+      }
     }
   };
 

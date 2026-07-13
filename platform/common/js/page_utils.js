@@ -2,6 +2,13 @@
 // 此文件提供复选框批量操作、自定义列面板、更多操作下拉等共享功能
 // 每个页面通过 window.PU_CONFIG 配置自己的列信息和批量操作
 
+/** Toast 代理 — 子页面（iframe）无 toastContainer，委托父页面执行 */
+function showToast(type, message) {
+  if (window.parent && typeof window.parent.showToast === 'function') {
+    window.parent.showToast(type, message);
+  }
+}
+
 (function() {
   'use strict';
 

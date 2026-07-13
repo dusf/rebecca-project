@@ -13,11 +13,11 @@ var mockShops = [
 
 // 示例成员数据
 var memberData = [
-  { id: 'member_1', accountId: 'AC20260700001', name: '系统管理员', phone: '13800138000', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1'], joinedAt: '2026-07-01 09:30' },
-  { id: 'member_2', accountId: 'AC20260700002', name: '张三', phone: '13800138001', org: '瑞贝卡集团/瑞贝卡科技/产品设计部', stores: ['shop_2'], joinedAt: '2026-07-03 14:20' },
-  { id: 'member_3', accountId: 'AC20260700003', name: '李四', phone: '13800138002', org: '瑞贝卡集团/瑞贝卡电商/运营部', stores: [], joinedAt: '2026-07-05 11:00' },
-  { id: 'member_4', accountId: 'AC20260700004', name: '王五', phone: '13800138003', org: '瑞贝卡集团/瑞贝卡电商/客服部', stores: ['shop_3'], joinedAt: '2026-07-06 16:45' },
-  { id: 'member_5', accountId: 'AC20260700005', name: '赵六', phone: '13800138004', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1', 'shop_2'], joinedAt: '2026-07-08 08:15' }
+  { id: 'member_1', accountId: 'AC20260700001', name: '系统管理员', phone: '13800138000', email: 'admin@rebecca.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1'], status: 'active', joinedAt: '2026-07-01 09:30' },
+  { id: 'member_2', accountId: 'AC20260700002', name: '张三', phone: '13800138001', email: '', org: '瑞贝卡集团/瑞贝卡科技/产品设计部', stores: ['shop_2'], status: 'active', joinedAt: '2026-07-03 14:20' },
+  { id: 'member_3', accountId: 'AC20260700003', name: '李四', phone: '13800138002', email: 'lisi@example.com', org: '瑞贝卡集团/瑞贝卡电商/运营部', stores: [], status: 'disabled', joinedAt: '2026-07-05 11:00' },
+  { id: 'member_4', accountId: 'AC20260700004', name: '王五', phone: '13800138003', email: '', org: '瑞贝卡集团/瑞贝卡电商/客服部', stores: ['shop_3'], status: 'active', joinedAt: '2026-07-06 16:45' },
+  { id: 'member_5', accountId: 'AC20260700005', name: '赵六', phone: '13800138004', email: 'zhaoliu@example.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1', 'shop_2'], status: 'active', joinedAt: '2026-07-08 08:15' }
 ];
 
 var currentPage = 1;
@@ -33,6 +33,7 @@ var columnsVisible = {
   email: true,
   org: true,
   stores: true,
+  status: true,
   joinedAt: true,
   action: true
 };
@@ -62,10 +63,14 @@ function getDeduplicatedStores(member) {
 function updateBatchBar() {
   var countEl = document.getElementById('batchCount');
   var assignBtn = document.getElementById('btnBatchAssign');
+  var enableBtn = document.getElementById('btnBatchEnable');
+  var disableBtn = document.getElementById('btnBatchDisable');
   var removeBtn = document.getElementById('btnBatchRemove');
   var c = selectedMemberIds.length;
   if (countEl) countEl.textContent = c;
   if (assignBtn) assignBtn.disabled = c === 0;
+  if (enableBtn) enableBtn.disabled = c === 0;
+  if (disableBtn) disableBtn.disabled = c === 0;
   if (removeBtn) removeBtn.disabled = c === 0;
 }
 
@@ -115,6 +120,9 @@ function getFilteredMembers(allMembers) {
   var search = ((document.getElementById('searchInput').value || '').trim()).toLowerCase();
   var storeFilter = document.getElementById('storeFilter').value;
   var orgFilter = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  var statusFilter = (document.getElementById('statusFilter') || {}).value || '';
+  var dateStart = (document.getElementById('dateStart') || {}).value || '';
+  var dateEnd = (document.getElementById('dateEnd') || {}).value || '';
 
   return allMembers.filter(function(m) {
     if (search) {
@@ -130,6 +138,17 @@ function getFilteredMembers(allMembers) {
     }
     if (orgFilter) {
       if ((m.org || '').indexOf(orgFilter) !== 0) return false;
+    }
+    if (statusFilter) {
+      if (m.status !== statusFilter) return false;
+    }
+    if (dateStart) {
+      var joined = (m.joinedAt || '').substring(0, 10);
+      if (joined < dateStart) return false;
+    }
+    if (dateEnd) {
+      var joined = (m.joinedAt || '').substring(0, 10);
+      if (joined > dateEnd) return false;
     }
     return true;
   });
@@ -237,6 +256,7 @@ function renderMembers() {
       + '<div class="action-btn more" title="更多" onclick="event.stopPropagation();toggleRowMore(\'' + actionMenuId + '\')">' + moreIcon + '</div>'
       + '<div class="action-more-menu" id="' + actionMenuId + '" style="display:none;">'
       + '<div class="action-more-item" onclick="openSingleAssign(\'' + m.id + '\');closeAllRowMore()">指派店铺</div>'
+      + '<div class="action-more-item" onclick="toggleMemberStatus(\'' + m.id + '\');closeAllRowMore()">' + (m.status === 'active' ? '停用' : '启用') + '</div>'
       + '</div>'
       + '</div>'
       + '</div>';
@@ -248,6 +268,7 @@ function renderMembers() {
       + (columnsVisible.email    ? '<td class="col-email"><span class="muted-text">' + (m.email || '-') + '</span></td>' : '')
       + (columnsVisible.org      ? '<td class="col-org"><div class="org-cell">' + orgHtml + '</div></td>' : '')
       + (columnsVisible.stores   ? '<td class="col-stores">' + storeHtml + '</td>' : '')
+      + (columnsVisible.status   ? '<td class="col-status"><span class="badge ' + (m.status === 'active' ? 'badge-success' : 'badge-secondary') + '">' + (m.status === 'active' ? '启用' : '停用') + '</span></td>' : '')
       + (columnsVisible.joinedAt ? '<td class="col-joinedAt"><span class="muted-text">' + (m.joinedAt || '-') + '</span></td>' : '')
       + (columnsVisible.action   ? '<td class="col-action">' + actionHtml + '</td>' : '')
       + '</tr>';
@@ -312,6 +333,7 @@ window.openAddMemberModal = function() {
         '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdAddEmail" placeholder="请输入邮箱地址"></div>' +
         '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
         '<div class="form-group"><label class="form-label">密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdAddPassword" placeholder="请输入登录密码"></div>' +
+        '<div class="form-group"><label class="form-label">状态</label><select class="form-input" id="mdAddStatus"><option value="active">启用</option><option value="disabled">停用</option></select></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopAddMemberOrgTreeSelect"></div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopAddMemberDialog\')">取消</button>' +
@@ -342,6 +364,7 @@ window.doAddMember = function() {
   var accountId = document.getElementById('mdAddAccountId').value.trim();
   var password = document.getElementById('mdAddPassword').value;
   var email = document.getElementById('mdAddEmail').value.trim();
+  var status = document.getElementById('mdAddStatus').value;
   var org = shopAddMemberOrgPicker ? shopAddMemberOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
@@ -360,6 +383,7 @@ window.doAddMember = function() {
     phone: phone,
     email: email || '',
     password: password,
+    status: status || 'active',
     org: org || '瑞贝卡集团',
     stores: [],
     joinedAt: joinedAt
@@ -457,6 +481,8 @@ window.doInviteMembers = function() {
       accountId: p.accountId,
       name: p.name,
       phone: p.phone,
+      email: '',
+      status: 'active',
       org: '瑞贝卡集团',
       stores: selectedShopIds.slice(),
       joinedAt: joinedAt
@@ -605,6 +631,36 @@ window.batchDeleteMembers = function() {
   }
 };
 
+window.batchEnableMembers = function() {
+  if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }
+  var count = 0;
+  memberData.forEach(function(m) {
+    if (selectedMemberIds.indexOf(m.id) !== -1 && m.status !== 'active') { m.status = 'active'; count++; }
+  });
+  if (window.parent.showToast) window.parent.showToast('success', '已启用 ' + count + ' 名成员');
+  selectedMemberIds = [];
+  renderMembers();
+};
+
+window.batchDisableMembers = function() {
+  if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }
+  var count = 0;
+  memberData.forEach(function(m) {
+    if (selectedMemberIds.indexOf(m.id) !== -1 && m.status !== 'disabled') { m.status = 'disabled'; count++; }
+  });
+  if (window.parent.showToast) window.parent.showToast('success', '已停用 ' + count + ' 名成员');
+  selectedMemberIds = [];
+  renderMembers();
+};
+
+window.toggleMemberStatus = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+  member.status = member.status === 'active' ? 'disabled' : 'active';
+  if (window.parent.showToast) window.parent.showToast('success', '已' + (member.status === 'active' ? '启用' : '停用') + '「' + member.name + '」');
+  renderMembers();
+};
+
 window.confirmBatchDeleteMembers = function() {
   memberData = memberData.filter(function(m) { return selectedMemberIds.indexOf(m.id) === -1; });
   if (window.parent.closeDialog) window.parent.closeDialog('shopBatchDeleteDialog');
@@ -629,6 +685,7 @@ window.editMember = function(id) {
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditPhone" value="' + member.phone + '" placeholder="请输入手机号"></div>' +
         '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdEditEmail" value="' + (member.email || '') + '" placeholder="请输入邮箱地址"></div>' +
         '<div class="form-group"><label class="form-label">账号ID</label><input class="form-input" id="mdEditAccountId" value="' + member.accountId + '" readonly></div>' +
+        '<div class="form-group"><label class="form-label">状态</label><select class="form-input" id="mdEditStatus"><option value="active"' + (member.status === 'active' ? ' selected' : '') + '>启用</option><option value="disabled"' + (member.status === 'disabled' ? ' selected' : '') + '>停用</option></select></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopEditMemberOrgTreeSelect"></div></div>',
       actions:
         '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopEditMemberDialog\')">取消</button>' +
@@ -661,6 +718,7 @@ window.doEditMember = function(id) {
   var name = document.getElementById('mdEditName').value.trim();
   var phone = document.getElementById('mdEditPhone').value.trim();
   var email = document.getElementById('mdEditEmail').value.trim();
+  var status = document.getElementById('mdEditStatus').value;
   var org = shopEditOrgPicker ? shopEditOrgPicker.getValue() : '';
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
@@ -669,6 +727,7 @@ window.doEditMember = function(id) {
   member.name = name;
   member.phone = phone;
   member.email = email;
+  member.status = status;
   member.org = org || member.org;
 
   if (window.parent.closeDialog) window.parent.closeDialog('shopEditMemberDialog');
@@ -710,6 +769,7 @@ var columnDefs = [
   { key: 'email', label: '邮箱', defaultShow: true },
   { key: 'org', label: '组织机构', defaultShow: true },
   { key: 'stores', label: '所在店铺', defaultShow: true },
+  { key: 'status', label: '状态', defaultShow: true },
   { key: 'joinedAt', label: '创建时间', defaultShow: true },
   { key: 'action', label: '操作', alwaysShow: true }
 ];

@@ -35,7 +35,15 @@
         <option value="shop_3">瑞贝卡家居生活馆</option>
         <option value="shop_4">瑞贝卡美妆优选</option>
       </select>
+      <select class="filter-select" id="statusFilter" onchange="renderMembers()">
+        <option value="">全部状态</option>
+        <option value="active">启用</option>
+        <option value="disabled">停用</option>
+      </select>
       <div class="filter-org-tree" id="orgFilterTreeSelect"></div>
+      <input class="filter-input" type="date" id="dateStart" title="创建时间起" onchange="renderMembers()" style="width:140px;min-width:140px;">
+      <span style="color:hsl(var(--muted-foreground));font-size:13px;flex-shrink:0;">至</span>
+      <input class="filter-input" type="date" id="dateEnd" title="创建时间止" onchange="renderMembers()" style="width:140px;min-width:140px;">
     </div>
 
     <!-- 批量操作栏 -->
@@ -43,6 +51,8 @@
       <div class="bulk-selected-count">已选 <span class="count" id="batchCount">0</span> 人</div>
       <div class="bulk-actions">
         <button class="btn btn-primary btn-sm" onclick="openBatchAssignStore()" disabled id="btnBatchAssign">指派店铺</button>
+        <button class="btn btn-success btn-sm" onclick="batchEnableMembers()" disabled id="btnBatchEnable">批量启用</button>
+        <button class="btn btn-secondary btn-sm" onclick="batchDisableMembers()" disabled id="btnBatchDisable">批量停用</button>
         <button class="btn btn-secondary btn-sm" onclick="batchDeleteMembers()" disabled id="btnBatchRemove">批量删除</button>
         <div class="custom-col-wrapper" id="customColWrapper">
           <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
@@ -66,6 +76,7 @@
               <th class="col-email" data-key="email">邮箱</th>
               <th class="col-org" data-key="org">组织机构</th>
               <th class="col-stores" data-key="stores" style="width:180px">所在店铺</th>
+              <th class="col-status" data-key="status">状态</th>
               <th class="sortable sorted col-joinedAt" data-sort="joinedAt" data-key="joinedAt" style="width:150px">创建时间<span class="sort-icon"></span></th>
               <th class="col-action" data-key="action" style="width:130px">操作</th>
             </tr>

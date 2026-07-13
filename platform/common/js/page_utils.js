@@ -401,3 +401,187 @@
   };
 
 })();
+
+// ==================== 可搜索下拉选择器 ====================
+
+/** 初始化页面上所有 select 为可搜索下拉（跳过已转换的） */
+function initSearchableSelects() {
+  var selects = document.querySelectorAll('select');
+  for (var i = 0; i < selects.length; i++) {
+    if (selects[i]._searchable) continue;
+    if (!selects[i].id) continue;
+    buildSearchableSelect(selects[i]);
+  }
+}
+
+/** 页面加载后自动初始化所有下拉 */
+document.addEventListener('DOMContentLoaded', initSearchableSelects);
+
+function buildSearchableSelect(select) {
+  var selectId = select.id;
+  if (!selectId) return;
+
+  // 外层容器
+  var wrapper = document.createElement('div');
+  wrapper.className = 'searchable-select';
+  wrapper.id = selectId + 'Wrapper';
+
+  // 触发器按钮
+  var trigger = document.createElement('button');
+  trigger.className = 'searchable-select-trigger';
+  trigger.type = 'button';
+  var selOpt = select.options[select.selectedIndex];
+  var triggerSpan = document.createElement('span');
+  triggerSpan.textContent = selOpt ? selOpt.text : '请选择';
+  trigger.appendChild(triggerSpan);
+  var arrow = document.createElement('span');
+  arrow.className = 'searchable-select-arrow';
+  arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#90A3B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  trigger.appendChild(arrow);
+
+  // 下拉面板
+  var dropdown = document.createElement('div');
+  dropdown.className = 'searchable-select-dropdown';
+  dropdown.id = selectId + 'Dropdown';
+  dropdown.style.display = 'none';
+
+  // 搜索框
+  var searchArea = document.createElement('div');
+  searchArea.className = 'searchable-select-search';
+  var searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.placeholder = '输入关键词检索...';
+  searchInput.id = selectId + 'Search';
+  searchArea.appendChild(searchInput);
+  dropdown.appendChild(searchArea);
+
+  // 选项列表
+  var listDiv = document.createElement('div');
+  listDiv.className = 'searchable-select-list';
+  listDiv.id = selectId + 'List';
+  var selValue = select.value;
+  var opts = select.querySelectorAll('option');
+  for (var j = 0; j < opts.length; j++) {
+    var opt = opts[j];
+    var item = document.createElement('div');
+    item.className = 'searchable-select-option';
+    if (opt.value === selValue) item.classList.add('selected');
+    item.dataset.value = opt.value;
+    item.textContent = (j + 1) + '. ' + opt.text;
+    (function(value, text) {
+      item.addEventListener('click', function() {
+        selectSearchableOption(selectId, value, text);
+      });
+    })(opt.value, opt.text);
+    listDiv.appendChild(item);
+  }
+  dropdown.appendChild(listDiv);
+
+  // 组装
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(dropdown);
+
+  // 隐藏原始 select，插入 wrapper
+  select.style.display = 'none';
+  select.parentNode.insertBefore(wrapper, select);
+
+  // 保存引用
+  select._searchable = { wrapper: wrapper, trigger: trigger, triggerSpan: triggerSpan, dropdown: dropdown };
+
+  // 触发器点击
+  trigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleSearchableDropdown(selectId);
+  });
+
+  // 搜索过滤
+  searchInput.addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    var items = dropdown.querySelectorAll('.searchable-select-option');
+    var visible = 0;
+    for (var k = 0; k < items.length; k++) {
+      if (!q || items[k].textContent.toLowerCase().indexOf(q) !== -1) {
+        items[k].classList.remove('hidden');
+        visible++;
+      } else {
+        items[k].classList.add('hidden');
+      }
+    }
+    var noneEl = listDiv.querySelector('.searchable-select-none');
+    if (visible === 0) {
+      if (!noneEl) {
+        noneEl = document.createElement('div');
+        noneEl.className = 'searchable-select-none';
+        noneEl.textContent = '无匹配选项';
+        listDiv.appendChild(noneEl);
+      }
+    } else if (noneEl) {
+      noneEl.remove();
+    }
+  });
+
+  // 点击外部关闭
+  document.addEventListener('click', function(e) {
+    var d = document.getElementById(selectId + 'Dropdown');
+    if (d && d.style.display === 'block' && !wrapper.contains(e.target)) {
+      closeSearchableDropdown(selectId);
+    }
+  });
+}
+
+function toggleSearchableDropdown(selectId) {
+  var dropdown = document.getElementById(selectId + 'Dropdown');
+  var triggerEl = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger');
+  if (!dropdown) return;
+  if (dropdown.style.display === 'block') {
+    closeSearchableDropdown(selectId);
+    return;
+  }
+  if (triggerEl) {
+    var rect = triggerEl.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 4) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.minWidth = rect.width + 'px';
+  }
+  dropdown.style.display = 'block';
+  if (triggerEl) triggerEl.classList.add('open');
+  var search = document.getElementById(selectId + 'Search');
+  if (search) setTimeout(function() { search.focus(); }, 100);
+}
+
+function closeSearchableDropdown(selectId) {
+  var dropdown = document.getElementById(selectId + 'Dropdown');
+  var triggerEl = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger');
+  if (dropdown) dropdown.style.display = 'none';
+  if (triggerEl) triggerEl.classList.remove('open');
+  var search = document.getElementById(selectId + 'Search');
+  if (search) search.value = '';
+  var list = document.getElementById(selectId + 'List');
+  if (list) {
+    var items = list.querySelectorAll('.searchable-select-option');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('hidden');
+    var noneEl = list.querySelector('.searchable-select-none');
+    if (noneEl) noneEl.remove();
+  }
+}
+
+function selectSearchableOption(selectId, value, text) {
+  var select = document.getElementById(selectId);
+  if (!select) return;
+  select.value = value;
+  var triggerSpan = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger span');
+  if (triggerSpan) triggerSpan.textContent = text;
+  var list = document.getElementById(selectId + 'List');
+  if (list) {
+    var items = list.querySelectorAll('.searchable-select-option');
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].dataset.value === value) {
+        items[i].classList.add('selected');
+      } else {
+        items[i].classList.remove('selected');
+      }
+    }
+  }
+  closeSearchableDropdown(selectId);
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+}

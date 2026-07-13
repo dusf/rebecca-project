@@ -1224,13 +1224,18 @@
 
     // ==================== 可搜索下拉选择器 ====================
 
-    /** 初始化页面上所有 .filter-select 为可搜索下拉 */
+    /** 初始化页面上所有 select 为可搜索下拉（跳过已转换的） */
     function initSearchableSelects() {
-      var selects = document.querySelectorAll('.filter-select');
+      var selects = document.querySelectorAll('select');
       for (var i = 0; i < selects.length; i++) {
+        if (selects[i]._searchable) continue;
+        if (!selects[i].id) continue;
         buildSearchableSelect(selects[i]);
       }
     }
+
+    /** 页面加载后自动初始化所有下拉 */
+    document.addEventListener('DOMContentLoaded', initSearchableSelects);
 
     function buildSearchableSelect(select) {
       var selectId = select.id;

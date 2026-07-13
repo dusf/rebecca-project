@@ -1897,6 +1897,19 @@
       background: hsl(var(--background));
     }
 
+    /* 第三步（商品/系列选择）列表自适应填充剩余空间，减少底部留白 */
+    .shopify-step3-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .shopify-step3-body .sync-series-list {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      margin-bottom: 16px;
+    }
+
     .sync-series-category {
       border-bottom: 1px solid hsl(var(--border) / 0.5);
     }

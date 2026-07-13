@@ -43,3 +43,43 @@
   font-size: 11px;
   color: hsl(var(--muted-foreground));
 }
+
+/* 行级更多菜单 */
+.action-more-wrapper {
+  position: relative;
+}
+
+.action-btn.more {
+  color: hsl(var(--muted-foreground));
+}
+
+.action-btn.more:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.action-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 500;
+  min-width: 120px;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+.action-more-item {
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: hsl(var(--foreground));
+  transition: background 0.1s;
+}
+
+.action-more-item:hover {
+  background: hsl(var(--muted));
+}

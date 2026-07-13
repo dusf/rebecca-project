@@ -13,11 +13,11 @@ var mockShops = [
 
 // 示例成员数据
 var memberData = [
-  { id: 'member_1', accountId: 'AC20260700001', name: '系统管理员', phone: '13800138000', email: 'admin@rebecca.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1'], status: 'active', joinedAt: '2026-07-01 09:30' },
-  { id: 'member_2', accountId: 'AC20260700002', name: '张三', phone: '13800138001', email: '', org: '瑞贝卡集团/瑞贝卡科技/产品设计部', stores: ['shop_2'], status: 'active', joinedAt: '2026-07-03 14:20' },
-  { id: 'member_3', accountId: 'AC20260700003', name: '李四', phone: '13800138002', email: 'lisi@example.com', org: '瑞贝卡集团/瑞贝卡电商/运营部', stores: [], status: 'disabled', joinedAt: '2026-07-05 11:00' },
-  { id: 'member_4', accountId: 'AC20260700004', name: '王五', phone: '13800138003', email: '', org: '瑞贝卡集团/瑞贝卡电商/客服部', stores: ['shop_3'], status: 'active', joinedAt: '2026-07-06 16:45' },
-  { id: 'member_5', accountId: 'AC20260700005', name: '赵六', phone: '13800138004', email: 'zhaoliu@example.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1', 'shop_2'], status: 'active', joinedAt: '2026-07-08 08:15' }
+  { id: 'member_1', accountId: 'AC20260700001', name: '系统管理员', phone: '13800138000', email: 'admin@rebecca.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1'], status: 'active', password: 'Admin@123', joinedAt: '2026-07-01 09:30' },
+  { id: 'member_2', accountId: 'AC20260700002', name: '张三', phone: '13800138001', email: '', org: '瑞贝卡集团/瑞贝卡科技/产品设计部', stores: ['shop_2'], status: 'active', password: 'ZhangSan@123', joinedAt: '2026-07-03 14:20' },
+  { id: 'member_3', accountId: 'AC20260700003', name: '李四', phone: '13800138002', email: 'lisi@example.com', org: '瑞贝卡集团/瑞贝卡电商/运营部', stores: [], status: 'disabled', password: 'LiSi@123', joinedAt: '2026-07-05 11:00' },
+  { id: 'member_4', accountId: 'AC20260700004', name: '王五', phone: '13800138003', email: '', org: '瑞贝卡集团/瑞贝卡电商/客服部', stores: ['shop_3'], status: 'active', password: 'WangWu@123', joinedAt: '2026-07-06 16:45' },
+  { id: 'member_5', accountId: 'AC20260700005', name: '赵六', phone: '13800138004', email: 'zhaoliu@example.com', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', stores: ['shop_1', 'shop_2'], status: 'active', password: 'ZhaoLiu@123', joinedAt: '2026-07-08 08:15' }
 ];
 
 var currentPage = 1;
@@ -62,13 +62,11 @@ function getDeduplicatedStores(member) {
 
 function updateBatchBar() {
   var countEl = document.getElementById('batchCount');
-  var assignBtn = document.getElementById('btnBatchAssign');
   var enableBtn = document.getElementById('btnBatchEnable');
   var disableBtn = document.getElementById('btnBatchDisable');
   var removeBtn = document.getElementById('btnBatchRemove');
   var c = selectedMemberIds.length;
   if (countEl) countEl.textContent = c;
-  if (assignBtn) assignBtn.disabled = c === 0;
   if (enableBtn) enableBtn.disabled = c === 0;
   if (disableBtn) disableBtn.disabled = c === 0;
   if (removeBtn) removeBtn.disabled = c === 0;
@@ -257,6 +255,7 @@ function renderMembers() {
       + '<div class="action-more-menu" id="' + actionMenuId + '" style="display:none;">'
       + '<div class="action-more-item" onclick="openSingleAssign(\'' + m.id + '\');closeAllRowMore()">指派店铺</div>'
       + '<div class="action-more-item" onclick="toggleMemberStatus(\'' + m.id + '\');closeAllRowMore()">' + (m.status === 'active' ? '停用' : '启用') + '</div>'
+      + '<div class="action-more-item" onclick="openResetPassword(\'' + m.id + '\');closeAllRowMore()">重置密码</div>'
       + '</div>'
       + '</div>'
       + '</div>';
@@ -331,7 +330,6 @@ window.openAddMemberModal = function() {
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddName" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddPhone" placeholder="请输入手机号"></div>' +
         '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdAddEmail" placeholder="请输入邮箱地址"></div>' +
-        '<div class="form-group"><label class="form-label">账号ID <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdAddAccountId" value="' + generateAccountId() + '" readonly></div>' +
         '<div class="form-group"><label class="form-label">密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdAddPassword" placeholder="请输入登录密码"></div>' +
         '<div class="form-group"><label class="form-label">状态</label><select class="form-input" id="mdAddStatus"><option value="active">启用</option><option value="disabled">停用</option></select></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopAddMemberOrgTreeSelect"></div></div>',
@@ -361,17 +359,15 @@ function initShopAddMemberOrgPicker() {
 window.doAddMember = function() {
   var name = document.getElementById('mdAddName').value.trim();
   var phone = document.getElementById('mdAddPhone').value.trim();
-  var accountId = document.getElementById('mdAddAccountId').value.trim();
   var password = document.getElementById('mdAddPassword').value;
   var email = document.getElementById('mdAddEmail').value.trim();
   var status = document.getElementById('mdAddStatus').value;
   var org = shopAddMemberOrgPicker ? shopAddMemberOrgPicker.getValue() : '';
+  var accountId = generateAccountId();
 
   if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
   if (!phone || !/^1\d{10}$/.test(phone)) { if (window.parent.showToast) window.parent.showToast('warning', '请输入正确的手机号'); return; }
-  if (!accountId) { if (window.parent.showToast) window.parent.showToast('warning', '账号ID不能为空'); return; }
   if (!password) { if (window.parent.showToast) window.parent.showToast('warning', '请输入登录密码'); return; }
-  if (memberData.some(function(m) { return m.accountId === accountId; })) { if (window.parent.showToast) window.parent.showToast('warning', '账号ID已存在'); return; }
 
   var now = new Date();
   var joinedAt = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
@@ -653,12 +649,86 @@ window.batchDisableMembers = function() {
   renderMembers();
 };
 
+window.batchResetPassword = function() {
+  if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }
+  var names = [];
+  memberData.forEach(function(m) {
+    if (selectedMemberIds.indexOf(m.id) !== -1) names.push(m.name);
+  });
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopBatchResetPwdDialog',
+      title: '批量重置密码',
+      width: '440px',
+      body:
+        '<p style="margin-bottom:16px;">将为已选的 <strong>' + selectedMemberIds.length + '</strong> 名成员重置密码：<br><span style="font-size:13px;color:hsl(var(--muted-foreground));">' + names.join('、') + '</span></p>' +
+        '<div class="form-group"><label class="form-label">新密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdBatchResetPwd" placeholder="请输入新密码（至少6位）"></div>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopBatchResetPwdDialog\')">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doBatchResetPassword()">确认重置</button>'
+    });
+  }
+};
+
+window.doBatchResetPassword = function() {
+  var newPwd = document.getElementById('mdBatchResetPwd').value;
+  if (!newPwd) { if (window.parent.showToast) window.parent.showToast('warning', '请输入新密码'); return; }
+  if (newPwd.length < 6) { if (window.parent.showToast) window.parent.showToast('warning', '密码长度不能少于6位'); return; }
+
+  var count = 0;
+  memberData.forEach(function(m) {
+    if (selectedMemberIds.indexOf(m.id) !== -1) { m.password = newPwd; count++; }
+  });
+
+  if (window.parent.closeDialog) window.parent.closeDialog('shopBatchResetPwdDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已重置 ' + count + ' 名成员的密码');
+  selectedMemberIds = [];
+  renderMembers();
+};
+
 window.toggleMemberStatus = function(id) {
   var member = memberData.find(function(m) { return m.id === id; });
   if (!member) return;
   member.status = member.status === 'active' ? 'disabled' : 'active';
   if (window.parent.showToast) window.parent.showToast('success', '已' + (member.status === 'active' ? '启用' : '停用') + '「' + member.name + '」');
   renderMembers();
+};
+
+window.openResetPassword = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopResetPasswordDialog',
+      title: '重置密码',
+      width: '440px',
+      body:
+        '<p style="margin-bottom:16px;">正在为 <strong>' + member.name + '</strong>（' + member.accountId + '）重置登录密码</p>' +
+        '<div class="form-group"><label class="form-label">新密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdResetPassword" placeholder="请输入新密码"></div>' +
+        '<div class="form-group"><label class="form-label">确认密码 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" type="password" id="mdResetPasswordConfirm" placeholder="请再次输入新密码"></div>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopResetPasswordDialog\')">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doResetPassword(\'' + id + '\')">确认重置</button>'
+    });
+  }
+};
+
+window.doResetPassword = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+
+  var newPwd = document.getElementById('mdResetPassword').value;
+  var confirmPwd = document.getElementById('mdResetPasswordConfirm').value;
+
+  if (!newPwd) { if (window.parent.showToast) window.parent.showToast('warning', '请输入新密码'); return; }
+  if (newPwd.length < 6) { if (window.parent.showToast) window.parent.showToast('warning', '密码长度不能少于6位'); return; }
+  if (newPwd !== confirmPwd) { if (window.parent.showToast) window.parent.showToast('warning', '两次输入的密码不一致'); return; }
+
+  member.password = newPwd;
+
+  if (window.parent.closeDialog) window.parent.closeDialog('shopResetPasswordDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已重置「' + member.name + '」的登录密码');
 };
 
 window.confirmBatchDeleteMembers = function() {
@@ -684,7 +754,8 @@ window.editMember = function(id) {
         '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditName" value="' + member.name + '" placeholder="请输入姓名"></div>' +
         '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditPhone" value="' + member.phone + '" placeholder="请输入手机号"></div>' +
         '<div class="form-group"><label class="form-label">邮箱 <span style="color:hsl(var(--muted-foreground));font-weight:400;">（选填）</span></label><input class="form-input" id="mdEditEmail" value="' + (member.email || '') + '" placeholder="请输入邮箱地址"></div>' +
-        '<div class="form-group"><label class="form-label">账号ID</label><input class="form-input" id="mdEditAccountId" value="' + member.accountId + '" readonly></div>' +
+        '<div class="form-group"><label class="form-label">账号ID</label><input class="form-input" value="' + member.accountId + '" readonly disabled></div>' +
+        '<div class="form-group"><label class="form-label">密码</label><input class="form-input" type="password" id="mdEditPassword" value="' + (member.password || '') + '" placeholder="留空则不修改密码"></div>' +
         '<div class="form-group"><label class="form-label">状态</label><select class="form-input" id="mdEditStatus"><option value="active"' + (member.status === 'active' ? ' selected' : '') + '>启用</option><option value="disabled"' + (member.status === 'disabled' ? ' selected' : '') + '>停用</option></select></div>' +
         '<div class="form-group"><label class="form-label">组织机构</label><div id="shopEditMemberOrgTreeSelect"></div></div>',
       actions:
@@ -718,6 +789,7 @@ window.doEditMember = function(id) {
   var name = document.getElementById('mdEditName').value.trim();
   var phone = document.getElementById('mdEditPhone').value.trim();
   var email = document.getElementById('mdEditEmail').value.trim();
+  var password = document.getElementById('mdEditPassword').value;
   var status = document.getElementById('mdEditStatus').value;
   var org = shopEditOrgPicker ? shopEditOrgPicker.getValue() : '';
 
@@ -727,6 +799,7 @@ window.doEditMember = function(id) {
   member.name = name;
   member.phone = phone;
   member.email = email;
+  if (password) member.password = password;
   member.status = status;
   member.org = org || member.org;
 

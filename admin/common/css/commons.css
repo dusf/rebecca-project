@@ -1693,10 +1693,13 @@
       align-items: center;
       justify-content: center;
       gap: 0;
-      padding: 0 20px 16px;
+      padding: 16px 20px 16px;
+      border-top: 1px solid hsl(var(--border));
       border-bottom: 1px solid hsl(var(--border));
-      margin-bottom: 12px;
+      margin-top: 16px;
+      margin-bottom: 24px;
     }
+
 
     .shopify-step {
       display: flex;
@@ -1762,10 +1765,48 @@
       background: hsl(var(--success));
     }
 
+    /* 通用表单输入框 */
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      box-sizing: border-box;
+      line-height: 1.4;
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground) / 0.6);
+    }
+
+    .form-input:hover {
+      border-color: hsl(30 20% 78%);
+    }
+
+    .form-input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+    }
+
+    .form-input:disabled {
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+      cursor: not-allowed;
+    }
+
     @media (max-width: 600px) {
       .shopify-step-indicator {
-        padding: 0 8px 12px;
+        padding: 12px 8px 12px;
+        margin-top: 12px;
+        margin-bottom: 16px;
       }
+
       .shopify-step-label {
         font-size: 10px;
       }

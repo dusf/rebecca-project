@@ -6,7 +6,7 @@ window.PU_CONFIG = {
     { key:'type',   label:'组织类型', defaultShow:true, alwaysShow:false },
     { key:'parent', label:'上级组织', defaultShow:true, alwaysShow:false },
     { key:'sort',   label:'排序',     defaultShow:false,alwaysShow:false },
-    { key:'status', label:'状态',     defaultShow:true, alwaysShow:true },
+    { key:'status', label:'状态',     defaultShow:true, alwaysShow:false },
     { key:'actions',label:'操作',     defaultShow:true, alwaysShow:true }
   ],
   visibleCols: ['name','type','parent','sort','status','actions'],

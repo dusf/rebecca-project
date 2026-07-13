@@ -1261,7 +1261,8 @@ select.form-input {
 }
 
 .custom-col-item.disabled .drag-handle {
-  display: none;
+  cursor: not-allowed;
+  opacity: 0.25;
 }
 
 .custom-col-item .col-check {

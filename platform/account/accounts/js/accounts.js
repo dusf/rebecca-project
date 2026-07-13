@@ -10,7 +10,7 @@ window.PU_CONFIG = {
     { key: 'org',       label: '组织',     defaultShow: true,  alwaysShow: false },
     { key: 'email',     label: '邮箱',     defaultShow: false, alwaysShow: false },
     { key: 'createdAt', label: '创建时间', defaultShow: true,  alwaysShow: false },
-    { key: 'status',    label: '状态',     defaultShow: true,  alwaysShow: true  },
+    { key: 'status',    label: '状态',     defaultShow: true,  alwaysShow: false },
     { key: 'actions',   label: '操作',     defaultShow: true,  alwaysShow: true  }
   ],
   visibleCols: ['phone','name','org','email','createdAt','status','actions'],

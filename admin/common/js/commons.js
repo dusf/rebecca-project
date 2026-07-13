@@ -652,8 +652,9 @@
         var disabled = c.alwaysShow ? 'disabled' : '';
         var active = visibleCols.indexOf(c.key) !== -1 ? 'active' : '';
         var draggable = c.alwaysShow ? '' : 'draggable="true"';
+        var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">\u22EE\u22EE</span>';
         return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '" ' + draggable + '>' +
-          (c.alwaysShow ? '' : '<span class="drag-handle" title="拖拽排序">\u22EE\u22EE</span>') +
+          dragIcon +
           '<div class="col-check" onclick="' + (c.alwaysShow ? '' : 'toggleCol(this.parentElement)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
           '<span style="flex:1">' + c.label + '</span>' +
         '</div>';

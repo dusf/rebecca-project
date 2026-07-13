@@ -184,14 +184,6 @@ function renderMembers() {
 
   if (countEl) countEl.textContent = '(' + filtered.length + '人)';
 
-  // 更新筛选下拉
-  var storeFilter = document.getElementById('storeFilter');
-  var currentStoreVal = storeFilter.value;
-  var shops = loadShops();
-  storeFilter.innerHTML = '<option value="">全部店铺</option>'
-    + shops.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
-  storeFilter.value = currentStoreVal;
-
   var totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
   var start = (currentPage - 1) * pageSize;

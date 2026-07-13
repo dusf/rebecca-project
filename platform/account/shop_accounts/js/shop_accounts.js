@@ -26,6 +26,17 @@ var selectedMemberIds = [];
 var sortField = 'joinedAt';
 var sortDir = 'desc';
 
+// 自定义列可见性
+var columnsVisible = {
+  info: true,
+  accountId: true,
+  phone: true,
+  org: true,
+  stores: true,
+  joinedAt: true,
+  action: true
+};
+
 function loadMembers() {
   return memberData;
 }
@@ -221,17 +232,21 @@ function renderMembers() {
         + '</div></div>';
     }
 
-    var actionHtml = '<button class="action-btn-sm assign" onclick="openSingleAssign(\'' + m.id + '\')">指派店铺</button>';
+    var actionHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+      + '<button class="action-btn-sm assign" onclick="openSingleAssign(\'' + m.id + '\')">指派店铺</button>'
+      + '<button class="action-btn-sm edit" onclick="editMember(\'' + m.id + '\')">编辑</button>'
+      + '<button class="action-btn-sm delete" onclick="deleteMember(\'' + m.id + '\')">删除</button>'
+      + '</div>';
 
     return '<tr>'
-      + '<td>' + checkboxHtml + '</td>'
-      + '<td><div class="member-info-cell"><div class="member-avatar avatar-c' + ((start + i) % 6) + '">' + (m.name || '?').charAt(0) + '</div><div class="member-name">' + m.name + '</div></div></td>'
-      + '<td><span class="mono-text">' + (m.accountId || '-') + '</span></td>'
-      + '<td>' + (m.phone || '-') + '</td>'
-      + '<td><div class="org-cell">' + orgHtml + '</div></td>'
-      + '<td>' + storeHtml + '</td>'
-      + '<td><span class="muted-text">' + (m.joinedAt || '-') + '</span></td>'
-      + '<td>' + actionHtml + '</td>'
+      + '<td class="col-cb">' + checkboxHtml + '</td>'
+      + (columnsVisible.info    ? '<td class="col-info"><div class="member-info-cell"><div class="member-avatar avatar-c' + ((start + i) % 6) + '">' + (m.name || '?').charAt(0) + '</div><div class="member-name">' + m.name + '</div></div></td>' : '')
+      + (columnsVisible.accountId ? '<td class="col-accountId"><span class="mono-text">' + (m.accountId || '-') + '</span></td>' : '')
+      + (columnsVisible.phone    ? '<td class="col-phone">' + (m.phone || '-') + '</td>' : '')
+      + (columnsVisible.org      ? '<td class="col-org"><div class="org-cell">' + orgHtml + '</div></td>' : '')
+      + (columnsVisible.stores   ? '<td class="col-stores">' + storeHtml + '</td>' : '')
+      + (columnsVisible.joinedAt ? '<td class="col-joinedAt"><span class="muted-text">' + (m.joinedAt || '-') + '</span></td>' : '')
+      + (columnsVisible.action   ? '<td class="col-action">' + actionHtml + '</td>' : '')
       + '</tr>';
   }).join('');
 
@@ -565,10 +580,174 @@ window.doAssignStores = function() {
 };
 
 
-window.batchRemove = function() {
+window.batchDeleteMembers = function() {
   if (selectedMemberIds.length === 0) { if (window.parent.showToast) window.parent.showToast('info', '请先选择成员'); return; }
-  openBatchAssignStore();
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopBatchDeleteDialog',
+      title: '批量删除',
+      width: '440px',
+      body: '<p>确定要删除已选的 <strong>' + selectedMemberIds.length + '</strong> 名成员吗？</p><p style="color:hsl(var(--error));margin-top:6px;">此操作不可恢复。</p>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopBatchDeleteDialog\')">取消</button>' +
+        '<button class="btn btn-primary" style="background:hsl(var(--error));border-color:hsl(var(--error))" onclick="window.parent.getFW().confirmBatchDeleteMembers()">确认删除</button>'
+    });
+  }
 };
+
+window.confirmBatchDeleteMembers = function() {
+  memberData = memberData.filter(function(m) { return selectedMemberIds.indexOf(m.id) === -1; });
+  if (window.parent.closeDialog) window.parent.closeDialog('shopBatchDeleteDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已删除 ' + selectedMemberIds.length + ' 名成员');
+  selectedMemberIds = [];
+  currentPage = 1;
+  renderMembers();
+};
+
+// ==================== 编辑成员 ====================
+window.editMember = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopEditMemberDialog',
+      title: '编辑成员',
+      width: '480px',
+      body:
+        '<div class="form-group"><label class="form-label">姓名 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditName" value="' + member.name + '" placeholder="请输入姓名"></div>' +
+        '<div class="form-group"><label class="form-label">手机号 <span style="color:hsl(var(--error))">*</span></label><input class="form-input" id="mdEditPhone" value="' + member.phone + '" placeholder="请输入手机号"></div>' +
+        '<div class="form-group"><label class="form-label">账号ID</label><input class="form-input" id="mdEditAccountId" value="' + member.accountId + '" readonly></div>' +
+        '<div class="form-group"><label class="form-label">组织机构</label><div id="shopEditMemberOrgTreeSelect"></div></div>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopEditMemberDialog\')">取消</button>' +
+        '<button class="btn btn-primary" onclick="window.parent.getFW().doEditMember(\'' + id + '\')">保存</button>'
+    });
+    initEditMemberOrgPicker(member.org);
+  }
+};
+
+var shopEditOrgPicker = null;
+function initEditMemberOrgPicker(currentOrg) {
+  var container = window.parent.document.getElementById('shopEditMemberOrgTreeSelect');
+  if (!container || !window.parent.OrgTreeSelect) return;
+  var orgUrl = 'account/organization/organization.html';
+  var orgFrame = window.parent.PLATFORM_IFRAME_CACHE && window.parent.PLATFORM_IFRAME_CACHE[orgUrl];
+  var orgData = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+    ? orgFrame.contentWindow.orgData : [];
+  if (shopEditOrgPicker) shopEditOrgPicker.destroy();
+  shopEditOrgPicker = window.parent.OrgTreeSelect.create(container, {
+    data: orgData,
+    placeholder: '-- 请选择 --'
+  });
+  if (currentOrg) shopEditOrgPicker.setValue(currentOrg);
+}
+
+window.doEditMember = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+
+  var name = document.getElementById('mdEditName').value.trim();
+  var phone = document.getElementById('mdEditPhone').value.trim();
+  var org = shopEditOrgPicker ? shopEditOrgPicker.getValue() : '';
+
+  if (!name) { if (window.parent.showToast) window.parent.showToast('warning', '请输入姓名'); return; }
+  if (!phone || !/^1\d{10}$/.test(phone)) { if (window.parent.showToast) window.parent.showToast('warning', '请输入正确的手机号'); return; }
+
+  member.name = name;
+  member.phone = phone;
+  member.org = org || member.org;
+
+  if (window.parent.closeDialog) window.parent.closeDialog('shopEditMemberDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已保存成员「' + name + '」');
+  renderMembers();
+};
+
+// ==================== 删除成员 ====================
+window.deleteMember = function(id) {
+  var member = memberData.find(function(m) { return m.id === id; });
+  if (!member) return;
+
+  if (window.parent && window.parent.openDialog) {
+    window.parent.openDialog({
+      id: 'shopDeleteMemberDialog',
+      title: '删除成员',
+      width: '440px',
+      body: '<p>确定要删除成员 <strong>' + member.name + '</strong> 吗？</p><p style="color:hsl(var(--error));margin-top:6px;">此操作不可恢复。</p>',
+      actions:
+        '<button class="btn btn-secondary" onclick="window.parent.closeDialog(\'shopDeleteMemberDialog\')">取消</button>' +
+        '<button class="btn btn-primary" style="background:hsl(var(--error));border-color:hsl(var(--error))" onclick="window.parent.getFW().confirmDeleteMember(\'' + id + '\')">确认删除</button>'
+    });
+  }
+};
+
+window.confirmDeleteMember = function(id) {
+  memberData = memberData.filter(function(m) { return m.id !== id; });
+  var idx = selectedMemberIds.indexOf(id);
+  if (idx !== -1) selectedMemberIds.splice(idx, 1);
+  if (window.parent.closeDialog) window.parent.closeDialog('shopDeleteMemberDialog');
+  if (window.parent.showToast) window.parent.showToast('success', '已删除该成员');
+  renderMembers();
+};
+
+// ==================== 自定义列 ====================
+var columnDefs = [
+  { key: 'info', label: '成员信息', required: true },
+  { key: 'accountId', label: '账号ID' },
+  { key: 'phone', label: '手机号' },
+  { key: 'org', label: '组织机构' },
+  { key: 'stores', label: '所在店铺' },
+  { key: 'joinedAt', label: '创建时间' },
+  { key: 'action', label: '操作', required: true }
+];
+
+window.toggleColumnMenu = function() {
+  var menu = document.getElementById('columnMenu');
+  if (!menu) return;
+  if (menu.classList.contains('show')) {
+    menu.classList.remove('show');
+    return;
+  }
+  menu.innerHTML = columnDefs.map(function(col) {
+    var checked = columnsVisible[col.key];
+    var disabled = col.required;
+    var cls = 'column-menu-item' + (checked ? ' checked' : '') + (disabled ? ' disabled' : '');
+    return '<div class="' + cls + '" onclick="' + (disabled ? '' : 'toggleColumn(\'' + col.key + '\')') + '">'
+      + '<span class="cm-check">' + (checked ? '✓' : '') + '</span>'
+      + '<span>' + col.label + '</span>'
+      + '</div>';
+  }).join('');
+  menu.classList.add('show');
+};
+
+window.toggleColumn = function(key) {
+  if (columnsVisible[key] === undefined) return;
+  columnsVisible[key] = !columnsVisible[key];
+  renderColumns();
+  renderMembers();
+  var menu = document.getElementById('columnMenu');
+  if (menu) menu.classList.remove('show');
+};
+
+function renderColumns() {
+  var ths = document.querySelectorAll('th[data-key]');
+  ths.forEach(function(th) {
+    var key = th.getAttribute('data-key');
+    th.style.display = columnsVisible[key] ? '' : 'none';
+  });
+  // checkbox列
+  var cbTh = document.querySelector('th.col-cb');
+  if (cbTh) cbTh.style.display = '';
+}
+
+// 点击外部关闭列菜单
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('columnMenu');
+  var btn = document.getElementById('columnCustomBtn');
+  if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
 
 window.refreshPage = function() {
   renderMembers();
@@ -578,5 +757,6 @@ window.refreshPage = function() {
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', function() {
   initOrgFilterTreeSelect();
+  renderColumns();
   renderMembers();
 });

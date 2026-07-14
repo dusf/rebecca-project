@@ -172,14 +172,19 @@
   }
 
   /** 销毁并重建可搜索下拉 */
-  function rebuildSearchableSelect(select, newHtml) {
+  window.rebuildSearchableSelect = function(select, newHtml) {
+    if (!select || !select._searchable) {
+      select.innerHTML = newHtml;
+      buildSearchableSelect(select);
+      return;
+    }
     var wrapper = select._searchable.wrapper;
     if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
     select._searchable = null;
     select.style.display = '';
     select.innerHTML = newHtml;
     buildSearchableSelect(select);
-  }
+  };
 
   window.onOrgFormTypeChange = function() {
     var type = document.getElementById('orgFormType').value;
@@ -614,7 +619,6 @@
 
   // ==================== 地区对话框 ====================
   var REGION_DLG_URLS = [
-    'parameters/region/form-dialog.html',
     'parameters/region/delete-dialog.html'
   ];
 
@@ -907,119 +911,6 @@
     if (fw.renderZoneTable) fw.renderZoneTable();
   };
 
-  // ---- 地区表单对话框 ----
-
-  window.openRegionFormDialog = function(mode, id) {
-    ensureDialogs('region', REGION_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) { console.error('[dialog_host] openRegionFormDialog: getFW 返回 null'); return; }
-
-      var title   = document.getElementById('regionFormDialogTitle');
-      var nameInp = document.getElementById('regionFormName');
-      var levSel  = document.getElementById('regionFormLevel');
-      var parSel  = document.getElementById('regionFormParent');
-      var statSel = document.getElementById('regionFormStatus');
-
-      document.getElementById('regionFormMode').value   = mode;
-      document.getElementById('regionFormEditId').value = id || '';
-
-      // 获取当前国家的层级标签
-      var country = fw.getCurrentCountry();
-      if (!country) { showToast('warning', '请先选择国家'); return; }
-
-      // 填充层级下拉
-      var levels = country.levels || [];
-      var levHtml = '<option value="">请选择层级</option>';
-      for (var i = 0; i < levels.length; i++) {
-        levHtml += '<option value="' + i + '">' + levels[i] + '</option>';
-      }
-      levSel.innerHTML = levHtml;
-
-      // 填充上级地区下拉（初始为空，随层级变化更新）
-      parSel.innerHTML = '<option value="">无（顶级地区）</option>';
-
-      if (mode === 'edit' && id) {
-        title.textContent = '编辑地区';
-        var r = fw.findRegion(id);
-        if (!r) { showToast('error', '地区不存在'); return; }
-        nameInp.value = r.name;
-        levSel.value = r.level;
-        statSel.value = r.status;
-        // 触发层级变化以填充上级地区下拉
-        onRegionLevelChange();
-        // 设置上级地区值
-        parSel.value = r.parent || '';
-      } else {
-        title.textContent = '添加地区';
-        nameInp.value = '';
-        levSel.value = '';
-        statSel.value = 'active';
-      }
-
-      var overlay = document.getElementById('regionFormDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeRegionFormDialog = function() {
-    var ov = document.getElementById('regionFormDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  // 层级变化时，更新上级地区下拉选项
-  window.onRegionLevelChange = function() {
-    var levSel = document.getElementById('regionFormLevel');
-    var parSel = document.getElementById('regionFormParent');
-    var selectedLevel = parseInt(levSel.value, 10);
-
-    var fw = getFW();
-    if (!fw) return;
-
-    var country = fw.getCurrentCountry();
-    if (!country) return;
-
-    var html = '<option value="">无（顶级地区）</option>';
-
-    if (selectedLevel > 0 && country.data) {
-      var parentLevel = selectedLevel - 1;
-      var parents = country.data.filter(function(d) { return d.level === parentLevel; });
-      // 排除当前编辑的地区自身
-      var editId = document.getElementById('regionFormEditId').value;
-      parents = parents.filter(function(d) { return d.id !== editId; });
-      parents.sort(function(a, b) { return a.name.localeCompare(b.name); });
-      parents.forEach(function(p) {
-        html += '<option value="' + p.id + '">' + p.name + '</option>';
-      });
-    }
-
-    parSel.innerHTML = html;
-  };
-
-  window.submitRegionForm = function() {
-    var fw = getFW();
-    if (!fw) return;
-
-    var mode   = document.getElementById('regionFormMode').value;
-    var editId = document.getElementById('regionFormEditId').value;
-    var name   = (document.getElementById('regionFormName').value || '').trim();
-    var level  = parseInt(document.getElementById('regionFormLevel').value, 10);
-    var parent = document.getElementById('regionFormParent').value || null;
-    var status = document.getElementById('regionFormStatus').value;
-
-    if (!name) { showToast('warning', '请输入地区名称'); return; }
-    if (isNaN(level)) { showToast('warning', '请选择层级'); return; }
-
-    if (mode === 'add') {
-      fw.regionAddItem(name, level, parent, status);
-    } else {
-      fw.regionUpdateItem(editId, name, level, parent, status);
-    }
-
-    closeRegionFormDialog();
-    fw.renderRegionDetail();
-    showToast('success', mode === 'add' ? '地区已添加' : '地区已更新');
-  };
-
   // ---- 地区删除对话框 ----
 
   window.openRegionDeleteDialog = function(id) {
@@ -1101,6 +992,159 @@
 
       overlay.style.display = 'flex';
     });
+  };
+
+  // ==================== 汇率对话框 ====================
+  var EXCHANGE_RATE_DLG_URLS = [
+    'parameters/exchange_rate/detail-dialog.html',
+    'parameters/exchange_rate/config-dialog.html',
+    'parameters/exchange_rate/change-source-dialog.html'
+  ];
+
+  var erDetailId = null;
+  var erChangeIds = [];
+
+  // ---- 汇率详情对话框 ----
+
+  window.openERDetailDialog = function(id) {
+    ensureDialogs('exchange_rate', EXCHANGE_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw || !fw.erFindRate) { console.error('[dialog_host] openERDetailDialog: iframe 中缺少 erFindRate'); return; }
+      var r = fw.erFindRate(id);
+      if (!r) { showToast('error', '币种不存在'); return; }
+      erDetailId = id;
+      document.getElementById('erDetailCode').textContent = r.code;
+      document.getElementById('erDetailName').textContent = r.name;
+      document.getElementById('erDetailRate').textContent = '1 USD = ' + r.rate.toFixed(6) + ' ' + r.code;
+      var statusMap = { active: '正常', paused: '暂停更新', disabled: '已禁用' };
+      document.getElementById('erDetailStatus').textContent = statusMap[r.status] || r.status;
+      document.getElementById('erDetailTime').textContent = r.updatedAt;
+      document.getElementById('erLogTypeFilter').value = '';
+      var overlay = document.getElementById('erDetailDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+      renderERDetailLogs();
+    });
+  };
+
+  window.closeERDetailDialog = function() {
+    erDetailId = null;
+    var ov = document.getElementById('erDetailDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.renderERDetailLogs = function() {
+    if (!erDetailId) return;
+    var fw = getFW();
+    if (!fw || !fw.erGetLogs) return;
+    var typeFilter = document.getElementById('erLogTypeFilter').value;
+    var logs = fw.erGetLogs(erDetailId, typeFilter);
+    var tbody = document.getElementById('erDetailLogBody');
+    var emptyEl = document.getElementById('erDetailLogEmpty');
+    var typeLabels = { api: 'API自动拉取', manual: '手动录入', confirm: '管理员确认更新' };
+    var typeCls = { api: 'badge-info', manual: 'badge-warning', confirm: 'badge-success' };
+
+    if (!logs.length) {
+      tbody.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    tbody.innerHTML = logs.map(function(l) {
+      var r = fw.erFindRate(l.currencyId);
+      var code = r ? r.code : '';
+      var beforeStr = l.beforeRate === 0 ? '--' : (l.beforeRate.toFixed(6) + ' ' + code);
+      var afterStr = l.afterRate.toFixed(6) + ' ' + code;
+      var label = typeLabels[l.type] || l.type;
+      var cls = typeCls[l.type] || 'badge-secondary';
+      return '<tr><td>' + l.time + '</td><td><span class="badge ' + cls + '" style="font-size:11px;">' + label + '</span></td><td>' + beforeStr + '</td><td>' + afterStr + '</td><td>' + l.operator + '</td><td style="color:hsl(var(--muted-foreground));">' + (l.remark || '') + '</td></tr>';
+    }).join('');
+  };
+
+  // ---- 数据源配置对话框 ----
+
+  window.openERConfigDialog = function() {
+    ensureDialogs('exchange_rate', EXCHANGE_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw || !fw.erGetConfig) { console.error('[dialog_host] openERConfigDialog: iframe 中缺少 erGetConfig'); return; }
+      var cfg = fw.erGetConfig();
+      document.getElementById('erConfigApiUrl').value = cfg.apiUrl;
+      document.getElementById('erConfigApiKey').value = cfg.apiKey;
+      document.getElementById('erConfigApiParams').value = cfg.apiParams;
+      document.getElementById('erConfigInterval').value = cfg.refreshInterval;
+      document.getElementById('erConfigThreshold').value = cfg.volatilityThreshold || 3;
+      var overlay = document.getElementById('erConfigDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeERConfigDialog = function() {
+    var ov = document.getElementById('erConfigDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.saveERConfigDialog = function() {
+    var fw = getFW();
+    if (!fw || !fw.erSaveConfig) return;
+    var cfg = {
+      apiUrl: (document.getElementById('erConfigApiUrl').value || '').trim(),
+      apiKey: (document.getElementById('erConfigApiKey').value || '').trim(),
+      apiParams: (document.getElementById('erConfigApiParams').value || '').trim(),
+      refreshInterval: parseInt(document.getElementById('erConfigInterval').value, 10),
+      volatilityThreshold: parseFloat(document.getElementById('erConfigThreshold').value) || 3
+    };
+    fw.erSaveConfig(cfg);
+    closeERConfigDialog();
+    showToast('success', '数据源配置已保存');
+  };
+
+  // ---- 更换数据来源对话框 ----
+
+  window.openERChangeSourceDialog = function(ids) {
+    ensureDialogs('exchange_rate', EXCHANGE_RATE_DLG_URLS, function() {
+      erChangeIds = ids;
+      document.getElementById('erChangeSourceCount').textContent = ids.length;
+      // 重置 radio 为 API 拉取
+      document.querySelector('input[name="erChangeSource"][value="api"]').checked = true;
+      erUpdateChangeSourceHint('api');
+      var overlay = document.getElementById('erChangeSourceOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeERChangeSourceDialog = function() {
+    var ov = document.getElementById('erChangeSourceOverlay');
+    if (ov) ov.style.display = 'none';
+    erChangeIds = [];
+  };
+
+  window.erSelectSourceOption = function(val) {
+    document.querySelector('input[name="erChangeSource"][value="' + val + '"]').checked = true;
+    erUpdateChangeSourceHint(val);
+  };
+
+  function erUpdateChangeSourceHint(val) {
+    var note = document.getElementById('erChangeSourceNote');
+    var apiOpt = document.getElementById('erOptApi');
+    var manualOpt = document.getElementById('erOptManual');
+    if (val === 'api') {
+      note.textContent = '切换为 API 拉取后，该币种将参与自动刷新。';
+      apiOpt.classList.add('selected');
+      manualOpt.classList.remove('selected');
+    } else {
+      note.textContent = '切换为手动维护后，该币种将不再参与 API 自动拉取。';
+      manualOpt.classList.add('selected');
+      apiOpt.classList.remove('selected');
+    }
+  }
+
+  window.doERChangeSource = function() {
+    if (!erChangeIds.length) { closeERChangeSourceDialog(); return; }
+    var fw = getFW();
+    if (!fw || !fw.erDoBatchChangeSource) return;
+    var radio = document.querySelector('input[name="erChangeSource"]:checked');
+    var newSource = radio ? radio.value : 'api';
+    fw.erDoBatchChangeSource(erChangeIds, newSource);
+    closeERChangeSourceDialog();
   };
 
   // ==================== 语言对话框 ====================
@@ -1621,6 +1665,494 @@
       showToast('success', '货币已删除');
     }
     fw.renderCurrencyTable();
+  };
+
+  // ==================== 税率对话框 ====================
+  var TAX_RATE_DLG_URLS = [
+    'parameters/tax_rate/form-dialog.html',
+    'parameters/tax_rate/delete-dialog.html',
+    'parameters/tax_rate/tax-type-dialog.html',
+    'parameters/tax_rate/region-detail-dialog.html'
+  ];
+
+  // ---- 税率配置表单对话框 ----
+
+  window.openTaxRateFormDialog = function(mode, id) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title      = document.getElementById('taxRateFormDialogTitle');
+      var countrySel = document.getElementById('taxRateFormCountry');
+      var stateSel   = document.getElementById('taxRateFormState');
+      var statusSel  = document.getElementById('taxRateFormStatus');
+
+      document.getElementById('taxRateFormMode').value    = mode;
+      document.getElementById('taxRateFormEditId').value  = id || '';
+
+      // 填充国家下拉
+      populateTaxRateCountryOptions(countrySel);
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑地区税率';
+        var rate = fw.findTaxRate(id);
+        if (!rate) { showToast('error', '税率配置不存在'); return; }
+        // 延迟设置国家和省/州（等国家选项加载后）
+        setTimeout(function() {
+          countrySel.value = rate.countryCode;
+          onTaxRateCountryChange();
+          setTimeout(function() {
+            stateSel.value = rate.stateCode || '';
+          }, 50);
+        }, 50);
+        statusSel.value = rate.status;
+        // 填充税种勾选
+        populateTaxRateTaxTypes(rate.taxes);
+      } else {
+        title.textContent = '添加地区税率';
+        countrySel.value = 'CN';
+        onTaxRateCountryChange();
+        stateSel.value = '';
+        statusSel.value = 'active';
+        populateTaxRateTaxTypes([]);
+      }
+
+      var overlay = document.getElementById('taxRateFormDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeTaxRateFormDialog = function() {
+    var ov = document.getElementById('taxRateFormDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  function populateTaxRateCountryOptions(countrySel) {
+    if (!countrySel) return;
+    // 优先使用父页面缓存的 PARAM_COUNTRY_DATA，否则使用默认数据
+    var raw = window.PARAM_COUNTRY_DATA || [
+      { code: 'CN', name: '中国', states: ['北京市', '上海市', '广东省', '浙江省'] },
+      { code: 'US', name: '美国', states: ['加利福尼亚州', '纽约州', '德克萨斯州', '佛罗里达州'] },
+      { code: 'JP', name: '日本', states: ['东京都', '大阪府'] },
+      { code: 'DE', name: '德国', states: ['巴伐利亚州', '柏林'] },
+      { code: 'GB', name: '英国', states: ['英格兰', '苏格兰'] },
+      { code: 'FR', name: '法国', states: ['法兰西岛', '普罗旺斯'] },
+      { code: 'AU', name: '澳洲', states: ['新南威尔士州', '维多利亚州'] },
+      { code: 'CA', name: '加拿大', states: ['安大略省', '魁北克省'] }
+    ];
+    // 规范化数据格式：兼容 PARAM_COUNTRY_DATA 原始格式（可能不含 states）
+    var countries = raw.map(function(c) {
+      return { code: c.code || c.id, name: c.name, states: c.states || [] };
+    });
+    var curVal = countrySel.value;
+    countrySel.innerHTML = '<option value="">请选择国家</option>';
+    countries.forEach(function(c) {
+      countrySel.innerHTML += '<option value="' + c.code + '">' + c.name + '</option>';
+    });
+    countrySel.value = curVal;
+    // 存储国家数据供省/州联动使用
+    window._taxRateCountryData = countries;
+  }
+
+  window.onTaxRateCountryChange = function() {
+    var countrySel = document.getElementById('taxRateFormCountry');
+    var stateSel   = document.getElementById('taxRateFormState');
+    var code = countrySel ? countrySel.value : '';
+    var countries = window._taxRateCountryData || [];
+    var country = null;
+    for (var i = 0; i < countries.length; i++) {
+      if (countries[i].code === code) { country = countries[i]; break; }
+    }
+    if (country && country.states && country.states.length > 0) {
+      stateSel.innerHTML = '<option value="">不选择（配置国家级别税率）</option>';
+      country.states.forEach(function(s) {
+        stateSel.innerHTML += '<option value="' + s + '">' + s + '</option>';
+      });
+    } else {
+      stateSel.innerHTML = '<option value="">不选择（配置国家级别税率）</option>';
+    }
+  };
+
+  function populateTaxRateTaxTypes(selectedTaxes) {
+    var container = document.getElementById('taxRateFormTaxTypes');
+    if (!container) return;
+
+    var fw = getFW();
+    var taxTypes = fw ? fw.getAllTaxTypes() : [
+      { code: 'VAT', name: '增值税', desc: '欧盟/英国/越南等', type: 'preset' },
+      { code: 'SALES_TAX', name: '销售税', desc: '美国各州', type: 'preset' },
+      { code: 'EXCISE', name: '消费税', desc: '酒精/烟草/能源等', type: 'preset' },
+      { code: 'GST', name: '商品服务税', desc: '澳洲/新西兰/印度/加拿大', type: 'preset' },
+      { code: 'HST', name: '综合销售税', desc: '加拿大特定省', type: 'preset' }
+    ];
+
+    var selectedMap = {};
+    if (selectedTaxes) {
+      selectedTaxes.forEach(function(t) { selectedMap[t.code] = t.rate; });
+    }
+
+    var html = '';
+    taxTypes.forEach(function(tt) {
+      var isSelected = selectedMap.hasOwnProperty(tt.code);
+      var rateVal = isSelected ? selectedMap[tt.code] : '';
+      html += '<div class="tax-type-check-item' + (isSelected ? ' selected' : '') + '" data-code="' + tt.code + '">';
+      html += '<div class="tc-checkbox" onclick="toggleTaxTypeCheck(this.parentElement)">';
+      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      html += '</div>';
+      html += '<div class="tc-info">';
+      html += '<div class="tc-name">' + tt.name + ' (' + tt.code + ')</div>';
+      html += '<div class="tc-code">' + (tt.desc || '') + '</div>';
+      html += '</div>';
+      html += '<div class="tc-rate-input"><input type="number" step="0.01" min="0" max="100" placeholder="税率%" value="' + rateVal + '" onchange="updateCompositeRateHint()" oninput="updateCompositeRateHint()"></div>';
+      html += '<span class="tc-rate-suffix">%</span>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+    updateCompositeRateHint();
+  }
+
+  window.toggleTaxTypeCheck = function(itemEl) {
+    itemEl.classList.toggle('selected');
+    window.updateCompositeRateHint();
+  };
+
+  window.updateCompositeRateHint = function() {
+    var items = document.querySelectorAll('#taxRateFormTaxTypes .tax-type-check-item');
+    var total = 0;
+    var hasSelected = false;
+    items.forEach(function(item) {
+      if (item.classList.contains('selected')) {
+        hasSelected = true;
+        var inp = item.querySelector('.tc-rate-input input');
+        if (inp && inp.value && !isNaN(parseFloat(inp.value))) {
+          total += parseFloat(inp.value);
+        }
+      }
+    });
+    var hint = document.getElementById('taxRateCompositeRateHint');
+    if (hint) {
+      hint.textContent = hasSelected
+        ? '综合税率 = ' + total.toFixed(2) + '%'
+        : '请勾选税种并填写各自税率值，系统将自动叠加计算综合税率';
+    }
+  }
+
+  function getTaxRateFormTaxes() {
+    var items = document.querySelectorAll('#taxRateFormTaxTypes .tax-type-check-item.selected');
+    var taxes = [];
+    items.forEach(function(item) {
+      var code = item.dataset.code;
+      var inp = item.querySelector('.tc-rate-input input');
+      var rate = inp && inp.value ? parseFloat(inp.value) : 0;
+      taxes.push({ code: code, rate: rate });
+    });
+    return taxes;
+  }
+
+  window.submitTaxRateForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode      = document.getElementById('taxRateFormMode').value;
+    var editId    = document.getElementById('taxRateFormEditId').value;
+    var countryCode = document.getElementById('taxRateFormCountry').value;
+    var stateCode   = document.getElementById('taxRateFormState').value;
+    var status    = document.getElementById('taxRateFormStatus').value;
+    var taxes     = getTaxRateFormTaxes();
+
+    if (!countryCode) { showToast('warning', '请选择所属国家'); return; }
+    if (!taxes.length) { showToast('warning', '请至少勾选一个税种'); return; }
+
+    // 验证税率值
+    for (var i = 0; i < taxes.length; i++) {
+      if (taxes[i].rate <= 0) { showToast('warning', '税种「' + taxes[i].code + '」的税率必须为正数'); return; }
+      if (taxes[i].rate > 100) { showToast('warning', '税种「' + taxes[i].code + '」的税率不能超过100%'); return; }
+    }
+
+    // 获取国家/省名称
+    var countrySel = document.getElementById('taxRateFormCountry');
+    var stateSel   = document.getElementById('taxRateFormState');
+    var countryName = countrySel.options[countrySel.selectedIndex] ? countrySel.options[countrySel.selectedIndex].text : '';
+    var stateName = stateCode && stateSel.options[stateSel.selectedIndex] ? stateSel.options[stateSel.selectedIndex].text : '';
+
+    // 检查重复（添加模式时）
+    if (mode === 'add') {
+      var fwData = fw.taxRateData || [];
+      for (var j = 0; j < fwData.length; j++) {
+        if (fwData[j].countryCode === countryCode && fwData[j].stateCode === (stateCode || '')) {
+          showToast('warning', '该地区税率已存在，请编辑现有配置');
+          return;
+        }
+      }
+    } else {
+      // 编辑模式检查重复（排除自身）
+      var fwData2 = fw.taxRateData || [];
+      for (var k = 0; k < fwData2.length; k++) {
+        if (fwData2[k].id !== parseInt(editId, 10) &&
+            fwData2[k].countryCode === countryCode &&
+            fwData2[k].stateCode === (stateCode || '')) {
+          showToast('warning', '该地区税率已存在，请编辑现有配置');
+          return;
+        }
+      }
+    }
+
+    if (mode === 'add') {
+      fw.taxRateAddItem(countryCode, countryName, stateCode, stateName, taxes, status);
+    } else {
+      fw.taxRateUpdateItem(editId, countryCode, countryName, stateCode, stateName, taxes, status);
+    }
+
+    closeTaxRateFormDialog();
+    fw.renderTaxRateTable();
+    showToast('success', mode === 'add' ? '税率配置已添加' : '税率配置已更新');
+  };
+
+  // ---- 税率删除对话框 ----
+
+  window.openTaxRateDeleteDialog = function(id) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var rate = fw.findTaxRate(id);
+      if (!rate) { showToast('error', '税率配置不存在'); return;
+      }
+
+      document.getElementById('taxRateDeleteId').value = id;
+      document.getElementById('taxRateDeleteIsBatch').value = 'false';
+      document.getElementById('taxRateDeleteDialogTitle').textContent = '删除税率配置';
+      var label = rate.countryName;
+      if (rate.stateName) label += '/' + rate.stateName;
+      var msg = '<p>确定要删除「<strong>' + label + '</strong>」的税率配置吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复，删除后该地区将按兜底规则匹配税率。</p>';
+      document.getElementById('taxRateDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('taxRateDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openTaxRateBatchDeleteDialog = function(ids) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的税率配置'); return; }
+
+      document.getElementById('taxRateDeleteId').value = JSON.stringify(ids);
+      document.getElementById('taxRateDeleteIsBatch').value = 'true';
+      document.getElementById('taxRateDeleteDialogTitle').textContent = '批量删除税率配置';
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个税率配置吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('taxRateDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('taxRateDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeTaxRateDeleteDialog = function() {
+    var ov = document.getElementById('taxRateDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmTaxRateDelete = function() {
+    var fw = getFW();
+    var id = document.getElementById('taxRateDeleteId').value;
+    var isBatch = document.getElementById('taxRateDeleteIsBatch').value === 'true';
+    closeTaxRateDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      fw.taxRateBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个税率配置');
+    } else {
+      fw.taxRateDeleteItem(id);
+      showToast('success', '税率配置已删除');
+    }
+    fw.renderTaxRateTable();
+  };
+
+  // ---- 税种管理对话框 ----
+
+  window.openTaxTypeDialog = function(mode, code) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title    = document.getElementById('taxTypeDialogTitle');
+      var codeInp  = document.getElementById('taxTypeFormCode');
+      var nameInp  = document.getElementById('taxTypeFormName');
+      var descInp  = document.getElementById('taxTypeFormDesc');
+
+      document.getElementById('taxTypeDialogMode').value = mode;
+      document.getElementById('taxTypeDialogOldCode').value = code || '';
+
+      if (mode === 'edit' && code) {
+        title.textContent = '编辑税种';
+        var tt = fw.findTaxType(code);
+        if (!tt) { showToast('error', '税种不存在'); return; }
+        codeInp.value = tt.code;
+        codeInp.disabled = (tt.type === 'preset');
+        nameInp.value = tt.name;
+        descInp.value = tt.desc || '';
+      } else {
+        title.textContent = '新增税种';
+        codeInp.value = '';
+        codeInp.disabled = false;
+        nameInp.value = '';
+        descInp.value = '';
+      }
+
+      var overlay = document.getElementById('taxTypeDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeTaxTypeDialog = function() {
+    var ov = document.getElementById('taxTypeDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitTaxTypeForm = function() {
+    var fw = getFW();
+    if (!fw) return;
+
+    var mode    = document.getElementById('taxTypeDialogMode').value;
+    var oldCode = document.getElementById('taxTypeDialogOldCode').value;
+    var code    = (document.getElementById('taxTypeFormCode').value || '').trim();
+    var name    = (document.getElementById('taxTypeFormName').value || '').trim();
+    var desc    = (document.getElementById('taxTypeFormDesc').value || '').trim();
+
+    if (!code) { showToast('warning', '请输入税种代码'); return; }
+    if (!name) { showToast('warning', '请输入税种名称'); return; }
+    if (!/^[A-Za-z0-9_]+$/.test(code)) { showToast('warning', '税种代码仅允许字母、数字、下划线'); return; }
+
+    // 检查代码重复
+    var allTypes = fw.getAllTaxTypes();
+    for (var i = 0; i < allTypes.length; i++) {
+      if (allTypes[i].code === code && (mode === 'add' || code !== oldCode)) {
+        showToast('warning', '该税种代码已被使用');
+        return;
+      }
+    }
+
+    if (mode === 'add') {
+      fw.taxTypeAddItem(code, name, desc);
+    } else {
+      fw.taxTypeUpdateItem(oldCode, code, name, desc);
+    }
+
+    closeTaxTypeDialog();
+    fw.renderTaxTypeTable();
+    showToast('success', mode === 'add' ? '税种已添加' : '税种已更新');
+  };
+
+  // ---- 税种删除对话框 ----
+
+  window.openTaxTypeDeleteDialog = function(code) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var tt = fw.findTaxType(code);
+      if (!tt) { showToast('error', '税种不存在'); return; }
+
+      document.getElementById('taxTypeDeleteCode').value = code;
+      document.getElementById('taxTypeDeleteDialogTitle').textContent = '删除税种';
+      var msg = '<p>确定要删除税种「<strong>' + tt.name + '（' + tt.code + '）</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">删除后，所有使用该税种的税率配置将同步移除该税种。</p>';
+      document.getElementById('taxTypeDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('taxTypeDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeTaxTypeDeleteDialog = function() {
+    var ov = document.getElementById('taxTypeDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmTaxTypeDelete = function() {
+    var fw = getFW();
+    var code = document.getElementById('taxTypeDeleteCode').value;
+    closeTaxTypeDeleteDialog();
+    if (!fw) return;
+    fw.taxTypeDeleteItem(code);
+    fw.renderTaxTypeTable();
+    showToast('success', '税种已删除');
+  };
+
+  // ---- 地区详情对话框 ----
+
+  window.openTaxRateRegionDetailDialog = function(countryCode, countryName) {
+    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+
+      var title = document.getElementById('taxRateRegionDetailTitle');
+      var body  = document.getElementById('taxRateRegionDetailBody');
+      var jumpBtn = document.getElementById('taxRateRegionDetailJumpBtn');
+
+      title.textContent = countryName + ' - 已配置省份';
+
+      var taxRates = fw.taxRateData || [];
+      var stateRates = taxRates.filter(function(t) {
+        return t.countryCode === countryCode && t.regionType === 'state';
+      });
+      var hasCountryRate = taxRates.some(function(t) {
+        return t.countryCode === countryCode && t.regionType === 'country';
+      });
+
+      var html = '';
+      html += '<p style="margin-bottom:12px;font-size:14px;color:hsl(var(--foreground));">';
+      html += '国家税率：' + (hasCountryRate ? '<span class="badge badge-success" style="margin-left:4px;">已配置</span>' : '<span class="badge badge-secondary" style="margin-left:4px;">未配置</span>');
+      html += '</p>';
+
+      if (stateRates.length === 0) {
+        html += '<div class="empty-state" style="padding:24px;">';
+        html += '<div class="empty-state-title">暂无已配置省份</div>';
+        html += '<div class="empty-state-desc">该国家下还没有配置省/州级别税率</div>';
+        html += '</div>';
+      } else {
+        html += '<div class="region-list-panel">';
+        stateRates.forEach(function(sr) {
+          var composite = 0;
+          if (sr.taxes) sr.taxes.forEach(function(t) { composite += t.rate || 0; });
+          var sm = sr.status === 'active'
+            ? '<span class="badge badge-success">启用</span>'
+            : '<span class="badge badge-secondary">停用</span>';
+          html += '<div class="region-list-item">';
+          html += '<div><div class="rli-name">' + sr.stateName + '</div><div style="font-size:12px;color:hsl(var(--muted-foreground));">综合税率：' + composite.toFixed(2) + '% | ' + (sr.taxes ? sr.taxes.length : 0) + ' 个税种</div></div>';
+          html += '<div class="rli-status">' + sm + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      body.innerHTML = html;
+      jumpBtn.setAttribute('data-country', countryCode);
+      jumpBtn.setAttribute('data-name', countryName);
+
+      var overlay = document.getElementById('taxRateRegionDetailOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeTaxRateRegionDetailDialog = function() {
+    var ov = document.getElementById('taxRateRegionDetailOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.jumpToTaxRateConfig = function() {
+    var btn = document.getElementById('taxRateRegionDetailJumpBtn');
+    var countryName = btn ? btn.getAttribute('data-name') || '' : '';
+    closeTaxRateRegionDetailDialog();
+    var fw = getFW();
+    if (!fw) return;
+    if (fw.switchTab) fw.switchTab('config');
+    // 跳转后自动过滤到对应国家
+    if (countryName && fw.document) {
+      var searchInput = fw.document.getElementById('searchInput');
+      if (searchInput) searchInput.value = countryName;
+      if (fw.renderTaxRateTable) fw.renderTaxRateTable();
+    }
   };
 
   // ==================== Escape 关闭对话框 ====================

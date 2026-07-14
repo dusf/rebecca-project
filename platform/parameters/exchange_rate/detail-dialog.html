@@ -1,0 +1,49 @@
+<style>
+  .er-detail-section { margin-bottom: 20px; }
+  .er-detail-title { font-size: 13px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid hsl(var(--border)); }
+  .er-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .er-detail-label { font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 2px; }
+  .er-detail-value { font-size: 14px; font-weight: 500; }
+  .er-log-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .er-log-table th { text-align: left; padding: 8px 10px; background: hsl(var(--muted)); font-weight: 500; color: hsl(var(--muted-foreground)); border-bottom: 1px solid hsl(var(--border)); white-space: nowrap; }
+  .er-log-table td { padding: 8px 10px; border-bottom: 1px solid hsl(var(--border)); }
+  .er-empty-log { display: none; text-align: center; padding: 30px; color: hsl(var(--muted-foreground)); }
+</style>
+<div class="dialog-overlay" id="erDetailDialogOverlay" style="display:none;" onclick="closeERDetailDialog()">
+  <div class="dialog" style="width:820px;max-width:95vw;min-height:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">汇率详情</span>
+      <button class="dialog-close" onclick="closeERDetailDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="er-detail-section">
+        <div class="er-detail-title">基本信息</div>
+        <div class="er-detail-grid">
+          <div><div class="er-detail-label">币种代码</div><div class="er-detail-value" id="erDetailCode">--</div></div>
+          <div><div class="er-detail-label">币种名称</div><div class="er-detail-value" id="erDetailName">--</div></div>
+          <div><div class="er-detail-label">当前汇率</div><div class="er-detail-value" id="erDetailRate">--</div></div>
+          <div><div class="er-detail-label">状态</div><div class="er-detail-value" id="erDetailStatus">--</div></div>
+          <div style="grid-column:1/-1;"><div class="er-detail-label">汇率变更时间</div><div class="er-detail-value" id="erDetailTime">--</div></div>
+        </div>
+      </div>
+      <div class="er-detail-section">
+        <div class="er-detail-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>变更日志</span>
+          <select class="form-select" id="erLogTypeFilter" onchange="renderERDetailLogs()" style="width:auto;min-width:130px;height:30px;padding:0 8px;font-size:12px;">
+            <option value="">全部类型</option>
+            <option value="manual">手动录入</option>
+            <option value="api">API自动拉取</option>
+            <option value="confirm">管理员确认更新</option>
+          </select>
+        </div>
+        <table class="er-log-table"><thead><tr><th>变更时间</th><th>类型</th><th>变更前</th><th>变更后</th><th>变更人</th><th>备注</th></tr></thead><tbody id="erDetailLogBody"></tbody></table>
+        <div class="er-empty-log" id="erDetailLogEmpty">暂无变更记录</div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeERDetailDialog()">关闭</button>
+    </div>
+  </div>
+</div>

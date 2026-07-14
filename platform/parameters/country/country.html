@@ -94,9 +94,9 @@
     var currentPage = 1, pageSize = 10;
     var countries = [
       { id: 'CN', name: '中国', code: 'CN', zone: '东亚', lang: '简体中文 (zh-CN)', currency: '人民币 (CNY)', status: 'active', levels: ['省/直辖市', '市', '区/县'], regionCount: 13 },
-      { id: 'US', name: '美国', code: 'US', zone: '北美', lang: 'English (en-US)', currency: '美元 (USD)', status: 'active', levels: ['State', 'City'], regionCount: 7 },
+      { id: 'US', name: '美国', code: 'US', zone: '北美', lang: 'English (en-US)', currency: '美元 (USD)', status: 'active', levels: ['州', '城市'], regionCount: 7 },
       { id: 'JP', name: '日本', code: 'JP', zone: '东亚', lang: '日本語 (ja-JP)', currency: '日元 (JPY)', status: 'active', levels: ['都道府県', '市区町村'], regionCount: 5 },
-      { id: 'GB', name: '英国', code: 'GB', zone: '欧洲', lang: 'English (en-GB)', currency: '欧元 (EUR)', status: 'disabled', levels: ['Region', 'County', 'District'], regionCount: 0 }
+      { id: 'GB', name: '英国', code: 'GB', zone: '欧洲', lang: 'English (en-GB)', currency: '欧元 (EUR)', status: 'disabled', levels: ['地区', '郡', '区'], regionCount: 0 }
     ];
     window.countries = countries;
     // 同步到 parent，供 region 页面的国家下拉读取

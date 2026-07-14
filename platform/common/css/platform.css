@@ -1899,6 +1899,7 @@ tr.drag-zone-highlight {
 .searchable-select {
   position: relative;
   flex-shrink: 0;
+  min-width: 140px;
 }
 
 .searchable-select-trigger {
@@ -1919,6 +1920,17 @@ tr.drag-zone-highlight {
   box-sizing: border-box;
   white-space: nowrap;
   position: relative;
+}
+
+/* 表单中的可搜索下拉默认撑满，窄宽度字段单独控制 */
+.form-group .searchable-select,
+.form-group .searchable-select-trigger {
+  width: 100%;
+}
+
+.form-group-narrow .searchable-select,
+.form-group-narrow .searchable-select-trigger {
+  width: 140px;
 }
 
 .searchable-select-trigger:hover {
@@ -2011,3 +2023,257 @@ tr.drag-zone-highlight {
   font-size: 13px;
   color: hsl(var(--muted-foreground));
 }
+
+/* ==================== Tab 页签 ==================== */
+.page-tabs {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.page-tab {
+  position: relative;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.page-tab:hover {
+  color: hsl(var(--foreground));
+  background: hsl(220 15% 97%);
+}
+
+.page-tab.active {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  border-bottom-color: hsl(var(--primary));
+}
+
+.page-tab .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.page-tab.active .tab-badge {
+  background: hsl(var(--primary-100));
+  color: hsl(var(--primary-700));
+}
+
+.tab-content {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.tab-content.active {
+  display: flex;
+}
+
+/* 税率管理专用：税种勾选列表 */
+.tax-type-check-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tax-type-check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.tax-type-check-item.selected {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
+  background: hsl(var(--primary-50));
+}
+
+.tax-type-check-item .tc-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #fff;
+}
+
+.tax-type-check-item.selected .tc-checkbox {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.tax-type-check-item .tc-checkbox svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.15s;
+}
+
+.tax-type-check-item.selected .tc-checkbox svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.tax-type-check-item .tc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tax-type-check-item .tc-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.tax-type-check-item .tc-code {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 2px;
+}
+
+.tax-type-check-item .tc-rate-input {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.tax-type-check-item .tc-rate-input input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1.5px solid hsl(var(--border));
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: right;
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.tax-type-check-item.selected .tc-rate-input input {
+  border-color: hsl(var(--primary));
+}
+
+.tax-type-check-item .tc-rate-input input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.12);
+}
+
+.tc-rate-suffix {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* 税率对话框内的税种区域 */
+.tax-type-section {
+  margin-top: 4px;
+}
+
+.tax-type-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 8px;
+}
+
+/* 查看更多地区按钮 */
+.view-regions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: hsl(var(--primary));
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+.view-regions-btn:hover {
+  color: hsl(var(--primary-700));
+  text-decoration: underline;
+}
+
+.view-regions-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 省/州列表（在地区管理 Tab 或对话框中展示） */
+.region-list-panel {
+  border: 1.5px solid hsl(var(--border));
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.region-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 14px;
+}
+
+.region-list-item:last-child {
+  border-bottom: none;
+}
+
+.region-list-item .rli-name {
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.region-list-item .rli-status {
+  font-size: 12px;
+}
+
+/* 表单行 — 复选框标签 */
+.form-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+} 

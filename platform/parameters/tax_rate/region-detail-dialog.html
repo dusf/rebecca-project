@@ -1,0 +1,18 @@
+<!-- 查看已配置省份对话框 -->
+<div class="dialog-overlay" id="taxRateRegionDetailOverlay" style="display:none;" onclick="closeTaxRateRegionDetailDialog()">
+  <div class="dialog" style="width:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="taxRateRegionDetailTitle">已配置省份</span>
+      <button class="dialog-close" onclick="closeTaxRateRegionDetailDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body" id="taxRateRegionDetailBody" style="max-height:400px;">
+      <!-- 动态生成省份列表 -->
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeTaxRateRegionDetailDialog()">关闭</button>
+      <button class="btn btn-primary" id="taxRateRegionDetailJumpBtn" onclick="jumpToTaxRateConfig()">跳转至税率配置</button>
+    </div>
+  </div>
+</div>

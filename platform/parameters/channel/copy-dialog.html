@@ -1,0 +1,19 @@
+<!-- 复制渠道对话框 -->
+<div class="dialog-overlay" id="channelCopyDialogOverlay" style="display:none;" onclick="closeChannelCopyDialog()">
+  <div class="dialog" style="width:440px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">复制渠道</span>
+      <button class="dialog-close" onclick="closeChannelCopyDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="channelCopyId" value="">
+      <div class="dialog-desc" id="channelCopyMsg"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeChannelCopyDialog()">取消</button>
+      <button class="btn btn-primary" onclick="confirmChannelCopy()">确定复制</button>
+    </div>
+  </div>
+</div>

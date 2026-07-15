@@ -1,0 +1,21 @@
+<!-- 删除确认对话框（物流商/授权账号/渠道通用） -->
+<div class="dialog-overlay" id="shippingDeleteDialogOverlay" style="display:none;" onclick="closeShippingDeleteDialog()">
+  <div class="dialog" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <div class="dialog-title" id="shippingDeleteDialogTitle">删除确认</div>
+      <button class="dialog-close" onclick="closeShippingDeleteDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="shippingDeleteType" value="">
+      <input type="hidden" id="shippingDeleteId" value="">
+      <input type="hidden" id="shippingDeleteIsBatch" value="false">
+      <div class="dialog-desc" id="shippingDeleteMsg"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeShippingDeleteDialog()">取消</button>
+      <button class="btn btn-destructive" onclick="confirmShippingDelete()">删除</button>
+    </div>
+  </div>
+</div>

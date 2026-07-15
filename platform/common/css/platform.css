@@ -1933,6 +1933,186 @@ tr.drag-zone-highlight {
   width: 140px;
 }
 
+/* ==================== 信息卡片 (dialog 内渠道摘要等) ==================== */
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+}
+.info-item {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.5;
+}
+.info-item strong {
+  color: hsl(var(--foreground));
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* ==================== 对话框内编辑表格 (运费规则/费率区间等) ==================== */
+.rate-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.rate-table thead tr {
+  background: hsl(var(--muted));
+}
+.rate-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  border-bottom: 1px solid hsl(var(--border));
+}
+.rate-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: middle;
+}
+.rate-table tbody tr:hover td {
+  background: hsl(var(--muted) / 0.5);
+}
+.rate-table input[type="number"],
+.rate-table input[type="text"] {
+  width: 90px;
+  height: 36px;
+  border: 1.5px solid hsl(220 10% 84%);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+.rate-table input[type="number"]:focus,
+.rate-table input[type="text"]:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+  outline: none;
+}
+.rate-table input[type="number"]::placeholder,
+.rate-table input[type="text"]::placeholder {
+  color: hsl(var(--muted-foreground) / 0.6);
+}
+.rate-table .input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rate-table .input-unit {
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.btn-row-del {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: hsl(0 84% 95%);
+  color: hsl(var(--error));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+.btn-row-del:hover {
+  background: hsl(0 84% 90%);
+}
+.btn-row-add {
+  padding: 6px 14px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 8px;
+  background: none;
+  color: hsl(var(--primary));
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+.btn-row-add:hover {
+  border-color: hsl(var(--primary));
+  background: hsla(var(--primary), 0.05);
+}
+
+/* ==================== 配置区块 (dialog 内 tab 内容面板) ==================== */
+.config-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--background));
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: hsl(var(--foreground));
+}
+
+/* ==================== Tab 导航 (对话框内) ==================== */
+.shipping-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid hsl(var(--border));
+  margin-bottom: 20px;
+}
+.shipping-tab {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.shipping-tab:hover {
+  color: hsl(var(--foreground));
+}
+.shipping-tab.active {
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+/* ==================== 国家标签 (渠道绑定) ==================== */
+.country-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.country-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: hsl(215 35% 92%);
+  color: hsl(215 35% 42%);
+}
+
 .searchable-select-trigger:hover {
   border-color: hsl(220 15% 72%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -2093,126 +2273,6 @@ tr.drag-zone-highlight {
   display: flex;
 }
 
-/* 税率管理专用：税种勾选列表 */
-.tax-type-check-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tax-type-check-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: 1.5px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--card));
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.tax-type-check-item.selected {
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
-  background: hsl(var(--primary-50));
-}
-
-.tax-type-check-item .tc-checkbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 2px solid hsl(var(--border));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.15s;
-  color: #fff;
-}
-
-.tax-type-check-item.selected .tc-checkbox {
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-}
-
-.tax-type-check-item .tc-checkbox svg {
-  width: 12px;
-  height: 12px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.15s;
-}
-
-.tax-type-check-item.selected .tc-checkbox svg {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.tax-type-check-item .tc-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.tax-type-check-item .tc-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: hsl(var(--foreground));
-}
-
-.tax-type-check-item .tc-code {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin-top: 2px;
-}
-
-.tax-type-check-item .tc-rate-input {
-  width: 100px;
-  flex-shrink: 0;
-}
-
-.tax-type-check-item .tc-rate-input input {
-  width: 100%;
-  height: 32px;
-  padding: 0 10px;
-  border: 1.5px solid hsl(var(--border));
-  border-radius: 8px;
-  font-size: 13px;
-  text-align: right;
-  color: hsl(var(--foreground));
-  font-family: var(--font-sans);
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.15s;
-}
-
-.tax-type-check-item.selected .tc-rate-input input {
-  border-color: hsl(var(--primary));
-}
-
-.tax-type-check-item .tc-rate-input input:focus {
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.12);
-}
-
-.tc-rate-suffix {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin-left: 2px;
-  flex-shrink: 0;
-}
-
-/* 税率对话框内的税种区域 */
-.tax-type-section {
-  margin-top: 4px;
-}
-
-.tax-type-section-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-  margin-bottom: 8px;
-}
 
 /* 查看更多地区按钮 */
 .view-regions-btn {

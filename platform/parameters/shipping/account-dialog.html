@@ -1,0 +1,57 @@
+<!-- 添加/编辑授权账号对话框 -->
+<div class="dialog-overlay" id="shippingAccountDialogOverlay" style="display:none;" onclick="closeShippingAccountDialog()">
+  <div class="dialog" style="width:520px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="shippingAccountDialogTitle">添加授权账号</span>
+      <button class="dialog-close" onclick="closeShippingAccountDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="shippingAccountMode" value="add">
+      <input type="hidden" id="shippingAccountEditId" value="">
+      <div class="form-group">
+        <label class="form-label">所属物流商<span class="required-star">*</span></label>
+        <select class="form-input" id="shippingAccountProvider">
+          <option value="">请选择物流商</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">账号名称<span class="required-star">*</span></label>
+        <input class="form-input" id="shippingAccountName" placeholder="例如：惠程荣达、惠程-TEMU专用">
+      </div>
+      <div class="form-group">
+        <label class="form-label">账号代码<span class="required-star">*</span></label>
+        <input class="form-input" id="shippingAccountCode" placeholder="例如：HUICHENG_01（唯一标识）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input class="form-input" id="shippingAccountApiKey" placeholder="物流商API授权密钥（选填）">
+        <div class="form-hint">加密存储，仅授权使用</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Secret</label>
+        <input class="form-input" id="shippingAccountApiSecret" placeholder="物流商API授权密钥（选填）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">回调URL</label>
+        <input class="form-input" id="shippingAccountCallbackUrl" placeholder="物流状态回调地址（选填）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-input" id="shippingAccountRemark" placeholder="补充说明（选填）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <select class="form-input" id="shippingAccountStatus">
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeShippingAccountDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitShippingAccount()">保存</button>
+    </div>
+  </div>
+</div>

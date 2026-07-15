@@ -592,3 +592,33 @@ function selectSearchableOption(selectId, value, text) {
   closeSearchableDropdown(selectId);
   select.dispatchEvent(new Event('change', { bubbles: true }));
 }
+
+/** 刷新指定 select 对应的 searchable-select 选项列表（用于 JS 动态填充 option 后） */
+function refreshSearchableSelect(selectId) {
+  var select = document.getElementById(selectId);
+  if (!select || !select._searchable) return;
+  var listDiv = document.getElementById(selectId + 'List');
+  if (!listDiv) return;
+  var selValue = select.value;
+  listDiv.innerHTML = '';
+  var opts = select.querySelectorAll('option');
+  for (var j = 0; j < opts.length; j++) {
+    var opt = opts[j];
+    var item = document.createElement('div');
+    item.className = 'searchable-select-option';
+    if (opt.value === selValue) item.classList.add('selected');
+    item.dataset.value = opt.value;
+    item.textContent = (j + 1) + '. ' + opt.text;
+    (function(value, text) {
+      item.addEventListener('click', function() {
+        selectSearchableOption(selectId, value, text);
+      });
+    })(opt.value, opt.text);
+    listDiv.appendChild(item);
+  }
+  var triggerSpan = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger span');
+  if (triggerSpan) {
+    var selectedOpt = select.options[select.selectedIndex];
+    triggerSpan.textContent = selectedOpt ? selectedOpt.text : '请选择';
+  }
+}

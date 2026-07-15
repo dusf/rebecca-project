@@ -1669,244 +1669,9 @@
 
   // ==================== 税率对话框 ====================
   var TAX_RATE_DLG_URLS = [
-    'parameters/tax_rate/form-dialog.html',
-    'parameters/tax_rate/delete-dialog.html',
-    'parameters/tax_rate/tax-type-dialog.html',
-    'parameters/tax_rate/region-detail-dialog.html'
+    'parameters/tax_rate/delete-dialog.html'
   ];
 
-  // ---- 税率配置表单对话框 ----
-
-  window.openTaxRateFormDialog = function(mode, id) {
-    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-
-      var title      = document.getElementById('taxRateFormDialogTitle');
-      var countrySel = document.getElementById('taxRateFormCountry');
-      var stateSel   = document.getElementById('taxRateFormState');
-      var statusSel  = document.getElementById('taxRateFormStatus');
-
-      document.getElementById('taxRateFormMode').value    = mode;
-      document.getElementById('taxRateFormEditId').value  = id || '';
-
-      // 填充国家下拉
-      populateTaxRateCountryOptions(countrySel);
-
-      if (mode === 'edit' && id) {
-        title.textContent = '编辑地区税率';
-        var rate = fw.findTaxRate(id);
-        if (!rate) { showToast('error', '税率配置不存在'); return; }
-        // 延迟设置国家和省/州（等国家选项加载后）
-        setTimeout(function() {
-          countrySel.value = rate.countryCode;
-          onTaxRateCountryChange();
-          setTimeout(function() {
-            stateSel.value = rate.stateCode || '';
-          }, 50);
-        }, 50);
-        statusSel.value = rate.status;
-        // 填充税种勾选
-        populateTaxRateTaxTypes(rate.taxes);
-      } else {
-        title.textContent = '添加地区税率';
-        countrySel.value = 'CN';
-        onTaxRateCountryChange();
-        stateSel.value = '';
-        statusSel.value = 'active';
-        populateTaxRateTaxTypes([]);
-      }
-
-      var overlay = document.getElementById('taxRateFormDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeTaxRateFormDialog = function() {
-    var ov = document.getElementById('taxRateFormDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  function populateTaxRateCountryOptions(countrySel) {
-    if (!countrySel) return;
-    // 优先使用父页面缓存的 PARAM_COUNTRY_DATA，否则使用默认数据
-    var raw = window.PARAM_COUNTRY_DATA || [
-      { code: 'CN', name: '中国', states: ['北京市', '上海市', '广东省', '浙江省'] },
-      { code: 'US', name: '美国', states: ['加利福尼亚州', '纽约州', '德克萨斯州', '佛罗里达州'] },
-      { code: 'JP', name: '日本', states: ['东京都', '大阪府'] },
-      { code: 'DE', name: '德国', states: ['巴伐利亚州', '柏林'] },
-      { code: 'GB', name: '英国', states: ['英格兰', '苏格兰'] },
-      { code: 'FR', name: '法国', states: ['法兰西岛', '普罗旺斯'] },
-      { code: 'AU', name: '澳洲', states: ['新南威尔士州', '维多利亚州'] },
-      { code: 'CA', name: '加拿大', states: ['安大略省', '魁北克省'] }
-    ];
-    // 规范化数据格式：兼容 PARAM_COUNTRY_DATA 原始格式（可能不含 states）
-    var countries = raw.map(function(c) {
-      return { code: c.code || c.id, name: c.name, states: c.states || [] };
-    });
-    var curVal = countrySel.value;
-    countrySel.innerHTML = '<option value="">请选择国家</option>';
-    countries.forEach(function(c) {
-      countrySel.innerHTML += '<option value="' + c.code + '">' + c.name + '</option>';
-    });
-    countrySel.value = curVal;
-    // 存储国家数据供省/州联动使用
-    window._taxRateCountryData = countries;
-  }
-
-  window.onTaxRateCountryChange = function() {
-    var countrySel = document.getElementById('taxRateFormCountry');
-    var stateSel   = document.getElementById('taxRateFormState');
-    var code = countrySel ? countrySel.value : '';
-    var countries = window._taxRateCountryData || [];
-    var country = null;
-    for (var i = 0; i < countries.length; i++) {
-      if (countries[i].code === code) { country = countries[i]; break; }
-    }
-    if (country && country.states && country.states.length > 0) {
-      stateSel.innerHTML = '<option value="">不选择（配置国家级别税率）</option>';
-      country.states.forEach(function(s) {
-        stateSel.innerHTML += '<option value="' + s + '">' + s + '</option>';
-      });
-    } else {
-      stateSel.innerHTML = '<option value="">不选择（配置国家级别税率）</option>';
-    }
-  };
-
-  function populateTaxRateTaxTypes(selectedTaxes) {
-    var container = document.getElementById('taxRateFormTaxTypes');
-    if (!container) return;
-
-    var fw = getFW();
-    var taxTypes = fw ? fw.getAllTaxTypes() : [
-      { code: 'VAT', name: '增值税', desc: '欧盟/英国/越南等', type: 'preset' },
-      { code: 'SALES_TAX', name: '销售税', desc: '美国各州', type: 'preset' },
-      { code: 'EXCISE', name: '消费税', desc: '酒精/烟草/能源等', type: 'preset' },
-      { code: 'GST', name: '商品服务税', desc: '澳洲/新西兰/印度/加拿大', type: 'preset' },
-      { code: 'HST', name: '综合销售税', desc: '加拿大特定省', type: 'preset' }
-    ];
-
-    var selectedMap = {};
-    if (selectedTaxes) {
-      selectedTaxes.forEach(function(t) { selectedMap[t.code] = t.rate; });
-    }
-
-    var html = '';
-    taxTypes.forEach(function(tt) {
-      var isSelected = selectedMap.hasOwnProperty(tt.code);
-      var rateVal = isSelected ? selectedMap[tt.code] : '';
-      html += '<div class="tax-type-check-item' + (isSelected ? ' selected' : '') + '" data-code="' + tt.code + '">';
-      html += '<div class="tc-checkbox" onclick="toggleTaxTypeCheck(this.parentElement)">';
-      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-      html += '</div>';
-      html += '<div class="tc-info">';
-      html += '<div class="tc-name">' + tt.name + ' (' + tt.code + ')</div>';
-      html += '<div class="tc-code">' + (tt.desc || '') + '</div>';
-      html += '</div>';
-      html += '<div class="tc-rate-input"><input type="number" step="0.01" min="0" max="100" placeholder="税率%" value="' + rateVal + '" onchange="updateCompositeRateHint()" oninput="updateCompositeRateHint()"></div>';
-      html += '<span class="tc-rate-suffix">%</span>';
-      html += '</div>';
-    });
-    container.innerHTML = html;
-    updateCompositeRateHint();
-  }
-
-  window.toggleTaxTypeCheck = function(itemEl) {
-    itemEl.classList.toggle('selected');
-    window.updateCompositeRateHint();
-  };
-
-  window.updateCompositeRateHint = function() {
-    var items = document.querySelectorAll('#taxRateFormTaxTypes .tax-type-check-item');
-    var total = 0;
-    var hasSelected = false;
-    items.forEach(function(item) {
-      if (item.classList.contains('selected')) {
-        hasSelected = true;
-        var inp = item.querySelector('.tc-rate-input input');
-        if (inp && inp.value && !isNaN(parseFloat(inp.value))) {
-          total += parseFloat(inp.value);
-        }
-      }
-    });
-    var hint = document.getElementById('taxRateCompositeRateHint');
-    if (hint) {
-      hint.textContent = hasSelected
-        ? '综合税率 = ' + total.toFixed(2) + '%'
-        : '请勾选税种并填写各自税率值，系统将自动叠加计算综合税率';
-    }
-  }
-
-  function getTaxRateFormTaxes() {
-    var items = document.querySelectorAll('#taxRateFormTaxTypes .tax-type-check-item.selected');
-    var taxes = [];
-    items.forEach(function(item) {
-      var code = item.dataset.code;
-      var inp = item.querySelector('.tc-rate-input input');
-      var rate = inp && inp.value ? parseFloat(inp.value) : 0;
-      taxes.push({ code: code, rate: rate });
-    });
-    return taxes;
-  }
-
-  window.submitTaxRateForm = function() {
-    var fw = getFW();
-    if (!fw) return;
-
-    var mode      = document.getElementById('taxRateFormMode').value;
-    var editId    = document.getElementById('taxRateFormEditId').value;
-    var countryCode = document.getElementById('taxRateFormCountry').value;
-    var stateCode   = document.getElementById('taxRateFormState').value;
-    var status    = document.getElementById('taxRateFormStatus').value;
-    var taxes     = getTaxRateFormTaxes();
-
-    if (!countryCode) { showToast('warning', '请选择所属国家'); return; }
-    if (!taxes.length) { showToast('warning', '请至少勾选一个税种'); return; }
-
-    // 验证税率值
-    for (var i = 0; i < taxes.length; i++) {
-      if (taxes[i].rate <= 0) { showToast('warning', '税种「' + taxes[i].code + '」的税率必须为正数'); return; }
-      if (taxes[i].rate > 100) { showToast('warning', '税种「' + taxes[i].code + '」的税率不能超过100%'); return; }
-    }
-
-    // 获取国家/省名称
-    var countrySel = document.getElementById('taxRateFormCountry');
-    var stateSel   = document.getElementById('taxRateFormState');
-    var countryName = countrySel.options[countrySel.selectedIndex] ? countrySel.options[countrySel.selectedIndex].text : '';
-    var stateName = stateCode && stateSel.options[stateSel.selectedIndex] ? stateSel.options[stateSel.selectedIndex].text : '';
-
-    // 检查重复（添加模式时）
-    if (mode === 'add') {
-      var fwData = fw.taxRateData || [];
-      for (var j = 0; j < fwData.length; j++) {
-        if (fwData[j].countryCode === countryCode && fwData[j].stateCode === (stateCode || '')) {
-          showToast('warning', '该地区税率已存在，请编辑现有配置');
-          return;
-        }
-      }
-    } else {
-      // 编辑模式检查重复（排除自身）
-      var fwData2 = fw.taxRateData || [];
-      for (var k = 0; k < fwData2.length; k++) {
-        if (fwData2[k].id !== parseInt(editId, 10) &&
-            fwData2[k].countryCode === countryCode &&
-            fwData2[k].stateCode === (stateCode || '')) {
-          showToast('warning', '该地区税率已存在，请编辑现有配置');
-          return;
-        }
-      }
-    }
-
-    if (mode === 'add') {
-      fw.taxRateAddItem(countryCode, countryName, stateCode, stateName, taxes, status);
-    } else {
-      fw.taxRateUpdateItem(editId, countryCode, countryName, stateCode, stateName, taxes, status);
-    }
-
-    closeTaxRateFormDialog();
-    fw.renderTaxRateTable();
-    showToast('success', mode === 'add' ? '税率配置已添加' : '税率配置已更新');
-  };
 
   // ---- 税率删除对话框 ----
 
@@ -1970,188 +1735,1467 @@
     fw.renderTaxRateTable();
   };
 
-  // ---- 税种管理对话框 ----
 
-  window.openTaxTypeDialog = function(mode, code) {
-    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+
+
+  // ==================== 运费管理对话框 ====================
+  var SHIPPING_DLG_URLS = [
+    'parameters/shipping/provider-dialog.html',
+    'parameters/shipping/account-dialog.html',
+    'parameters/shipping/channel-dialog.html',
+    'parameters/shipping/rate-dialog.html',
+    'parameters/shipping/delete-dialog.html',
+    'parameters/shipping/copy-dialog.html'
+  ];
+
+  // ---- 物流商表单对话框 ----
+
+  window.openShippingProviderDialog = function(mode, id) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
+      var title = document.getElementById('shippingProviderDialogTitle');
+      var nameInp = document.getElementById('shippingProviderName');
+      var codeInp = document.getElementById('shippingProviderCode');
+      var typeSel = document.getElementById('shippingProviderType');
+      var websiteInp = document.getElementById('shippingProviderWebsite');
+      var remarkInp = document.getElementById('shippingProviderRemark');
+      var statSel = document.getElementById('shippingProviderStatus');
 
-      var title    = document.getElementById('taxTypeDialogTitle');
-      var codeInp  = document.getElementById('taxTypeFormCode');
-      var nameInp  = document.getElementById('taxTypeFormName');
-      var descInp  = document.getElementById('taxTypeFormDesc');
+      document.getElementById('shippingProviderMode').value = mode;
+      document.getElementById('shippingProviderEditId').value = id || '';
 
-      document.getElementById('taxTypeDialogMode').value = mode;
-      document.getElementById('taxTypeDialogOldCode').value = code || '';
-
-      if (mode === 'edit' && code) {
-        title.textContent = '编辑税种';
-        var tt = fw.findTaxType(code);
-        if (!tt) { showToast('error', '税种不存在'); return; }
-        codeInp.value = tt.code;
-        codeInp.disabled = (tt.type === 'preset');
-        nameInp.value = tt.name;
-        descInp.value = tt.desc || '';
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑物流商';
+        var p = fw.findProvider(id);
+        if (!p) { showToast('error', '物流商不存在'); return; }
+        nameInp.value = p.name;
+        codeInp.value = p.code;
+        typeSel.value = p.type;
+        websiteInp.value = p.website || '';
+        remarkInp.value = p.remark || '';
+        statSel.value = p.status;
       } else {
-        title.textContent = '新增税种';
-        codeInp.value = '';
-        codeInp.disabled = false;
+        title.textContent = '添加物流商';
         nameInp.value = '';
-        descInp.value = '';
+        codeInp.value = '';
+        typeSel.value = '';
+        websiteInp.value = '';
+        remarkInp.value = '';
+        statSel.value = 'active';
       }
 
-      var overlay = document.getElementById('taxTypeDialogOverlay');
+      var overlay = document.getElementById('shippingProviderDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
   };
 
-  window.closeTaxTypeDialog = function() {
-    var ov = document.getElementById('taxTypeDialogOverlay');
+  window.closeShippingProviderDialog = function() {
+    var ov = document.getElementById('shippingProviderDialogOverlay');
     if (ov) ov.style.display = 'none';
   };
 
-  window.submitTaxTypeForm = function() {
+  window.submitShippingProvider = function() {
     var fw = getFW();
     if (!fw) return;
+    var mode = document.getElementById('shippingProviderMode').value;
+    var editId = document.getElementById('shippingProviderEditId').value;
+    var name = (document.getElementById('shippingProviderName').value || '').trim();
+    var code = (document.getElementById('shippingProviderCode').value || '').trim().toUpperCase();
+    var type = document.getElementById('shippingProviderType').value;
+    var website = (document.getElementById('shippingProviderWebsite').value || '').trim();
+    var remark = (document.getElementById('shippingProviderRemark').value || '').trim();
+    var status = document.getElementById('shippingProviderStatus').value;
 
-    var mode    = document.getElementById('taxTypeDialogMode').value;
-    var oldCode = document.getElementById('taxTypeDialogOldCode').value;
-    var code    = (document.getElementById('taxTypeFormCode').value || '').trim();
-    var name    = (document.getElementById('taxTypeFormName').value || '').trim();
-    var desc    = (document.getElementById('taxTypeFormDesc').value || '').trim();
+    if (!name) { showToast('warning', '请输入物流商名称'); return; }
+    if (!code) { showToast('warning', '请输入物流商代码'); return; }
+    if (!type) { showToast('warning', '请选择物流商类型'); return; }
 
-    if (!code) { showToast('warning', '请输入税种代码'); return; }
-    if (!name) { showToast('warning', '请输入税种名称'); return; }
-    if (!/^[A-Za-z0-9_]+$/.test(code)) { showToast('warning', '税种代码仅允许字母、数字、下划线'); return; }
-
-    // 检查代码重复
-    var allTypes = fw.getAllTaxTypes();
-    for (var i = 0; i < allTypes.length; i++) {
-      if (allTypes[i].code === code && (mode === 'add' || code !== oldCode)) {
-        showToast('warning', '该税种代码已被使用');
-        return;
-      }
+    // 唯一性检查
+    var providers = fw.providers || [];
+    for (var i = 0; i < providers.length; i++) {
+      if (mode === 'add' && providers[i].code === code) { showToast('warning', '该物流商代码已被使用'); return; }
+      if (mode === 'edit' && providers[i].code === code && providers[i].id !== parseInt(editId)) { showToast('warning', '该物流商代码已被使用'); return; }
     }
 
     if (mode === 'add') {
-      fw.taxTypeAddItem(code, name, desc);
+      fw.providerAddItem(name, code, type, website, status);
     } else {
-      fw.taxTypeUpdateItem(oldCode, code, name, desc);
+      fw.providerUpdateItem(parseInt(editId), name, code, type, website, status);
     }
-
-    closeTaxTypeDialog();
-    fw.renderTaxTypeTable();
-    showToast('success', mode === 'add' ? '税种已添加' : '税种已更新');
+    closeShippingProviderDialog();
+    fw.renderShippingTable();
+    showToast('success', mode === 'add' ? '物流商已添加' : '物流商已更新');
   };
 
-  // ---- 税种删除对话框 ----
+  // ---- 授权账号表单对话框 ----
 
-  window.openTaxTypeDeleteDialog = function(code) {
-    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
+  window.openShippingAccountDialog = function(mode, id) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
-      var tt = fw.findTaxType(code);
-      if (!tt) { showToast('error', '税种不存在'); return; }
+      var title = document.getElementById('shippingAccountDialogTitle');
+      var provSel = document.getElementById('shippingAccountProvider');
+      var nameInp = document.getElementById('shippingAccountName');
+      var codeInp = document.getElementById('shippingAccountCode');
+      var apiKeyInp = document.getElementById('shippingAccountApiKey');
+      var apiSecretInp = document.getElementById('shippingAccountApiSecret');
+      var callbackInp = document.getElementById('shippingAccountCallbackUrl');
+      var remarkInp = document.getElementById('shippingAccountRemark');
+      var statSel = document.getElementById('shippingAccountStatus');
 
-      document.getElementById('taxTypeDeleteCode').value = code;
-      document.getElementById('taxTypeDeleteDialogTitle').textContent = '删除税种';
-      var msg = '<p>确定要删除税种「<strong>' + tt.name + '（' + tt.code + '）</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">删除后，所有使用该税种的税率配置将同步移除该税种。</p>';
-      document.getElementById('taxTypeDeleteMsg').innerHTML = msg;
+      document.getElementById('shippingAccountMode').value = mode;
+      document.getElementById('shippingAccountEditId').value = id || '';
 
-      var overlay = document.getElementById('taxTypeDeleteDialogOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
+      // 填充物流商下拉
+      var providers = fw.providers || [];
+      provSel.innerHTML = '<option value="">请选择物流商</option>';
+      providers.forEach(function(p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; provSel.appendChild(o); });
 
-  window.closeTaxTypeDeleteDialog = function() {
-    var ov = document.getElementById('taxTypeDeleteDialogOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  window.confirmTaxTypeDelete = function() {
-    var fw = getFW();
-    var code = document.getElementById('taxTypeDeleteCode').value;
-    closeTaxTypeDeleteDialog();
-    if (!fw) return;
-    fw.taxTypeDeleteItem(code);
-    fw.renderTaxTypeTable();
-    showToast('success', '税种已删除');
-  };
-
-  // ---- 地区详情对话框 ----
-
-  window.openTaxRateRegionDetailDialog = function(countryCode, countryName) {
-    ensureDialogs('tax-rate', TAX_RATE_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-
-      var title = document.getElementById('taxRateRegionDetailTitle');
-      var body  = document.getElementById('taxRateRegionDetailBody');
-      var jumpBtn = document.getElementById('taxRateRegionDetailJumpBtn');
-
-      title.textContent = countryName + ' - 已配置省份';
-
-      var taxRates = fw.taxRateData || [];
-      var stateRates = taxRates.filter(function(t) {
-        return t.countryCode === countryCode && t.regionType === 'state';
-      });
-      var hasCountryRate = taxRates.some(function(t) {
-        return t.countryCode === countryCode && t.regionType === 'country';
-      });
-
-      var html = '';
-      html += '<p style="margin-bottom:12px;font-size:14px;color:hsl(var(--foreground));">';
-      html += '国家税率：' + (hasCountryRate ? '<span class="badge badge-success" style="margin-left:4px;">已配置</span>' : '<span class="badge badge-secondary" style="margin-left:4px;">未配置</span>');
-      html += '</p>';
-
-      if (stateRates.length === 0) {
-        html += '<div class="empty-state" style="padding:24px;">';
-        html += '<div class="empty-state-title">暂无已配置省份</div>';
-        html += '<div class="empty-state-desc">该国家下还没有配置省/州级别税率</div>';
-        html += '</div>';
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑授权账号';
+        var a = fw.findAccount(id);
+        if (!a) { showToast('error', '授权账号不存在'); return; }
+        provSel.value = a.providerId;
+        nameInp.value = a.name;
+        codeInp.value = a.code;
+        apiKeyInp.value = a.apiKey || '';
+        apiSecretInp.value = a.apiSecret || '';
+        callbackInp.value = a.callbackUrl || '';
+        remarkInp.value = a.remark || '';
+        statSel.value = a.status;
       } else {
-        html += '<div class="region-list-panel">';
-        stateRates.forEach(function(sr) {
-          var composite = 0;
-          if (sr.taxes) sr.taxes.forEach(function(t) { composite += t.rate || 0; });
-          var sm = sr.status === 'active'
-            ? '<span class="badge badge-success">启用</span>'
-            : '<span class="badge badge-secondary">停用</span>';
-          html += '<div class="region-list-item">';
-          html += '<div><div class="rli-name">' + sr.stateName + '</div><div style="font-size:12px;color:hsl(var(--muted-foreground));">综合税率：' + composite.toFixed(2) + '% | ' + (sr.taxes ? sr.taxes.length : 0) + ' 个税种</div></div>';
-          html += '<div class="rli-status">' + sm + '</div>';
-          html += '</div>';
-        });
-        html += '</div>';
+        title.textContent = '添加授权账号';
+        provSel.value = '';
+        nameInp.value = '';
+        codeInp.value = '';
+        apiKeyInp.value = '';
+        apiSecretInp.value = '';
+        callbackInp.value = '';
+        remarkInp.value = '';
+        statSel.value = 'active';
       }
 
-      body.innerHTML = html;
-      jumpBtn.setAttribute('data-country', countryCode);
-      jumpBtn.setAttribute('data-name', countryName);
-
-      var overlay = document.getElementById('taxRateRegionDetailOverlay');
+      var overlay = document.getElementById('shippingAccountDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
   };
 
-  window.closeTaxRateRegionDetailDialog = function() {
-    var ov = document.getElementById('taxRateRegionDetailOverlay');
+  window.closeShippingAccountDialog = function() {
+    var ov = document.getElementById('shippingAccountDialogOverlay');
     if (ov) ov.style.display = 'none';
   };
 
-  window.jumpToTaxRateConfig = function() {
-    var btn = document.getElementById('taxRateRegionDetailJumpBtn');
-    var countryName = btn ? btn.getAttribute('data-name') || '' : '';
-    closeTaxRateRegionDetailDialog();
+  window.submitShippingAccount = function() {
     var fw = getFW();
     if (!fw) return;
-    if (fw.switchTab) fw.switchTab('config');
-    // 跳转后自动过滤到对应国家
-    if (countryName && fw.document) {
-      var searchInput = fw.document.getElementById('searchInput');
-      if (searchInput) searchInput.value = countryName;
-      if (fw.renderTaxRateTable) fw.renderTaxRateTable();
+    var mode = document.getElementById('shippingAccountMode').value;
+    var editId = document.getElementById('shippingAccountEditId').value;
+    var providerId = parseInt(document.getElementById('shippingAccountProvider').value);
+    var name = (document.getElementById('shippingAccountName').value || '').trim();
+    var code = (document.getElementById('shippingAccountCode').value || '').trim().toUpperCase();
+    var apiKey = (document.getElementById('shippingAccountApiKey').value || '').trim();
+    var apiSecret = (document.getElementById('shippingAccountApiSecret').value || '').trim();
+    var callbackUrl = (document.getElementById('shippingAccountCallbackUrl').value || '').trim();
+    var remark = (document.getElementById('shippingAccountRemark').value || '').trim();
+    var status = document.getElementById('shippingAccountStatus').value;
+
+    if (!providerId) { showToast('warning', '请选择所属物流商'); return; }
+    if (!name) { showToast('warning', '请输入账号名称'); return; }
+    if (!code) { showToast('warning', '请输入账号代码'); return; }
+
+    var accounts = fw.accounts || [];
+    for (var i = 0; i < accounts.length; i++) {
+      if (mode === 'add' && accounts[i].code === code) { showToast('warning', '该账号代码已被使用'); return; }
+      if (mode === 'edit' && accounts[i].code === code && accounts[i].id !== parseInt(editId)) { showToast('warning', '该账号代码已被使用'); return; }
+    }
+
+    if (mode === 'add') {
+      fw.accountAddItem(providerId, name, code, apiKey || '', apiSecret || '', callbackUrl, status);
+    } else {
+      fw.accountUpdateItem(parseInt(editId), providerId, name, code, apiKey || '', apiSecret || '', callbackUrl, status);
+    }
+    closeShippingAccountDialog();
+    fw.renderShippingTable();
+    showToast('success', mode === 'add' ? '授权账号已添加' : '授权账号已更新');
+  };
+
+  // ---- 渠道表单对话框 ----
+  var _chCountryPickerCallback = null;
+  var _chTempSelectedCountries = [];
+
+  window.openShippingChannelDialog = function(mode, id) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var title = document.getElementById('shippingChannelDialogTitle');
+      var provDisplay = document.getElementById('shippingChannelProviderDisplay');
+      var acctSel = document.getElementById('shippingChannelAccount');
+      var nameInp = document.getElementById('shippingChannelName');
+      var codeInp = document.getElementById('shippingChannelCode');
+      var srvSel = document.getElementById('shippingChannelServiceType');
+      var daysInp = document.getElementById('shippingChannelEstimatedDays');
+      var statSel = document.getElementById('shippingChannelStatus');
+
+      document.getElementById('shippingChannelMode').value = mode;
+      document.getElementById('shippingChannelEditId').value = id || '';
+
+      // 填充账号下拉
+      var accounts = fw.accounts || [];
+      var providers = fw.providers || [];
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑渠道';
+        var ch = fw.findChannel(id);
+        if (!ch) { showToast('error', '渠道不存在'); return; }
+        var ac = fw.findAccount(ch.accountId);
+        var p = ac ? fw.findProvider(ac.providerId) : null;
+        provDisplay.textContent = p ? p.name : '—';
+        nameInp.value = ch.name;
+        codeInp.value = ch.code;
+        srvSel.value = ch.serviceType;
+        daysInp.value = ch.estimatedDays || '';
+        statSel.value = ch.status;
+        _chTempSelectedCountries = (ch.countries || []).slice();
+        // 只显示该物流商下的账号
+        acctSel.innerHTML = '';
+        accounts.forEach(function(a) {
+          if (a.providerId === (ac ? ac.providerId : 0)) { var o = document.createElement('option'); o.value = a.id; o.textContent = a.name; acctSel.appendChild(o); }
+        });
+        acctSel.value = ch.accountId;
+      } else {
+        title.textContent = '添加渠道';
+        provDisplay.textContent = '—';
+        nameInp.value = '';
+        codeInp.value = '';
+        srvSel.value = '';
+        daysInp.value = '';
+        statSel.value = 'active';
+        _chTempSelectedCountries = [];
+        // 显示所有账号
+        acctSel.innerHTML = '<option value="">请选择授权账号</option>';
+        accounts.forEach(function(a) { var o = document.createElement('option'); o.value = a.id; o.textContent = a.name + ' (' + (providers.find(function(p){return p.id===a.providerId;})||{}).name + ')'; acctSel.appendChild(o); });
+      }
+      document.getElementById('shippingChannelCountries').value = JSON.stringify(_chTempSelectedCountries);
+      renderChannelCountryTags();
+      var overlay = document.getElementById('shippingChannelDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeShippingChannelDialog = function() {
+    var ov = document.getElementById('shippingChannelDialogOverlay');
+    if (ov) ov.style.display = 'none';
+    _chTempSelectedCountries = [];
+  };
+
+  function renderChannelCountryTags() {
+    var container = document.getElementById('shippingChannelCountryTags');
+    if (!container) return;
+    if (_chTempSelectedCountries.length === 0) { container.innerHTML = '<span style="font-size:13px;color:hsl(var(--muted-foreground));">未选择</span>'; return; }
+    container.innerHTML = _chTempSelectedCountries.map(function(c) { return '<span class="country-tag">' + c + '</span>'; }).join('');
+  }
+
+  window.openCountryPicker = function() {
+    var overlay = document.getElementById('countryPickerOverlay');
+    if (!overlay) return;
+    // 获取国家列表（从 country iframe 或默认列表）
+    var allCountries = [];
+    try {
+      var cache = window.PLATFORM_IFRAME_CACHE;
+      if (cache && cache['parameters/country/country.html'] && cache['parameters/country/country.html'].contentWindow && cache['parameters/country/country.html'].contentWindow.countries) {
+        allCountries = cache['parameters/country/country.html'].contentWindow.countries;
+      }
+    } catch(e) {}
+    if (!allCountries.length) {
+      allCountries = [
+        { name: '美国', code: 'US' }, { name: '中国', code: 'CN' }, { name: '英国', code: 'GB' },
+        { name: '德国', code: 'DE' }, { name: '法国', code: 'FR' }, { name: '日本', code: 'JP' },
+        { name: '澳洲', code: 'AU' }, { name: '加拿大', code: 'CA' }, { name: '巴西', code: 'BR' },
+        { name: '南非', code: 'ZA' }, { name: '新加坡', code: 'SG' }, { name: '韩国', code: 'KR' },
+        { name: '印度', code: 'IN' }, { name: '意大利', code: 'IT' }, { name: '西班牙', code: 'ES' },
+        { name: '荷兰', code: 'NL' }, { name: '瑞典', code: 'SE' }, { name: '挪威', code: 'NO' },
+        { name: '丹麦', code: 'DK' }, { name: '芬兰', code: 'FI' }, { name: '波兰', code: 'PL' },
+        { name: '乌克兰', code: 'UA' }, { name: '俄罗斯', code: 'RU' }, { name: '阿联酋', code: 'AE' },
+        { name: '沙特', code: 'SA' }, { name: '墨西哥', code: 'MX' }, { name: '阿根廷', code: 'AR' },
+        { name: '智利', code: 'CL' }, { name: '新西兰', code: 'NZ' }, { name: '泰国', code: 'TH' }
+      ];
+    }
+    var list = document.getElementById('countryPickerList');
+    list.innerHTML = allCountries.map(function(c) {
+      var checked = _chTempSelectedCountries.indexOf(c.name) !== -1;
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;" onmouseenter="this.style.background=\'hsl(var(--muted))\'" onmouseleave="this.style.background=\'\'">' +
+        '<input type="checkbox" class="country-picker-check" value="' + c.name + '"' + (checked ? ' checked' : '') + ' onchange="updateCountryPickerCount()" style="width:16px;height:16px;">' +
+        '<span style="font-size:13px;">' + c.name + '</span><span style="font-size:12px;color:hsl(var(--muted-foreground));">' + c.code + '</span>' +
+        '</label>';
+    }).join('');
+    updateCountryPickerCount();
+    overlay.style.display = 'flex';
+  };
+
+  window.closeCountryPicker = function() {
+    var ov = document.getElementById('countryPickerOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.updateCountryPickerCount = function() {
+    var boxes = document.querySelectorAll('.country-picker-check');
+    var count = 0; boxes.forEach(function(b) { if (b.checked) count++; });
+    var el = document.getElementById('countryPickerCount');
+    if (el) el.textContent = count;
+  };
+
+  window.filterCountryPicker = function() {
+    var q = (document.getElementById('countryPickerSearch').value || '').toLowerCase();
+    var items = document.querySelectorAll('#countryPickerList label');
+    items.forEach(function(item) {
+      var text = item.textContent.toLowerCase();
+      item.style.display = q ? (text.indexOf(q) !== -1 ? '' : 'none') : '';
+    });
+  };
+
+  window.confirmCountryPicker = function() {
+    var boxes = document.querySelectorAll('.country-picker-check');
+    _chTempSelectedCountries = [];
+    boxes.forEach(function(b) { if (b.checked) _chTempSelectedCountries.push(b.value); });
+    if (_chTempSelectedCountries.length === 0) { showToast('info', '请至少选择一个配送国家'); return; }
+    document.getElementById('shippingChannelCountries').value = JSON.stringify(_chTempSelectedCountries);
+    renderChannelCountryTags();
+    closeCountryPicker();
+  };
+
+  window.submitShippingChannel = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var mode = document.getElementById('shippingChannelMode').value;
+    var editId = document.getElementById('shippingChannelEditId').value;
+    var accountId = parseInt(document.getElementById('shippingChannelAccount').value);
+    var name = (document.getElementById('shippingChannelName').value || '').trim();
+    var code = (document.getElementById('shippingChannelCode').value || '').trim().toUpperCase();
+    var serviceType = document.getElementById('shippingChannelServiceType').value;
+    var countries = JSON.parse(document.getElementById('shippingChannelCountries').value || '[]');
+    var estimatedDays = (document.getElementById('shippingChannelEstimatedDays').value || '').trim();
+    var status = document.getElementById('shippingChannelStatus').value;
+
+    if (!accountId) { showToast('warning', '请选择所属授权账号'); return; }
+    if (!name) { showToast('warning', '请输入渠道名称'); return; }
+    if (!code) { showToast('warning', '请输入渠道代码'); return; }
+    if (!serviceType) { showToast('warning', '请选择服务类型'); return; }
+    if (countries.length === 0) { showToast('warning', '请至少选择一个配送国家'); return; }
+
+    var channels = fw.channels || [];
+    for (var i = 0; i < channels.length; i++) {
+      if (mode === 'add' && channels[i].code === code) { showToast('warning', '该渠道代码已被使用'); return; }
+      if (mode === 'edit' && channels[i].code === code && channels[i].id !== parseInt(editId)) { showToast('warning', '该渠道代码已被使用'); return; }
+    }
+
+    if (mode === 'add') {
+      fw.channelAddItem(accountId, name, code, serviceType, countries, estimatedDays, 'amount', status);
+    } else {
+      fw.channelUpdateItem(parseInt(editId), accountId, name, code, serviceType, countries, estimatedDays, undefined, status);
+    }
+    closeShippingChannelDialog();
+    fw.renderShippingTable();
+    showToast('success', mode === 'add' ? '渠道已添加' : '渠道已更新');
+  };
+
+  // ---- 运费规则配置对话框 ----
+  var _rateTempRemoteFees = [];
+  var _rateRemoteCallback = null;
+
+  window.openShippingRateDialog = function(channelId) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(channelId);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      var ac = fw.findAccount(ch.accountId);
+      var p = ac ? fw.findProvider(ac.providerId) : null;
+
+      document.getElementById('shippingRateChannelId').value = channelId;
+
+      // 渠道信息
+      var info = document.getElementById('shippingRateChannelInfo');
+      var infoCountries = (ch.countries||[]).join('、');
+      if (infoCountries.length > 30) infoCountries = infoCountries.substring(0, 30) + '...';
+      info.innerHTML = '<div class="info-item"><strong>物流商</strong>' + (p ? p.name : '—') + '</div>' +
+        '<div class="info-item"><strong>账号</strong>' + (ac ? ac.name : '—') + '</div>' +
+        '<div class="info-item"><strong>渠道</strong>' + ch.name + '</div>' +
+        '<div class="info-item"><strong>国家</strong>' + (infoCountries || '—') + '</div>';
+
+      // 查找已有模板
+      var templates = fw.templates || [];
+      var tpl = null;
+      for (var i = 0; i < templates.length; i++) {
+        if (templates[i].channelId === channelId) { tpl = templates[i]; break; }
+      }
+
+      if (tpl) {
+        document.getElementById('shippingRateTemplateId').value = tpl.id;
+        document.getElementById('rateBillingType').value = tpl.billingType;
+        document.getElementById('rateFirstUnitFee').value = tpl.firstUnitFee || '';
+        document.getElementById('rateAdditionalUnitFee').value = tpl.additionalUnitFee || '';
+        document.getElementById('rateFreeShippingThreshold').value = tpl.freeShippingThreshold || '';
+        document.getElementById('rateInsuranceEnabled').value = tpl.insuranceEnabled ? 'true' : 'false';
+        document.getElementById('rateInsuranceRate').value = tpl.insuranceRate || '';
+        document.getElementById('rateInsuranceHolder').value = tpl.insuranceHolder || 'platform';
+        document.getElementById('rateIsTaxIncluded').value = tpl.isTaxIncluded ? 'true' : 'false';
+        _rateTempRemoteFees = (tpl.remoteFeeRules || []).slice();
+        document.getElementById('shippingRateDialogTitle').textContent = '编辑运费规则';
+      } else {
+        document.getElementById('shippingRateTemplateId').value = '';
+        document.getElementById('rateBillingType').value = 'amount';
+        document.getElementById('rateFirstUnitFee').value = '';
+        document.getElementById('rateAdditionalUnitFee').value = '';
+        document.getElementById('rateFreeShippingThreshold').value = '';
+        document.getElementById('rateInsuranceEnabled').value = 'false';
+        document.getElementById('rateInsuranceRate').value = '';
+        document.getElementById('rateInsuranceHolder').value = 'platform';
+        document.getElementById('rateIsTaxIncluded').value = 'false';
+        _rateTempRemoteFees = [];
+        document.getElementById('shippingRateDialogTitle').textContent = '配置运费规则';
+      }
+
+      onBillingTypeChange();
+      onInsuranceChange();
+      switchRateTab('basic');
+      renderRateRules(tpl ? tpl.rules : null);
+      renderRemoteFeeList();
+
+      var overlay = document.getElementById('shippingRateDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeShippingRateDialog = function() {
+    var ov = document.getElementById('shippingRateDialogOverlay');
+    if (ov) ov.style.display = 'none';
+    _rateTempRemoteFees = [];
+  };
+
+  window.switchRateTab = function(tab) {
+    document.querySelectorAll('#shippingRateDialogOverlay .shipping-tab').forEach(function(t) { t.classList.remove('active'); });
+    var basicTab = document.getElementById('rateTab-basic');
+    var remoteTab = document.getElementById('rateTab-remote');
+    if (tab === 'basic') {
+      basicTab.style.display = '';
+      remoteTab.style.display = 'none';
+    } else {
+      basicTab.style.display = 'none';
+      remoteTab.style.display = '';
+    }
+    // highlight active tab button
+    var tabs = document.querySelectorAll('#shippingRateDialogOverlay .shipping-tab');
+    tabs.forEach(function(t) { if (t.textContent.indexOf(tab === 'basic' ? '基础' : '偏远') !== -1) t.classList.add('active'); });
+  };
+
+  window.onBillingTypeChange = function() {
+    var type = document.getElementById('rateBillingType').value;
+    var title = document.getElementById('rateRulesTitle');
+    var tbody = document.getElementById('rateRulesBody');
+    var addBtn = document.getElementById('btnAddRateRule');
+
+    if (type === 'fixed') {
+      title.textContent = '固定运费金额';
+      addBtn.style.display = 'none';
+      if (tbody.querySelectorAll('tr').length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3"><input class="form-input" type="number" id="rateFixedFee" placeholder="固定运费金额（如 10）" step="0.01" min="0"></td></tr>';
+      }
+    } else {
+      title.textContent = type === 'amount' ? '金额区间规则 ($)' : '重量区间规则 (g)';
+      addBtn.style.display = '';
+      renderRateRules(null);
+    }
+  };
+
+  function renderRateRules(rules) {
+    var type = document.getElementById('rateBillingType').value;
+    var tbody = document.getElementById('rateRulesBody');
+    if (type === 'fixed') return;
+
+    var unitLabel = type === 'amount' ? '$' : 'g';
+    if (!rules) rules = [{from:0,to:30,fee:8},{from:30,to:80,fee:5},{from:80,to:150,fee:3}];
+
+    tbody.innerHTML = rules.map(function(r, i) {
+      return '<tr>' +
+        '<td><div class="input-group"><input type="number" class="rate-rule-from" value="' + r.from + '" step="0.01" min="0"><span class="input-unit">' + unitLabel + '</span></div></td>' +
+        '<td><div class="input-group"><input type="number" class="rate-rule-to" value="' + (r.to || '') + '" step="0.01" min="0" placeholder="无上限"><span class="input-unit">' + unitLabel + '</span></div></td>' +
+        '<td><div class="input-group"><input type="number" class="rate-rule-fee" value="' + r.fee + '" step="0.01" min="0"><span class="input-unit">$</span></div></td>' +
+        '<td><button class="btn-row-del" onclick="this.closest(\'tr\').remove()">&times;</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  window.addRateRule = function() {
+    var tbody = document.getElementById('rateRulesBody');
+    var rows = tbody.querySelectorAll('tr');
+    var lastTo = rows.length > 0 ? parseInt(rows[rows.length-1].querySelector('.rate-rule-to').value) || 0 : 0;
+    var row = document.createElement('tr');
+    row.innerHTML = '<td><div class="input-group"><input type="number" class="rate-rule-from" value="' + lastTo + '" step="0.01" min="0"><span class="input-unit"></span></div></td>' +
+      '<td><div class="input-group"><input type="number" class="rate-rule-to" value="' + (lastTo + 50) + '" step="0.01" min="0"><span class="input-unit"></span></div></td>' +
+      '<td><div class="input-group"><input type="number" class="rate-rule-fee" value="0" step="0.01" min="0"><span class="input-unit">$</span></div></td>' +
+      '<td><button class="btn-row-del" onclick="this.closest(\'tr\').remove()">&times;</button></td>';
+    tbody.appendChild(row);
+  };
+
+  window.onInsuranceChange = function() {
+    var enabled = document.getElementById('rateInsuranceEnabled').value === 'true';
+    document.getElementById('rateInsuranceRateGroup').style.display = enabled ? '' : 'none';
+    document.getElementById('rateInsuranceHolderGroup').style.display = enabled ? '' : 'none';
+  };
+
+  // ---- 偏远地区附加费 ----
+
+  function renderRemoteFeeList() {
+    var container = document.getElementById('remoteFeeRulesList');
+    if (!container) return;
+    if (_rateTempRemoteFees.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:hsl(var(--muted-foreground));font-size:13px;">暂无偏远地区附加费规则</div>';
+      return;
+    }
+    container.innerHTML = _rateTempRemoteFees.map(function(rf, i) {
+      var typeLabel = rf.type === 'fixed' ? '固定金额 $' + rf.amount : '百分比 ' + rf.percent + '%';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid hsl(var(--border));border-radius:6px;margin-bottom:6px;">' +
+        '<span style="font-size:13px;"><strong>' + rf.country + '</strong> — ' + typeLabel + '</span>' +
+        '<button class="btn-row-del" onclick="removeRemoteFee(' + i + ')">&times;</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  window.addRemoteFeeRule = function() {
+    _rateRemoteCallback = function(country) {
+      if (!country) return;
+      _rateTempRemoteFees.push({ country: country, type: 'fixed', amount: 5 });
+      renderRemoteFeeList();
+    };
+    openRemoteCountryPicker();
+  };
+
+  window.removeRemoteFee = function(index) {
+    _rateTempRemoteFees.splice(index, 1);
+    renderRemoteFeeList();
+  };
+
+  window.openRemoteCountryPicker = function() {
+    var overlay = document.getElementById('remoteCountryPickerOverlay');
+    if (!overlay) return;
+    var allCountries = [
+      { name: '南非', code: 'ZA' }, { name: '巴西', code: 'BR' }, { name: '阿根廷', code: 'AR' },
+      { name: '智利', code: 'CL' }, { name: '俄罗斯', code: 'RU' }, { name: '印度', code: 'IN' },
+      { name: '墨西哥', code: 'MX' }, { name: '乌克兰', code: 'UA' }, { name: '沙特', code: 'SA' },
+      { name: '阿联酋', code: 'AE' }, { name: '新西兰', code: 'NZ' }, { name: '挪威', code: 'NO' },
+      { name: '芬兰', code: 'FI' }, { name: '波兰', code: 'PL' }
+    ];
+    var list = document.getElementById('remoteCountryPickerList');
+    list.innerHTML = allCountries.map(function(c) {
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;" onmouseenter="this.style.background=\'hsl(var(--muted))\'" onmouseleave="this.style.background=\'\'">' +
+        '<input type="radio" name="remoteCountryRadio" value="' + c.name + '" style="width:16px;height:16px;">' +
+        '<span style="font-size:13px;">' + c.name + '</span><span style="font-size:12px;color:hsl(var(--muted-foreground));">' + c.code + '</span>' +
+        '</label>';
+    }).join('');
+    overlay.style.display = 'flex';
+  };
+
+  window.closeRemoteCountryPicker = function() {
+    var ov = document.getElementById('remoteCountryPickerOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmRemoteCountryPicker = function() {
+    var radio = document.querySelector('input[name="remoteCountryRadio"]:checked');
+    if (!radio) { showToast('info', '请选择一个偏远国家'); return; }
+    var country = radio.value;
+    closeRemoteCountryPicker();
+    if (_rateRemoteCallback) _rateRemoteCallback(country);
+    _rateRemoteCallback = null;
+  };
+
+  // ---- 提交运费规则 ----
+
+  window.submitShippingRate = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var channelId = parseInt(document.getElementById('shippingRateChannelId').value);
+    var tplId = document.getElementById('shippingRateTemplateId').value;
+    var billingType = document.getElementById('rateBillingType').value;
+    var firstUnitFee = parseFloat(document.getElementById('rateFirstUnitFee').value) || 0;
+    var additionalUnitFee = parseFloat(document.getElementById('rateAdditionalUnitFee').value) || 0;
+    var freeShippingThreshold = parseFloat(document.getElementById('rateFreeShippingThreshold').value) || 0;
+    var insuranceEnabled = document.getElementById('rateInsuranceEnabled').value === 'true';
+    var insuranceRate = parseFloat(document.getElementById('rateInsuranceRate').value) || 0;
+    var insuranceHolder = document.getElementById('rateInsuranceHolder').value;
+    var isTaxIncluded = document.getElementById('rateIsTaxIncluded').value === 'true';
+
+    // 读取规则
+    var rules = [];
+    if (billingType === 'fixed') {
+      var fixedFee = parseFloat(document.getElementById('rateFixedFee').value) || 0;
+      rules = [{from:0,to:0,fee:fixedFee}];
+    } else {
+      var froms = document.querySelectorAll('.rate-rule-from');
+      var tos = document.querySelectorAll('.rate-rule-to');
+      var fees = document.querySelectorAll('.rate-rule-fee');
+      for (var i = 0; i < froms.length; i++) {
+        var f = parseFloat(froms[i].value) || 0;
+        var t = parseFloat(tos[i].value) || 0;
+        var fee = parseFloat(fees[i].value) || 0;
+        rules.push({ from: f, to: t, fee: fee });
+      }
+      if (rules.length === 0) { showToast('warning', '请至少配置一条计费规则'); return; }
+    }
+
+    var tpl = {
+      channelId: channelId,
+      billingType: billingType,
+      rules: rules,
+      firstUnitFee: firstUnitFee,
+      additionalUnitFee: additionalUnitFee,
+      freeShippingThreshold: freeShippingThreshold,
+      remoteFeeRules: _rateTempRemoteFees,
+      insuranceEnabled: insuranceEnabled,
+      insuranceRate: insuranceRate,
+      insuranceHolder: insuranceHolder,
+      isTaxIncluded: isTaxIncluded
+    };
+    if (tplId) tpl.id = parseInt(tplId);
+
+    fw.templateSaveItem(tpl);
+    closeShippingRateDialog();
+    fw.renderShippingTable();
+    showToast('success', '运费规则已保存');
+  };
+
+  // ---- 删除对话框（通用） ----
+
+  window.openShippingDeleteDialog = function(type, id) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var name = '';
+      if (type === 'provider') { var p = fw.findProvider(id); if (!p) return; name = p.name; }
+      else if (type === 'account') { var a = fw.findAccount(id); if (!a) return; name = a.name; }
+      else if (type === 'channel') { var ch = fw.findChannel(id); if (!ch) return; name = ch.name; }
+
+      var typeLabels = { provider: '物流商', account: '授权账号', channel: '渠道' };
+      document.getElementById('shippingDeleteType').value = type;
+      document.getElementById('shippingDeleteId').value = id;
+      document.getElementById('shippingDeleteIsBatch').value = 'false';
+      document.getElementById('shippingDeleteDialogTitle').textContent = '删除' + typeLabels[type];
+      var msg = '<p>确定要删除' + typeLabels[type] + '「<strong>' + name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('shippingDeleteMsg').innerHTML = msg;
+
+      var overlay = document.getElementById('shippingDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openShippingBatchDeleteDialog = function(type, ids) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的项'); return; }
+      var typeLabels = { provider: '物流商', account: '授权账号', channel: '渠道' };
+      document.getElementById('shippingDeleteType').value = type;
+      document.getElementById('shippingDeleteId').value = JSON.stringify(ids);
+      document.getElementById('shippingDeleteIsBatch').value = 'true';
+      document.getElementById('shippingDeleteDialogTitle').textContent = '批量删除' + typeLabels[type];
+      var msg = '<p>确定要批量删除以下 <strong>' + ids.length + '</strong> 个' + typeLabels[type] + '吗？</p><p style="margin-top:6px;color:hsl(var(--error));">此操作不可恢复。</p>';
+      document.getElementById('shippingDeleteMsg').innerHTML = msg;
+      var overlay = document.getElementById('shippingDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeShippingDeleteDialog = function() {
+    var ov = document.getElementById('shippingDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmShippingDelete = function() {
+    var fw = getFW();
+    var type = document.getElementById('shippingDeleteType').value;
+    var id = document.getElementById('shippingDeleteId').value;
+    var isBatch = document.getElementById('shippingDeleteIsBatch').value === 'true';
+    closeShippingDeleteDialog();
+    if (!fw) return;
+    if (isBatch) {
+      var ids = JSON.parse(id);
+      if (type === 'provider') fw.providerBatchDeleteItems(ids);
+      else if (type === 'account') fw.accountBatchDeleteItems(ids);
+      else if (type === 'channel') fw.channelBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 条');
+    } else {
+      if (type === 'provider') fw.providerDeleteItem(parseInt(id));
+      else if (type === 'account') fw.accountDeleteItem(parseInt(id));
+      else if (type === 'channel') fw.channelDeleteItem(parseInt(id));
+      showToast('success', '已删除');
+    }
+    fw.renderShippingTable();
+  };
+
+  // ---- 复制运费规则对话框 ----
+
+  window.openShippingCopyDialog = function(channelId) {
+    ensureDialogs('shipping', SHIPPING_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(channelId);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      document.getElementById('shippingCopySourceChannelId').value = channelId;
+      document.getElementById('shippingCopySourceLabel').textContent = ch.name + ' (' + (ch.countries||[]).join('、') + ')';
+
+      // 填充目标渠道下拉（排除自身和已有模板的渠道）
+      var channels = fw.channels || [];
+      var templates = fw.templates || [];
+      var tplChannelIds = templates.map(function(t) { return t.channelId; });
+      var sel = document.getElementById('shippingCopyTargetChannel');
+      sel.innerHTML = '<option value="">请选择目标渠道</option>';
+      channels.forEach(function(c) {
+        if (c.id !== channelId) {
+          var hasTpl = tplChannelIds.indexOf(c.id) !== -1;
+          var ac = fw.findAccount(c.accountId);
+          var p = ac ? fw.findProvider(ac.providerId) : null;
+          var o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = c.name + ' (' + (p?p.name:'—') + ')' + (hasTpl ? ' [已有规则]' : '');
+          sel.appendChild(o);
+        }
+      });
+
+      var overlay = document.getElementById('shippingCopyDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeShippingCopyDialog = function() {
+    var ov = document.getElementById('shippingCopyDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmShippingCopy = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var sourceChannelId = parseInt(document.getElementById('shippingCopySourceChannelId').value);
+    var targetChannelId = parseInt(document.getElementById('shippingCopyTargetChannel').value);
+    if (!targetChannelId) { showToast('warning', '请选择目标渠道'); return; }
+
+    var templates = fw.templates || [];
+    var sourceTpl = null;
+    for (var i = 0; i < templates.length; i++) {
+      if (templates[i].channelId === sourceChannelId) { sourceTpl = templates[i]; break; }
+    }
+    if (!sourceTpl) { showToast('error', '源渠道没有运费规则'); return; }
+
+    // 复制模板
+    var newTpl = JSON.parse(JSON.stringify(sourceTpl));
+    newTpl.channelId = targetChannelId;
+    // 如果目标已有模板则更新
+    var existing = null;
+    for (var j = 0; j < templates.length; j++) {
+      if (templates[j].channelId === targetChannelId) { existing = templates[j]; break; }
+    }
+    if (existing) {
+      Object.assign(existing, newTpl);
+    } else {
+      fw.templateSaveItem(newTpl);
+    }
+    closeShippingCopyDialog();
+    fw.renderShippingTable();
+    showToast('success', '运费规则已复制');
+  };
+
+  // ==================== 物流商管理对话框 ====================
+  var LOGISTICS_DLG_URLS = [
+    'parameters/logistics_provider/provider-form-dialog.html',
+    'parameters/logistics_provider/account-form-dialog.html',
+    'parameters/logistics_provider/delete-dialog.html',
+    'parameters/logistics_provider/toggle-dialog.html',
+    'parameters/logistics_provider/import-dialog.html'
+  ];
+
+  // ---- 物流商表单对话框 ----
+  window.openLogisticsProviderDialog = function(mode, id) {
+    ensureDialogs('logistics', LOGISTICS_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var title = document.getElementById('logisticsProviderDialogTitle');
+      var nameInp = document.getElementById('logisticsProviderName');
+      var codeInp = document.getElementById('logisticsProviderCode');
+      var typeSel = document.getElementById('logisticsProviderType');
+      var websiteInp = document.getElementById('logisticsProviderWebsite');
+      var logoInp = document.getElementById('logisticsProviderLogo');
+      var descInp = document.getElementById('logisticsProviderDescription');
+      var sortInp = document.getElementById('logisticsProviderSortOrder');
+      var statSel = document.getElementById('logisticsProviderStatus');
+
+      document.getElementById('logisticsProviderMode').value = mode;
+      document.getElementById('logisticsProviderEditId').value = id || '';
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑物流商';
+        var p = fw.findProvider(id);
+        if (!p) { showToast('error', '物流商不存在'); return; }
+        nameInp.value = p.name;
+        codeInp.value = p.code;
+        codeInp.setAttribute('readonly', 'readonly');
+        codeInp.style.backgroundColor = 'hsl(var(--muted))';
+        typeSel.value = p.type;
+        websiteInp.value = p.website || '';
+        if (logoInp) logoInp.value = '';
+        descInp.value = p.description || '';
+        sortInp.value = p.sortOrder || 999;
+        statSel.value = p.status;
+      } else {
+        title.textContent = '新增物流商';
+        nameInp.value = '';
+        codeInp.value = '';
+        codeInp.removeAttribute('readonly');
+        codeInp.style.backgroundColor = '';
+        typeSel.value = '';
+        websiteInp.value = '';
+        if (logoInp) logoInp.value = '';
+        descInp.value = '';
+        sortInp.value = '999';
+        statSel.value = 'enabled';
+      }
+
+      var overlay = document.getElementById('logisticsProviderDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeLogisticsProviderDialog = function() {
+    var ov = document.getElementById('logisticsProviderDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitLogisticsProvider = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var mode = document.getElementById('logisticsProviderMode').value;
+    var editId = document.getElementById('logisticsProviderEditId').value;
+    var name = (document.getElementById('logisticsProviderName').value || '').trim();
+    var code = (document.getElementById('logisticsProviderCode').value || '').trim().toUpperCase();
+    var type = document.getElementById('logisticsProviderType').value;
+    var website = (document.getElementById('logisticsProviderWebsite').value || '').trim();
+    var description = (document.getElementById('logisticsProviderDescription').value || '').trim();
+    var sortOrder = parseInt(document.getElementById('logisticsProviderSortOrder').value) || 999;
+    var status = document.getElementById('logisticsProviderStatus').value;
+
+    // 表单校验
+    if (!name) { showToast('warning', '请输入物流商名称'); return; }
+    if (!code) { showToast('warning', '请输入物流商代码'); return; }
+    if (!type) { showToast('warning', '请选择物流商类型'); return; }
+
+    // 代码格式校验
+    if (!/^[A-Z0-9_]+$/.test(code)) { showToast('warning', '物流商代码只能包含字母、数字和下划线'); return; }
+    if (code.length > 20) { showToast('warning', '物流商代码最大20字符'); return; }
+    if (name.length > 50) { showToast('warning', '物流商名称最大50字符'); return; }
+
+    // 官网URL校验
+    if (website && !/^https?:\/\/.+/.test(website)) { showToast('warning', '请输入有效的官网URL'); return; }
+
+    // 唯一性检查
+    var providers = fw.providers || [];
+    for (var i = 0; i < providers.length; i++) {
+      if (mode === 'add' && providers[i].code === code) { showToast('warning', '该物流商代码已被使用，请更换'); return; }
+      if (mode === 'edit' && providers[i].code === code && providers[i].id !== parseInt(editId)) { showToast('warning', '该物流商代码已被使用，请更换'); return; }
+    }
+
+    if (mode === 'add') {
+      fw.providerAddItem(name, code, type, website, '', description, sortOrder, status);
+    } else {
+      fw.providerUpdateItem(parseInt(editId), name, code, type, website, '', description, sortOrder, status);
+    }
+    closeLogisticsProviderDialog();
+    fw.renderLogisticsTable();
+    showToast('success', mode === 'add' ? '物流商已添加' : '保存成功');
+  };
+
+  // ---- 授权账号表单对话框 ----
+  window.openLogisticsAccountDialog = function(mode, id) {
+    ensureDialogs('logistics', LOGISTICS_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var title = document.getElementById('logisticsAccountDialogTitle');
+      var provSel = document.getElementById('logisticsAccountProvider');
+      var nameInp = document.getElementById('logisticsAccountName');
+      var codeInp = document.getElementById('logisticsAccountCode');
+      var apiKeyInp = document.getElementById('logisticsAccountApiKey');
+      var apiSecretInp = document.getElementById('logisticsAccountApiSecret');
+      var callbackInp = document.getElementById('logisticsAccountCallbackUrl');
+      var descInp = document.getElementById('logisticsAccountDescription');
+      var statSel = document.getElementById('logisticsAccountStatus');
+
+      document.getElementById('logisticsAccountMode').value = mode;
+      document.getElementById('logisticsAccountEditId').value = id || '';
+
+      // 填充物流商下拉
+      var providers = fw.providers || [];
+      provSel.innerHTML = '<option value="">请选择物流商</option>';
+      providers.forEach(function(p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; provSel.appendChild(o); });
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑授权账号';
+        var a = fw.findAccount(id);
+        if (!a) { showToast('error', '授权账号不存在'); return; }
+        provSel.value = a.providerId;
+        provSel.setAttribute('disabled', 'disabled');
+        nameInp.value = a.name;
+        codeInp.value = a.code;
+        codeInp.setAttribute('readonly', 'readonly');
+        codeInp.style.backgroundColor = 'hsl(var(--muted))';
+        apiKeyInp.value = a.apiKey || '';
+        apiSecretInp.value = a.apiSecret || '';
+        callbackInp.value = a.callbackUrl || '';
+        descInp.value = a.description || '';
+        statSel.value = a.status;
+      } else {
+        title.textContent = '新增授权账号';
+        provSel.value = '';
+        provSel.removeAttribute('disabled');
+        nameInp.value = '';
+        codeInp.value = '';
+        codeInp.removeAttribute('readonly');
+        codeInp.style.backgroundColor = '';
+        apiKeyInp.value = '';
+        apiSecretInp.value = '';
+        callbackInp.value = '';
+        descInp.value = '';
+        statSel.value = 'enabled';
+      }
+
+      var overlay = document.getElementById('logisticsAccountDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeLogisticsAccountDialog = function() {
+    var ov = document.getElementById('logisticsAccountDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.submitLogisticsAccount = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var mode = document.getElementById('logisticsAccountMode').value;
+    var editId = document.getElementById('logisticsAccountEditId').value;
+    var providerId = parseInt(document.getElementById('logisticsAccountProvider').value);
+    var name = (document.getElementById('logisticsAccountName').value || '').trim();
+    var code = (document.getElementById('logisticsAccountCode').value || '').trim().toUpperCase();
+    var apiKey = (document.getElementById('logisticsAccountApiKey').value || '').trim();
+    var apiSecret = (document.getElementById('logisticsAccountApiSecret').value || '').trim();
+    var callbackUrl = (document.getElementById('logisticsAccountCallbackUrl').value || '').trim();
+    var description = (document.getElementById('logisticsAccountDescription').value || '').trim();
+    var status = document.getElementById('logisticsAccountStatus').value;
+
+    if (!providerId) { showToast('warning', '请选择所属物流商'); return; }
+    if (!name) { showToast('warning', '请输入账号名称'); return; }
+    if (!code) { showToast('warning', '请输入账号代码'); return; }
+
+    if (!/^[A-Z0-9_]+$/.test(code)) { showToast('warning', '账号代码只能包含字母、数字和下划线'); return; }
+    if (code.length > 30) { showToast('warning', '账号代码最大30字符'); return; }
+    if (name.length > 50) { showToast('warning', '账号名称最大50字符'); return; }
+    if (callbackUrl && !/^https?:\/\/.+/.test(callbackUrl)) { showToast('warning', '请输入有效的回调URL'); return; }
+
+    var accounts = fw.accounts || [];
+    for (var i = 0; i < accounts.length; i++) {
+      if (mode === 'add' && accounts[i].code === code) { showToast('warning', '该账号代码已被使用，请更换'); return; }
+      if (mode === 'edit' && accounts[i].code === code && accounts[i].id !== parseInt(editId)) { showToast('warning', '该账号代码已被使用，请更换'); return; }
+    }
+
+    if (mode === 'add') {
+      fw.accountAddItem(providerId, name, code, apiKey, apiSecret, callbackUrl, description, status);
+    } else {
+      fw.accountUpdateItem(parseInt(editId), providerId, name, code, apiKey, apiSecret, callbackUrl, description, status);
+    }
+    closeLogisticsAccountDialog();
+    fw.renderLogisticsTable();
+    showToast('success', mode === 'add' ? '授权账号已添加' : '保存成功');
+  };
+
+  // ---- 删除确认对话框 ----
+  window.openLogisticsDeleteDialog = function(type, id) {
+    ensureDialogs('logistics', LOGISTICS_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var name = '';
+      if (type === 'provider') { var p = fw.findProvider(id); name = p ? p.name : ''; }
+      else { var a = fw.findAccount(id); name = a ? a.name : ''; }
+      var typeName = type === 'provider' ? '物流商' : '授权账号';
+      document.getElementById('logisticsDeleteDialogTitle').textContent = '确认删除';
+      document.getElementById('logisticsDeleteType').value = type;
+      document.getElementById('logisticsDeleteId').value = id;
+      document.getElementById('logisticsDeleteIsBatch').value = 'false';
+      document.getElementById('logisticsDeleteMsg').innerHTML = '确定要删除' + typeName + '「' + name + '」吗？<br><br>删除后不可恢复。';
+      var overlay = document.getElementById('logisticsDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openLogisticsBatchDeleteDialog = function(type, ids) {
+    ensureDialogs('logistics', LOGISTICS_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的项'); return; }
+      var typeName = type === 'provider' ? '物流商' : '授权账号';
+      document.getElementById('logisticsDeleteDialogTitle').textContent = '批量删除';
+      document.getElementById('logisticsDeleteType').value = type;
+      document.getElementById('logisticsDeleteId').value = JSON.stringify(ids);
+      document.getElementById('logisticsDeleteIsBatch').value = 'true';
+      document.getElementById('logisticsDeleteMsg').innerHTML = '确定要删除选中的 ' + ids.length + ' 个' + typeName + '吗？<br><br>删除后不可恢复。';
+      var overlay = document.getElementById('logisticsDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeLogisticsDeleteDialog = function() {
+    var ov = document.getElementById('logisticsDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmLogisticsDelete = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var type = document.getElementById('logisticsDeleteType').value;
+    var isBatch = document.getElementById('logisticsDeleteIsBatch').value === 'true';
+    if (isBatch) {
+      var ids = JSON.parse(document.getElementById('logisticsDeleteId').value);
+      if (type === 'provider') { fw.providerBatchDeleteItems(ids); }
+      else { fw.accountBatchDeleteItems(ids); }
+    } else {
+      var id = parseInt(document.getElementById('logisticsDeleteId').value);
+      if (type === 'provider') { fw.providerDeleteItem(id); }
+      else { fw.accountDeleteItem(id); }
+    }
+    closeLogisticsDeleteDialog();
+    fw.renderLogisticsTable();
+    showToast('success', '删除成功');
+  };
+
+  // ---- 批量导入对话框 ----
+  window.openLogisticsImportDialog = function() {
+    ensureDialogs('logistics', LOGISTICS_DLG_URLS, function() {
+      var fileInp = document.getElementById('logisticsImportFile');
+      if (fileInp) fileInp.value = '';
+      var resultDiv = document.getElementById('logisticsImportResult');
+      if (resultDiv) resultDiv.style.display = 'none';
+      var overlay = document.getElementById('logisticsImportDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeLogisticsImportDialog = function() {
+    var ov = document.getElementById('logisticsImportDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.downloadLogisticsImportTemplate = function() {
+    var csvContent = 'provider_name,provider_code,provider_type,website_url,description\n云途,YUNTU,专线,https://www.yuntoupost.com,全球专线物流\n燕文,YANWEN,专线,https://www.yw56.com.cn,专线追踪服务';
+    var blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '物流商导入模板.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('success', '模板已下载');
+  };
+
+  window.submitLogisticsImport = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var fileInp = document.getElementById('logisticsImportFile');
+    if (!fileInp || !fileInp.files || !fileInp.files.length) {
+      showToast('warning', '请选择要导入的文件');
+      return;
+    }
+    var file = fileInp.files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var text = e.target.result;
+      var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+      if (lines.length < 2) { showToast('warning', '文件内容为空或格式不正确'); return; }
+      var success = 0, fail = 0, failDetails = [];
+      var providers = fw.providers || [];
+      var importItems = [];
+      for (var i = 1; i < lines.length; i++) {
+        var cols = lines[i].split(',');
+        if (cols.length < 2) { fail++; failDetails.push('第' + (i + 1) + '行：字段数不足'); continue; }
+        var name = (cols[0] || '').trim();
+        var code = (cols[1] || '').trim().toUpperCase();
+        var type = (cols[2] || '专线').trim();
+        var website = (cols[3] || '').trim();
+        var description = (cols[4] || '').trim();
+        if (!name || !code) { fail++; failDetails.push('第' + (i + 1) + '行：名称或代码为空'); continue; }
+        if (!/^[A-Z0-9_]+$/.test(code)) { fail++; failDetails.push('第' + (i + 1) + '行：代码格式不正确'); continue; }
+        var dup = false;
+        for (var j = 0; j < providers.length; j++) { if (providers[j].code === code) { dup = true; break; } }
+        if (dup) { fail++; failDetails.push('第' + (i + 1) + '行：代码' + code + '已存在'); continue; }
+        success++;
+        importItems.push({ name: name, code: code, type: type, website: website, description: description, sortOrder: 999 });
+      }
+      // 批量导入
+      if (importItems.length > 0 && fw.providerBatchImport) {
+        fw.providerBatchImport(importItems);
+      }
+      // 显示结果
+      var resultDiv = document.getElementById('logisticsImportResult');
+      if (resultDiv) {
+        resultDiv.style.display = 'block';
+        var html = '共导入 ' + (success + fail) + ' 条数据<br>';
+        html += '成功：' + success + ' 条<br>';
+        html += '失败：' + fail + ' 条';
+        if (failDetails.length > 0) {
+          html += '<br><br><div style="font-size:12px;color:hsl(var(--destructive));">' + failDetails.slice(0, 5).join('<br>') + (failDetails.length > 5 ? '<br>...等' + failDetails.length + '条错误' : '') + '</div>';
+        }
+        document.getElementById('logisticsImportResultContent').innerHTML = html;
+      }
+      fw.renderLogisticsTable();
+      showToast('success', '导入完成：成功 ' + success + ' 条，失败 ' + fail + ' 条');
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  // ==================== 物流渠道管理对话框 ====================
+  var CHANNEL_DLG_URLS = [
+    'parameters/channel/channel-form-dialog.html',
+    'parameters/channel/delete-dialog.html',
+    'parameters/channel/toggle-dialog.html',
+    'parameters/channel/copy-dialog.html'
+  ];
+
+  var _chTempSelectedCountries = [];
+
+  // ---- 渠道表单对话框 ----
+  window.openChannelDialog = function(mode, id) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var title = document.getElementById('channelDialogTitle');
+      var provDisplay = document.getElementById('channelProviderDisplay');
+      var acctSel = document.getElementById('channelAccount');
+      var nameInp = document.getElementById('channelName');
+      var codeInp = document.getElementById('channelCode');
+      var srvSel = document.getElementById('channelServiceType');
+      var daysMinInp = document.getElementById('channelEstDaysMin');
+      var daysMaxInp = document.getElementById('channelEstDaysMax');
+      var descInp = document.getElementById('channelDescription');
+      var sortInp = document.getElementById('channelSortOrder');
+      var statSel = document.getElementById('channelStatus');
+
+      document.getElementById('channelMode').value = mode;
+      document.getElementById('channelEditId').value = id || '';
+
+      var accounts = fw.accounts || [];
+
+      if (mode === 'edit' && id) {
+        title.textContent = '编辑渠道';
+        var ch = fw.findChannel(id);
+        if (!ch) { showToast('error', '渠道不存在'); return; }
+        var ac = fw.findAccount(ch.accountId);
+        var p = ac ? fw.findProvider(ac.providerId) : null;
+        provDisplay.textContent = p ? p.name : '—';
+        nameInp.value = ch.name;
+        codeInp.value = ch.code;
+        srvSel.value = ch.serviceType;
+        daysMinInp.value = ch.estimatedDaysMin || '';
+        daysMaxInp.value = ch.estimatedDaysMax || '';
+        descInp.value = ch.description || '';
+        sortInp.value = ch.sortOrder || 999;
+        statSel.value = ch.status;
+        _chTempSelectedCountries = (ch.countries || []).slice();
+        // 只显示该物流商下的账号
+        acctSel.innerHTML = '';
+        var acctProvId = ac ? ac.providerId : 0;
+        accounts.forEach(function(a) {
+          if (a.providerId === acctProvId) {
+            var o = document.createElement('option'); o.value = a.id; o.textContent = a.name; acctSel.appendChild(o);
+          }
+        });
+        acctSel.value = ch.accountId;
+      } else {
+        title.textContent = '新增渠道';
+        provDisplay.textContent = '—';
+        nameInp.value = '';
+        codeInp.value = '';
+        srvSel.value = '';
+        daysMinInp.value = '';
+        daysMaxInp.value = '';
+        descInp.value = '';
+        sortInp.value = '999';
+        statSel.value = 'enabled';
+        _chTempSelectedCountries = [];
+        // 显示所有账号
+        acctSel.innerHTML = '<option value="">请选择授权账号</option>';
+        accounts.forEach(function(a) {
+          var prov = fw.findProvider(a.providerId);
+          var o = document.createElement('option');
+          o.value = a.id;
+          o.textContent = a.name + (prov ? ' (' + prov.name + ')' : '');
+          acctSel.appendChild(o);
+        });
+      }
+      document.getElementById('channelCountries').value = JSON.stringify(_chTempSelectedCountries);
+      renderChannelCountryTags();
+      var overlay = document.getElementById('channelDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeChannelDialog = function() {
+    var ov = document.getElementById('channelDialogOverlay');
+    if (ov) ov.style.display = 'none';
+    _chTempSelectedCountries = [];
+  };
+
+  window.onChannelAccountChange = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var acctId = parseInt(document.getElementById('channelAccount').value);
+    var ac = fw.findAccount(acctId);
+    var p = ac ? fw.findProvider(ac.providerId) : null;
+    document.getElementById('channelProviderDisplay').textContent = p ? p.name : '—';
+  };
+
+  function renderChannelCountryTags() {
+    var container = document.getElementById('channelCountryTags');
+    if (!container) return;
+    if (_chTempSelectedCountries.length === 0) { container.innerHTML = '<span style="font-size:13px;color:hsl(var(--muted-foreground));">未选择</span>'; return; }
+    container.innerHTML = _chTempSelectedCountries.map(function(c) { return '<span class="country-tag">' + c + '</span>'; }).join('');
+  }
+
+  window.openChannelCountryPicker = function() {
+    var overlay = document.getElementById('channelCountryPickerOverlay');
+    if (!overlay) return;
+    var allCountries = [
+      { name: '美国', code: 'US' }, { name: '中国', code: 'CN' }, { name: '英国', code: 'GB' },
+      { name: '德国', code: 'DE' }, { name: '法国', code: 'FR' }, { name: '日本', code: 'JP' },
+      { name: '澳洲', code: 'AU' }, { name: '加拿大', code: 'CA' }, { name: '巴西', code: 'BR' },
+      { name: '南非', code: 'ZA' }, { name: '新加坡', code: 'SG' }, { name: '韩国', code: 'KR' },
+      { name: '印度', code: 'IN' }, { name: '意大利', code: 'IT' }, { name: '西班牙', code: 'ES' },
+      { name: '荷兰', code: 'NL' }, { name: '瑞典', code: 'SE' }, { name: '挪威', code: 'NO' },
+      { name: '丹麦', code: 'DK' }, { name: '芬兰', code: 'FI' }, { name: '波兰', code: 'PL' },
+      { name: '乌克兰', code: 'UA' }, { name: '俄罗斯', code: 'RU' }, { name: '阿联酋', code: 'AE' },
+      { name: '沙特', code: 'SA' }, { name: '墨西哥', code: 'MX' }, { name: '阿根廷', code: 'AR' },
+      { name: '智利', code: 'CL' }, { name: '新西兰', code: 'NZ' }, { name: '泰国', code: 'TH' }
+    ];
+    var list = document.getElementById('channelCountryPickerList');
+    list.innerHTML = allCountries.map(function(c) {
+      var checked = _chTempSelectedCountries.indexOf(c.name) !== -1;
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;" onmouseenter="this.style.background=\'hsl(var(--muted))\'" onmouseleave="this.style.background=\'\'">' +
+        '<input type="checkbox" class="channel-country-picker-check" value="' + c.name + '"' + (checked ? ' checked' : '') + ' onchange="updateChannelCountryPickerCount()" style="width:16px;height:16px;">' +
+        '<span style="font-size:13px;">' + c.name + '</span><span style="font-size:12px;color:hsl(var(--muted-foreground));">' + c.code + '</span>' +
+        '</label>';
+    }).join('');
+    updateChannelCountryPickerCount();
+    overlay.style.display = 'flex';
+  };
+
+  window.closeChannelCountryPicker = function() {
+    var ov = document.getElementById('channelCountryPickerOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.updateChannelCountryPickerCount = function() {
+    var boxes = document.querySelectorAll('.channel-country-picker-check');
+    var count = 0; boxes.forEach(function(b) { if (b.checked) count++; });
+    var el = document.getElementById('channelCountryPickerCount');
+    if (el) el.textContent = count;
+  };
+
+  window.filterChannelCountryPicker = function() {
+    var q = (document.getElementById('channelCountryPickerSearch').value || '').toLowerCase();
+    var items = document.querySelectorAll('#channelCountryPickerList label');
+    items.forEach(function(item) {
+      var text = item.textContent.toLowerCase();
+      item.style.display = q ? (text.indexOf(q) !== -1 ? '' : 'none') : '';
+    });
+  };
+
+  window.confirmChannelCountryPicker = function() {
+    var boxes = document.querySelectorAll('.channel-country-picker-check');
+    _chTempSelectedCountries = [];
+    boxes.forEach(function(b) { if (b.checked) _chTempSelectedCountries.push(b.value); });
+    if (_chTempSelectedCountries.length === 0) { showToast('warning', '请至少选择一个配送国家'); return; }
+    document.getElementById('channelCountries').value = JSON.stringify(_chTempSelectedCountries);
+    renderChannelCountryTags();
+    closeChannelCountryPicker();
+  };
+
+  window.submitChannel = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var mode = document.getElementById('channelMode').value;
+    var editId = document.getElementById('channelEditId').value;
+    var accountId = parseInt(document.getElementById('channelAccount').value);
+    var name = (document.getElementById('channelName').value || '').trim();
+    var code = (document.getElementById('channelCode').value || '').trim().toUpperCase();
+    var serviceType = document.getElementById('channelServiceType').value;
+    var countries = JSON.parse(document.getElementById('channelCountries').value || '[]');
+    var estDaysMin = parseInt(document.getElementById('channelEstDaysMin').value) || 0;
+    var estDaysMax = parseInt(document.getElementById('channelEstDaysMax').value) || 0;
+    var description = (document.getElementById('channelDescription').value || '').trim();
+    var sortOrder = parseInt(document.getElementById('channelSortOrder').value) || 999;
+    var status = document.getElementById('channelStatus').value;
+
+    if (!accountId) { showToast('warning', '请选择所属授权账号'); return; }
+    if (!name) { showToast('warning', '请输入渠道名称'); return; }
+    if (name.length > 100) { showToast('warning', '渠道名称最大100字符'); return; }
+    if (!code) { showToast('warning', '请输入渠道代码'); return; }
+    if (!/^[A-Z0-9_]+$/.test(code)) { showToast('warning', '渠道代码只能包含字母、数字和下划线'); return; }
+    if (code.length > 30) { showToast('warning', '渠道代码最大30字符'); return; }
+    if (!serviceType) { showToast('warning', '请选择服务类型'); return; }
+    if (countries.length === 0) { showToast('warning', '请至少选择一个配送国家'); return; }
+
+    var channels = fw.channels || [];
+    for (var i = 0; i < channels.length; i++) {
+      if (mode === 'add' && channels[i].code === code) { showToast('warning', '该渠道代码已被使用，请更换'); return; }
+      if (mode === 'edit' && channels[i].code === code && channels[i].id !== parseInt(editId)) { showToast('warning', '该渠道代码已被使用，请更换'); return; }
+    }
+
+    if (mode === 'add') {
+      fw.channelAddItem(accountId, name, code, serviceType, countries, estDaysMin, estDaysMax, description, sortOrder, status);
+    } else {
+      fw.channelUpdateItem(parseInt(editId), accountId, name, code, serviceType, countries, estDaysMin, estDaysMax, description, sortOrder, status);
+    }
+    closeChannelDialog();
+    fw.renderChannelTable();
+    showToast('success', mode === 'add' ? '渠道已添加' : '保存成功');
+  };
+
+  // ---- 删除确认对话框 ----
+  window.openChannelDeleteDialog = function(id) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(id);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      document.getElementById('channelDeleteDialogTitle').textContent = '确认删除';
+      document.getElementById('channelDeleteId').value = id;
+      document.getElementById('channelDeleteIsBatch').value = 'false';
+      document.getElementById('channelDeleteMsg').innerHTML = '<p>确定要删除渠道「<strong>' + ch.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--destructive));">删除后不可恢复。</p>';
+      var overlay = document.getElementById('channelDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.openChannelBatchDeleteDialog = function(ids, blockedCount) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的渠道'); return; }
+      document.getElementById('channelDeleteDialogTitle').textContent = '批量删除';
+      document.getElementById('channelDeleteId').value = JSON.stringify(ids);
+      document.getElementById('channelDeleteIsBatch').value = 'true';
+      var msg = '<p>选中了 <strong>' + (ids.length + blockedCount) + '</strong> 个渠道</p>';
+      if (blockedCount > 0) {
+        msg += '<p style="margin-top:6px;color:hsl(var(--destructive));">其中 <strong>' + blockedCount + '</strong> 个渠道存在关联订单，无法删除</p>';
+      }
+      msg += '<p style="margin-top:6px;">其余 <strong>' + ids.length + '</strong> 个渠道将删除</p>';
+      msg += '<p style="margin-top:6px;color:hsl(var(--destructive));">删除后不可恢复。</p>';
+      document.getElementById('channelDeleteMsg').innerHTML = msg;
+      var overlay = document.getElementById('channelDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeChannelDeleteDialog = function() {
+    var ov = document.getElementById('channelDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmChannelDelete = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var isBatch = document.getElementById('channelDeleteIsBatch').value === 'true';
+    closeChannelDeleteDialog();
+    if (isBatch) {
+      var ids = JSON.parse(document.getElementById('channelDeleteId').value);
+      fw.channelBatchDeleteItems(ids);
+      showToast('success', '已删除 ' + ids.length + ' 个渠道');
+    } else {
+      var id = parseInt(document.getElementById('channelDeleteId').value);
+      fw.channelDeleteItem(id);
+      showToast('success', '渠道已删除');
+    }
+    fw.renderChannelTable();
+  };
+
+  // ---- 启用/禁用确认对话框 ----
+  window.openChannelToggleDialog = function(id) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(id);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      var newStatus = ch.status === 'enabled' ? 'disabled' : 'enabled';
+      var actionText = newStatus === 'enabled' ? '启用' : '禁用';
+      document.getElementById('channelToggleDialogTitle').textContent = '确认' + actionText;
+      document.getElementById('channelToggleId').value = id;
+      if (newStatus === 'disabled') {
+        document.getElementById('channelToggleMsg').innerHTML = '<p>确定要禁用渠道「<strong>' + ch.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">禁用后，用户结算时将看不到该配送方式。</p>';
+        document.getElementById('channelToggleConfirmBtn').textContent = '确定禁用';
+      } else {
+        document.getElementById('channelToggleMsg').innerHTML = '<p>确定要启用渠道「<strong>' + ch.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">启用后，该渠道将在结算页显示。</p>';
+        document.getElementById('channelToggleConfirmBtn').textContent = '确定启用';
+      }
+      var overlay = document.getElementById('channelToggleDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeChannelToggleDialog = function() {
+    var ov = document.getElementById('channelToggleDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmChannelToggle = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var id = parseInt(document.getElementById('channelToggleId').value);
+    var ch = fw.findChannel(id);
+    if (!ch) return;
+    ch.status = ch.status === 'enabled' ? 'disabled' : 'enabled';
+    closeChannelToggleDialog();
+    fw.renderChannelTable();
+    showToast('success', '已' + (ch.status === 'enabled' ? '启用' : '禁用') + '「' + ch.name + '」');
+  };
+
+  // ---- 复制渠道对话框 ----
+  window.openChannelCopyDialog = function(id) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(id);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      document.getElementById('channelCopyId').value = id;
+      document.getElementById('channelCopyMsg').innerHTML = '<p>确定要复制渠道「<strong>' + ch.name + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">复制后请编辑渠道代码（新代码不能与已有代码重复）。</p><p style="margin-top:6px;color:hsl(var(--muted-foreground));">将复制：服务类型、配送国家、描述、排序<br>不复制：运费模板关联</p>';
+      var overlay = document.getElementById('channelCopyDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeChannelCopyDialog = function() {
+    var ov = document.getElementById('channelCopyDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmChannelCopy = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var sourceId = parseInt(document.getElementById('channelCopyId').value);
+    var newCh = fw.channelCopyItem(sourceId);
+    closeChannelCopyDialog();
+    if (newCh) {
+      fw.renderChannelTable();
+      showToast('success', '渠道已复制，请编辑新渠道的代码');
+      // 自动打开编辑
+      setTimeout(function() { window.openChannelDialog('edit', newCh.id); }, 300);
+    } else {
+      showToast('error', '复制失败：渠道不存在');
     }
   };
 

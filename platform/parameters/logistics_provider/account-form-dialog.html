@@ -1,0 +1,60 @@
+<!-- 添加/编辑授权账号对话框 -->
+<div class="dialog-overlay" id="logisticsAccountDialogOverlay" style="display:none;" onclick="closeLogisticsAccountDialog()">
+  <div class="dialog" style="width:540px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="logisticsAccountDialogTitle">新增授权账号</span>
+      <button class="dialog-close" onclick="closeLogisticsAccountDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="logisticsAccountMode" value="add">
+      <input type="hidden" id="logisticsAccountEditId" value="">
+      <div class="form-group">
+        <label class="form-label">所属物流商<span class="required-star">*</span></label>
+        <select class="form-input" id="logisticsAccountProvider">
+          <option value="">请选择物流商</option>
+        </select>
+        <div class="form-hint">自动带入，不可修改（编辑模式下）</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">账号名称<span class="required-star">*</span></label>
+        <input class="form-input" id="logisticsAccountName" placeholder="如：惠程荣达、惠程-TEMU专用" maxlength="50">
+        <div class="form-hint">最大50字符</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">账号代码<span class="required-star">*</span></label>
+        <input class="form-input" id="logisticsAccountCode" placeholder="如：HUICHENG_01（字母+数字+下划线，唯一）" maxlength="30">
+        <div class="form-hint">字母、数字、下划线，最大30字符，唯一</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input class="form-input" id="logisticsAccountApiKey" placeholder="物流商API授权密钥（选填，加密存储）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Secret</label>
+        <input class="form-input" type="password" id="logisticsAccountApiSecret" placeholder="物流商API授权密钥（选填，加密存储）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">回调URL</label>
+        <input class="form-input" id="logisticsAccountCallbackUrl" placeholder="https://（选填）">
+        <div class="form-hint">物流状态回调地址，请输入有效的URL格式</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">描述/备注</label>
+        <textarea class="form-input" id="logisticsAccountDescription" rows="3" placeholder="补充说明（选填）" maxlength="500" style="resize:vertical;min-height:60px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态<span class="required-star">*</span></label>
+        <select class="form-input" id="logisticsAccountStatus">
+          <option value="enabled">启用</option>
+          <option value="disabled">禁用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeLogisticsAccountDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitLogisticsAccount()">保存</button>
+    </div>
+  </div>
+</div>

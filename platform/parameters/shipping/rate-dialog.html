@@ -1,0 +1,125 @@
+<!-- 运费规则配置对话框 -->
+<div class="dialog-overlay" id="shippingRateDialogOverlay" style="display:none;" onclick="closeShippingRateDialog()">
+  <div class="dialog" style="width:680px;min-height:660px;max-height:90vh;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="shippingRateDialogTitle">配置运费规则</span>
+      <button class="dialog-close" onclick="closeShippingRateDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="shippingRateChannelId" value="">
+      <input type="hidden" id="shippingRateTemplateId" value="">
+
+      <!-- 渠道信息 -->
+      <div class="info-row" id="shippingRateChannelInfo"></div>
+
+      <!-- 内部Tab -->
+      <div class="shipping-tabs" style="margin-bottom:16px;">
+        <button class="shipping-tab active" onclick="switchRateTab('basic')">基础配置</button>
+        <button class="shipping-tab" onclick="switchRateTab('remote')">偏远地区附加费</button>
+      </div>
+
+      <!-- 基础配置Tab -->
+      <div class="config-section" id="rateTab-basic">
+        <div class="form-group">
+          <label class="form-label">计费方式<span class="required-star">*</span></label>
+          <select class="form-input" id="rateBillingType" onchange="onBillingTypeChange()">
+            <option value="amount">按订单金额区间</option>
+            <option value="weight">按订单重量区间</option>
+            <option value="fixed">固定金额</option>
+          </select>
+        </div>
+
+        <div id="rateRulesSection">
+          <div class="section-title" id="rateRulesTitle">金额区间规则</div>
+          <div style="overflow-x:auto;">
+            <table class="rate-table" id="rateRulesTable">
+              <thead><tr><th style="width:80px;">起始</th><th style="width:80px;">结束</th><th style="width:100px;">运费</th><th style="width:40px;"></th></tr></thead>
+              <tbody id="rateRulesBody"></tbody>
+            </table>
+          </div>
+          <button class="btn-row-add" onclick="addRateRule()" id="btnAddRateRule" style="margin-top:8px;">+ 添加区间</button>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">首重/首件费用</label>
+          <input class="form-input" type="number" id="rateFirstUnitFee" placeholder="首重或首件的基础费用（选填）" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">续重/续件费用</label>
+          <input class="form-input" type="number" id="rateAdditionalUnitFee" placeholder="超出首重/首件后的费用（选填）" step="0.01" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">包邮门槛</label>
+          <input class="form-input" type="number" id="rateFreeShippingThreshold" placeholder="满X金额免运费，不填则无包邮" step="0.01" min="0">
+          <div class="form-hint">例如：100 表示订单满$100免运费</div>
+        </div>
+
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:200px;">
+            <label class="form-label">运费险</label>
+            <select class="form-input" id="rateInsuranceEnabled" onchange="onInsuranceChange()">
+              <option value="false">关闭</option>
+              <option value="true">开启</option>
+            </select>
+          </div>
+          <div class="form-group" id="rateInsuranceRateGroup" style="flex:1;min-width:200px;display:none;">
+            <label class="form-label">运费险费率</label>
+            <input class="form-input" type="number" id="rateInsuranceRate" placeholder="例如：1（表示1%）" step="0.01" min="0" max="100">
+            <div class="form-hint">订单金额的百分比</div>
+          </div>
+          <div class="form-group" id="rateInsuranceHolderGroup" style="flex:1;min-width:200px;display:none;">
+            <label class="form-label">运费险承担方</label>
+            <select class="form-input" id="rateInsuranceHolder">
+              <option value="platform">平台承担</option>
+              <option value="merchant">商家承担</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">运费含税</label>
+          <select class="form-input" id="rateIsTaxIncluded">
+            <option value="false">不含税</option>
+            <option value="true">含税</option>
+          </select>
+          <div class="form-hint">运费是否参与税费计算，与税率模块联动</div>
+        </div>
+      </div>
+
+      <!-- 偏远地区附加费Tab -->
+      <div class="config-section" id="rateTab-remote" style="display:none;">
+        <div class="section-title">偏远地区附加费规则</div>
+        <div id="remoteFeeRulesList"></div>
+        <button class="btn-row-add" onclick="addRemoteFeeRule()" style="margin-top:8px;">+ 添加偏远地区</button>
+        <div class="form-hint" style="margin-top:8px;">基础运费 + 偏远地区附加费 = 最终运费。例如：基础运费$8，附加费20%，最终=$9.6</div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeShippingRateDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitShippingRate()">保存运费规则</button>
+    </div>
+  </div>
+</div>
+
+<!-- 偏远附加费选择国家子对话框 -->
+<div class="dialog-overlay" id="remoteCountryPickerOverlay" style="display:none;z-index:10000;" onclick="closeRemoteCountryPicker()">
+  <div class="dialog" style="width:420px;max-height:460px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">选择偏远国家</span>
+      <button class="dialog-close" onclick="closeRemoteCountryPicker()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="dialog-desc" style="margin-bottom:12px;">请选择需要加收附加费的偏远地区</div>
+      <div id="remoteCountryPickerList" style="max-height:260px;overflow-y:auto;"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeRemoteCountryPicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmRemoteCountryPicker()">确定</button>
+    </div>
+  </div>
+</div>

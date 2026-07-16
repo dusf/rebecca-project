@@ -30,9 +30,7 @@
       <div class="form-row-2">
         <div class="form-group">
           <label class="form-label">首重（g）<span class="required-star">*</span>
-            <span class="help-icon" onmouseenter="showHelpTooltip(event, '多件商品计费说明','<p>购物车所有商品合并总重量后，只算一次运费。</p><div class=help-example><div class=help-example-title>示例：订单3件假发，各120g，合计360g</div><div>首重：100g / $8.00</div><div>续重：每100g / $0.05</div><div class=help-example-sep></div><div>合并计费重 = max(360g, 体积重) = 360g</div><div>超出 = 360 - 100 = 260g</div><div>续重单位 = ceil(260/100) = 3</div><div>运费 = $8.00 + 3 × $0.05 = $8.15</div></div><p class=help-note>不是逐件计费，而是合并后一次性计算。</p>')" onmouseleave="hideHelpTooltip()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </span>
+            <span class="help-icon" onmouseenter="showHelpTooltip(event, '多件商品计费说明','<p>购物车所有商品合并总重量后，只算一次运费。</p><div class=help-example><div class=help-example-title>示例：订单3件假发，各120g，合计360g</div><div>首重：100g / $8.00</div><div>续重：每100g / $0.05</div><div class=help-example-sep></div><div>合并计费重 = max(360g, 体积重) = 360g</div><div>超出 = 360 - 100 = 260g</div><div>续重单位 = ceil(260/100) = 3</div><div>运费 = $8.00 + 3 × $0.05 = $8.15</div></div><p class=help-note>不是逐件计费，而是合并后一次性计算。</p>')" onmouseleave="hideHelpTooltip()">i</span>
           </label>
           <input class="form-input" id="costFirstWeight" type="number" placeholder="如：100" min="1" max="99999" value="100">
         </div>
@@ -57,9 +55,7 @@
       <!-- DIM 系数 -->
       <div class="form-group">
         <label class="form-label">DIM 系数
-          <span class="help-icon" onmouseenter="showHelpTooltip(event, 'DIM 系数说明','<p>体积重(g) = 长 × 宽 × 高(in) × 16.387 / DIM系数 × 1000</p><p>计费重 = max(实际重量, 体积重)，取较大值按同一套首重/续重规则计费。</p><div class=help-hint>· 填 6000 → 启用体积重（DIM行业标准）<br>· 填 0 → 不启用体积重，只按实际重量计费</div>')" onmouseleave="hideHelpTooltip()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          </span>
+          <span class="help-icon" onmouseenter="showHelpTooltip(event, 'DIM 系数说明','<p>体积重(g) = 长 × 宽 × 高(in) × 16.387 / DIM系数 × 1000</p><p>计费重 = max(实际重量, 体积重)，取较大值按同一套首重/续重规则计费。</p><div class=help-hint>· 填 6000 → 启用体积重（DIM行业标准）<br>· 填 0 → 不启用体积重，只按实际重量计费</div>')" onmouseleave="hideHelpTooltip()">i</span>
         </label>
         <input class="form-input" id="costDimCoefficient" type="number" placeholder="如：6000，填0不启用" min="0" value="6000">
       </div>

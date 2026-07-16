@@ -3183,14 +3183,10 @@
     document.getElementById('costAdditionalPrice').value = cos.additionalPrice || 0;
     document.getElementById('costDimCoefficient').value = cos.dimCoefficient != null ? cos.dimCoefficient : 6000;
     document.getElementById('costRemoteAreaFee').value = (cos.remoteAreaFee != null ? cos.remoteAreaFee : 0).toFixed(2);
-    var insVal = cos.hasShippingInsurance ? '1' : '0';
-    document.getElementById('costHasShippingInsurance').value = insVal;
-    document.getElementById('costInsuranceFee').value = (cos.insuranceFee != null ? cos.insuranceFee : 0).toFixed(2);
     document.getElementById('costIsActive').value = cos.isActive ? '1' : '0';
     document.getElementById('costDescription').value = cos.description || '';
     document.getElementById('costCountryCodes').value = JSON.stringify(cos.countryCodes || []);
     renderCostCountryTags(cos.countryCodes || []);
-    onCostInsuranceChange();
   }
 
   function resetCostForm() {
@@ -3201,13 +3197,10 @@
     document.getElementById('costAdditionalPrice').value = 0.05;
     document.getElementById('costDimCoefficient').value = 6000;
     document.getElementById('costRemoteAreaFee').value = '0.00';
-    document.getElementById('costHasShippingInsurance').value = '0';
-    document.getElementById('costInsuranceFee').value = '1.00';
     document.getElementById('costIsActive').value = '1';
     document.getElementById('costDescription').value = '';
     document.getElementById('costCountryCodes').value = '[]';
     renderCostCountryTags([]);
-    onCostInsuranceChange();
   }
 
   function renderCostCountryTags(countryCodes) {
@@ -3260,8 +3253,6 @@
     var additionalPrice = parseFloat(document.getElementById('costAdditionalPrice').value) || 0;
     var dimCoefficient = parseInt(document.getElementById('costDimCoefficient').value) || 0;
     var remoteAreaFee = parseFloat(document.getElementById('costRemoteAreaFee').value) || 0;
-    var hasShippingInsurance = parseInt(document.getElementById('costHasShippingInsurance').value) || 0;
-    var insuranceFee = parseFloat(document.getElementById('costInsuranceFee').value) || 0;
     var countryCodes = safeParseJSON(document.getElementById('costCountryCodes').value, []);
     var isActive = document.getElementById('costIsActive').value === '1';
     var description = (document.getElementById('costDescription').value || '').trim();
@@ -3275,8 +3266,6 @@
       additionalPrice: additionalPrice,
       dimCoefficient: dimCoefficient,
       remoteAreaFee: remoteAreaFee,
-      hasShippingInsurance: hasShippingInsurance,
-      insuranceFee: insuranceFee,
       isActive: isActive,
       description: description
     };
@@ -3289,14 +3278,6 @@
     closeCostFormDialog();
     if (fw.renderDetailPanel) fw.renderDetailPanel();
     showToast('success', mode === 'add' ? '运费已添加' : '保存成功');
-  };
-
-  // ---- 运输险开关联动 ----
-  window.onCostInsuranceChange = function() {
-    var sel = document.getElementById('costHasShippingInsurance');
-    var grp = document.getElementById('costInsuranceFeeGroup');
-    if (!sel || !grp) return;
-    grp.style.display = sel.value === '1' ? '' : 'none';
   };
 
   // ---- 运费适用国家选择子对话框 ----
@@ -3508,7 +3489,6 @@
       document.getElementById('previewWidth').value = 4;
       document.getElementById('previewHeight').value = 5;
       document.getElementById('previewIsRemote').value = '0';
-      document.getElementById('previewHasInsurance').value = '1';
       document.getElementById('previewResult').style.display = 'none';
 
       var overlay = document.getElementById('costPreviewDialogOverlay');
@@ -3539,7 +3519,6 @@
     var width = parseFloat(document.getElementById('previewWidth').value) || 0;
     var height = parseFloat(document.getElementById('previewHeight').value) || 0;
     var isRemote = document.getElementById('previewIsRemote').value === '1';
-    var hasInsurance = document.getElementById('previewHasInsurance').value === '1';
 
     // 查找匹配的运费配置
     var allCosts = (fw.costs || []).filter(function(c) { return c.channelId === channelId && c.isActive; });
@@ -3591,8 +3570,7 @@
 
     // 附加费
     var remoteFee = isRemote ? (mc.remoteAreaFee || 0) : 0;
-    var insuranceFee = (hasInsurance && mc.hasShippingInsurance) ? (mc.insuranceFee || 0) : 0;
-    var totalFee = firstCost + additionalCost + remoteFee + insuranceFee;
+    var totalFee = firstCost + additionalCost + remoteFee;
 
     // 构建结果HTML
     var lines = [];
@@ -3612,9 +3590,6 @@
     }
     if (isRemote && mc.remoteAreaFee > 0) {
       lines.push('<tr><td>偏远附加费</td><td class="preview-val">$' + mc.remoteAreaFee.toFixed(2) + '</td></tr>');
-    }
-    if (hasInsurance && mc.hasShippingInsurance && mc.insuranceFee > 0) {
-      lines.push('<tr><td>运输险费用</td><td class="preview-val">$' + mc.insuranceFee.toFixed(2) + '</td></tr>');
     }
     lines.push('<tr style="border-top:2px solid hsl(var(--border));font-weight:700;font-size:15px;"><td>预估总费用</td><td class="preview-val" style="color:hsl(var(--primary));font-size:18px;">$' + totalFee.toFixed(2) + '</td></tr>');
     lines.push('</tbody></table>');

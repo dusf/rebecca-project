@@ -85,17 +85,17 @@ var nextChId = 18;
 
 // 渠道运费配置
 var costs = [
-  { id: 1, channelId: 1, costName: '云途-美国特惠-基础运费', countryCodes: ['美国'], firstWeight: 100, firstWeightPrice: 8.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 5.00, hasShippingInsurance: 1, insuranceFee: 1.00, isActive: true, description: '云途美国特惠基础运费', createdAt: '2025-03-16' },
-  { id: 2, channelId: 2, costName: '云途-欧洲标准-基础运费', countryCodes: ['英国', '德国', '法国'], firstWeight: 150, firstWeightPrice: 12.00, additionalUnit: 100, additionalPrice: 0.08, dimCoefficient: 5000, remoteAreaFee: 0, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: '云途欧洲标准基础运费', createdAt: '2025-04-03' },
-  { id: 3, channelId: 2, costName: '云途-欧洲标准-高端运费', countryCodes: [], firstWeight: 100, firstWeightPrice: 18.00, additionalUnit: 50, additionalPrice: 0.10, dimCoefficient: 6000, remoteAreaFee: 3.00, hasShippingInsurance: 1, insuranceFee: 2.00, isActive: false, description: '高端渠道，含保险', createdAt: '2025-04-05' },
-  { id: 4, channelId: 8, costName: 'DHL-全球快递-基础运费', countryCodes: [], firstWeight: 200, firstWeightPrice: 25.00, additionalUnit: 100, additionalPrice: 0.12, dimCoefficient: 5000, remoteAreaFee: 8.00, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: 'DHL全球兜底运费', createdAt: '2025-06-16' },
-  { id: 5, channelId: 6, costName: 'USPS-美国FirstClass-基础运费', countryCodes: ['美国'], firstWeight: 50, firstWeightPrice: 3.50, additionalUnit: 50, additionalPrice: 0.03, dimCoefficient: 0, remoteAreaFee: 0, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: 'USPS经济邮政', createdAt: '2025-05-21' },
-  { id: 6, channelId: 7, costName: 'USPS-美国Priority-基础运费', countryCodes: ['美国'], firstWeight: 100, firstWeightPrice: 7.50, additionalUnit: 100, additionalPrice: 0.04, dimCoefficient: 0, remoteAreaFee: 0, hasShippingInsurance: 1, insuranceFee: 1.50, isActive: true, description: 'USPS优先邮政', createdAt: '2025-06-02' },
-  { id: 7, channelId: 13, costName: '志远-美国空派-基础运费', countryCodes: ['美国'], firstWeight: 500, firstWeightPrice: 20.00, additionalUnit: 500, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 10.00, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: '志远美国空派', createdAt: '2025-09-02' },
-  { id: 8, channelId: 15, costName: 'FBA-美国标准-基础运费', countryCodes: ['美国'], firstWeight: 200, firstWeightPrice: 15.00, additionalUnit: 100, additionalPrice: 0.06, dimCoefficient: 5000, remoteAreaFee: 0, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: 'FBA头程美国', createdAt: '2025-10-02' },
-  { id: 9, channelId: 16, costName: 'FBA-欧洲五国-基础运费', countryCodes: ['英国', '德国', '法国', '意大利', '西班牙'], firstWeight: 300, firstWeightPrice: 22.00, additionalUnit: 200, additionalPrice: 0.07, dimCoefficient: 5000, remoteAreaFee: 0, hasShippingInsurance: 1, insuranceFee: 2.50, isActive: true, description: 'FBA头程欧洲五国', createdAt: '2025-10-16' },
-  { id: 10, channelId: 12, costName: '惠程-欧美标准-基础运费', countryCodes: ['美国', '英国', '德国'], firstWeight: 150, firstWeightPrice: 10.00, additionalUnit: 100, additionalPrice: 0.06, dimCoefficient: 6000, remoteAreaFee: 5.00, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: '惠程欧美标准', createdAt: '2025-08-16' },
-  { id: 11, channelId: 3, costName: '燕文-标准全球-兜底运费', countryCodes: [], firstWeight: 100, firstWeightPrice: 9.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 4.00, hasShippingInsurance: 0, insuranceFee: 0, isActive: true, description: '燕文标准全球兜底', createdAt: '2025-04-11' }
+  { id: 1, channelId: 1, costName: '云途-美国特惠-基础运费', countryCodes: ['美国'], firstWeight: 100, firstWeightPrice: 8.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 5.00, isActive: true, description: '云途美国特惠基础运费', createdAt: '2025-03-16' },
+  { id: 2, channelId: 2, costName: '云途-欧洲标准-基础运费', countryCodes: ['英国', '德国', '法国'], firstWeight: 150, firstWeightPrice: 12.00, additionalUnit: 100, additionalPrice: 0.08, dimCoefficient: 5000, remoteAreaFee: 0, isActive: true, description: '云途欧洲标准基础运费', createdAt: '2025-04-03' },
+  { id: 3, channelId: 2, costName: '云途-欧洲标准-高端运费', countryCodes: [], firstWeight: 100, firstWeightPrice: 18.00, additionalUnit: 50, additionalPrice: 0.10, dimCoefficient: 6000, remoteAreaFee: 3.00, isActive: false, description: '高端渠道', createdAt: '2025-04-05' },
+  { id: 4, channelId: 8, costName: 'DHL-全球快递-基础运费', countryCodes: [], firstWeight: 200, firstWeightPrice: 25.00, additionalUnit: 100, additionalPrice: 0.12, dimCoefficient: 5000, remoteAreaFee: 8.00, isActive: true, description: 'DHL全球兜底运费', createdAt: '2025-06-16' },
+  { id: 5, channelId: 6, costName: 'USPS-美国FirstClass-基础运费', countryCodes: ['美国'], firstWeight: 50, firstWeightPrice: 3.50, additionalUnit: 50, additionalPrice: 0.03, dimCoefficient: 0, remoteAreaFee: 0, isActive: true, description: 'USPS经济邮政', createdAt: '2025-05-21' },
+  { id: 6, channelId: 7, costName: 'USPS-美国Priority-基础运费', countryCodes: ['美国'], firstWeight: 100, firstWeightPrice: 7.50, additionalUnit: 100, additionalPrice: 0.04, dimCoefficient: 0, remoteAreaFee: 0, isActive: true, description: 'USPS优先邮政', createdAt: '2025-06-02' },
+  { id: 7, channelId: 13, costName: '志远-美国空派-基础运费', countryCodes: ['美国'], firstWeight: 500, firstWeightPrice: 20.00, additionalUnit: 500, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 10.00, isActive: true, description: '志远美国空派', createdAt: '2025-09-02' },
+  { id: 8, channelId: 15, costName: 'FBA-美国标准-基础运费', countryCodes: ['美国'], firstWeight: 200, firstWeightPrice: 15.00, additionalUnit: 100, additionalPrice: 0.06, dimCoefficient: 5000, remoteAreaFee: 0, isActive: true, description: 'FBA头程美国', createdAt: '2025-10-02' },
+  { id: 9, channelId: 16, costName: 'FBA-欧洲五国-基础运费', countryCodes: ['英国', '德国', '法国', '意大利', '西班牙'], firstWeight: 300, firstWeightPrice: 22.00, additionalUnit: 200, additionalPrice: 0.07, dimCoefficient: 5000, remoteAreaFee: 0, isActive: true, description: 'FBA头程欧洲五国', createdAt: '2025-10-16' },
+  { id: 10, channelId: 12, costName: '惠程-欧美标准-基础运费', countryCodes: ['美国', '英国', '德国'], firstWeight: 150, firstWeightPrice: 10.00, additionalUnit: 100, additionalPrice: 0.06, dimCoefficient: 6000, remoteAreaFee: 5.00, isActive: true, description: '惠程欧美标准', createdAt: '2025-08-16' },
+  { id: 11, channelId: 3, costName: '燕文-标准全球-兜底运费', countryCodes: [], firstWeight: 100, firstWeightPrice: 9.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, remoteAreaFee: 4.00, isActive: true, description: '燕文标准全球兜底', createdAt: '2025-04-11' }
 ];
 var nextCostId = 12;
 
@@ -553,7 +553,6 @@ function renderCostList() {
       '<td class="cost-fee-cell">' + c.additionalUnit + 'g / $' + c.additionalPrice.toFixed(2) + '</td>' +
       '<td>' + dimDisplay + '</td>' +
       '<td class="cost-fee-cell">$' + (c.remoteAreaFee || 0).toFixed(2) + '</td>' +
-      '<td>' + (c.hasShippingInsurance ? '<span class="badge badge-success">已启用</span>' : '<span class="badge badge-secondary">未启用</span>') + '</td>' +
       '<td><span class="badge ' + (c.isActive ? 'badge-success' : 'badge-secondary') + '">' + (c.isActive ? '启用' : '禁用') + '</span></td>' +
       '<td style="white-space:nowrap;">' +
         '<div class="action-group">' +

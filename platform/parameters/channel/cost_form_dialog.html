@@ -58,23 +58,8 @@
           <div class="form-hint">体积重换算系数，0=不启用体积重</div>
         </div>
         <div class="form-group">
-          <label class="form-label">偏远附加费（USD）</label>
+          <label class="form-label">预估偏远附加费（USD）</label>
           <input class="form-input" id="costRemoteAreaFee" type="number" placeholder="默认0" min="0" step="0.01" value="0">
-        </div>
-      </div>
-
-      <!-- 运输险 + 保险费用 -->
-      <div class="form-row-2">
-        <div class="form-group">
-          <label class="form-label">启用运输保障险</label>
-          <select class="form-input" id="costHasShippingInsurance" onchange="onCostInsuranceChange()">
-            <option value="0">不启用</option>
-            <option value="1">启用</option>
-          </select>
-        </div>
-        <div class="form-group" id="costInsuranceFeeGroup" style="display:none;">
-          <label class="form-label">保险费用（USD）<span class="required-star">*</span></label>
-          <input class="form-input" id="costInsuranceFee" type="number" placeholder="如：1.00" min="0.01" step="0.01" value="1.00">
         </div>
       </div>
 

@@ -3566,24 +3566,32 @@
 
     var totalFee = firstCost + additionalCost;
 
-    // 构建结果HTML
+    // 构建结果HTML — 费用明细格式
     var lines = [];
-    lines.push('<div class="preview-result-title">运费预览结果</div>');
+    lines.push('<div class="preview-result-title">费用明细</div>');
     lines.push('<div class="preview-result-subtitle">匹配运费：' + mc.costName + '</div>');
+    lines.push('<div class="preview-divider"></div>');
     lines.push('<table class="preview-result-table"><tbody>');
-    lines.push('<tr><td>商品实际重量</td><td class="preview-val">' + weight + ' g</td></tr>');
+    lines.push('<tr><td>商品总重量</td><td class="preview-val">' + weight + 'g</td></tr>');
     if (mc.dimCoefficient > 0 && length > 0 && width > 0 && height > 0) {
-      lines.push('<tr><td>体积重（' + length + '×' + width + '×' + height + ' / ' + mc.dimCoefficient + '）</td><td class="preview-val">' + volumeWeight + ' g</td></tr>');
+      lines.push('<tr><td>体积重（' + length + '×' + width + '×' + height + ' / ' + mc.dimCoefficient + '）</td><td class="preview-val">' + volumeWeight + 'g</td></tr>');
+      lines.push('<tr><td>计费重量</td><td class="preview-val">' + billingWeight + 'g（体积重 &gt; 实际重量）</td></tr>');
+    } else {
+      lines.push('<tr><td>计费重量</td><td class="preview-val">' + billingWeight + 'g（实际重量）</td></tr>');
     }
-    lines.push('<tr><td>计费重量</td><td class="preview-val">' + billingWeight + ' g</td></tr>');
     lines.push('<tr><td>首重（≤' + mc.firstWeight + 'g）</td><td class="preview-val">$' + mc.firstWeightPrice.toFixed(2) + '</td></tr>');
     if (additionalCost > 0) {
-      lines.push('<tr><td>续重（' + Math.ceil((billingWeight - mc.firstWeight) / mc.additionalUnit) + ' × ' + mc.additionalUnit + 'g）</td><td class="preview-val">$' + additionalCost.toFixed(2) + '</td></tr>');
+      var addUnits = Math.ceil((billingWeight - mc.firstWeight) / mc.additionalUnit);
+      lines.push('<tr><td>续重 ' + addUnits + ' 单位</td><td class="preview-val">$' + additionalCost.toFixed(2) + '</td></tr>');
     } else {
       lines.push('<tr><td>续重</td><td class="preview-val">$0.00</td></tr>');
     }
-    lines.push('<tr style="border-top:2px solid hsl(var(--border));font-weight:700;font-size:15px;"><td>预估总费用</td><td class="preview-val" style="color:hsl(var(--primary));font-size:18px;">$' + totalFee.toFixed(2) + '</td></tr>');
+    if (isRemote) {
+      lines.push('<tr><td>偏远附加费</td><td class="preview-val" style="color:hsl(var(--muted-foreground));">以物流商API实际返回为准</td></tr>');
+    }
     lines.push('</tbody></table>');
+    lines.push('<div class="preview-divider"></div>');
+    lines.push('<div class="preview-total">合计：<strong>$' + totalFee.toFixed(2) + ' USD</strong></div>');
 
     result.innerHTML = lines.join('');
     result.style.display = 'block';

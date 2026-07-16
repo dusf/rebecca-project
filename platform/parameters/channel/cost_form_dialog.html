@@ -50,11 +50,60 @@
         </div>
       </div>
 
+      <!-- 多件商品计费说明 -->
+      <div class="info-callout">
+        <div class="info-callout-title">多件商品计费说明</div>
+        <div class="info-callout-body">购物车所有商品合并总重量后，只算一次运费。</div>
+        <div class="info-callout-example">
+          <div class="info-callout-example-title">示例：订单3件假发，各120g，合计360g</div>
+          <div>首重：100g / $8.00</div>
+          <div>续重：每100g / $0.05</div>
+          <div class="info-callout-example-sep"></div>
+          <div>合并计费重 = max(360g, 体积重) = 360g</div>
+          <div>超出 = 360 - 100 = 260g</div>
+          <div>续重单位 = ceil(260/100) = 3</div>
+          <div>运费 = $8.00 + 3 × $0.05 = $8.15</div>
+          <div class="info-callout-note">不是逐件计费，而是合并后一次性计算。</div>
+        </div>
+      </div>
+
       <!-- DIM 系数 -->
       <div class="form-group">
         <label class="form-label">DIM 系数</label>
         <input class="form-input" id="costDimCoefficient" type="number" placeholder="如：6000，填0不启用" min="0" value="6000">
-        <div class="form-hint">体积重换算系数，0=不启用体积重</div>
+        <div class="info-callout info-callout-compact">
+          <div class="info-callout-body">
+            体积重(g) = 长 × 宽 × 高(in) × 16.387 / DIM系数 × 1000<br>
+            计费重 = max(实际重量, 体积重)，取较大值按同一套首重/续重规则计费。
+          </div>
+          <div style="margin-top:4px;font-size:12px;color:hsl(var(--muted-foreground));">
+            · 填 6000 → 启用体积重（DIM行业标准）<br>
+            · 填 0 → 不启用体积重，只按实际重量计费
+          </div>
+        </div>
+      </div>
+
+      <!-- 偏远附加费说明 -->
+      <div class="info-callout">
+        <div class="info-callout-title">偏远附加费说明</div>
+        <div class="info-callout-body">
+          偏远附加费不预设固定金额。<br>
+          结算时系统通过邮编实时判断是否偏远，偏远附加费由物流商API在发货时返回实际金额。
+        </div>
+        <div style="margin-top:4px;font-size:12px;color:hsl(var(--muted-foreground));">
+          · 结算页：可显示「偏远地区可能产生附加费，以实际发货为准」<br>
+          · 发货时：物流商API创建运单后返回实际偏远费
+        </div>
+      </div>
+
+      <!-- 运输保障险说明 -->
+      <div class="info-callout">
+        <div class="info-callout-title">运输保障险说明</div>
+        <div class="info-callout-body">
+          开启后，买家可购买运输途中丢失/损坏的保障服务。<br>
+          保费由商家在「保险费用」字段预设（如 $1.00）。
+        </div>
+        <div style="margin-top:4px;font-size:12px;color:hsl(var(--muted-foreground));">不是运费险（退货险），是运输保障险。</div>
       </div>
 
       <!-- 适用国家 + 状态 -->

@@ -1425,6 +1425,84 @@ tr:hover td { background: hsl(220 15% 96%); }
   color: hsl(var(--primary));
 }
 
+.preview-divider {
+  height: 1px;
+  background: hsl(var(--border));
+  margin: 8px 0;
+}
+
+.preview-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(var(--primary));
+  text-align: right;
+}
+
+.preview-total strong {
+  font-size: 18px;
+}
+
+/* ==================== 信息提示卡片 ==================== */
+.info-callout {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: hsl(var(--muted-foreground));
+}
+
+.info-callout-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  margin-bottom: 6px;
+}
+
+.info-callout-body {
+  color: hsl(var(--muted-foreground));
+}
+
+.info-callout-example {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: hsl(var(--card));
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: hsl(var(--foreground));
+}
+
+.info-callout-example-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-family: inherit;
+}
+
+.info-callout-example-sep {
+  height: 1px;
+  margin: 6px 0;
+  background: hsl(var(--border));
+}
+
+.info-callout-note {
+  margin-top: 6px;
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+.info-callout-compact {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.info-callout-compact .info-callout-body {
+  line-height: 1.8;
+}
+
 /* ==================== 指派店铺弹窗 ==================== */
 .assign-dialog {
   width: 520px;

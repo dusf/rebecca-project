@@ -1,0 +1,108 @@
+<!-- 添加/编辑渠道成本对话框 - 全屏遮罩 -->
+<div class="dialog-overlay" id="ccDialogOverlay" style="display:none;" onclick="closeCCDialog()">
+  <div class="dialog" style="width:620px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="ccDialogTitle">新增成本</span>
+      <button class="dialog-close" onclick="closeCCDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="ccMode" value="add">
+      <input type="hidden" id="ccEditId" value="">
+      <!-- 渠道选择（新增时可选，编辑时只读） -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">所属物流商<span class="required-star">*</span></label>
+          <select class="form-input" id="ccProvider" onchange="onCCProviderChange()">
+            <option value="">请选择物流商</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">所属渠道<span class="required-star">*</span></label>
+          <select class="form-input" id="ccChannel">
+            <option value="">请选择渠道</option>
+          </select>
+        </div>
+      </div>
+      <!-- 只读信息（编辑时显示） -->
+      <div id="ccReadonlyInfo" style="display:none;margin-bottom:16px;padding:12px;background:hsl(var(--muted));border-radius:8px;font-size:13px;color:hsl(var(--muted-foreground));">
+        <span>物流商：<strong id="ccReadonlyProvider">—</strong></span>
+        <span style="margin-left:24px;">渠道：<strong id="ccReadonlyChannel">—</strong></span>
+        <span style="margin-left:24px;">服务类型：<strong id="ccReadonlyServiceType">—</strong></span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">成本名称<span class="required-star">*</span></label>
+        <input class="form-input" id="ccCostName" placeholder="例：云途-美国标准-基础运费" maxlength="100">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">首重（g）<span class="required-star">*</span></label>
+          <input class="form-input" id="ccFirstWeight" type="number" placeholder="100" min="1" max="99999">
+          <div class="form-hint">基础重量，单位克（g）</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">首重价格（$）<span class="required-star">*</span></label>
+          <input class="form-input" id="ccFirstWeightPrice" type="number" placeholder="8.00" min="0" step="0.01">
+          <div class="form-hint">基础重量内固定价</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">续重单位（g）<span class="required-star">*</span></label>
+          <input class="form-input" id="ccAdditionalUnit" type="number" placeholder="100" min="1" max="99999">
+          <div class="form-hint">超出首重后每多少g一个续重单位</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">续重单价（$）<span class="required-star">*</span></label>
+          <input class="form-input" id="ccAdditionalPrice" type="number" placeholder="0.05" min="0" step="0.01">
+          <div class="form-hint">每个续重单位的单价</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">偏远附加费（$）</label>
+          <input class="form-input" id="ccRemoteAreaFee" type="number" placeholder="0" min="0" step="0.01" value="0">
+          <div class="form-hint">偏远地区附加费（固定金额）</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">启用运输保障险</label>
+          <select class="form-input" id="ccHasInsurance" onchange="onCCInsuranceChange()">
+            <option value="0">不启用</option>
+            <option value="1">启用</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="ccInsuranceFeeGroup" style="display:none;">
+        <label class="form-label">保险费用（$）<span class="required-star">*</span></label>
+        <input class="form-input" id="ccInsuranceFee" type="number" placeholder="1.00" min="0.01" step="0.01" value="0">
+        <div class="form-hint">运输险费用（固定金额），开启保险后必填</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">DIM 系数<span class="required-star">*</span></label>
+          <input class="form-input" id="ccDimCoefficient" type="number" placeholder="0" min="0" max="99999" value="0">
+          <div class="form-hint">体积重系数，设为 0 则不启用体积重</div>
+        </div>
+        <div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">描述/备注</label>
+          <textarea class="form-input" id="ccDescription" placeholder="补充说明（选填）" rows="2" style="resize:vertical;min-height:60px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-input" id="ccStatus">
+            <option value="1">启用</option>
+            <option value="0">禁用</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeCCDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitCC()">保存</button>
+    </div>
+  </div>
+</div>

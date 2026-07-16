@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>物流渠道管理 - 中台管理</title>
   <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    .c-popup-wrapper { position: relative; display: inline-block; cursor: pointer; }
+    .c-popup-trigger { display: inline-flex; align-items: center; gap: 3px; color: hsl(var(--primary)); font-weight: 500; }
+    .c-popup-trigger svg { width: 12px; height: 12px; flex-shrink: 0; transition: transform 0.15s; }
+    .c-popup-wrapper:hover .c-popup-trigger svg { transform: rotate(180deg); }
+    .c-popup-dropdown { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); min-width: 200px; max-width: 280px; background: #fff; border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 999; padding: 6px 0; margin-top: 4px; }
+    .c-popup-wrapper:hover .c-popup-dropdown { display: block; }
+    .c-popup-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 12px; font-size: 13px; color: hsl(var(--foreground)); white-space: nowrap; }
+    .c-popup-item:hover { background: hsl(var(--primary-50)); }
+    .c-popup-item .flag { font-size: 14px; margin-right: 4px; }
+    .c-popup-empty { padding: 8px 12px; font-size: 12px; color: hsl(var(--muted-foreground)); text-align: center; }
+    /* 固定列 */
+    .col-sticky { position: sticky; z-index: 3; }
+    td.col-sticky { background: #fff; }
+    thead th.col-sticky { background: #EDEFF5; }
+    /* 更多菜单向上弹出，避免被后续行遮挡 */
+    .action-more-menu { bottom: calc(100% + 4px); top: auto; z-index: 10000; }
+  </style>
 </head>
 <body>
   <script>
@@ -21,7 +39,7 @@
     <div class="page-header">
       <div>
         <div class="page-title">物流渠道<span class="count-badge" id="chCount"></span></div>
-        <div class="page-subtitle">管理物流渠道、绑定配送国家及运费模板</div>
+        <div class="page-subtitle">管理物流渠道、绑定配送国家</div>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary" id="btnAdd" onclick="handleAdd()">+ 新增渠道</button>
@@ -31,6 +49,7 @@
     <!-- 筛选工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索渠道名称/代码/备注..." oninput="currentPage=1;renderTable()" id="channelSearch">
         <select class="filter-select" onchange="onProviderFilterChange();currentPage=1;renderTable()" id="providerFilter">
           <option value="">全部物流商</option>
         </select>
@@ -48,7 +67,6 @@
           <option value="enabled">启用</option>
           <option value="disabled">禁用</option>
         </select>
-        <input class="search-input" type="text" placeholder="搜索渠道名称/代码..." oninput="currentPage=1;renderTable()" id="channelSearch">
       </div>
     </div>
 
@@ -59,6 +77,16 @@
         <button class="btn btn-success btn-sm" onclick="chDoBatchAction('enable')" disabled>批量启用</button>
         <button class="btn btn-destructive btn-sm" onclick="chDoBatchAction('disable')" disabled>批量禁用</button>
         <button class="btn btn-secondary btn-sm" onclick="chDoBatchAction('delete')" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="customColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="chToggleCustomColPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列
+          </button>
+        </div>
+        <div class="custom-col-wrapper">
+          <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -68,16 +96,17 @@
         <table>
           <thead>
             <tr>
-              <th style="width:40px"><div class="checkbox" onclick="chToggleAllCheckboxes(this)"></div></th>
-              <th>物流商</th>
-              <th>授权账号</th>
-              <th>渠道名称</th>
-              <th>渠道代码</th>
-              <th>服务类型</th>
-              <th>配送国家数</th>
-              <th>运费模板</th>
-              <th>状态</th>
-              <th style="width:260px">操作</th>
+              <th class="col-sticky" style="width:40px;left:0"><div class="checkbox" onclick="chToggleAllCheckboxes(this)"></div></th>
+              <th data-col="name" class="col-sticky" style="left:40px;min-width:140px">渠道名称</th>
+              <th data-col="provider">物流商</th>
+              <th data-col="account">授权账号</th>
+              <th data-col="code">渠道代码</th>
+              <th data-col="serviceType">服务类型</th>
+              <th data-col="days">预估时效</th>
+              <th data-col="countries">配送国家数</th>
+              <th data-col="status">状态</th>
+              <th data-col="description">描述/备注</th>
+              <th data-col="actions" class="col-sticky" style="width:210px;right:0">操作</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -85,6 +114,12 @@
       </div>
       <div class="pagination-bar" id="chPagination"></div>
     </div>
+  </div>
+
+  <div class="custom-col-panel" id="chCustomColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="chCustomColBody"></div>
+    <div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="chResetCustomCols()">恢复默认</button></div>
   </div>
 
   <script>
@@ -237,12 +272,18 @@
   // ---- 更多菜单 ----
   function toggleMore(menuId) {
     var menu = document.getElementById(menuId); if (!menu) return;
-    if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+    if (menu.style.display === 'block') { menu.style.display = 'none'; chResetMenuRow(menu); return; }
     closeAllMore(); menu.style.display = 'block';
+    var tr = menu.closest('tr');
+    if (tr) { tr.style.position = 'relative'; tr.style.zIndex = '100'; }
   }
   function closeAllMore() {
     var menus = document.querySelectorAll('.action-more-menu');
-    for (var i = 0; i < menus.length; i++) menus[i].style.display = 'none';
+    for (var i = 0; i < menus.length; i++) { menus[i].style.display = 'none'; chResetMenuRow(menus[i]); }
+  }
+  function chResetMenuRow(menu) {
+    var tr = menu.closest('tr');
+    if (tr) { tr.style.zIndex = ''; tr.style.position = ''; }
   }
   document.addEventListener('click', function(e) { if (!e.target.closest('.action-more-wrapper')) closeAllMore(); });
   </script>
@@ -252,10 +293,122 @@
   var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
   var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
   var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
-  var rateIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
   var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 
   var currentPage = 1, pageSize = 10;
+
+  // ========== 自定义列配置 ==========
+  var chColDefs = [
+    { key: 'name', label: '渠道名称', defaultShow: true, alwaysShow: true },
+    { key: 'provider', label: '物流商', defaultShow: true, alwaysShow: false },
+    { key: 'account', label: '授权账号', defaultShow: true, alwaysShow: false },
+    { key: 'code', label: '渠道代码', defaultShow: true, alwaysShow: false },
+    { key: 'serviceType', label: '服务类型', defaultShow: true, alwaysShow: false },
+    { key: 'days', label: '预估时效', defaultShow: true, alwaysShow: false },
+    { key: 'countries', label: '配送国家数', defaultShow: true, alwaysShow: false },
+    { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+    { key: 'description', label: '描述/备注', defaultShow: false, alwaysShow: false }
+  ];
+  var chVisibleCols = {};
+  chColDefs.forEach(function(c) { chVisibleCols[c.key] = c.defaultShow; });
+
+  var chDragSource = null;
+
+  function chBuildCustomColPanel() {
+    var body = document.getElementById('chCustomColBody');
+    if (!body) return;
+    body.innerHTML = chColDefs.map(function(c) {
+      var disabled = c.alwaysShow ? 'disabled' : '';
+      var active = chVisibleCols[c.key] ? 'active' : '';
+      var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>';
+      return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '" draggable="' + (c.alwaysShow ? 'false' : 'true') + '" ondragstart="chOnDragStart(event)" ondragover="chOnDragOver(event)" ondragleave="chOnDragLeave(event)" ondrop="chOnDrop(event)">' +
+        dragIcon +
+        '<div class="col-check" onclick="chColCheckClick(this.parentElement, event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+        '<span style="flex:1">' + c.label + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.chColCheckClick = function(el, e) {
+    e.stopPropagation();
+    if (el.classList.contains('disabled')) return;
+    var key = el.getAttribute('data-key');
+    if (!key) return;
+    chVisibleCols[key] = !chVisibleCols[key];
+    el.classList.toggle('active', chVisibleCols[key]);
+    renderTable();
+  };
+
+  window.chOnDragStart = function(e) { chDragSource = e.target; e.target.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; };
+  window.chOnDragOver = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.target.closest('.custom-col-item')?.classList.add('drag-over'); };
+  window.chOnDragLeave = function(e) { e.target.closest('.custom-col-item')?.classList.remove('drag-over'); };
+  window.chOnDrop = function(e) {
+    e.preventDefault();
+    var target = e.target.closest('.custom-col-item');
+    if (!target || !chDragSource || target === chDragSource) return;
+    var sourceKey = chDragSource.getAttribute('data-key');
+    var targetKey = target.getAttribute('data-key');
+    var srcIdx = -1, tgtIdx = -1;
+    for (var i = 0; i < chColDefs.length; i++) { if (chColDefs[i].key === sourceKey) srcIdx = i; if (chColDefs[i].key === targetKey) tgtIdx = i; }
+    if (srcIdx !== -1 && tgtIdx !== -1) {
+      var item = chColDefs.splice(srcIdx, 1)[0];
+      chColDefs.splice(tgtIdx, 0, item);
+    }
+    chDragSource.classList.remove('dragging');
+    target.classList.remove('drag-over');
+    chDragSource = null;
+    chBuildCustomColPanel();
+    renderTable();
+  };
+
+  function chToggleCustomColPanel() {
+    var panel = document.getElementById('chCustomColPanel');
+    var btn = document.querySelector('#customColWrapper button');
+    if (!panel || !btn) return;
+    if (panel.classList.contains('show')) {
+      panel.classList.remove('show');
+      panel.style.display = 'none';
+    } else {
+      chBuildCustomColPanel();
+      var rect = btn.getBoundingClientRect();
+      panel.style.top = (rect.bottom + 4) + 'px';
+      panel.style.left = Math.max(8, rect.right - 240) + 'px';
+      panel.style.display = 'block';
+      panel.classList.add('show');
+    }
+  }
+
+  function chResetCustomCols() {
+    chColDefs.forEach(function(c) { chVisibleCols[c.key] = c.defaultShow; });
+    chBuildCustomColPanel();
+    renderTable();
+  }
+
+  function chSyncTableHead() {
+    var thead = document.querySelector('.table-wrapper thead');
+    if (!thead) return;
+    var ths = thead.querySelectorAll('th[data-col]');
+    ths.forEach(function(th) {
+      var col = th.getAttribute('data-col');
+      if (col === 'actions') return;
+      th.style.display = chVisibleCols[col] ? '' : 'none';
+    });
+  }
+
+  function refreshPage() {
+    currentPage = 1;
+    renderTable();
+    showToast('success', '数据已刷新');
+  }
+
+  // 关闭自定义列面板（点击外部）
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('chCustomColPanel');
+    if (!panel || !panel.classList.contains('show')) return;
+    var wrapper = document.getElementById('customColWrapper');
+    if (wrapper && wrapper.contains(e.target)) return;
+    if (!panel.contains(e.target)) panel.classList.remove('show');
+  });
 
   // ========== 样例数据 ==========
 
@@ -295,20 +448,6 @@
     { id: 16, providerId: 12, name: '中国邮政主账号', code: 'CP_MAIN', status: 'enabled' }
   ];
 
-  // 运费模板数据
-  var templates = [
-    { id: 1, channelId: 2, name: '欧洲标准运费', billingType: 'amount' },
-    { id: 2, channelId: 3, name: '燕文标准全球运费', billingType: 'amount' },
-    { id: 3, channelId: 4, name: '燕文加拿大线运费', billingType: 'amount' },
-    { id: 4, channelId: 6, name: 'USPS First Class运费', billingType: 'weight' },
-    { id: 5, channelId: 7, name: 'USPS Priority运费', billingType: 'weight' },
-    { id: 6, channelId: 8, name: 'DHL Express全球运费', billingType: 'weight' },
-    { id: 7, channelId: 10, name: 'DHL亚太速递运费', billingType: 'weight' },
-    { id: 8, channelId: 13, name: 'ES8美国空派运费', billingType: 'fixed' },
-    { id: 9, channelId: 14, name: '环亚日本线运费', billingType: 'amount' },
-    { id: 10, channelId: 17, name: '河南邮政经济运费', billingType: 'weight' }
-  ];
-
   // 渠道数据（核心数据）
   var channels = [
     { id: 1, accountId: 1, name: '云途-特惠普货-美国', code: 'YUNTU_ECONOMY_US', serviceType: '经济', countries: ['美国'], estimatedDaysMin: 12, estimatedDaysMax: 18, description: '云途全球特惠渠道，美国普货专线', sortOrder: 1, status: 'enabled' },
@@ -341,7 +480,6 @@
   function findProvider(id) { for (var i = 0; i < providers.length; i++) if (providers[i].id === id) return providers[i]; return null; }
   function findAccount(id) { for (var i = 0; i < accounts.length; i++) if (accounts[i].id === id) return accounts[i]; return null; }
   function findChannel(id) { for (var i = 0; i < channels.length; i++) if (channels[i].id === id) return channels[i]; return null; }
-  function findTemplateByChannel(channelId) { for (var i = 0; i < templates.length; i++) if (templates[i].channelId === channelId) return templates[i]; return null; }
   function hasOrders(channelId) { for (var i = 0; i < channelOrders.length; i++) if (channelOrders[i].channelId === channelId) return true; return false; }
 
   // 供父页面调用的暴露函数
@@ -417,6 +555,18 @@
     }
   }
 
+  function buildCountryPopup(countries) {
+    if (!countries || countries.length === 0) return '<span style="color:hsl(var(--muted-foreground));">0</span>';
+    var html = '<div class="c-popup-wrapper">';
+    html += '<span class="c-popup-trigger">' + countries.length + ' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>';
+    html += '<div class="c-popup-dropdown">';
+    for (var i = 0; i < countries.length; i++) {
+      html += '<div class="c-popup-item">' + countries[i] + '</div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
   // ========== 操作按钮 ==========
   function handleAdd() {
     if (window.parent && window.parent.openChannelDialog) window.parent.openChannelDialog('add', null);
@@ -439,10 +589,6 @@
   function handleCopy(id) {
     if (window.parent && window.parent.openChannelCopyDialog) window.parent.openChannelCopyDialog(id);
   }
-  function handleViewRate(channelId) {
-    showToast('info', '跳转至运费模板页面，自动筛选该渠道关联的运费模板');
-  }
-
   // ========== 主渲染 ==========
   function renderTable() {
     var provVal = document.getElementById('providerFilter').value;
@@ -452,7 +598,7 @@
     var search = (document.getElementById('channelSearch').value || '').toLowerCase();
 
     var filtered = channels.filter(function(ch) {
-      if (search && ch.name.toLowerCase().indexOf(search) === -1 && ch.code.toLowerCase().indexOf(search) === -1) return false;
+      if (search && ch.name.toLowerCase().indexOf(search) === -1 && ch.code.toLowerCase().indexOf(search) === -1 && (ch.description || '').toLowerCase().indexOf(search) === -1) return false;
       if (srvVal && ch.serviceType !== srvVal) return false;
       if (statVal && ch.status !== statVal) return false;
       if (acctVal && ch.accountId !== parseInt(acctVal)) return false;
@@ -472,7 +618,10 @@
     document.getElementById('chCount').textContent = '(' + filtered.length + '个)';
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无物流渠道</div><div class="empty-state-desc">点击"新增渠道"开始配置</div></td></tr>';
+      var visibleColCount = 1; // checkbox
+      chColDefs.forEach(function(c) { if (chVisibleCols[c.key]) visibleColCount++; });
+      visibleColCount++; // actions column
+      tbody.innerHTML = '<tr><td colspan="' + visibleColCount + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无物流渠道</div><div class="empty-state-desc">点击"新增渠道"开始配置</div></td></tr>';
       chUpdateBulkBar(); document.getElementById('chPagination').innerHTML = ''; return;
     }
 
@@ -486,21 +635,21 @@
       var s = sm[ch.status] || { label: ch.status, cls: 'badge-secondary' };
       var stLabel = serviceTypeLabels[ch.serviceType] || ch.serviceType;
       var stBadge = serviceTypeBadges[ch.serviceType] || 'badge-secondary';
-      var tpl = findTemplateByChannel(ch.id);
       var menuId = 'cm_' + ch.id;
       var daysStr = ch.estimatedDaysMin === ch.estimatedDaysMax ? ch.estimatedDaysMin + '天' : ch.estimatedDaysMin + '-' + ch.estimatedDaysMax + '天';
+      if (!ch.estimatedDaysMin && !ch.estimatedDaysMax) daysStr = '—';
 
-      var row = '<tr data-id="' + ch.id + '"><td><div class="checkbox" onclick="chToggleCheckbox(this)"></div></td>';
-      row += '<td>' + (p ? p.name : '—') + '</td>';
-      row += '<td>' + (ac ? ac.name : '—') + '</td>';
-      row += '<td><strong>' + ch.name + '</strong></td>';
-      row += '<td><code style="font-size:12px;">' + ch.code + '</code></td>';
-      row += '<td><span class="badge ' + stBadge + '">' + stLabel + '</span></td>';
-      row += '<td>' + ch.countries.length + '</td>';
-      row += '<td>' + (tpl ? tpl.name : '<span style="color:hsl(var(--muted-foreground));">未配置</span>') + '</td>';
-      row += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
-      row += '<td><div class="action-group">' +
-        '<button class="btn btn-text btn-sm" onclick="handleViewRate(' + ch.id + ')" title="查看运费">' + rateIcon + ' 运费</button>' +
+      var row = '<tr data-id="' + ch.id + '"><td class="col-sticky" style="left:0"><div class="checkbox" onclick="chToggleCheckbox(this)"></div></td>';
+      if (chVisibleCols.name) row += '<td class="col-sticky" style="left:40px"><strong>' + ch.name + '</strong></td>';
+      if (chVisibleCols.provider) row += '<td>' + (p ? p.name : '—') + '</td>';
+      if (chVisibleCols.account) row += '<td>' + (ac ? ac.name : '—') + '</td>';
+      if (chVisibleCols.code) row += '<td><code style="font-size:12px;">' + ch.code + '</code></td>';
+      if (chVisibleCols.serviceType) row += '<td><span class="badge ' + stBadge + '">' + stLabel + '</span></td>';
+      if (chVisibleCols.days) row += '<td><span style="font-size:13px;">' + daysStr + '</span></td>';
+      if (chVisibleCols.countries) row += '<td>' + buildCountryPopup(ch.countries) + '</td>';
+      if (chVisibleCols.status) row += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      if (chVisibleCols.description) row += '<td><span style="font-size:12px;color:hsl(var(--muted-foreground));">' + (ch.description || '—') + '</span></td>';
+      row += '<td class="col-sticky" style="right:0"><div class="action-group">' +
         '<div class="action-btn" title="编辑" onclick="handleEdit(' + ch.id + ')">' + editIcon + '</div>' +
         '<div class="action-btn" title="复制" onclick="handleCopy(' + ch.id + ')">' + copyIcon + '</div>' +
         '<div class="action-btn danger" title="删除" onclick="handleDelete(' + ch.id + ')">' + deleteIcon + '</div>' +
@@ -510,8 +659,10 @@
       row += '</tr>'; return row;
     }).join('');
 
+    chSyncTableHead();
     chRestoreCheckedIds(checkedIds);
     chUpdateBulkBar();
+    chBuildCustomColPanel();
     chRenderPagination({ total: filtered.length, pageSize: pageSize, currentPage: currentPage, containerId: 'chPagination', onPageChange: function(p) { currentPage = p; renderTable(); } });
   }
 

@@ -1754,6 +1754,43 @@
                   </div>
                 </div>
 
+                <!-- 配送信息 -->
+                <div class="sidebar-card">
+                  <div class="sidebar-card-title">配送信息</div>
+                  <div class="form-group">
+                    <label class="form-label">商品重量</label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productWeight" placeholder="0" min="0" step="0.01" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">g</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">商品净重，单位为克（g）</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装长（英寸）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackLen" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">英寸</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装长度，单位为英寸（inch），保留1位小数</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装宽（英寸）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackWid" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">英寸</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装宽度，单位为英寸（inch），保留1位小数</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装高（英寸）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackHgt" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">英寸</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装高度，单位为英寸（inch），保留1位小数</div>
+                  </div>
+                </div>
+
                 <!-- SEO 配置 -->
                 <div class="sidebar-card">
                   <div class="sidebar-card-title">SEO 配置</div>
@@ -1849,6 +1886,11 @@
         seoSlug: document.getElementById('seoSlug').value,
         seoTitle: document.getElementById('seoTitle').value,
         seoDesc: document.getElementById('seoDesc').value,
+        weight: parseFloat(document.getElementById('productWeight').value) || 0,
+        size_inch: parseFloat(document.getElementById('productSize').value) || 0,
+        pack_len: parseFloat(document.getElementById('productPackLen').value) || 0,
+        pack_wid: parseFloat(document.getElementById('productPackWid').value) || 0,
+        pack_hgt: parseFloat(document.getElementById('productPackHgt').value) || 0,
         skuData: skuData,  // 包含 invCode 的完整 SKU 数据
       };
 

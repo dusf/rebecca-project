@@ -12,8 +12,10 @@
       <input type="hidden" id="channelEditId" value="">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label class="form-label">所属物流商</label>
-          <div style="font-size:14px;padding:8px 0;color:hsl(var(--muted-foreground));" id="channelProviderDisplay">—</div>
+          <label class="form-label">所属物流商<span class="required-star">*</span></label>
+          <select class="form-input" id="channelProvider" onchange="onChannelProviderChange()">
+            <option value="">请选择物流商</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">所属账号<span class="required-star">*</span></label>

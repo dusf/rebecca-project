@@ -25,6 +25,7 @@
         <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
         <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
         <div class="custom-col-wrapper" id="customColWrapper"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        <div class="custom-col-wrapper"><button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></div>
       </div>
     </div>
     <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th data-col="name">语言</th><th data-col="code">语言代码</th><th data-col="status">状态</th><th data-col="actions" style="width:120px">操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="languagePagination"></div></div>
@@ -74,6 +75,13 @@
       moreActions: [],
       onColumnsChange: function() { renderTable(); }
     };
+
+    // ========== 刷新 ==========
+    function refreshPage() {
+      currentPage = 1;
+      renderTable();
+      showToast('success', '数据已刷新');
+    }
 
     // ========== 操作：添加 ==========
     function handleAddLanguage() {

@@ -3182,7 +3182,6 @@
     document.getElementById('costAdditionalUnit').value = cos.additionalUnit || 100;
     document.getElementById('costAdditionalPrice').value = cos.additionalPrice || 0;
     document.getElementById('costDimCoefficient').value = cos.dimCoefficient != null ? cos.dimCoefficient : 6000;
-    document.getElementById('costRemoteAreaFee').value = (cos.remoteAreaFee != null ? cos.remoteAreaFee : 0).toFixed(2);
     document.getElementById('costIsActive').value = cos.isActive ? '1' : '0';
     document.getElementById('costDescription').value = cos.description || '';
     document.getElementById('costCountryCodes').value = JSON.stringify(cos.countryCodes || []);
@@ -3196,7 +3195,6 @@
     document.getElementById('costAdditionalUnit').value = 100;
     document.getElementById('costAdditionalPrice').value = 0.05;
     document.getElementById('costDimCoefficient').value = 6000;
-    document.getElementById('costRemoteAreaFee').value = '0.00';
     document.getElementById('costIsActive').value = '1';
     document.getElementById('costDescription').value = '';
     document.getElementById('costCountryCodes').value = '[]';
@@ -3252,7 +3250,6 @@
     var additionalUnit = parseInt(document.getElementById('costAdditionalUnit').value) || 100;
     var additionalPrice = parseFloat(document.getElementById('costAdditionalPrice').value) || 0;
     var dimCoefficient = parseInt(document.getElementById('costDimCoefficient').value) || 0;
-    var remoteAreaFee = parseFloat(document.getElementById('costRemoteAreaFee').value) || 0;
     var countryCodes = safeParseJSON(document.getElementById('costCountryCodes').value, []);
     var isActive = document.getElementById('costIsActive').value === '1';
     var description = (document.getElementById('costDescription').value || '').trim();
@@ -3265,7 +3262,6 @@
       additionalUnit: additionalUnit,
       additionalPrice: additionalPrice,
       dimCoefficient: dimCoefficient,
-      remoteAreaFee: remoteAreaFee,
       isActive: isActive,
       description: description
     };
@@ -3568,9 +3564,7 @@
       additionalCost = Math.ceil(extraWeight / mc.additionalUnit) * mc.additionalPrice;
     }
 
-    // 附加费
-    var remoteFee = isRemote ? (mc.remoteAreaFee || 0) : 0;
-    var totalFee = firstCost + additionalCost + remoteFee;
+    var totalFee = firstCost + additionalCost;
 
     // 构建结果HTML
     var lines = [];
@@ -3587,9 +3581,6 @@
       lines.push('<tr><td>续重（' + Math.ceil((billingWeight - mc.firstWeight) / mc.additionalUnit) + ' × ' + mc.additionalUnit + 'g）</td><td class="preview-val">$' + additionalCost.toFixed(2) + '</td></tr>');
     } else {
       lines.push('<tr><td>续重</td><td class="preview-val">$0.00</td></tr>');
-    }
-    if (isRemote && mc.remoteAreaFee > 0) {
-      lines.push('<tr><td>偏远附加费</td><td class="preview-val">$' + mc.remoteAreaFee.toFixed(2) + '</td></tr>');
     }
     lines.push('<tr style="border-top:2px solid hsl(var(--border));font-weight:700;font-size:15px;"><td>预估总费用</td><td class="preview-val" style="color:hsl(var(--primary));font-size:18px;">$' + totalFee.toFixed(2) + '</td></tr>');
     lines.push('</tbody></table>');

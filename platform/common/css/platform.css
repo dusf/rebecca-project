@@ -1442,6 +1442,78 @@ tr:hover td { background: hsl(220 15% 96%); }
   font-size: 18px;
 }
 
+/* ==================== 帮助图标 + 悬浮提示 ==================== */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  color: hsl(var(--muted-foreground));
+  cursor: help;
+  margin-left: 3px;
+  vertical-align: middle;
+  transition: color 0.15s;
+}
+.help-icon:hover {
+  color: hsl(var(--primary));
+}
+
+/* 共享浮动提示卡片（JS 动态定位到 body 下） */
+.help-tooltip {
+  position: fixed;
+  max-width: 360px;
+  padding: 14px 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  font-size: 12px;
+  line-height: 1.8;
+  color: hsl(var(--foreground));
+  z-index: 99999;
+  pointer-events: none;
+  display: none;
+}
+.help-tooltip-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.help-tooltip p {
+  margin: 0 0 4px;
+}
+.help-tooltip .help-example {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: hsl(var(--muted));
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.help-tooltip .help-example-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-family: inherit;
+}
+.help-tooltip .help-example-sep {
+  height: 1px;
+  margin: 6px 0;
+  background: hsl(var(--border));
+}
+.help-tooltip .help-note {
+  color: hsl(var(--primary)) !important;
+  font-weight: 500 !important;
+  margin-top: 6px !important;
+}
+.help-tooltip .help-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
 /* ==================== 信息提示卡片 ==================== */
 .info-callout {
   margin-top: 12px;

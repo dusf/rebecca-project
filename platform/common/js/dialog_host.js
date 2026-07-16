@@ -3613,4 +3613,48 @@
     dlgCloseAll();
   };
 
+  // ==================== 共享帮助提示 ====================
+  var helpTooltip = null;
+
+  function ensureHelpTooltip() {
+    if (helpTooltip) return helpTooltip;
+    helpTooltip = document.createElement('div');
+    helpTooltip.className = 'help-tooltip';
+    document.body.appendChild(helpTooltip);
+    return helpTooltip;
+  }
+
+  window.showHelpTooltip = function(event, title, bodyHtml) {
+    var tip = ensureHelpTooltip();
+    tip.innerHTML =
+      '<div class="help-tooltip-title">' + title + '</div>' +
+      bodyHtml;
+    tip.style.display = 'block';
+
+    var icon = event.currentTarget;
+    var rect = icon.getBoundingClientRect();
+    var tipW = tip.offsetWidth || 360;
+    var tipH = tip.offsetHeight || 200;
+
+    // 默认显示在图标下方
+    var top = rect.bottom + 6;
+    var left = rect.left + rect.width / 2 - tipW / 2;
+
+    // 防止超出视口左右
+    if (left < 8) left = 8;
+    if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
+
+    // 如果下方空间不够，显示在上方
+    if (top + tipH > window.innerHeight - 8) {
+      top = rect.top - tipH - 6;
+    }
+
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  };
+
+  window.hideHelpTooltip = function() {
+    if (helpTooltip) helpTooltip.style.display = 'none';
+  };
+
 })();

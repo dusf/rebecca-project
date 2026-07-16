@@ -48,7 +48,7 @@
       <!-- DIM 系数 -->
       <div class="form-group">
         <label class="form-label">DIM 系数
-          <span class="help-icon" onmouseenter="showHelpTooltip(event, 'DIM 系数说明','<p>体积重(g) = 长 × 宽 × 高(in) × 16.387 / DIM系数 × 1000</p><p>计费重 = max(实际重量, 体积重)，取较大值按同一套首重/续重规则计费。</p><div class=help-hint>· 填 6000 → 启用体积重（DIM行业标准）<br>· 填 0 → 不启用体积重，只按实际重量计费</div>')" onmouseleave="hideHelpTooltip()">i</span>
+          <span class="help-icon" onmouseenter="showHelpTooltip(event, 'DIM 系数说明','<p>体积重(g) = 长 × 宽 × 高(cm) ÷ DIM系数 × 1000</p><p>计费重 = max(实际重量, 体积重)，取较大值按同一套首重/续重规则计费。</p><div class=help-hint>· 填 6000 → 启用体积重（DIM行业标准）<br>· 填 0 → 不启用体积重，只按实际重量计费</div>')" onmouseleave="hideHelpTooltip()">i</span>
         </label>
         <input class="form-input" id="costDimCoefficient" type="number" placeholder="如：6000，填0不启用" min="0" value="6000">
       </div>

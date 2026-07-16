@@ -3321,11 +3321,13 @@
     ];
 
     grid.innerHTML = allCountries.map(function(c) {
-      var checked = currentCodes.indexOf(c.name) !== -1;
       var inChannel = channelCountries.indexOf(c.name) !== -1;
+      // 渠道已配国家：默认必选且禁用，用户无法取消勾选
+      var checked = inChannel || currentCodes.indexOf(c.name) !== -1;
+      var disabled = inChannel;
       var tag = inChannel ? '<span style="font-size:11px;color:hsl(var(--primary));background:hsl(var(--primary-50));padding:1px 6px;border-radius:3px;margin-left:auto;">渠道已配</span>' : '';
-      return '<label class="country-check-item' + (checked ? ' selected' : '') + '" data-country="' + c.name + '" data-code="' + c.code + '" data-channel="' + (inChannel ? '1' : '0') + '">' +
-        '<input type="checkbox" class="cost-country-picker-check" value="' + c.name + '"' + (checked ? ' checked' : '') + ' onchange="onCostCountryPickerChange(this)">' +
+      return '<label class="country-check-item' + (checked ? ' selected' : '') + (disabled ? ' disabled' : '') + '" data-country="' + c.name + '" data-code="' + c.code + '" data-channel="' + (inChannel ? '1' : '0') + '">' +
+        '<input type="checkbox" class="cost-country-picker-check" value="' + c.name + '"' + (checked ? ' checked' : '') + (disabled ? ' disabled' : '') + ' onchange="onCostCountryPickerChange(this)">' +
         '<span class="cci-box">' + (typeof ICONS !== 'undefined' && ICONS.check ? ICONS.check : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>') + '</span>' +
         '<span style="flex:1;">' + c.name + '<span style="font-size:11px;color:hsl(var(--muted-foreground));margin-left:4px;">' + c.code + '</span></span>' +
         tag +
@@ -3347,22 +3349,24 @@
     var countEl = document.getElementById('costCountryPickerCount');
     if (!countEl) return;
     var count = 0;
-    var visibleBoxes = 0;
-    var checkedVisible = 0;
+    var selectableVisible = 0;
+    var selectedSelectable = 0;
     checkboxes.forEach(function(cb) {
       if (cb.checked) count++;
+      // 渠道已配国家默认勾选且禁用，全选框状态应基于"可选"项判断
+      if (cb.disabled) return;
       var item = cb.closest('.country-check-item');
       if (item && item.style.display !== 'none') {
-        visibleBoxes++;
-        if (cb.checked) checkedVisible++;
+        selectableVisible++;
+        if (cb.checked) selectedSelectable++;
       }
     });
     countEl.textContent = count;
-    // 同步全选框状态
+    // 同步全选框状态（只统计非 disabled 的可见项）
     var allCb = document.getElementById('costCountryPickerSelectAll');
     if (allCb) {
-      allCb.checked = visibleBoxes > 0 && checkedVisible === visibleBoxes;
-      allCb.indeterminate = checkedVisible > 0 && checkedVisible < visibleBoxes;
+      allCb.checked = selectableVisible > 0 && selectedSelectable === selectableVisible;
+      allCb.indeterminate = selectedSelectable > 0 && selectedSelectable < selectableVisible;
     }
   };
 
@@ -3379,6 +3383,8 @@
   window.toggleCostCountrySelectAll = function(checked) {
     var boxes = document.querySelectorAll('#costCountryPickerList .cost-country-picker-check');
     boxes.forEach(function(cb) {
+      // 渠道已配国家默认勾选且禁用，全选不应改变其状态
+      if (cb.disabled) return;
       var item = cb.closest('.country-check-item');
       if (item && item.style.display !== 'none') {
         cb.checked = checked;

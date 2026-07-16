@@ -121,12 +121,12 @@
       </button>
     </div>
     <div class="dialog-body">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-        <div style="flex:1;position:relative;">
+      <div style="margin-bottom:8px;">
+        <div style="position:relative;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:hsl(var(--muted-foreground));opacity:0.6;pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="costCountryPickerSearch" placeholder="搜索国家..." oninput="filterCostCountryPicker()" style="width:100%;box-sizing:border-box;height:32px;padding:0 10px 0 30px;font-size:13px;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--muted));outline:none;">
         </div>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:hsl(var(--muted-foreground));cursor:pointer;white-space:nowrap;user-select:none;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:hsl(var(--muted-foreground));cursor:pointer;white-space:nowrap;user-select:none;margin-top:6px;">
           <input type="checkbox" id="costCountryPickerSelectAll" onchange="toggleCostCountrySelectAll(this.checked)" style="width:14px;height:14px;cursor:pointer;">
           全选
         </label>

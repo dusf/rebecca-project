@@ -1331,10 +1331,22 @@ tr:hover td { background: hsl(220 15% 96%); }
   pointer-events: none;
 }
 
-/* 成本国家选择器 - 渠道已配国家高亮 */
+/* 成本国家选择器 - 渠道已配国家高亮（且禁用交互） */
 #costCountryPickerList .country-check-item[data-channel="1"] {
   border-color: hsl(var(--primary-200));
   background: hsl(var(--primary-50));
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+#costCountryPickerList .country-check-item[data-channel="1"]:hover {
+  border-color: hsl(var(--primary-200));
+  background: hsl(var(--primary-50));
+}
+
+#costCountryPickerList .country-check-item[data-channel="1"] > input[type="checkbox"] {
+  /* 渠道已配国家 checkbox 隐藏但保留 checked 状态用于表单提交 */
+  pointer-events: none;
 }
 
 /* 成本国家标签（可移除） */

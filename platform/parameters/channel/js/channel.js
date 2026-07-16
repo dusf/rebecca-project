@@ -63,7 +63,7 @@ var accounts = [
 
 // 物流渠道
 var channels = [
-  { id: 1, accountId: 1, name: '云途-特惠普货-美国', code: 'YUNTU_ECONOMY_US', serviceType: '经济', countries: ['美国'], deliveryMinDays: 12, deliveryMaxDays: 18, description: '云途全球特惠渠道，美国普货专线', sortOrder: 1, status: 'enabled', createdAt: '2025-03-15' },
+  { id: 1, accountId: 1, name: '云途-特惠普货-欧美', code: 'YUNTU_ECONOMY_EUUS', serviceType: '经济', countries: ['美国', '英国', '德国', '法国', '加拿大', '澳洲'], deliveryMinDays: 12, deliveryMaxDays: 18, description: '云途全球特惠渠道，欧美普货专线', sortOrder: 1, status: 'enabled', createdAt: '2025-03-15' },
   { id: 2, accountId: 2, name: '云途-标准-欧洲', code: 'YUNTU_STANDARD_EU', serviceType: '标准', countries: ['英国', '德国', '法国'], deliveryMinDays: 7, deliveryMaxDays: 12, description: '云途欧洲专线标准渠道', sortOrder: 2, status: 'enabled', createdAt: '2025-04-02' },
   { id: 3, accountId: 3, name: '燕文-标准-全球', code: 'YANWEN_STANDARD_GLOBAL', serviceType: '标准', countries: ['美国', '加拿大', '英国', '德国'], deliveryMinDays: 8, deliveryMaxDays: 15, description: '燕文标准全球配送', sortOrder: 3, status: 'enabled', createdAt: '2025-04-10' },
   { id: 4, accountId: 3, name: '燕文-标准-加拿大', code: 'YANWEN_STANDARD_CA', serviceType: '标准', countries: ['加拿大'], deliveryMinDays: 10, deliveryMaxDays: 14, description: '燕文加拿大专线', sortOrder: 4, status: 'enabled', createdAt: '2025-05-01' },
@@ -85,7 +85,7 @@ var nextChId = 18;
 
 // 渠道运费配置
 var costs = [
-  { id: 1, channelId: 1, costName: '云途-美国特惠-基础运费', countryCodes: ['美国'], firstWeight: 100, firstWeightPrice: 8.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, isActive: true, description: '云途美国特惠基础运费', createdAt: '2025-03-16' },
+  { id: 1, channelId: 1, costName: '云途-欧美特惠-基础运费', countryCodes: ['美国', '英国', '德国', '法国', '加拿大', '澳洲'], firstWeight: 100, firstWeightPrice: 8.00, additionalUnit: 100, additionalPrice: 0.05, dimCoefficient: 6000, isActive: true, description: '云途欧美特惠基础运费', createdAt: '2025-03-16' },
   { id: 2, channelId: 2, costName: '云途-欧洲标准-基础运费', countryCodes: ['英国', '德国', '法国'], firstWeight: 150, firstWeightPrice: 12.00, additionalUnit: 100, additionalPrice: 0.08, dimCoefficient: 5000, isActive: true, description: '云途欧洲标准基础运费', createdAt: '2025-04-03' },
   { id: 3, channelId: 2, costName: '云途-欧洲标准-高端运费', countryCodes: [], firstWeight: 100, firstWeightPrice: 18.00, additionalUnit: 50, additionalPrice: 0.10, dimCoefficient: 6000, isActive: false, description: '高端渠道', createdAt: '2025-04-05' },
   { id: 4, channelId: 8, costName: 'DHL-全球快递-基础运费', countryCodes: ['美国', '英国', '德国', '法国', '日本', '澳洲', '加拿大'], firstWeight: 200, firstWeightPrice: 25.00, additionalUnit: 100, additionalPrice: 0.12, dimCoefficient: 5000, isActive: true, description: 'DHL全球快递基础运费', createdAt: '2025-06-16' },

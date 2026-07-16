@@ -524,6 +524,21 @@ function renderCostTab() {
   renderCostList();
 }
 
+function buildCostCountryDisplay(countryCodes) {
+  var MAX_SHOW = 3;
+  if (countryCodes.length <= MAX_SHOW) {
+    return countryCodes.map(function(cc) { return '<span class="cost-country-tag">' + cc + '</span>'; }).join('');
+  }
+  var shown = countryCodes.slice(0, MAX_SHOW).map(function(cc) { return '<span class="cost-country-tag">' + cc + '</span>'; }).join('');
+  var more = countryCodes.length - MAX_SHOW;
+  var popover = countryCodes.join('、');
+  return shown +
+    '<span class="cost-country-more">+' + more +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" style="margin-left:2px;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>' +
+      '<span class="cost-country-popover">' + escHtml(popover) + '</span>' +
+    '</span>';
+}
+
 function renderCostList() {
   var ch = findChannel(selectedChannelId);
   var filtered = getFilteredCosts(selectedChannelId);
@@ -544,7 +559,7 @@ function renderCostList() {
   var pageData = filtered.slice((costCurrentPage - 1) * costPageSize, costCurrentPage * costPageSize);
 
   container.innerHTML = pageData.map(function(c) {
-    var countryDisplay = c.countryCodes.length === 0 ? '<span class="badge badge-info">全球兜底</span>' : c.countryCodes.map(function(cc) { return '<span class="cost-country-tag">' + cc + '</span>'; }).join('');
+    var countryDisplay = c.countryCodes.length === 0 ? '<span class="badge badge-info">全球兜底</span>' : buildCostCountryDisplay(c.countryCodes);
     var dimDisplay = c.dimCoefficient === 0 ? '不启用' : c.dimCoefficient;
     return '<tr>' +
       '<td><strong>' + escHtml(c.costName) + '</strong></td>' +

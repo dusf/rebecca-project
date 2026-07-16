@@ -557,6 +557,50 @@
   margin: 1px;
 }
 
+/* 国家列超量折叠 */
+.cost-country-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  cursor: pointer;
+  position: relative;
+  margin: 1px;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+.cost-country-more:hover {
+  background: hsl(var(--primary) / 0.2);
+}
+
+.cost-country-popover {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: nowrap;
+  z-index: 99;
+  color: hsl(var(--foreground));
+  font-weight: 400;
+  pointer-events: none;
+}
+.cost-country-more:hover .cost-country-popover {
+  display: block;
+}
+
 /* 费用显示 */
 .cost-fee-cell {
   font-variant-numeric: tabular-nums;

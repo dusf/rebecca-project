@@ -544,12 +544,8 @@ function toggleSearchableDropdown(selectId) {
     closeSearchableDropdown(selectId);
     return;
   }
-  if (triggerEl) {
-    var rect = triggerEl.getBoundingClientRect();
-    dropdown.style.top = (rect.bottom + 4) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.minWidth = rect.width + 'px';
-  }
+  // dropdown 是 wrapper 的子元素，使用 CSS absolute 定位（top/left 已在 CSS 中定义），
+  // 避免 iframe 内 position:fixed 定位偏移到父页面视口的问题。
   dropdown.style.display = 'block';
   if (triggerEl) triggerEl.classList.add('open');
   var search = document.getElementById(selectId + 'Search');

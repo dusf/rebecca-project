@@ -1,0 +1,19 @@
+<!-- 删除运费确认对话框 -->
+<div class="dialog-overlay" id="costDeleteDialogOverlay" style="display:none;" onclick="closeCostDeleteDialog()">
+  <div class="dialog" style="width:440px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">确认删除运费</span>
+      <button class="dialog-close" onclick="closeCostDeleteDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="costDeleteId" value="">
+      <div class="dialog-desc" id="costDeleteMsg">确认删除该运费配置？删除后不可恢复。</div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeCostDeleteDialog()">取消</button>
+      <button class="btn btn-destructive" onclick="confirmCostDelete()">确定删除</button>
+    </div>
+  </div>
+</div>

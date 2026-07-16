@@ -48,6 +48,8 @@
             icon: '<svg viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.45.94 3.38 0l6.63-6.63c.94-.94.94-2.45 0-3.38L12 2Z"/><path d="M7 7h.01"/></svg>' },
           { page: 'gifts', label: '赠品',
             icon: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 2.5 2.5v5"/><path d="M16.5 8v-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-2.5 2.5h-5"/></svg>' },
+          { page: 'coupons', label: '优惠',
+            icon: '<svg viewBox="0 0 24 24"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M22 7H2v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7z"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><path d="M10 3l2 4 4-2-2 4 4 2-4 2 2 4-4-2-2 4-2-4-4 2 2-4-4-2 4-2-2-4z"/></svg>' },
           { page: 'content', label: '内容',
             icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>' },
           { page: 'users', label: '用户',
@@ -58,27 +60,7 @@
             icon: '<svg viewBox="0 0 24 24"><path d="m14.622 17.897-10.68-2.913"/><path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.707.707a.5.5 0 0 0 .707 0l4.021-4.02a1 1 0 0 1 3.002 3.001l-4.02 4.021a2.5 2.5 0 0 1-3.535 0l-.707-.707a2.5 2.5 0 0 1 0-3.535z"/><path d="M8.79 17.897a1.5 1.5 0 0 0 2.208 1.193l-2.208-1.193Z"/></svg>' }
         ]
       },
-      {
-        section: '全局',
-        items: [
-          { page: 'countries', label: '国家',
-            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>' },
-          { page: 'language', label: '语言',
-            icon: '<svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>' },
-          { page: 'currency', label: '货币',
-            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg>' },
-          { page: 'exchange-rate', label: '汇率',
-            icon: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9"/><path d="M3 12a9 9 0 0 1 9-9"/><path d="M12 3v18"/><path d="m7 6 2-2 2 2"/><path d="m13 18 2 2 2-2"/></svg>' },
-          { page: 'tax-rate', label: '税率',
-            icon: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg>' },
-          { page: 'freight', label: '运费',
-            icon: '<svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' },
-          { page: 'vip-system', label: 'VIP体系',
-            icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
-          { page: 'category-mgmt', label: '分类',
-            icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' }
-        ]
-      }
+
     ];
 
     // ==================== 店铺数据（全局共享） ====================
@@ -129,8 +111,8 @@
     const PAGE_ROUTES = {
       'products':      'product/product_list.html',
       'add-product':   'product/add_product.html',
-      'countries':     'country/countries.html',
-      'exchange-rate': 'exchange-rate/exchange_rate.html',
+
+
       'settings':      'shop/shop_settings.html'
     };
 

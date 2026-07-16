@@ -1235,6 +1235,184 @@ tr:hover td { background: hsl(220 15% 96%); }
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ==================== 对话框通用子组件 (国家选择 / 表单双列 / 预览结果) ====================
+   说明：对话框 HTML 通过 fetch 动态注入到 #dialogHost（父页面），
+   因此对话框内的自定义组件样式必须放在 platform.css 而非各子页面 CSS，
+   否则 iframe 内的子页面 CSS 不会作用于父页面的对话框 DOM。 */
+
+/* 表单双列 */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* label 行内小提示 */
+.form-label-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+  margin-left: 4px;
+}
+
+/* switch 开关组 */
+.switch-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 对话框内国家选择网格 */
+.country-check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.country-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.country-check-item:hover {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary-50));
+}
+
+.country-check-item.selected {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary-50));
+}
+
+.country-check-item .cci-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.country-check-item.selected .cci-box {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.country-check-item.selected .cci-box svg {
+  display: block;
+}
+
+.country-check-item .cci-box svg {
+  display: none;
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+/* 隐藏 country-check-item 内的原生 checkbox（自定义 cci-box） */
+.country-check-item > input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 成本国家选择器 - 渠道已配国家高亮 */
+#costCountryPickerList .country-check-item[data-channel="1"] {
+  border-color: hsl(var(--primary-200));
+  background: hsl(var(--primary-50));
+}
+
+/* 成本国家标签（可移除） */
+.cost-country-tag-removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: hsl(215 35% 92%);
+  color: hsl(215 35% 42%);
+  transition: all 0.15s;
+}
+
+.cost-country-tag-removable:hover {
+  background: hsl(215 35% 86%);
+}
+
+.cost-country-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  color: hsl(215 35% 42%);
+  opacity: 0.55;
+  transition: all 0.15s;
+}
+
+.cost-country-tag-remove:hover {
+  background: hsl(0 70% 92%);
+  color: hsl(0 70% 45%);
+  opacity: 1;
+}
+
+/* 渠道详情页内联国家标签容器 */
+.country-tags-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 预览结果 */
+.preview-result {
+  margin-top: 16px;
+  padding: 16px;
+  background: hsl(var(--muted));
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.preview-result .pr-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: hsl(var(--foreground));
+}
+
+.preview-result .pr-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.preview-result .pr-total {
+  border-top: 1px solid hsl(var(--border));
+  margin-top: 8px;
+  padding-top: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: hsl(var(--primary));
+}
+
 /* ==================== 指派店铺弹窗 ==================== */
 .assign-dialog {
   width: 520px;
@@ -2137,7 +2315,12 @@ tr.drag-zone-highlight {
 }
 
 .searchable-select-dropdown {
-  position: fixed;
+  /* 使用 absolute 相对 .searchable-select wrapper 定位，避免 iframe 内
+     position:fixed 偏移到父页面视口的 bug。 */
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
   background: #FFFFFF;
   border: 1px solid hsl(var(--border));
   border-radius: 10px;
@@ -2148,7 +2331,7 @@ tr.drag-zone-highlight {
 }
 
 .searchable-select-search {
-  padding: 8px;
+  padding: 6px 8px;
   border-bottom: 1px solid hsl(var(--border));
 }
 

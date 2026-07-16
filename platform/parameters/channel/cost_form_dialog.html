@@ -1,0 +1,142 @@
+<!-- 添加/编辑运费配置对话框 -->
+<div class="dialog-overlay" id="costFormDialogOverlay" style="display:none;" onclick="closeCostFormDialog()">
+  <div class="dialog" style="width:640px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="costFormDialogTitle">新增运费</span>
+      <button class="dialog-close" onclick="closeCostFormDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="costMode" value="add">
+      <input type="hidden" id="costEditId" value="">
+      <input type="hidden" id="costChannelId" value="">
+
+      <!-- 渠道信息（只读） -->
+      <div class="info-row">
+        <div class="info-item"><strong>所属渠道：</strong><span id="costChannelName">—</span></div>
+        <div class="info-item"><strong>服务类型：</strong><span id="costServiceType">—</span></div>
+        <div class="info-item"><strong>配送国家/地区：</strong><span id="costChannelCountries">—</span></div>
+      </div>
+
+      <!-- 运费名称 -->
+      <div class="form-group">
+        <label class="form-label">运费名称<span class="required-star">*</span></label>
+        <input class="form-input" id="costName" placeholder="如：云途-美国特惠-基础运费" maxlength="100">
+        <div class="form-hint">内部使用的运费配置名称</div>
+      </div>
+
+      <!-- 首重 + 首重价格 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">首重（g）<span class="required-star">*</span></label>
+          <input class="form-input" id="costFirstWeight" type="number" placeholder="如：100" min="1" max="99999" value="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">首重价格（USD）<span class="required-star">*</span></label>
+          <input class="form-input" id="costFirstWeightPrice" type="number" placeholder="如：8.00" min="0" step="0.01" value="8.00">
+        </div>
+      </div>
+
+      <!-- 续重单位 + 续重单价 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">续重单位（g）<span class="required-star">*</span></label>
+          <input class="form-input" id="costAdditionalUnit" type="number" placeholder="如：100" min="1" max="99999" value="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">续重单价（USD）<span class="required-star">*</span></label>
+          <input class="form-input" id="costAdditionalPrice" type="number" placeholder="如：0.05" min="0" step="0.01" value="0.05">
+        </div>
+      </div>
+
+      <!-- DIM 系数 + 偏远附加费 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">DIM 系数</label>
+          <input class="form-input" id="costDimCoefficient" type="number" placeholder="如：6000，填0不启用" min="0" value="6000">
+          <div class="form-hint">体积重换算系数，0=不启用体积重</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">偏远附加费（USD）</label>
+          <input class="form-input" id="costRemoteAreaFee" type="number" placeholder="默认0" min="0" step="0.01" value="0">
+        </div>
+      </div>
+
+      <!-- 运输险 + 保险费用 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">启用运输保障险</label>
+          <select class="form-input" id="costHasShippingInsurance" onchange="onCostInsuranceChange()">
+            <option value="0">不启用</option>
+            <option value="1">启用</option>
+          </select>
+        </div>
+        <div class="form-group" id="costInsuranceFeeGroup" style="display:none;">
+          <label class="form-label">保险费用（USD）<span class="required-star">*</span></label>
+          <input class="form-input" id="costInsuranceFee" type="number" placeholder="如：1.00" min="0.01" step="0.01" value="1.00">
+        </div>
+      </div>
+
+      <!-- 适用国家 + 状态 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">适用国家<span class="required-star">*</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="costCountryTags">
+            <span style="font-size:13px;color:hsl(var(--muted-foreground));">未选择（视为全局兜底）</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="openCostCountryPicker()">+ 选择适用国家</button>
+          <div class="form-hint">点击 chip 上的 × 可快速移除；不选=全局兜底</div>
+          <input type="hidden" id="costCountryCodes" value="[]">
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-input" id="costIsActive">
+            <option value="1">启用</option>
+            <option value="0">禁用</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 描述 -->
+      <div class="form-group">
+        <label class="form-label">描述/备注<span class="form-label-hint">选填</span></label>
+        <textarea class="form-textarea" id="costDescription" placeholder="补充说明（选填）" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeCostFormDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitCost()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 运费适用国家选择子对话框 -->
+<div class="dialog-overlay" id="costCountryPickerOverlay" style="display:none;z-index:10000;" onclick="closeCostCountryPicker()">
+  <div class="dialog" style="width:500px;max-height:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">选择适用国家</span>
+      <button class="dialog-close" onclick="closeCostCountryPicker()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+        <div style="flex:1;position:relative;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:hsl(var(--muted-foreground));opacity:0.6;pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="costCountryPickerSearch" placeholder="搜索国家..." oninput="filterCostCountryPicker()" style="width:100%;box-sizing:border-box;height:32px;padding:0 10px 0 30px;font-size:13px;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--muted));outline:none;">
+        </div>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:hsl(var(--muted-foreground));cursor:pointer;white-space:nowrap;user-select:none;">
+          <input type="checkbox" id="costCountryPickerSelectAll" onchange="toggleCostCountrySelectAll(this.checked)" style="width:14px;height:14px;cursor:pointer;">
+          全选
+        </label>
+      </div>
+      <div class="country-check-grid" id="costCountryPickerList" style="grid-template-columns:1fr 1fr;max-height:320px;"></div>
+    </div>
+    <div class="dialog-actions">
+      <span style="flex:1;font-size:13px;color:hsl(var(--muted-foreground));">已选 <strong id="costCountryPickerCount">0</strong> 个</span>
+      <button class="btn btn-secondary" onclick="closeCostCountryPicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmCostCountryPicker()">确定</button>
+    </div>
+  </div>
+</div>

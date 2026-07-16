@@ -1,0 +1,72 @@
+<!-- 运费预览对话框 -->
+<div class="dialog-overlay" id="costPreviewDialogOverlay" style="display:none;" onclick="closeCostPreviewDialog()">
+  <div class="dialog" style="width:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">运费预览</span>
+      <button class="dialog-close" onclick="closeCostPreviewDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="previewChannelId" value="">
+      <input type="hidden" id="previewCostId" value="">
+
+      <!-- 输入参数 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">收货国家<span class="required-star">*</span></label>
+          <select class="form-input" id="previewCountry">
+            <option value="">请选择收货国家</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">商品重量（g）<span class="required-star">*</span></label>
+          <input class="form-input" id="previewWeight" type="number" placeholder="如：350" min="1" value="350">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">包装长（英寸）<span class="form-label-hint">选填</span></label>
+          <input class="form-input" id="previewLength" type="number" placeholder="如：18" min="0" step="0.1" value="18">
+        </div>
+        <div class="form-group">
+          <label class="form-label">包装宽（英寸）<span class="form-label-hint">选填</span></label>
+          <input class="form-input" id="previewWidth" type="number" placeholder="如：4" min="0" step="0.1" value="4">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">包装高（英寸）<span class="form-label-hint">选填</span></label>
+          <input class="form-input" id="previewHeight" type="number" placeholder="如：5" min="0" step="0.1" value="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">是否偏远地区</label>
+          <select class="form-input" id="previewIsRemote">
+            <option value="0">否</option>
+            <option value="1">是</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">启用运输保障险</label>
+          <select class="form-input" id="previewHasInsurance">
+            <option value="1">是</option>
+            <option value="0">否</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="calcCostPreview()" style="width:100%;margin-bottom:16px;">计算运费</button>
+
+      <!-- 预览结果 -->
+      <div class="preview-result" id="previewResult" style="display:none;"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeCostPreviewDialog()">关闭</button>
+    </div>
+  </div>
+</div>

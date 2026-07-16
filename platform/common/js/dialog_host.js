@@ -564,12 +564,8 @@
     var triggerEl = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger');
     if (!dropdown) return;
     if (dropdown.style.display === 'block') { closeSearchableDropdown(selectId); return; }
-    if (triggerEl) {
-      var rect = triggerEl.getBoundingClientRect();
-      dropdown.style.top = (rect.bottom + 4) + 'px';
-      dropdown.style.left = rect.left + 'px';
-      dropdown.style.minWidth = rect.width + 'px';
-    }
+    // dropdown 已在 buildSearchableSelect 中作为 wrapper 子元素插入，
+    // CSS 使用 position:absolute 相对 wrapper 定位，无需手动计算 top/left。
     dropdown.style.display = 'block';
     if (triggerEl) triggerEl.classList.add('open');
     var search = document.getElementById(selectId + 'Search');
@@ -2774,10 +2770,14 @@
 
   // ==================== 物流渠道管理对话框 ====================
   var CHANNEL_DLG_URLS = [
-    'parameters/channel/channel-form-dialog.html',
-    'parameters/channel/delete-dialog.html',
-    'parameters/channel/toggle-dialog.html',
-    'parameters/channel/copy-dialog.html'
+    'parameters/channel/channel_form_dialog.html',
+    'parameters/channel/channel_delete_dialog.html',
+    'parameters/channel/channel_toggle_dialog.html',
+    'parameters/channel/channel_copy_dialog.html',
+    'parameters/channel/cost_form_dialog.html',
+    'parameters/channel/cost_delete_dialog.html',
+    'parameters/channel/cost_toggle_dialog.html',
+    'parameters/channel/cost_preview_dialog.html'
   ];
 
   var _chTempSelectedCountries = [];
@@ -2793,8 +2793,8 @@
       var nameInp = document.getElementById('channelName');
       var codeInp = document.getElementById('channelCode');
       var srvSel = document.getElementById('channelServiceType');
-      var daysMinInp = document.getElementById('channelEstDaysMin');
-      var daysMaxInp = document.getElementById('channelEstDaysMax');
+      var daysMinInp = document.getElementById('channelDeliveryMinDays');
+      var daysMaxInp = document.getElementById('channelDeliveryMaxDays');
       var descInp = document.getElementById('channelDescription');
       var sortInp = document.getElementById('channelSortOrder');
       var statSel = document.getElementById('channelStatus');
@@ -2819,8 +2819,8 @@
         nameInp.value = ch.name;
         codeInp.value = ch.code;
         srvSel.value = ch.serviceType;
-        daysMinInp.value = ch.estimatedDaysMin || '';
-        daysMaxInp.value = ch.estimatedDaysMax || '';
+        daysMinInp.value = ch.deliveryMinDays || '';
+        daysMaxInp.value = ch.deliveryMaxDays || '';
         descInp.value = ch.description || '';
         sortInp.value = ch.sortOrder || 999;
         statSel.value = ch.status;
@@ -2844,8 +2844,8 @@
         nameInp.value = '';
         codeInp.value = '';
         srvSel.value = '';
-        daysMinInp.value = '';
-        daysMaxInp.value = '';
+        if (daysMinInp) daysMinInp.value = '';
+        if (daysMaxInp) daysMaxInp.value = '';
         descInp.value = '';
         sortInp.value = '999';
         statSel.value = 'enabled';
@@ -2967,8 +2967,8 @@
     var code = (document.getElementById('channelCode').value || '').trim().toUpperCase();
     var serviceType = document.getElementById('channelServiceType').value;
     var countries = JSON.parse(document.getElementById('channelCountries').value || '[]');
-    var estDaysMin = parseInt(document.getElementById('channelEstDaysMin').value) || 0;
-    var estDaysMax = parseInt(document.getElementById('channelEstDaysMax').value) || 0;
+    var estDaysMin = parseInt(document.getElementById('channelDeliveryMinDays').value) || 0;
+    var estDaysMax = parseInt(document.getElementById('channelDeliveryMaxDays').value) || 0;
     var description = (document.getElementById('channelDescription').value || '').trim();
     var sortOrder = parseInt(document.getElementById('channelSortOrder').value) || 999;
     var status = document.getElementById('channelStatus').value;
@@ -3000,6 +3000,7 @@
     }
     closeChannelDialog();
     fw.renderChannelTable();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
     showToast('success', mode === 'add' ? '渠道已添加' : '保存成功');
   };
 
@@ -3059,6 +3060,7 @@
       showToast('success', '渠道已删除');
     }
     fw.renderChannelTable();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
   };
 
   // ---- 启用/禁用确认对话框 ----
@@ -3098,6 +3100,7 @@
     ch.status = ch.status === 'enabled' ? 'disabled' : 'enabled';
     closeChannelToggleDialog();
     fw.renderChannelTable();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
     showToast('success', '已' + (ch.status === 'enabled' ? '启用' : '禁用') + '「' + ch.name + '」');
   };
 
@@ -3136,432 +3139,484 @@
     }
   };
 
-  // ==================== 渠道成本管理对话框 ====================
-  var CC_DLG_URLS = [
-    'parameters/channel_cost/channel_cost_form_dialog.html',
-    'parameters/channel_cost/channel_cost_preview_dialog.html',
-    'parameters/channel_cost/channel_cost_confirm_dialogs.html'
-  ];
 
-  // ---- 成本表单对话框 ----
-  window.openCCDialog = function(mode, id) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
+  // ==================== 运费配置对话框 ====================
+
+  // ---- 运费表单对话框（新增/编辑） ----
+  window.openCostFormDialog = function(mode, channelId, costId) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
-      var title = document.getElementById('ccDialogTitle');
-      var modeInp = document.getElementById('ccMode');
-      var editId = document.getElementById('ccEditId');
-      var provSel = document.getElementById('ccProvider');
-      var chSel = document.getElementById('ccChannel');
-      var readonlyDiv = document.getElementById('ccReadonlyInfo');
-      var costNameInp = document.getElementById('ccCostName');
-      var firstWeightInp = document.getElementById('ccFirstWeight');
-      var firstPriceInp = document.getElementById('ccFirstWeightPrice');
-      var addUnitInp = document.getElementById('ccAdditionalUnit');
-      var addPriceInp = document.getElementById('ccAdditionalPrice');
-      var remoteInp = document.getElementById('ccRemoteAreaFee');
-      var hasInsSel = document.getElementById('ccHasInsurance');
-      var insFeeInp = document.getElementById('ccInsuranceFee');
-      var insFeeGrp = document.getElementById('ccInsuranceFeeGroup');
-      var dimCoInp = document.getElementById('ccDimCoefficient');
-      var descInp = document.getElementById('ccDescription');
-      var statusSel = document.getElementById('ccStatus');
+      var ch = fw.findChannel(channelId);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
 
-      modeInp.value = mode;
-      editId.value = id || '';
+      document.getElementById('costMode').value = mode;
+      document.getElementById('costEditId').value = costId || '';
+      document.getElementById('costChannelId').value = channelId;
 
-      // 填充物流商下拉
-      var providers = fw.providers || [];
-      provSel.innerHTML = '<option value="">请选择物流商</option>';
-      providers.forEach(function(p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; provSel.appendChild(o); });
+      // 设置只读渠道信息
+      document.getElementById('costChannelName').textContent = ch.name;
+      document.getElementById('costServiceType').textContent = ch.serviceType || '—';
+      document.getElementById('costChannelCountries').textContent = (ch.countries && ch.countries.length ? ch.countries.join('、') : '未配置');
 
-      if (mode === 'add') {
-        title.textContent = '新增成本';
-        readonlyDiv.style.display = 'none';
-        provSel.disabled = false;
-        chSel.disabled = false;
-        chSel.innerHTML = '<option value="">请先选择物流商</option>';
-        // 重置表单
-        costNameInp.value = '';
-        firstWeightInp.value = '';
-        firstPriceInp.value = '';
-        addUnitInp.value = '';
-        addPriceInp.value = '';
-        remoteInp.value = '0';
-        hasInsSel.value = '0';
-        insFeeInp.value = '0';
-        insFeeGrp.style.display = 'none';
-        dimCoInp.value = '0';
-        descInp.value = '';
-        statusSel.value = '1';
-        readonlyDiv.style.display = 'block';
-        provSel.disabled = true;
-        chSel.disabled = true;
-        var cc = fw.findCost(id);
-        if (!cc) { showToast('error', '成本配置不存在'); return; }
-        var ch = fw.findChannel(cc.channelId);
-        var ac = ch ? fw.findAccount(ch.accountId) : null;
-        var p = ac ? fw.findProvider(ac.providerId) : null;
-        document.getElementById('ccReadonlyProvider').textContent = p ? p.name : '—';
-        document.getElementById('ccReadonlyChannel').textContent = ch ? ch.name : '—';
-        document.getElementById('ccReadonlyServiceType').textContent = ch ? ch.serviceType : '—';
-        costNameInp.value = cc.costName || '';
-        firstWeightInp.value = cc.firstWeight || '';
-        firstPriceInp.value = cc.firstWeightPrice != null ? cc.firstWeightPrice : '';
-        addUnitInp.value = cc.additionalUnit || '';
-        addPriceInp.value = cc.additionalPrice != null ? cc.additionalPrice : '';
-        remoteInp.value = cc.remoteAreaFee || 0;
-        hasInsSel.value = cc.hasShippingInsurance || 0;
-        insFeeInp.value = cc.insuranceFee || 0;
-        insFeeGrp.style.display = cc.hasShippingInsurance === 1 ? '' : 'none';
-        dimCoInp.value = cc.dimCoefficient || 0;
-        descInp.value = cc.description || '';
-        statusSel.value = cc.isActive || 1;
+      // 存储渠道配送国家（供国家选择器使用）
+      window._costAvailCountries = ch.countries || [];
+
+      if (mode === 'edit' && costId) {
+        document.getElementById('costFormDialogTitle').textContent = '编辑运费';
+        var cos = (fw.costs || []).find(function(c) { return c.id === costId; });
+        if (cos) { populateCostForm(cos); }
+      } else {
+        document.getElementById('costFormDialogTitle').textContent = '新增运费';
+        resetCostForm();
       }
-      var overlay = document.getElementById('ccDialogOverlay');
+      var overlay = document.getElementById('costFormDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
   };
 
-  window.closeCCDialog = function() {
-    var ov = document.getElementById('ccDialogOverlay');
+  function populateCostForm(cos) {
+    document.getElementById('costName').value = cos.costName || '';
+    document.getElementById('costFirstWeight').value = cos.firstWeight || 100;
+    document.getElementById('costFirstWeightPrice').value = cos.firstWeightPrice || 0;
+    document.getElementById('costAdditionalUnit').value = cos.additionalUnit || 100;
+    document.getElementById('costAdditionalPrice').value = cos.additionalPrice || 0;
+    document.getElementById('costDimCoefficient').value = cos.dimCoefficient != null ? cos.dimCoefficient : 6000;
+    document.getElementById('costRemoteAreaFee').value = (cos.remoteAreaFee != null ? cos.remoteAreaFee : 0).toFixed(2);
+    var insVal = cos.hasShippingInsurance ? '1' : '0';
+    document.getElementById('costHasShippingInsurance').value = insVal;
+    document.getElementById('costInsuranceFee').value = (cos.insuranceFee != null ? cos.insuranceFee : 0).toFixed(2);
+    document.getElementById('costIsActive').value = cos.isActive ? '1' : '0';
+    document.getElementById('costDescription').value = cos.description || '';
+    document.getElementById('costCountryCodes').value = JSON.stringify(cos.countryCodes || []);
+    renderCostCountryTags(cos.countryCodes || []);
+    onCostInsuranceChange();
+  }
+
+  function resetCostForm() {
+    document.getElementById('costName').value = '';
+    document.getElementById('costFirstWeight').value = 100;
+    document.getElementById('costFirstWeightPrice').value = 8.00;
+    document.getElementById('costAdditionalUnit').value = 100;
+    document.getElementById('costAdditionalPrice').value = 0.05;
+    document.getElementById('costDimCoefficient').value = 6000;
+    document.getElementById('costRemoteAreaFee').value = '0.00';
+    document.getElementById('costHasShippingInsurance').value = '0';
+    document.getElementById('costInsuranceFee').value = '1.00';
+    document.getElementById('costIsActive').value = '1';
+    document.getElementById('costDescription').value = '';
+    document.getElementById('costCountryCodes').value = '[]';
+    renderCostCountryTags([]);
+    onCostInsuranceChange();
+  }
+
+  function renderCostCountryTags(countryCodes) {
+    var container = document.getElementById('costCountryTags');
+    if (!container) return;
+    if (!countryCodes || countryCodes.length === 0) {
+      container.innerHTML = '<span style="font-size:13px;color:hsl(var(--muted-foreground));">未选择（视为全局兜底）</span>';
+    } else {
+      container.innerHTML = countryCodes.map(function(cc) {
+        return '<span class="country-tag cost-country-tag-removable">' + cc +
+          '<span class="cost-country-tag-remove" onclick="removeCostCountryTag(\'' + cc + '\')" title="移除">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</span>' +
+          '</span>';
+      }).join('');
+    }
+  }
+
+  window.removeCostCountryTag = function(country) {
+    var codes = safeParseJSON(document.getElementById('costCountryCodes').value, []);
+    codes = codes.filter(function(c) { return c !== country; });
+    document.getElementById('costCountryCodes').value = JSON.stringify(codes);
+    renderCostCountryTags(codes);
+  };
+
+  function safeParseJSON(str, fallback) {
+    try { return JSON.parse(str); } catch(e) { return fallback; }
+  }
+
+  window.closeCostFormDialog = function() {
+    var ov = document.getElementById('costFormDialogOverlay');
     if (ov) ov.style.display = 'none';
   };
 
-  window.onCCProviderChange = function() {
+  window.submitCost = function() {
     var fw = getFW();
     if (!fw) return;
-    var provId = parseInt(document.getElementById('ccProvider').value);
-    var chSel = document.getElementById('ccChannel');
-    var channels = fw.channels || [];
-    var accounts = fw.accounts || [];
-    chSel.innerHTML = '<option value="">请选择渠道</option>';
-    if (!provId) return;
-    var acctIds = accounts.filter(function(a) { return a.providerId === provId; }).map(function(a) { return a.id; });
-    var costData = fw.costData || [];
-    channels.forEach(function(ch) {
-      if (acctIds.indexOf(ch.accountId) === -1) return;
-      // 新增时只显示未配置成本的渠道（已有启用成本的排除）
-      var mode = document.getElementById('ccMode').value;
-      if (mode === 'add') {
-        var existCost = costData.filter(function(c) { return c.channelId === ch.id && c.isActive === 1; });
-        if (existCost.length > 0) return;
-      }
-      var o = document.createElement('option'); o.value = ch.id; o.textContent = ch.name; chSel.appendChild(o);
-    });
-  };
+    var mode = document.getElementById('costMode').value;
+    var costId = document.getElementById('costEditId').value ? parseInt(document.getElementById('costEditId').value) : null;
+    var channelId = parseInt(document.getElementById('costChannelId').value);
 
-  window.onCCInsuranceChange = function() {
-    var hasIns = parseInt(document.getElementById('ccHasInsurance').value);
-    var grp = document.getElementById('ccInsuranceFeeGroup');
-    if (grp) grp.style.display = hasIns === 1 ? '' : 'none';
-  };
+    var costName = (document.getElementById('costName').value || '').trim();
+    if (!costName) { showToast('warning', '请输入运费名称'); return; }
 
-  window.submitCC = function() {
-    var fw = getFW();
-    if (!fw) return;
-    var mode = document.getElementById('ccMode').value;
-    var editId = mode === 'edit' ? parseInt(document.getElementById('ccEditId').value) : null;
-    var costName = document.getElementById('ccCostName').value.trim();
-    var firstWeight = parseInt(document.getElementById('ccFirstWeight').value) || 0;
-    var firstPrice = parseFloat(document.getElementById('ccFirstWeightPrice').value) || 0;
-    var addUnit = parseInt(document.getElementById('ccAdditionalUnit').value) || 0;
-    var addPrice = parseFloat(document.getElementById('ccAdditionalPrice').value) || 0;
-    var remoteFee = parseFloat(document.getElementById('ccRemoteAreaFee').value) || 0;
-    var hasIns = parseInt(document.getElementById('ccHasInsurance').value);
-    var insFee = parseFloat(document.getElementById('ccInsuranceFee').value) || 0;
-    var dimCo = parseInt(document.getElementById('ccDimCoefficient').value) || 0;
-    var desc = document.getElementById('ccDescription').value.trim();
-    var status = parseInt(document.getElementById('ccStatus').value);
+    var firstWeight = parseInt(document.getElementById('costFirstWeight').value) || 0;
+    if (firstWeight <= 0) { showToast('warning', '首重必须大于0'); return; }
 
-    // 校验
-    if (!costName) { showToast('warning', '请输入成本名称'); return; }
-    if (costName.length > 100) { showToast('warning', '成本名称最大100字符'); return; }
-    if (!firstWeight || firstWeight <= 0) { showToast('warning', '首重必须大于0'); return; }
-    if (firstWeight > 99999) { showToast('warning', '首重最大99999g'); return; }
-    if (firstPrice < 0) { showToast('warning', '首重价格不能小于0'); return; }
-    if (!addUnit || addUnit <= 0) { showToast('warning', '续重单位必须大于0'); return; }
-    if (addPrice < 0) { showToast('warning', '续重单价不能小于0'); return; }
-    if (remoteFee < 0) { showToast('warning', '偏远附加费不能小于0'); return; }
-    if (hasIns === 1 && insFee <= 0) { showToast('warning', '开启运输保障险后，保险费用必填且大于0'); return; }
-    if (dimCo < 0) { showToast('warning', 'DIM系数不能小于0'); return; }
+    var firstWeightPrice = parseFloat(document.getElementById('costFirstWeightPrice').value) || 0;
+    var additionalUnit = parseInt(document.getElementById('costAdditionalUnit').value) || 100;
+    var additionalPrice = parseFloat(document.getElementById('costAdditionalPrice').value) || 0;
+    var dimCoefficient = parseInt(document.getElementById('costDimCoefficient').value) || 0;
+    var remoteAreaFee = parseFloat(document.getElementById('costRemoteAreaFee').value) || 0;
+    var hasShippingInsurance = parseInt(document.getElementById('costHasShippingInsurance').value) || 0;
+    var insuranceFee = parseFloat(document.getElementById('costInsuranceFee').value) || 0;
+    var countryCodes = safeParseJSON(document.getElementById('costCountryCodes').value, []);
+    var isActive = document.getElementById('costIsActive').value === '1';
+    var description = (document.getElementById('costDescription').value || '').trim();
+
+    var obj = {
+      costName: costName,
+      countryCodes: countryCodes,
+      firstWeight: firstWeight,
+      firstWeightPrice: firstWeightPrice,
+      additionalUnit: additionalUnit,
+      additionalPrice: additionalPrice,
+      dimCoefficient: dimCoefficient,
+      remoteAreaFee: remoteAreaFee,
+      hasShippingInsurance: hasShippingInsurance,
+      insuranceFee: insuranceFee,
+      isActive: isActive,
+      description: description
+    };
 
     if (mode === 'add') {
-      var chId = parseInt(document.getElementById('ccChannel').value);
-      if (!chId) { showToast('warning', '请选择渠道'); return; }
-      // 检查是否已有启用成本
-      var costData = fw.costData || [];
-      var existing = costData.filter(function(c) { return c.channelId === chId && c.isActive === 1; });
-      if (status === 1 && existing.length > 0) { showToast('warning', '该渠道已存在启用的成本配置，请先禁用或删除'); return; }
-      fw.ccAddItem(chId, costName, firstWeight, firstPrice, addUnit, addPrice, remoteFee, hasIns, insFee, dimCo, desc, status);
-    } else {
-      var cc = fw.findCost(editId);
-      if (!cc) { showToast('error', '成本配置不存在'); return; }
-      if (status === 1) {
-        var costData = fw.costData || [];
-        var dup = costData.filter(function(c) { return c.channelId === cc.channelId && c.isActive === 1 && c.id !== editId; });
-        if (dup.length > 0) { showToast('warning', '该渠道已存在启用的成本配置，请先禁用或删除'); return; }
-      }
-      fw.ccUpdateItem(editId, cc.channelId, costName, firstWeight, firstPrice, addUnit, addPrice, remoteFee, hasIns, insFee, dimCo, desc, status);
+      fw.costAddItem(channelId, obj);
+    } else if (mode === 'edit' && costId) {
+      fw.costUpdateItem(costId, obj);
     }
-    closeCCDialog();
-    fw.renderCCTable();
-    showToast('success', mode === 'add' ? '成本已添加' : '保存成功');
+    closeCostFormDialog();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
+    showToast('success', mode === 'add' ? '运费已添加' : '保存成功');
   };
 
-  // ---- 删除确认对话框 ----
-  window.openCCDeleteDialog = function(id) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      var cc = fw.findCost(id);
-      if (!cc) { showToast('error', '成本配置不存在'); return; }
-      document.getElementById('ccDeleteTitle').textContent = '确认删除';
-      document.getElementById('ccDeleteId').value = id;
-      document.getElementById('ccDeleteIsBatch').value = 'false';
-      document.getElementById('ccDeleteMsg').innerHTML = '<p>确定要删除成本「<strong>' + cc.costName + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--destructive));">删除后不可恢复。</p>';
-      document.getElementById('ccDeleteConfirmBtn').textContent = '确定删除';
-      var overlay = document.getElementById('ccDeleteOverlay');
-      if (overlay) overlay.style.display = 'flex';
+  // ---- 运输险开关联动 ----
+  window.onCostInsuranceChange = function() {
+    var sel = document.getElementById('costHasShippingInsurance');
+    var grp = document.getElementById('costInsuranceFeeGroup');
+    if (!sel || !grp) return;
+    grp.style.display = sel.value === '1' ? '' : 'none';
+  };
+
+  // ---- 运费适用国家选择子对话框 ----
+  window.openCostCountryPicker = function() {
+    var grid = document.getElementById('costCountryPickerList');
+    if (!grid) return;
+    var channelCountries = window._costAvailCountries || [];
+    var currentCodes = safeParseJSON(document.getElementById('costCountryCodes').value, []);
+
+    // 主国家列表（与渠道国家选择器保持一致）
+    var allCountries = [
+      { name: '美国', code: 'US' }, { name: '中国', code: 'CN' }, { name: '英国', code: 'GB' },
+      { name: '德国', code: 'DE' }, { name: '法国', code: 'FR' }, { name: '日本', code: 'JP' },
+      { name: '澳洲', code: 'AU' }, { name: '加拿大', code: 'CA' }, { name: '巴西', code: 'BR' },
+      { name: '南非', code: 'ZA' }, { name: '新加坡', code: 'SG' }, { name: '韩国', code: 'KR' },
+      { name: '印度', code: 'IN' }, { name: '意大利', code: 'IT' }, { name: '西班牙', code: 'ES' },
+      { name: '荷兰', code: 'NL' }, { name: '瑞典', code: 'SE' }, { name: '挪威', code: 'NO' },
+      { name: '丹麦', code: 'DK' }, { name: '芬兰', code: 'FI' }, { name: '波兰', code: 'PL' },
+      { name: '乌克兰', code: 'UA' }, { name: '俄罗斯', code: 'RU' }, { name: '阿联酋', code: 'AE' },
+      { name: '沙特', code: 'SA' }, { name: '墨西哥', code: 'MX' }, { name: '阿根廷', code: 'AR' },
+      { name: '智利', code: 'CL' }, { name: '新西兰', code: 'NZ' }, { name: '泰国', code: 'TH' }
+    ];
+
+    grid.innerHTML = allCountries.map(function(c) {
+      var checked = currentCodes.indexOf(c.name) !== -1;
+      var inChannel = channelCountries.indexOf(c.name) !== -1;
+      var tag = inChannel ? '<span style="font-size:11px;color:hsl(var(--primary));background:hsl(var(--primary-50));padding:1px 6px;border-radius:3px;margin-left:auto;">渠道已配</span>' : '';
+      return '<label class="country-check-item' + (checked ? ' selected' : '') + '" data-country="' + c.name + '" data-code="' + c.code + '" data-channel="' + (inChannel ? '1' : '0') + '">' +
+        '<input type="checkbox" class="cost-country-picker-check" value="' + c.name + '"' + (checked ? ' checked' : '') + ' onchange="onCostCountryPickerChange(this)">' +
+        '<span class="cci-box">' + (typeof ICONS !== 'undefined' && ICONS.check ? ICONS.check : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>') + '</span>' +
+        '<span style="flex:1;">' + c.name + '<span style="font-size:11px;color:hsl(var(--muted-foreground));margin-left:4px;">' + c.code + '</span></span>' +
+        tag +
+        '</label>';
+    }).join('');
+
+    // 重置搜索框
+    var searchInput = document.getElementById('costCountryPickerSearch');
+    if (searchInput) searchInput.value = '';
+
+    window._costPickerSelected = currentCodes.slice();
+    updateCostCountryPickerCount();
+    var overlay = document.getElementById('costCountryPickerOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  };
+
+  window.updateCostCountryPickerCount = function() {
+    var checkboxes = document.querySelectorAll('#costCountryPickerList .cost-country-picker-check');
+    var countEl = document.getElementById('costCountryPickerCount');
+    if (!countEl) return;
+    var count = 0;
+    var visibleBoxes = 0;
+    var checkedVisible = 0;
+    checkboxes.forEach(function(cb) {
+      if (cb.checked) count++;
+      var item = cb.closest('.country-check-item');
+      if (item && item.style.display !== 'none') {
+        visibleBoxes++;
+        if (cb.checked) checkedVisible++;
+      }
     });
+    countEl.textContent = count;
+    // 同步全选框状态
+    var allCb = document.getElementById('costCountryPickerSelectAll');
+    if (allCb) {
+      allCb.checked = visibleBoxes > 0 && checkedVisible === visibleBoxes;
+      allCb.indeterminate = checkedVisible > 0 && checkedVisible < visibleBoxes;
+    }
   };
 
-  window.openCCBatchDeleteDialog = function(ids, blockedCount) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      if (!ids || ids.length === 0) { showToast('info', '请先选择要删除的成本配置'); return; }
-      document.getElementById('ccDeleteTitle').textContent = '批量删除';
-      document.getElementById('ccDeleteId').value = JSON.stringify(ids);
-      document.getElementById('ccDeleteIsBatch').value = 'true';
-      var msg = '<p>选中了 <strong>' + (ids.length + blockedCount) + '</strong> 个成本配置</p>';
-      if (blockedCount > 0) { msg += '<p style="margin-top:6px;color:hsl(var(--destructive));">其中 <strong>' + blockedCount + '</strong> 个存在关联订单，无法删除</p>'; }
-      msg += '<p style="margin-top:6px;">其余 <strong>' + ids.length + '</strong> 个将删除</p>';
-      msg += '<p style="margin-top:6px;color:hsl(var(--destructive));">删除后不可恢复。</p>';
-      document.getElementById('ccDeleteMsg').innerHTML = msg;
-      document.getElementById('ccDeleteConfirmBtn').textContent = '确定删除';
-      var overlay = document.getElementById('ccDeleteOverlay');
-      if (overlay) overlay.style.display = 'flex';
+  window.filterCostCountryPicker = function() {
+    var q = (document.getElementById('costCountryPickerSearch').value || '').toLowerCase().trim();
+    var items = document.querySelectorAll('#costCountryPickerList .country-check-item');
+    items.forEach(function(item) {
+      var text = (item.getAttribute('data-country') + ' ' + item.getAttribute('data-code')).toLowerCase();
+      item.style.display = !q || text.indexOf(q) !== -1 ? '' : 'none';
     });
+    updateCostCountryPickerCount();
   };
 
-  window.closeCCDeleteDialog = function() {
-    var ov = document.getElementById('ccDeleteOverlay');
+  window.toggleCostCountrySelectAll = function(checked) {
+    var boxes = document.querySelectorAll('#costCountryPickerList .cost-country-picker-check');
+    boxes.forEach(function(cb) {
+      var item = cb.closest('.country-check-item');
+      if (item && item.style.display !== 'none') {
+        cb.checked = checked;
+        if (checked) item.classList.add('selected');
+        else item.classList.remove('selected');
+      }
+    });
+    updateCostCountryPickerCount();
+  };
+
+  window.onCostCountryPickerChange = function(cb) {
+    var item = cb.closest('.country-check-item');
+    if (item) {
+      if (cb.checked) item.classList.add('selected');
+      else item.classList.remove('selected');
+    }
+    updateCostCountryPickerCount();
+  };
+
+  window.closeCostCountryPicker = function() {
+    var ov = document.getElementById('costCountryPickerOverlay');
     if (ov) ov.style.display = 'none';
   };
 
-  window.confirmCCDelete = function() {
-    var fw = getFW();
-    if (!fw) return;
-    var isBatch = document.getElementById('ccDeleteIsBatch').value === 'true';
-    closeCCDeleteDialog();
-    if (isBatch) {
-      var ids = JSON.parse(document.getElementById('ccDeleteId').value);
-      fw.ccBatchDeleteItems(ids);
-      showToast('success', '已删除 ' + ids.length + ' 个成本配置');
-    } else {
-      var id = parseInt(document.getElementById('ccDeleteId').value);
-      fw.ccDeleteItem(id);
-      showToast('success', '删除成功');
-    }
-    fw.renderCCTable();
+  window.confirmCostCountryPicker = function() {
+    var checkboxes = document.querySelectorAll('#costCountryPickerList input[type="checkbox"]');
+    var selected = [];
+    checkboxes.forEach(function(cb) { if (cb.checked) selected.push(cb.value); });
+    document.getElementById('costCountryCodes').value = JSON.stringify(selected);
+    renderCostCountryTags(selected);
+    closeCostCountryPicker();
   };
 
-  // ---- 启用/禁用确认对话框 ----
-  window.openCCToggleDialog = function(id) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
+  // ---- 运费删除对话框 ----
+  window.openCostDeleteDialog = function(costId) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
       var fw = getFW();
       if (!fw) return;
-      var cc = fw.findCost(id);
-      if (!cc) { showToast('error', '成本配置不存在'); return; }
-      var isActive = cc.isActive === 1;
-      var action = isActive ? 'disable' : 'enable';
-      document.getElementById('ccToggleId').value = id;
-      document.getElementById('ccToggleAction').value = action;
-      if (isActive) {
-        document.getElementById('ccToggleTitle').textContent = '确认禁用';
-        document.getElementById('ccToggleMsg').innerHTML = '<p>确定要禁用成本「<strong>' + cc.costName + '</strong>」吗？</p><p style="margin-top:6px;">禁用后，该成本在结算页不生效。</p>';
-        document.getElementById('ccToggleConfirmBtn').textContent = '确定禁用';
-        document.getElementById('ccToggleConfirmBtn').className = 'btn btn-destructive';
-      } else {
-        // 启用校验：该渠道是否已有其他启用成本
-        var costData = fw.costData || [];
-        var dup = costData.filter(function(c) { return c.channelId === cc.channelId && c.isActive === 1 && c.id !== id; });
-        if (dup.length > 0) {
-          showToast('warning', '该渠道已存在启用的成本配置，请先禁用或删除');
-          return;
+      var cos = (fw.costs || []).find(function(c) { return c.id === costId; });
+      if (!cos) { showToast('error', '运费不存在'); return; }
+      document.getElementById('costDeleteId').value = costId;
+      document.getElementById('costDeleteMsg').innerHTML = '<p>确定要删除运费「<strong>' + cos.costName + '</strong>」吗？</p><p style="margin-top:6px;color:hsl(var(--destructive));">删除后不可恢复。</p>';
+      var overlay = document.getElementById('costDeleteDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCostDeleteDialog = function() {
+    var ov = document.getElementById('costDeleteDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmCostDelete = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var costId = parseInt(document.getElementById('costDeleteId').value);
+    fw.costDeleteItem(costId);
+    closeCostDeleteDialog();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
+    showToast('success', '运费已删除');
+  };
+
+  // ---- 运费启用/禁用对话框 ----
+  window.openCostToggleDialog = function(costId) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var cos = (fw.costs || []).find(function(c) { return c.id === costId; });
+      if (!cos) { showToast('error', '运费不存在'); return; }
+      var actionText = cos.isActive ? '禁用' : '启用';
+      document.getElementById('costToggleDialogTitle').textContent = '确认' + actionText;
+      document.getElementById('costToggleId').value = costId;
+      document.getElementById('costToggleMsg').innerHTML = '<p>确定要' + actionText + '运费「<strong>' + cos.costName + '</strong>」吗？</p>' + (cos.isActive ? '<p style="margin-top:6px;color:hsl(var(--muted-foreground));">禁用后该运费配置将不可用于运费计算。</p>' : '');
+      document.getElementById('costToggleConfirmBtn').textContent = '确定' + actionText;
+      var overlay = document.getElementById('costToggleDialogOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    });
+  };
+
+  window.closeCostToggleDialog = function() {
+    var ov = document.getElementById('costToggleDialogOverlay');
+    if (ov) ov.style.display = 'none';
+  };
+
+  window.confirmCostToggle = function() {
+    var fw = getFW();
+    if (!fw) return;
+    var costId = parseInt(document.getElementById('costToggleId').value);
+    var cos = (fw.costs || []).find(function(c) { return c.id === costId; });
+    if (!cos) return;
+    cos.isActive = !cos.isActive;
+    closeCostToggleDialog();
+    if (fw.renderDetailPanel) fw.renderDetailPanel();
+    showToast('success', '已' + (cos.isActive ? '启用' : '禁用') + '运费「' + cos.costName + '」');
+  };
+
+  // ---- 运费预览对话框 ----
+  window.openCostPreviewDialog = function(channelId, costId) {
+    ensureDialogs('channel', CHANNEL_DLG_URLS, function() {
+      var fw = getFW();
+      if (!fw) return;
+      var ch = fw.findChannel(channelId);
+      if (!ch) { showToast('error', '渠道不存在'); return; }
+      document.getElementById('previewChannelId').value = channelId;
+      document.getElementById('previewCostId').value = costId || '';
+
+      // 初始化收货国家下拉
+      var countrySel = document.getElementById('previewCountry');
+      if (countrySel) {
+        countrySel.innerHTML = '<option value="">请选择收货国家</option>';
+        if (ch.countries && ch.countries.length) {
+          ch.countries.forEach(function(c) {
+            countrySel.innerHTML += '<option value="' + c + '">' + c + '</option>';
+          });
         }
-        document.getElementById('ccToggleTitle').textContent = '确认启用';
-        document.getElementById('ccToggleMsg').innerHTML = '<p>确定要启用成本「<strong>' + cc.costName + '</strong>」吗？</p>';
-        document.getElementById('ccToggleConfirmBtn').textContent = '确定启用';
-        document.getElementById('ccToggleConfirmBtn').className = 'btn btn-primary';
       }
-      var overlay = document.getElementById('ccToggleOverlay');
+
+      // 重置输入参数
+      document.getElementById('previewWeight').value = 350;
+      document.getElementById('previewLength').value = 18;
+      document.getElementById('previewWidth').value = 4;
+      document.getElementById('previewHeight').value = 5;
+      document.getElementById('previewIsRemote').value = '0';
+      document.getElementById('previewHasInsurance').value = '1';
+      document.getElementById('previewResult').style.display = 'none';
+
+      var overlay = document.getElementById('costPreviewDialogOverlay');
       if (overlay) overlay.style.display = 'flex';
     });
   };
 
-  window.closeCCToggleDialog = function() {
-    var ov = document.getElementById('ccToggleOverlay');
+  window.closeCostPreviewDialog = function() {
+    var ov = document.getElementById('costPreviewDialogOverlay');
     if (ov) ov.style.display = 'none';
   };
 
-  window.confirmCCToggle = function() {
+  window.calcCostPreview = function() {
     var fw = getFW();
     if (!fw) return;
-    var id = parseInt(document.getElementById('ccToggleId').value);
-    var action = document.getElementById('ccToggleAction').value;
-    var cc = fw.findCost(id);
-    if (!cc) return;
-    closeCCToggleDialog();
-    cc.isActive = action === 'enable' ? 1 : 0;
-    fw.renderCCTable();
-    showToast('success', action === 'enable' ? '已启用' : '已禁用');
-  };
 
-  // ---- 复制确认对话框 ----
-  window.openCCCopyDialog = function(id) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      var cc = fw.findCost(id);
-      if (!cc) { showToast('error', '成本配置不存在'); return; }
-      document.getElementById('ccCopyId').value = id;
-      document.getElementById('ccCopyMsg').innerHTML = '<p>确定要复制成本「<strong>' + cc.costName + '</strong>」吗？</p><p style="margin-top:6px;">复制后将生成新配置，名称自动添加 _Copy 后缀。</p>';
-      var overlay = document.getElementById('ccCopyOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
+    var channelId = parseInt(document.getElementById('previewChannelId').value);
+    var costIdStr = document.getElementById('previewCostId').value;
+    var costId = costIdStr ? parseInt(costIdStr) : null;
 
-  window.closeCCCopyDialog = function() {
-    var ov = document.getElementById('ccCopyOverlay');
-    if (ov) ov.style.display = 'none';
-  };
+    var country = document.getElementById('previewCountry').value;
+    if (!country) { showToast('warning', '请选择收货国家'); return; }
 
-  window.confirmCCCopy = function() {
-    var fw = getFW();
-    if (!fw) return;
-    var id = parseInt(document.getElementById('ccCopyId').value);
-    var newCc = fw.ccCopyItem(id);
-    closeCCCopyDialog();
-    if (newCc) {
-      fw.renderCCTable();
-      showToast('success', '成本配置已复制，请编辑新配置');
-      setTimeout(function() { window.openCCDialog('edit', newCc.id); }, 300);
+    var weight = parseFloat(document.getElementById('previewWeight').value) || 0;
+    if (weight <= 0) { showToast('warning', '商品重量必须大于0'); return; }
+
+    var length = parseFloat(document.getElementById('previewLength').value) || 0;
+    var width = parseFloat(document.getElementById('previewWidth').value) || 0;
+    var height = parseFloat(document.getElementById('previewHeight').value) || 0;
+    var isRemote = document.getElementById('previewIsRemote').value === '1';
+    var hasInsurance = document.getElementById('previewHasInsurance').value === '1';
+
+    // 查找匹配的运费配置
+    var allCosts = (fw.costs || []).filter(function(c) { return c.channelId === channelId && c.isActive; });
+    var matchedCost = null;
+
+    if (costId) {
+      // 指定了运费ID则使用该运费
+      matchedCost = allCosts.find(function(c) { return c.id === costId; });
     } else {
-      showToast('error', '复制失败');
+      // 否则按国家匹配：优先精确匹配，然后是全局兜底
+      allCosts.forEach(function(c) {
+        if (!c.countryCodes || c.countryCodes.length === 0) {
+          if (!matchedCost) matchedCost = c; // 兜底
+        } else if (c.countryCodes.indexOf(country) !== -1) {
+          matchedCost = c; // 精确匹配覆盖兜底
+        }
+      });
     }
-  };
 
-  // ---- 成本预览对话框 ----
-  window.openCCPreviewDialog = function(id) {
-    ensureDialogs('channelCost', CC_DLG_URLS, function() {
-      var fw = getFW();
-      if (!fw) return;
-      var cc = fw.findCost(id);
-      if (!cc) { showToast('error', '成本配置不存在'); return; }
-      var ch = fw.findChannel(cc.channelId);
-      if (!ch) { showToast('error', '关联渠道不存在'); return; }
+    var result = document.getElementById('previewResult');
+    if (!result) return;
 
-      document.getElementById('ccPreviewId').value = id;
+    if (!matchedCost) {
+      result.style.display = 'block';
+      result.innerHTML = '<div style="color:hsl(var(--destructive));text-align:center;padding:16px;">未找到「' + country + '」的有效运费配置</div>';
+      return;
+    }
 
-      // 填充国家下拉（使用渠道已配置的国家）
-      var countries = ch.countries || [];
-      var countrySel = document.getElementById('ccPreviewCountry');
-      countrySel.innerHTML = '<option value="">请选择国家</option>';
-      countries.forEach(function(c) { var o = document.createElement('option'); o.value = c; o.textContent = c; countrySel.appendChild(o); });
-
-      // 重置表单
-      document.getElementById('ccPreviewWeight').value = '';
-      document.getElementById('ccPreviewRemote').value = '0';
-      document.getElementById('ccPreviewInsurance').value = '1';
-      // DIM 系数相关
-      var dimGroup = document.getElementById('ccPreviewDimGroup');
-      if (cc.dimCoefficient > 0) {
-        if (dimGroup) dimGroup.style.display = 'block';
-        document.getElementById('ccPreviewPackLen').value = '';
-        document.getElementById('ccPreviewPackWid').value = '';
-        document.getElementById('ccPreviewPackHgt').value = '';
-      } else {
-        if (dimGroup) dimGroup.style.display = 'none';
-      }
-
-      // 显示基本信息
-      var ac = fw.findAccount(ch.accountId);
-      var p = ac ? fw.findProvider(ac.providerId) : null;
-      document.getElementById('ccPreviewInfo').innerHTML =
-        '<strong>成本名称：</strong>' + cc.costName + '<br>' +
-        '<strong>渠道：</strong>' + (p ? p.name + ' — ' : '') + ch.name + '<br>' +
-        '<strong>服务类型：</strong>' + ch.serviceType + ' | <strong>首重：</strong>' + cc.firstWeight + 'g/$' + cc.firstWeightPrice.toFixed(2) + ' | <strong>续重：</strong>' + cc.additionalUnit + 'g/$' + cc.additionalPrice.toFixed(2) + (cc.dimCoefficient > 0 ? ' | <strong>DIM系数：</strong>' + cc.dimCoefficient : '');
-
-      document.getElementById('ccPreviewResult').innerHTML = '<div style="text-align:center;color:hsl(var(--muted-foreground));">请输入商品重量查看运费预览</div>';
-
-      var overlay = document.getElementById('ccPreviewOverlay');
-      if (overlay) overlay.style.display = 'flex';
-    });
-  };
-
-  window.closeCCPreviewDialog = function() {
-    var ov = document.getElementById('ccPreviewOverlay');
-    if (ov) ov.style.display = 'none';
-  };
-
-  window.calcCCPreview = function() {
-    var fw = getFW();
-    if (!fw) return;
-    var id = parseInt(document.getElementById('ccPreviewId').value);
-    var cc = fw.findCost(id);
-    if (!cc) return;
-    var weight = parseInt(document.getElementById('ccPreviewWeight').value) || 0;
-    var isRemote = parseInt(document.getElementById('ccPreviewRemote').value);
-    var hasIns = parseInt(document.getElementById('ccPreviewInsurance').value);
-    var country = document.getElementById('ccPreviewCountry').value;
-    var resultDiv = document.getElementById('ccPreviewResult');
-    if (!weight || weight <= 0) { resultDiv.innerHTML = '<div style="text-align:center;color:hsl(var(--muted-foreground));">请输入有效的商品重量</div>'; return; }
-    if (!country) { resultDiv.innerHTML = '<div style="text-align:center;color:hsl(var(--muted-foreground));">请选择收货国家</div>'; return; }
+    var mc = matchedCost;
 
     // 体积重计算
-    var chargeableWeight = weight;
-    var volumetricWeight = 0;
-    var showVolumetric = false;
-    if (cc.dimCoefficient > 0) {
-      var packLen = parseFloat(document.getElementById('ccPreviewPackLen').value) || 0;
-      var packWid = parseFloat(document.getElementById('ccPreviewPackWid').value) || 0;
-      var packHgt = parseFloat(document.getElementById('ccPreviewPackHgt').value) || 0;
-      if (packLen > 0 && packWid > 0 && packHgt > 0) {
-        volumetricWeight = Math.ceil((packLen * packWid * packHgt) / cc.dimCoefficient * 1000);
-        chargeableWeight = Math.max(weight, volumetricWeight);
-        showVolumetric = true;
-      }
+    var volumeWeight = 0;
+    if (mc.dimCoefficient > 0 && length > 0 && width > 0 && height > 0) {
+      volumeWeight = Math.ceil((length * width * height) / mc.dimCoefficient);
     }
 
-    var extraWeight = Math.max(0, chargeableWeight - cc.firstWeight);
-    var additionalUnits = Math.ceil(extraWeight / cc.additionalUnit);
-    var baseFee = cc.firstWeightPrice + additionalUnits * cc.additionalPrice;
-    var remoteFee = isRemote === 1 ? cc.remoteAreaFee : 0;
-    var insFee = (hasIns === 1 && cc.hasShippingInsurance === 1) ? cc.insuranceFee : 0;
-    var totalFee = baseFee + remoteFee + insFee;
+    // 计费重量 = max(实际重量, 体积重)
+    var billingWeight = Math.max(weight, volumeWeight);
 
-    var details = '<div style="font-size:14px;font-weight:600;margin-bottom:10px;color:hsl(var(--foreground));">费用明细</div>';
-    details += '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
-    if (showVolumetric) {
-      details += '<tr><td style="padding:4px 0;">├── 体积重（' + packLen.toFixed(1) + '×' + packWid.toFixed(1) + '×' + packHgt.toFixed(1) + '÷' + cc.dimCoefficient + '×1000）</td><td style="text-align:right;font-weight:500;">' + volumetricWeight + 'g</td></tr>';
-      details += '<tr><td style="padding:4px 0;">├── 计费重（MAX(' + weight + ', ' + volumetricWeight + ')）</td><td style="text-align:right;font-weight:500;">' + chargeableWeight + 'g</td></tr>';
+    // 首重费用
+    var firstCost = mc.firstWeightPrice;
+
+    // 续重费用
+    var additionalCost = 0;
+    if (billingWeight > mc.firstWeight) {
+      var extraWeight = billingWeight - mc.firstWeight;
+      additionalCost = Math.ceil(extraWeight / mc.additionalUnit) * mc.additionalPrice;
     }
-    details += '<tr><td style="padding:4px 0;">├── 首重（' + cc.firstWeight + 'g以内）</td><td style="text-align:right;font-weight:500;">$' + cc.firstWeightPrice.toFixed(2) + '</td></tr>';
-    if (extraWeight > 0) {
-      details += '<tr><td style="padding:4px 0;">├── 续重（' + chargeableWeight + '-' + cc.firstWeight + '=' + extraWeight + 'g，' + additionalUnits + '单位×$' + cc.additionalPrice.toFixed(2) + '）</td><td style="text-align:right;font-weight:500;">$' + (additionalUnits * cc.additionalPrice).toFixed(2) + '</td></tr>';
+
+    // 附加费
+    var remoteFee = isRemote ? (mc.remoteAreaFee || 0) : 0;
+    var insuranceFee = (hasInsurance && mc.hasShippingInsurance) ? (mc.insuranceFee || 0) : 0;
+    var totalFee = firstCost + additionalCost + remoteFee + insuranceFee;
+
+    // 构建结果HTML
+    var lines = [];
+    lines.push('<div class="preview-result-title">运费预览结果</div>');
+    lines.push('<div class="preview-result-subtitle">匹配运费：' + mc.costName + '</div>');
+    lines.push('<table class="preview-result-table"><tbody>');
+    lines.push('<tr><td>商品实际重量</td><td class="preview-val">' + weight + ' g</td></tr>');
+    if (mc.dimCoefficient > 0 && length > 0 && width > 0 && height > 0) {
+      lines.push('<tr><td>体积重（' + length + '×' + width + '×' + height + ' / ' + mc.dimCoefficient + '）</td><td class="preview-val">' + volumeWeight + ' g</td></tr>');
     }
-    if (isRemote && remoteFee > 0) {
-      details += '<tr><td style="padding:4px 0;">├── 偏远附加费</td><td style="text-align:right;font-weight:500;">$' + remoteFee.toFixed(2) + '</td></tr>';
+    lines.push('<tr><td>计费重量</td><td class="preview-val">' + billingWeight + ' g</td></tr>');
+    lines.push('<tr><td>首重（≤' + mc.firstWeight + 'g）</td><td class="preview-val">$' + mc.firstWeightPrice.toFixed(2) + '</td></tr>');
+    if (additionalCost > 0) {
+      lines.push('<tr><td>续重（' + Math.ceil((billingWeight - mc.firstWeight) / mc.additionalUnit) + ' × ' + mc.additionalUnit + 'g）</td><td class="preview-val">$' + additionalCost.toFixed(2) + '</td></tr>');
+    } else {
+      lines.push('<tr><td>续重</td><td class="preview-val">$0.00</td></tr>');
     }
-    if (hasIns && insFee > 0) {
-      details += '<tr><td style="padding:4px 0;">└── 运输保障险</td><td style="text-align:right;font-weight:500;">$' + insFee.toFixed(2) + '</td></tr>';
+    if (isRemote && mc.remoteAreaFee > 0) {
+      lines.push('<tr><td>偏远附加费</td><td class="preview-val">$' + mc.remoteAreaFee.toFixed(2) + '</td></tr>');
     }
-    details += '<tr><td colspan="2" style="padding:8px 0 0;border-top:1px dashed hsl(var(--border));font-weight:700;font-size:15px;color:hsl(var(--primary));">合计运费：<span style="float:right;">$' + totalFee.toFixed(2) + '</span></td></tr>';
-    details += '</table>';
-    resultDiv.innerHTML = details;
+    if (hasInsurance && mc.hasShippingInsurance && mc.insuranceFee > 0) {
+      lines.push('<tr><td>运输险费用</td><td class="preview-val">$' + mc.insuranceFee.toFixed(2) + '</td></tr>');
+    }
+    lines.push('<tr style="border-top:2px solid hsl(var(--border));font-weight:700;font-size:15px;"><td>预估总费用</td><td class="preview-val" style="color:hsl(var(--primary));font-size:18px;">$' + totalFee.toFixed(2) + '</td></tr>');
+    lines.push('</tbody></table>');
+
+    result.innerHTML = lines.join('');
+    result.style.display = 'block';
   };
+
 
   // ==================== Escape 关闭对话框 ====================
   document.addEventListener('keydown', function(e) {

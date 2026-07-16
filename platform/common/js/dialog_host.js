@@ -3154,11 +3154,6 @@
       document.getElementById('costEditId').value = costId || '';
       document.getElementById('costChannelId').value = channelId;
 
-      // 设置只读渠道信息
-      document.getElementById('costChannelName').textContent = ch.name;
-      document.getElementById('costServiceType').textContent = ch.serviceType || '—';
-      document.getElementById('costChannelCountries').textContent = (ch.countries && ch.countries.length ? ch.countries.join('、') : '未配置');
-
       // 存储渠道配送国家（供国家选择器使用）
       window._costAvailCountries = ch.countries || [];
 

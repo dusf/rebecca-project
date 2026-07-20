@@ -261,11 +261,11 @@
         <div class="page active" id="page-categories">
           <div class="page-header">
             <div>
-              <div class="page-title">店铺分类管理<span class="count-badge" id="categoryCount">(0个)</span></div>
+              <div class="page-title">产品分类管理<span class="count-badge" id="categoryCount">(0个)</span></div>
               <div class="page-subtitle">
                 <span style="font-size:12px;color:hsl(var(--muted-foreground));display:inline-flex;align-items:center;gap:3px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  分类名称支持多语言配置（en/zh/es），前台按买家语言自动展示
+                  产品分类名称支持多语言配置（en/zh/es），前台按买家语言自动展示
                 </span>
               </div>
             </div>
@@ -420,7 +420,6 @@
       { key: 'sortOrder', label: '排序', required: false, active: true, width: '80px' },
       { key: 'productCount', label: '关联商品', required: false, active: true, width: '100px' },
       { key: 'status', label: '状态', required: false, active: true, width: '100px' },
-      { key: 'isPreset', label: '类型', required: false, active: true, width: '80px' },
       { key: 'createdAt', label: '创建时间', required: false, active: true, width: '120px' },
       { key: 'updatedAt', label: '更新时间', required: false, active: true, width: '120px' },
       { key: 'actions', label: '操作', required: true, active: true, width: '120px', fixed: 'right' }
@@ -605,9 +604,6 @@
               val = c.status === 'active' 
                 ? '<span class="badge badge-success">已启用</span>' 
                 : '<span class="badge badge-warning">已禁用</span>';
-              break;
-            case 'isPreset':
-              val = c.isPreset ? '<span class="preset-badge">系统预设</span>' : '<span class="badge badge-secondary">自定义</span>';
               break;
             case 'createdAt':
               val = c.createdAt;

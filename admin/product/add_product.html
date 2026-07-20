@@ -1387,6 +1387,26 @@
       padding-left: 28px;
     }
 
+    /* 带后缀单位的数字输入（如 g / cm） */
+    .unit-input {
+      position: relative;
+    }
+
+    .unit-input .form-input {
+      padding-right: 40px;
+    }
+
+    .unit-input .unit-suffix {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      pointer-events: none;
+      line-height: 1;
+    }
+
     .review-import-buttons {
       display: flex;
       flex-direction: column;
@@ -1525,54 +1545,20 @@
                     <input class="form-input" type="text" id="productTitle" placeholder="请输入产品标题" maxlength="120" oninput="updateCharCount(this, 'titleCount', 120)" />
                   </div>
 
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label class="form-label">产品类别</label>
-                      <select class="form-select" id="productCategory">
-                        <option value="">请选择分类</option>
-                        <option value="human-hair">Human Hair</option>
-                        <option value="synthetic">Synthetic</option>
-                        <option value="accessories">Accessories</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">产品所属分类</label>
-                      <input class="form-input" type="text" id="productSubcategory" placeholder="如：HD Lace Collection" />
-                    </div>
-                  </div>
-
                   <div class="form-group">
-                    <label class="form-label">产品关键词</label>
-                    <input class="form-input" type="text" id="productKeywords" placeholder="如：body wave, natural black, pre-plucked hairline" />
+                    <label class="form-label">产品分类</label>
+                    <select class="form-select" id="productCategory" onchange="onCategoryChange()">
+                      <option value="">请选择分类</option>
+                    </select>
                   </div>
 
-                  <!-- 属性1 ~ 属性5 固定字段 -->
+                  <!-- 产品属性（根据所选分类动态级联） -->
                   <div class="spec-section-title" style="margin-bottom: 12px;">产品属性</div>
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label class="form-label">属性1</label>
-                      <input class="form-input" type="text" id="attr1" placeholder="属性1（如：材质）" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">属性2</label>
-                      <input class="form-input" type="text" id="attr2" placeholder="属性2（如：长度）" />
-                    </div>
+                  <div id="dynamicAttrsContainer">
+                    <div class="form-hint" style="margin-bottom: 16px; color: hsl(var(--muted-foreground));">请先选择产品分类，系统将自动加载该分类下的属性项供选择。</div>
                   </div>
-                  <div class="form-row-2">
-                    <div class="form-group">
-                      <label class="form-label">属性3</label>
-                      <input class="form-input" type="text" id="attr3" placeholder="属性3（如：密度）" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">属性4</label>
-                      <input class="form-input" type="text" id="attr4" placeholder="属性4（如：蕾丝类型）" />
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">属性5</label>
-                    <input class="form-input" type="text" id="attr5" placeholder="属性5" style="max-width: 50%;" />
-                  </div>
-                  <div class="form-hint" style="margin-bottom: 16px;">以上5个属性为固定字段，商家按需自由填写，每个属性输入框仅填写一个值。</div>
+
+
 
                   <!-- 产品标记（多标签输入） -->
                   <div class="form-group">
@@ -1758,36 +1744,35 @@
                 <div class="sidebar-card">
                   <div class="sidebar-card-title">配送信息</div>
                   <div class="form-group">
-                    <label class="form-label">产品重量</label>
-                    <div class="price-input">
+                    <label class="form-label">重量<span class="required">*</span></label>
+                    <div class="unit-input">
                       <input class="form-input" type="number" id="productWeight" placeholder="0" min="0" step="0.01" value="0" />
-                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">g</span>
+                      <span class="unit-suffix">g</span>
                     </div>
                     <div class="form-hint" style="margin-top:4px;">产品净重，单位为克（g）</div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">包装长（cm）<span class="required">*</span></label>
-                    <div class="price-input">
-                      <input class="form-input" type="number" id="productPackLen" placeholder="0" min="0" step="0.1" value="0" />
-                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                  <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="form-group">
+                      <label class="form-label">包装长（cm）</label>
+                      <div class="unit-input">
+                        <input class="form-input" type="number" id="productPackLen" placeholder="0" min="0" step="0.1" value="0" />
+                        <span class="unit-suffix">cm</span>
+                      </div>
                     </div>
-                    <div class="form-hint" style="margin-top:4px;">包装长度，单位为cm，保留1位小数</div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">包装宽（cm）<span class="required">*</span></label>
-                    <div class="price-input">
-                      <input class="form-input" type="number" id="productPackWid" placeholder="0" min="0" step="0.1" value="0" />
-                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                    <div class="form-group">
+                      <label class="form-label">包装宽（cm）</label>
+                      <div class="unit-input">
+                        <input class="form-input" type="number" id="productPackWid" placeholder="0" min="0" step="0.1" value="0" />
+                        <span class="unit-suffix">cm</span>
+                      </div>
                     </div>
-                    <div class="form-hint" style="margin-top:4px;">包装宽度，单位为cm，保留1位小数</div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">包装高（cm）<span class="required">*</span></label>
-                    <div class="price-input">
-                      <input class="form-input" type="number" id="productPackHgt" placeholder="0" min="0" step="0.1" value="0" />
-                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                    <div class="form-group">
+                      <label class="form-label">包装高（cm）</label>
+                      <div class="unit-input">
+                        <input class="form-input" type="number" id="productPackHgt" placeholder="0" min="0" step="0.1" value="0" />
+                        <span class="unit-suffix">cm</span>
+                      </div>
                     </div>
-                    <div class="form-hint" style="margin-top:4px;">包装高度，单位为cm，保留1位小数</div>
                   </div>
                 </div>
 
@@ -1835,6 +1820,71 @@
   <script>var CURRENT_PAGE = 'products';</script>
   <script src="../common/js/commons.js"></script>
   <script>
+    // ==================== 分类下拉初始化 ====================
+    function populateCategories() {
+      var select = document.getElementById('productCategory');
+      if (!select) return;
+      var html = '<option value="">请选择分类</option>';
+      (categories || []).forEach(function(c) {
+        if (c.status === 'active') {
+          html += '<option value="' + c.nameZh + '" data-cat-id="' + c.id + '">' + c.nameZh + '</option>';
+        }
+      });
+      select.innerHTML = html;
+    }
+
+    // ==================== 分类切换 → 动态渲染属性字段 ====================
+    function onCategoryChange() {
+      var select = document.getElementById('productCategory');
+      var container = document.getElementById('dynamicAttrsContainer');
+      if (!select || !container) return;
+
+      var catName = select.value;
+      if (!catName) {
+        container.innerHTML = '<div class="form-hint" style="margin-bottom: 16px; color: hsl(var(--muted-foreground));">请先选择产品分类，系统将自动加载该分类下的属性项供选择。</div>';
+        return;
+      }
+
+      // 根据分类名称找到分类 ID
+      var cat = (categories || []).find(function(c) { return c.nameZh === catName; });
+      if (!cat) {
+        container.innerHTML = '<div class="form-hint" style="margin-bottom: 16px; color: hsl(var(--muted-foreground));">未找到该分类的属性配置。</div>';
+        return;
+      }
+
+      var attrs = getAttributesByCategory(cat.id);
+      if (attrs.length === 0) {
+        container.innerHTML = '<div class="form-hint" style="margin-bottom: 16px; color: hsl(var(--muted-foreground));">该分类下暂无属性配置，请先在属性管理页面添加。</div>';
+        return;
+      }
+
+      // 取前5个属性
+      var displayAttrs = attrs.slice(0, 5);
+      var rows = '';
+      for (var i = 0; i < displayAttrs.length; i += 2) {
+        rows += '<div class="form-row-2">';
+        for (var j = i; j < Math.min(i + 2, displayAttrs.length); j++) {
+          var a = displayAttrs[j];
+          var optionsHtml = '<option value="">请选择' + a.nameZh + '</option>';
+          (a.options || []).forEach(function(o) {
+            optionsHtml += '<option value="' + o.labelZh.replace(/"/g, '&quot;') + '">' + o.labelZh + '</option>';
+          });
+          rows += '<div class="form-group">' +
+            '<label class="form-label">' + a.nameZh + (a.isRequired ? '<span class="required">*</span>' : '') + '</label>' +
+            '<select class="form-select" id="dynAttr_' + a.id + '" data-attr-name="' + a.nameZh.replace(/"/g, '&quot;') + '" data-attr-id="' + a.id + '" data-required="' + a.isRequired + '">' +
+            optionsHtml +
+            '</select></div>';
+        }
+        // 如果是奇数个属性（即最后一行只有一个），补一个空占位
+        if (i + 2 > displayAttrs.length && displayAttrs.length % 2 !== 0) {
+          rows += '<div class="form-group"></div>';
+        }
+        rows += '</div>';
+      }
+
+      container.innerHTML = rows;
+    }
+
     // ==================== 提交产品 ====================
     function submitProduct() {
       const title = document.getElementById('productTitle').value;
@@ -1847,7 +1897,7 @@
         return;
       }
       if (!category) {
-        showToast('error', '请选择产品类别');
+        showToast('error', '请选择产品分类');
         return;
       }
       if (!price) {
@@ -1855,43 +1905,50 @@
         document.getElementById('productPrice').focus();
         return;
       }
+      const weight = document.getElementById('productWeight').value;
+      if (!weight) {
+        showToast('error', '请填写产品重量');
+        document.getElementById('productWeight').focus();
+        return;
+      }
 
-      const catCodeMap = { 'human-hair': 'HH', 'synthetic': 'SY', 'accessories': 'AC' };
-      const catNameMap = { 'human-hair': 'Human Hair', 'synthetic': 'Synthetic', 'accessories': 'Accessories' };
-      const catCode = catCodeMap[category] || 'OT';
-      const spu = 'SPU-' + catCode + '-' + String(products.length + 1).padStart(5, '0');
+      const spu = 'SPU-' + String(products.length + 1).padStart(5, '0');
 
       // 收集产品标记
       const productTags = Array.from(document.getElementById('productTags').querySelectorAll('.tag-pill'))
         .map(p => p.childNodes[0].textContent.trim());
 
+      // 收集动态属性
+      const dynamicAttrs = {};
+      const attrSelects = document.querySelectorAll('#dynamicAttrsContainer .form-select');
+      attrSelects.forEach(function(sel) {
+        if (sel.value) {
+          dynamicAttrs[sel.dataset.attrName] = sel.value;
+        }
+      });
+
       const newProduct = {
         id: products.length + 1,
         name: title,
         spu: spu,
-        category: catNameMap[category] || 'Accessories',
+        category: category,
         price: parseFloat(price),
         originalPrice: parseFloat(document.getElementById('productOriginalPrice').value) || null,
         stock: '1款0件',
         site: 1,
         status: document.getElementById('productStatus').value,
         date: new Date().toISOString().split('T')[0],
-        // 新增字段
-        attr1: document.getElementById('attr1').value,
-        attr2: document.getElementById('attr2').value,
-        attr3: document.getElementById('attr3').value,
-        attr4: document.getElementById('attr4').value,
-        attr5: document.getElementById('attr5').value,
+        // 动态属性
+        attrs: dynamicAttrs,
         tags: productTags,
         seoSlug: document.getElementById('seoSlug').value,
         seoTitle: document.getElementById('seoTitle').value,
         seoDesc: document.getElementById('seoDesc').value,
         weight: parseFloat(document.getElementById('productWeight').value) || 0,
-        size_inch: parseFloat(document.getElementById('productSize').value) || 0,
         pack_len: parseFloat(document.getElementById('productPackLen').value) || 0,
         pack_wid: parseFloat(document.getElementById('productPackWid').value) || 0,
         pack_hgt: parseFloat(document.getElementById('productPackHgt').value) || 0,
-        skuData: skuData,  // 包含 invCode 的完整 SKU 数据
+        skuData: skuData,
       };
 
       products.unshift(newProduct);
@@ -2622,6 +2679,7 @@
 
 
     // ==================== 初始化 ====================
+    populateCategories();
     renderSpecs();
     updateSpecFilters();
     renderSkuTable();

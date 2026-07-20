@@ -523,6 +523,253 @@
       { id: 5, nameEn: 'Custom Wigs', nameZh: '定制假发', nameEs: 'Pelucas Personalizadas', sortOrder: 5, productCount: 0, status: 'disabled', isPreset: false, createdAt: '2026-06-01', updatedAt: '2026-06-15' }
     ];
 
+    /** 根据分类 ID 获取该分类下的属性列表（按 sortOrder 排序） */
+    function getAttributesByCategory(catId) {
+      return (attributes || []).filter(function(a) { return a.categoryId === catId && a.status === 'active'; })
+        .sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+    }
+
+    // ==================== 属性数据（全局共享，与属性管理页数据一致） ====================
+    var attributes = [
+      // ===== 女士全头套 (categoryId: 1) =====
+      { id: 1, categoryId: 1, nameEn: 'Hair Material', nameZh: '发丝材质', nameEs: 'Material del Cabello', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 1, labelEn: '100% Human Hair', labelZh: '全真发', labelEs: 'Cabello 100% Humano', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Human Hair Blend', labelZh: '人发混丝', labelEs: 'Mezcla de Cabello Humano', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Heat-Resistant Synthetic', labelZh: '高温化纤丝', labelEs: 'Fibra Sintética Resistente al Calor', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 2, categoryId: 1, nameEn: 'Hair Length', nameZh: '发丝长度', nameEs: 'Longitud del Cabello', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 4, labelEn: '30cm', labelZh: '30cm', labelEs: '30cm', sortOrder: 1, status: 'active' },
+          { id: 5, labelEn: '40cm', labelZh: '40cm', labelEs: '40cm', sortOrder: 2, status: 'active' },
+          { id: 6, labelEn: '50cm', labelZh: '50cm', labelEs: '50cm', sortOrder: 3, status: 'active' },
+          { id: 7, labelEn: '60cm', labelZh: '60cm', labelEs: '60cm', sortOrder: 4, status: 'active' },
+          { id: 8, labelEn: '70cm', labelZh: '70cm', labelEs: '70cm', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 3, categoryId: 1, nameEn: 'Hair Color', nameZh: '发色', nameEs: 'Color del Cabello', inputType: 'multiple', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 9, labelEn: 'Natural Black', labelZh: '自然黑', labelEs: 'Negro Natural', sortOrder: 1, status: 'active' },
+          { id: 10, labelEn: 'Dark Tea', labelZh: '黑茶', labelEs: 'Té Oscuro', sortOrder: 2, status: 'active' },
+          { id: 11, labelEn: 'Chestnut Brown', labelZh: '栗棕', labelEs: 'Castaño', sortOrder: 3, status: 'active' },
+          { id: 12, labelEn: 'Ash Blonde', labelZh: '亚麻', labelEs: 'Rubio Ceniza', sortOrder: 4, status: 'active' },
+          { id: 13, labelEn: 'Milk Tea', labelZh: '奶茶', labelEs: 'Té con Leche', sortOrder: 5, status: 'active' },
+          { id: 14, labelEn: 'Highlight', labelZh: '挑染', labelEs: 'Reflejos', sortOrder: 6, status: 'active' },
+          { id: 15, labelEn: 'Ombre/Gradient', labelZh: '渐变', labelEs: 'Degradado', sortOrder: 7, status: 'active' }
+        ] },
+      { id: 4, categoryId: 1, nameEn: 'Suitable Style', nameZh: '适用风格', nameEs: 'Estilo Adecuado', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 16, labelEn: 'Daily Commute', labelZh: '日常通勤', labelEs: 'Uso Diario', sortOrder: 1, status: 'active' },
+          { id: 17, labelEn: 'Influencer Style', labelZh: '网红造型', labelEs: 'Estilo Influencer', sortOrder: 2, status: 'active' },
+          { id: 18, labelEn: 'Traditional/Ancient', labelZh: '古风', labelEs: 'Estilo Antiguo', sortOrder: 3, status: 'active' },
+          { id: 19, labelEn: 'Photoshoot/Stage', labelZh: '写真舞台', labelEs: 'Sesión de Fotos/Escenario', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 5, categoryId: 1, nameEn: 'Target Audience', nameZh: '适用人群', nameEs: 'Público Objetivo', inputType: 'single', isRequired: true, sortOrder: 5, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 20, labelEn: 'Youth Styling', labelZh: '少女造型', labelEs: 'Estilo Juvenil', sortOrder: 1, status: 'active' },
+          { id: 21, labelEn: 'Gray Hair Coverage', labelZh: '中青年遮白', labelEs: 'Cobertura de Canas', sortOrder: 2, status: 'active' },
+          { id: 22, labelEn: 'Volume Enhancement', labelZh: '发量少增发', labelEs: 'Aumento de Volumen', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 6, categoryId: 1, nameEn: 'Wig Style', nameZh: '发型款式', nameEs: 'Estilo de Peluca', inputType: 'single', isRequired: true, sortOrder: 6, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 23, labelEn: 'Short Bob', labelZh: '短发波波头', labelEs: 'Bob Corto', sortOrder: 1, status: 'active' },
+          { id: 24, labelEn: 'Mid-Length Straight', labelZh: '中长直发', labelEs: 'Liso Medio', sortOrder: 2, status: 'active' },
+          { id: 25, labelEn: 'Big Waves', labelZh: '大波浪', labelEs: 'Ondas Grandes', sortOrder: 3, status: 'active' },
+          { id: 26, labelEn: 'Wool Curls', labelZh: '羊毛卷', labelEs: 'Rizos Lanosos', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 7, categoryId: 1, nameEn: 'Bangs Style', nameZh: '刘海样式', nameEs: 'Estilo de Flequillo', inputType: 'single', isRequired: true, sortOrder: 7, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 27, labelEn: 'Wispy Bangs', labelZh: '空气刘海', labelEs: 'Flequillo Ligero', sortOrder: 1, status: 'active' },
+          { id: 28, labelEn: 'Side-Swept Bangs', labelZh: '八字刘海', labelEs: 'Flequillo Lateral', sortOrder: 2, status: 'active' },
+          { id: 29, labelEn: 'No Bangs', labelZh: '无刘海', labelEs: 'Sin Flequillo', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 8, categoryId: 1, nameEn: 'Cap Construction', nameZh: '内网工艺', nameEs: 'Construcción de la Base', inputType: 'single', isRequired: true, sortOrder: 8, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 30, labelEn: 'Standard Machine Weft', labelZh: '普通机织', labelEs: 'Tejido a Máquina Estándar', sortOrder: 1, status: 'active' },
+          { id: 31, labelEn: 'Breathable Ice Silk Mesh', labelZh: '透气冰丝网', labelEs: 'Malla de Seda Helada Transpirable', sortOrder: 2, status: 'active' },
+          { id: 32, labelEn: 'Front Lace & Silk Top', labelZh: '前蕾丝递针', labelEs: 'Encaje Frontal con Aguja', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 9, categoryId: 1, nameEn: 'Density', nameZh: '发量厚薄', nameEs: 'Densidad', inputType: 'single', isRequired: true, sortOrder: 9, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 33, labelEn: 'Light & Thin', labelZh: '轻薄款', labelEs: 'Ligero y Fino', sortOrder: 1, status: 'active' },
+          { id: 34, labelEn: 'Normal Density', labelZh: '正常发量', labelEs: 'Densidad Normal', sortOrder: 2, status: 'active' },
+          { id: 35, labelEn: 'Heavy (180%)', labelZh: '加厚高颅顶', labelEs: 'Densidad Alta (180%)', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 10, categoryId: 1, nameEn: 'Free Gift', nameZh: '配套赠品', nameEs: 'Regalo de Cortesía', inputType: 'single', isRequired: false, sortOrder: 10, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 36, labelEn: 'Yes (Comb + Wig Cap)', labelZh: '有（梳子+发网）', labelEs: 'Sí (Peine + Red)', sortOrder: 1, status: 'active' },
+          { id: 37, labelEn: 'No Free Gift', labelZh: '无赠品', labelEs: 'Sin Regalo', sortOrder: 2, status: 'active' }
+        ] },
+      // ===== 女士接发 (categoryId: 2) =====
+      { id: 11, categoryId: 2, nameEn: 'Hair Material', nameZh: '发丝材质', nameEs: 'Material del Cabello', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 1, labelEn: '100% Remy Human Hair', labelZh: 'Remy全真发', labelEs: 'Cabello Remy 100% Humano', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Non-Remy Human Hair', labelZh: '非Remy真发', labelEs: 'Cabello Humano No Remy', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Fiber Synthetic', labelZh: '纤维高温丝', labelEs: 'Fibra Sintética', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 12, categoryId: 2, nameEn: 'Extension Length', nameZh: '接发长度', nameEs: 'Longitud de Extensión', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 4, labelEn: '14 inch (35cm)', labelZh: '14英寸(35cm)', labelEs: '14 pulgadas (35cm)', sortOrder: 1, status: 'active' },
+          { id: 5, labelEn: '18 inch (45cm)', labelZh: '18英寸(45cm)', labelEs: '18 pulgadas (45cm)', sortOrder: 2, status: 'active' },
+          { id: 6, labelEn: '22 inch (55cm)', labelZh: '22英寸(55cm)', labelEs: '22 pulgadas (55cm)', sortOrder: 3, status: 'active' },
+          { id: 7, labelEn: '24 inch (60cm)', labelZh: '24英寸(60cm)', labelEs: '24 pulgadas (60cm)', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 13, categoryId: 2, nameEn: 'Extension Color', nameZh: '接发颜色', nameEs: 'Color de Extensión', inputType: 'multiple', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 8, labelEn: 'Natural Black (#1B)', labelZh: '自然黑(#1B)', labelEs: 'Negro Natural (#1B)', sortOrder: 1, status: 'active' },
+          { id: 9, labelEn: 'Dark Brown (#4)', labelZh: '深棕(#4)', labelEs: 'Marrón Oscuro (#4)', sortOrder: 2, status: 'active' },
+          { id: 10, labelEn: 'Medium Brown (#6)', labelZh: '中棕(#6)', labelEs: 'Marrón Medio (#6)', sortOrder: 3, status: 'active' },
+          { id: 11, labelEn: 'Ash Blonde (#18)', labelZh: '灰金(#18)', labelEs: 'Rubio Ceniza (#18)', sortOrder: 4, status: 'active' },
+          { id: 12, labelEn: 'Balayage Highlight', labelZh: '巴黎画染', labelEs: 'Balayage', sortOrder: 5, status: 'active' },
+          { id: 13, labelEn: 'Ombre Two-Tone', labelZh: '渐变色', labelEs: 'Degradado Dos Tonos', sortOrder: 6, status: 'active' }
+        ] },
+      { id: 14, categoryId: 2, nameEn: 'Extension Type', nameZh: '接发方式', nameEs: 'Tipo de Extensión', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 14, labelEn: 'Clip-In Wefts', labelZh: '卡扣片接', labelEs: 'Clip de Sujeción', sortOrder: 1, status: 'active' },
+          { id: 15, labelEn: '8D Invisible Tape', labelZh: '8D无痕胶接', labelEs: 'Cinta Invisible 8D', sortOrder: 2, status: 'active' },
+          { id: 16, labelEn: 'Nano Ring (I-Tip)', labelZh: '纳米环(I扣)', labelEs: 'Anillo Nano (I-Tip)', sortOrder: 3, status: 'active' },
+          { id: 17, labelEn: 'Keratin Bond (U-Tip)', labelZh: '角蛋白(U扣)', labelEs: 'Queratina (U-Tip)', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 15, categoryId: 2, nameEn: 'Package Size', nameZh: '套装规格', nameEs: 'Tamaño del Paquete', inputType: 'single', isRequired: true, sortOrder: 5, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 18, labelEn: '50g / 3-Piece', labelZh: '50g/3片装', labelEs: '50g / 3 Piezas', sortOrder: 1, status: 'active' },
+          { id: 19, labelEn: '80g / 5-Piece', labelZh: '80g/5片装', labelEs: '80g / 5 Piezas', sortOrder: 2, status: 'active' },
+          { id: 20, labelEn: '120g / 7-Piece', labelZh: '120g/7片装', labelEs: '120g / 7 Piezas', sortOrder: 3, status: 'active' },
+          { id: 21, labelEn: 'Single Strand (Bulk)', labelZh: '单束散装', labelEs: 'Hebra Individual', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 16, categoryId: 2, nameEn: 'Hair Texture', nameZh: '发丝纹理', nameEs: 'Textura del Cabello', inputType: 'single', isRequired: true, sortOrder: 6, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 22, labelEn: 'Silky Straight', labelZh: '丝滑直发', labelEs: 'Liso Sedoso', sortOrder: 1, status: 'active' },
+          { id: 23, labelEn: 'Body Wave', labelZh: '大卷波浪', labelEs: 'Onda Corporal', sortOrder: 2, status: 'active' },
+          { id: 24, labelEn: 'Deep Wave', labelZh: '深度波浪', labelEs: 'Onda Profunda', sortOrder: 3, status: 'active' },
+          { id: 25, labelEn: 'Curly / Kinky', labelZh: '卷发/小卷', labelEs: 'Rizado/Kinky', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 17, categoryId: 2, nameEn: 'Application Method', nameZh: '使用方式', nameEs: 'Método de Aplicación', inputType: 'single', isRequired: true, sortOrder: 7, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 26, labelEn: 'DIY Home Use', labelZh: '家用自戴', labelEs: 'Auto-aplicación', sortOrder: 1, status: 'active' },
+          { id: 27, labelEn: 'Professional Salon', labelZh: '沙龙专业嫁接', labelEs: 'Salón Profesional', sortOrder: 2, status: 'active' }
+        ] },
+      { id: 18, categoryId: 2, nameEn: 'Free Gift', nameZh: '配套赠品', nameEs: 'Regalo de Cortesía', inputType: 'single', isRequired: false, sortOrder: 8, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 28, labelEn: 'Yes (Clips + Pliers)', labelZh: '有（卡扣+钳子）', labelEs: 'Sí (Clips + Pinzas)', sortOrder: 1, status: 'active' },
+          { id: 29, labelEn: 'No Free Gift', labelZh: '无赠品', labelEs: 'Sin Regalo', sortOrder: 2, status: 'active' }
+        ] },
+      // ===== 发饰配件 (categoryId: 3) =====
+      { id: 19, categoryId: 3, nameEn: 'Material', nameZh: '材质', nameEs: 'Material', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-05-10', updatedAt: '2026-07-10',
+        options: [
+          { id: 1, labelEn: 'Silk Satin', labelZh: '真丝缎面', labelEs: 'Satén de Seda', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Acrylic / Resin', labelZh: '亚克力/树脂', labelEs: 'Acrílico/Resina', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Freshwater Pearl', labelZh: '淡水珍珠', labelEs: 'Perla de Agua Dulce', sortOrder: 3, status: 'active' },
+          { id: 4, labelEn: 'Zinc Alloy', labelZh: '锌合金', labelEs: 'Aleación de Zinc', sortOrder: 4, status: 'active' },
+          { id: 5, labelEn: 'Velvet', labelZh: '天鹅绒', labelEs: 'Terciopelo', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 20, categoryId: 3, nameEn: 'Accessory Type', nameZh: '配件类型', nameEs: 'Tipo de Accesorio', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-05-10', updatedAt: '2026-07-10',
+        options: [
+          { id: 6, labelEn: 'Hair Claw Clip', labelZh: '抓夹', labelEs: 'Pinza de Garra', sortOrder: 1, status: 'active' },
+          { id: 7, labelEn: 'Headband', labelZh: '发箍', labelEs: 'Diadema', sortOrder: 2, status: 'active' },
+          { id: 8, labelEn: 'Hair Tie / Scrunchie', labelZh: '发圈', labelEs: 'Coletero/Scrunchie', sortOrder: 3, status: 'active' },
+          { id: 9, labelEn: 'Hair Scarf', labelZh: '发带/丝巾', labelEs: 'Pañuelo para el Cabello', sortOrder: 4, status: 'active' },
+          { id: 10, labelEn: 'Barrette / Hair Pin', labelZh: '发夹/一字夹', labelEs: 'Pasador/Horquilla', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 21, categoryId: 3, nameEn: 'Color', nameZh: '颜色', nameEs: 'Color', inputType: 'multiple', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-05-10', updatedAt: '2026-07-10',
+        options: [
+          { id: 11, labelEn: 'Classic Black', labelZh: '经典黑', labelEs: 'Negro Clásico', sortOrder: 1, status: 'active' },
+          { id: 12, labelEn: 'Pearl White', labelZh: '珍珠白', labelEs: 'Blanco Perla', sortOrder: 2, status: 'active' },
+          { id: 13, labelEn: 'Champagne Gold', labelZh: '香槟金', labelEs: 'Dorado Champán', sortOrder: 3, status: 'active' },
+          { id: 14, labelEn: 'Rose Gold', labelZh: '玫瑰金', labelEs: 'Oro Rosa', sortOrder: 4, status: 'active' },
+          { id: 15, labelEn: 'Tortoise Shell', labelZh: '玳瑁色', labelEs: 'Carey', sortOrder: 5, status: 'active' },
+          { id: 16, labelEn: 'Blush Pink', labelZh: '裸粉色', labelEs: 'Rosa Pálido', sortOrder: 6, status: 'active' }
+        ] },
+      { id: 22, categoryId: 3, nameEn: 'Style', nameZh: '风格', nameEs: 'Estilo', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-05-10', updatedAt: '2026-07-10',
+        options: [
+          { id: 17, labelEn: 'Minimalist', labelZh: '简约风', labelEs: 'Minimalista', sortOrder: 1, status: 'active' },
+          { id: 18, labelEn: 'Vintage Retro', labelZh: '复古风', labelEs: 'Vintage Retro', sortOrder: 2, status: 'active' },
+          { id: 19, labelEn: 'Korean Trendy', labelZh: '韩式潮流', labelEs: 'Tendencia Coreana', sortOrder: 3, status: 'active' },
+          { id: 20, labelEn: 'Elegant Luxe', labelZh: '轻奢优雅', labelEs: 'Elegante Lujo', sortOrder: 4, status: 'active' },
+          { id: 21, labelEn: 'Sweet Cute', labelZh: '甜美可爱', labelEs: 'Dulce y Lindo', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 23, categoryId: 3, nameEn: 'Occasion', nameZh: '适用场合', nameEs: 'Ocasión', inputType: 'single', isRequired: false, sortOrder: 5, status: 'active', createdAt: '2026-05-10', updatedAt: '2026-07-10',
+        options: [
+          { id: 22, labelEn: 'Daily Casual', labelZh: '日常休闲', labelEs: 'Diario Casual', sortOrder: 1, status: 'active' },
+          { id: 23, labelEn: 'Office / Commute', labelZh: '通勤办公', labelEs: 'Oficina/Trabajo', sortOrder: 2, status: 'active' },
+          { id: 24, labelEn: 'Party / Date', labelZh: '派对约会', labelEs: 'Fiesta/Cita', sortOrder: 3, status: 'active' },
+          { id: 25, labelEn: 'Wedding / Formal', labelZh: '婚礼正式场合', labelEs: 'Boda/Formal', sortOrder: 4, status: 'active' }
+        ] },
+      // ===== 护理产品 (categoryId: 4) =====
+      { id: 24, categoryId: 4, nameEn: 'Volume / Size', nameZh: '容量规格', nameEs: 'Volumen/Tamaño', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-05-15', updatedAt: '2026-07-12',
+        options: [
+          { id: 1, labelEn: 'Travel Size (30ml)', labelZh: '旅行装(30ml)', labelEs: 'Tamaño Viaje (30ml)', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Standard (100ml)', labelZh: '标准装(100ml)', labelEs: 'Estándar (100ml)', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Large (250ml)', labelZh: '大瓶装(250ml)', labelEs: 'Grande (250ml)', sortOrder: 3, status: 'active' },
+          { id: 4, labelEn: 'Family Size (500ml)', labelZh: '家庭装(500ml)', labelEs: 'Tamaño Familiar (500ml)', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 25, categoryId: 4, nameEn: 'Suitable Hair Type', nameZh: '适用发质', nameEs: 'Tipo de Cabello Adecuado', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-05-15', updatedAt: '2026-07-12',
+        options: [
+          { id: 5, labelEn: 'Dry & Damaged', labelZh: '干枯受损发质', labelEs: 'Seco y Dañado', sortOrder: 1, status: 'active' },
+          { id: 6, labelEn: 'Oily Scalp', labelZh: '油性头皮', labelEs: 'Cuero Cabelludo Graso', sortOrder: 2, status: 'active' },
+          { id: 7, labelEn: 'Color-Treated', labelZh: '染烫发质', labelEs: 'Cabello Teñido', sortOrder: 3, status: 'active' },
+          { id: 8, labelEn: 'All Hair Types', labelZh: '所有发质通用', labelEs: 'Todo Tipo de Cabello', sortOrder: 4, status: 'active' },
+          { id: 9, labelEn: 'Fine & Thin', labelZh: '细软扁塌发质', labelEs: 'Fino y Delgado', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 26, categoryId: 4, nameEn: 'Effect / Benefit', nameZh: '功效', nameEs: 'Efecto/Beneficio', inputType: 'single', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-05-15', updatedAt: '2026-07-12',
+        options: [
+          { id: 10, labelEn: 'Deep Repair', labelZh: '深层修护', labelEs: 'Reparación Profunda', sortOrder: 1, status: 'active' },
+          { id: 11, labelEn: 'Smooth & Anti-Frizz', labelZh: '柔顺防毛躁', labelEs: 'Suavidad Anti-Frizz', sortOrder: 2, status: 'active' },
+          { id: 12, labelEn: 'Volume & Thickening', labelZh: '蓬松增厚', labelEs: 'Volumen y Densidad', sortOrder: 3, status: 'active' },
+          { id: 13, labelEn: 'Scalp Care', labelZh: '头皮养护', labelEs: 'Cuidado del Cuero Cabelludo', sortOrder: 4, status: 'active' },
+          { id: 14, labelEn: 'Color Protection', labelZh: '护色锁色', labelEs: 'Protección de Color', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 27, categoryId: 4, nameEn: 'Key Ingredient', nameZh: '核心成分', nameEs: 'Ingrediente Clave', inputType: 'single', isRequired: false, sortOrder: 4, status: 'active', createdAt: '2026-05-15', updatedAt: '2026-07-12',
+        options: [
+          { id: 15, labelEn: 'Argan Oil', labelZh: '摩洛哥坚果油', labelEs: 'Aceite de Argán', sortOrder: 1, status: 'active' },
+          { id: 16, labelEn: 'Keratin Protein', labelZh: '角蛋白', labelEs: 'Proteína de Queratina', sortOrder: 2, status: 'active' },
+          { id: 17, labelEn: 'Botanical Extract', labelZh: '植物精华', labelEs: 'Extracto Botánico', sortOrder: 3, status: 'active' },
+          { id: 18, labelEn: 'Collagen', labelZh: '胶原蛋白', labelEs: 'Colágeno', sortOrder: 4, status: 'active' },
+          { id: 19, labelEn: 'Biotin Complex', labelZh: '生物素复合物', labelEs: 'Complejo de Biotina', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 28, categoryId: 4, nameEn: 'Product Type', nameZh: '产品类型', nameEs: 'Tipo de Producto', inputType: 'single', isRequired: true, sortOrder: 5, status: 'active', createdAt: '2026-05-15', updatedAt: '2026-07-12',
+        options: [
+          { id: 20, labelEn: 'Shampoo', labelZh: '洗发水', labelEs: 'Champú', sortOrder: 1, status: 'active' },
+          { id: 21, labelEn: 'Conditioner', labelZh: '护发素', labelEs: 'Acondicionador', sortOrder: 2, status: 'active' },
+          { id: 22, labelEn: 'Hair Mask', labelZh: '发膜', labelEs: 'Mascarilla Capilar', sortOrder: 3, status: 'active' },
+          { id: 23, labelEn: 'Hair Oil / Serum', labelZh: '护发精油', labelEs: 'Aceite/Sérum Capilar', sortOrder: 4, status: 'active' },
+          { id: 24, labelEn: 'Leave-in Spray', labelZh: '免洗喷雾', labelEs: 'Spray Sin Enjuague', sortOrder: 5, status: 'active' }
+        ] },
+      // ===== 定制假发 (categoryId: 5) =====
+      { id: 29, categoryId: 5, nameEn: 'Custom Type', nameZh: '定制类型', nameEs: 'Tipo de Personalización', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-06-05', updatedAt: '2026-07-18',
+        options: [
+          { id: 1, labelEn: 'Full Custom (Bespoke)', labelZh: '全定制（量身定做）', labelEs: 'Personalización Completa', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Semi-Custom (Modify Existing)', labelZh: '半定制（修改现有款）', labelEs: 'Semi-Personalización', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Color Custom Only', labelZh: '仅定制颜色', labelEs: 'Solo Personalización de Color', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 30, categoryId: 5, nameEn: 'Custom Hair Material', nameZh: '定制发丝材质', nameEs: 'Material Personalizado', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-06-05', updatedAt: '2026-07-18',
+        options: [
+          { id: 4, labelEn: 'Premium Virgin Hair', labelZh: '优质处女发', labelEs: 'Cabello Virgen Premium', sortOrder: 1, status: 'active' },
+          { id: 5, labelEn: 'European Hair', labelZh: '欧洲发', labelEs: 'Cabello Europeo', sortOrder: 2, status: 'active' },
+          { id: 6, labelEn: 'Brazilian Hair', labelZh: '巴西发', labelEs: 'Cabello Brasileño', sortOrder: 3, status: 'active' },
+          { id: 7, labelEn: 'Mongolian Hair', labelZh: '蒙古发', labelEs: 'Cabello Mongol', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 31, categoryId: 5, nameEn: 'Head Circumference', nameZh: '头围尺寸', nameEs: 'Circunferencia de Cabeza', inputType: 'single', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-06-05', updatedAt: '2026-07-18',
+        options: [
+          { id: 8, labelEn: 'Small (54cm)', labelZh: 'S码(54cm)', labelEs: 'Pequeño (54cm)', sortOrder: 1, status: 'active' },
+          { id: 9, labelEn: 'Medium (56cm)', labelZh: 'M码(56cm)', labelEs: 'Mediano (56cm)', sortOrder: 2, status: 'active' },
+          { id: 10, labelEn: 'Large (58cm)', labelZh: 'L码(58cm)', labelEs: 'Grande (58cm)', sortOrder: 3, status: 'active' },
+          { id: 11, labelEn: 'X-Large (60cm)', labelZh: 'XL码(60cm)', labelEs: 'X-Grande (60cm)', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 32, categoryId: 5, nameEn: 'Production Time', nameZh: '定制周期', nameEs: 'Tiempo de Producción', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-06-05', updatedAt: '2026-07-18',
+        options: [
+          { id: 12, labelEn: 'Express (7 Days)', labelZh: '加急(7天)', labelEs: 'Express (7 Días)', sortOrder: 1, status: 'active' },
+          { id: 13, labelEn: 'Standard (15 Days)', labelZh: '标准(15天)', labelEs: 'Estándar (15 Días)', sortOrder: 2, status: 'active' },
+          { id: 14, labelEn: 'Premium (30 Days)', labelZh: '精工(30天)', labelEs: 'Premium (30 Días)', sortOrder: 3, status: 'active' },
+          { id: 15, labelEn: 'Masterpiece (45 Days)', labelZh: '大师级(45天)', labelEs: 'Obra Maestra (45 Días)', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 33, categoryId: 5, nameEn: 'Revision Policy', nameZh: '修改政策', nameEs: 'Política de Revisión', inputType: 'single', isRequired: false, sortOrder: 5, status: 'active', createdAt: '2026-06-05', updatedAt: '2026-07-18',
+        options: [
+          { id: 16, labelEn: '1 Free Revision', labelZh: '免费修改1次', labelEs: '1 Revisión Gratuita', sortOrder: 1, status: 'active' },
+          { id: 17, labelEn: '2 Free Revisions', labelZh: '免费修改2次', labelEs: '2 Revisiones Gratuitas', sortOrder: 2, status: 'active' },
+          { id: 18, labelEn: 'No Revision', labelZh: '不支持修改', labelEs: 'Sin Revisión', sortOrder: 3, status: 'active' }
+        ] }
+    ];
+
     /** 为产品列表页等页面动态生成分类筛选下拉菜单 */
     function buildCategoryFilter(selectId) {
       var select = document.getElementById(selectId || 'categoryFilter');
@@ -881,6 +1128,12 @@
       return base + '/product/' + encodeURIComponent(slug);
     }
 
+    // ==================== 编辑产品 ====================
+    function editProduct(productId) {
+      sessionStorage.setItem('editProductId', productId);
+      navigateToPage('edit_product.html');
+    }
+
     function getCollectionViewUrl(collection) {
       var base = getShopBaseUrl();
       if (!base) return '#';
@@ -972,7 +1225,7 @@
           }
           if (c.isAction) {
             var viewUrl = getProductViewUrl(p);
-            return '<td class="' + fixedClass + '" style="' + width + '"><div class="action-group"><div class="action-btn" title="编辑" onclick="showToast(\'info\', \'编辑: ' + p.name + '\')">' + svgIcon.edit + '</div><div class="action-btn" title="查看" onclick="window.open(\'' + viewUrl + '\', \'_blank\')">' + svgIcon.external + '</div><div class="action-btn danger" title="删除" onclick="confirmDelete(\'' + p.name + '\')">' + svgIcon.trash + '</div></div></td>';
+            return '<td class="' + fixedClass + '" style="' + width + '"><div class="action-group"><div class="action-btn" title="编辑" onclick="editProduct(' + p.id + ')">' + svgIcon.edit + '</div><div class="action-btn" title="查看" onclick="window.open(\'' + viewUrl + '\', \'_blank\')">' + svgIcon.external + '</div><div class="action-btn danger" title="删除" onclick="confirmDelete(\'' + p.name + '\')">' + svgIcon.trash + '</div></div></td>';
           }
 
           var content = '';
@@ -1368,7 +1621,7 @@
       // 点击外部关闭（使用全局事件）
       document.addEventListener('click', function(e) {
         var d = document.getElementById(selectId + 'Dropdown');
-        if (d && d.style.display === 'block' && !wrapper.contains(e.target)) {
+        if (d && d.style.display === 'block' && !wrapper.contains(e.target) && !d.contains(e.target)) {
           closeSearchableDropdown(selectId);
         }
       });
@@ -1380,13 +1633,23 @@
     function toggleSearchableDropdown(selectId) {
       var dropdown = document.getElementById(selectId + 'Dropdown');
       var triggerEl = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger');
+      var wrapper = document.getElementById(selectId + 'Wrapper');
       if (!dropdown) return;
       if (dropdown.style.display === 'block') {
         closeSearchableDropdown(selectId);
         return;
       }
+      // 关闭已打开的浏览器原生日期选择器
+      var dateInputs = document.querySelectorAll('input[type="date"]');
+      for (var di = 0; di < dateInputs.length; di++) {
+        dateInputs[di].blur();
+      }
       if (triggerEl) {
         var rect = triggerEl.getBoundingClientRect();
+        // 将下拉面板提升到 body 层级，避免被父容器 transform/overflow 影响而错位
+        if (wrapper && dropdown.parentNode !== document.body) {
+          document.body.appendChild(dropdown);
+        }
         dropdown.style.top = (rect.bottom + 4) + 'px';
         dropdown.style.left = rect.left + 'px';
         dropdown.style.minWidth = rect.width + 'px';
@@ -1400,7 +1663,14 @@
     function closeSearchableDropdown(selectId) {
       var dropdown = document.getElementById(selectId + 'Dropdown');
       var triggerEl = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger');
-      if (dropdown) dropdown.style.display = 'none';
+      var wrapper = document.getElementById(selectId + 'Wrapper');
+      if (dropdown) {
+        dropdown.style.display = 'none';
+        // 关闭后移回 wrapper，保持 DOM 结构一致
+        if (wrapper && dropdown.parentNode !== wrapper) {
+          wrapper.appendChild(dropdown);
+        }
+      }
       if (triggerEl) triggerEl.classList.remove('open');
       var search = document.getElementById(selectId + 'Search');
       if (search) search.value = '';

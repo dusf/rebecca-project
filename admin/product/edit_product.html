@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店铺商城后台管理系统 - 编辑商品</title>
+  <title>店铺商城后台管理系统 - 编辑产品</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../common/css/commons.css">
   <style>
-    /* ==================== 添加商品页面 ==================== */
+    /* ==================== 添加产品页面 ==================== */
     .page-header {
       display: flex;
       align-items: center;
@@ -634,7 +634,7 @@
       outline: none;
     }
 
-    /* ==================== 添加商品页面 - 新版商城风格 ==================== */
+    /* ==================== 添加产品页面 - 新版商城风格 ==================== */
     .add-product-container {
       display: flex;
       flex-direction: column;
@@ -1476,12 +1476,12 @@
     <div class="main-area">
       <!-- 内容区域 -->
       <div class="content">
-        <!-- ==================== 添加商品页面 ==================== -->
+        <!-- ==================== 添加产品页面 ==================== -->
         <div class="page active" id="page-add-product">
           <div class="add-product-container">
             <!-- 页面头部 -->
             <div class="add-product-header">
-              <div class="page-title">编辑商品</div>
+              <div class="page-title">编辑产品</div>
               <div class="add-product-actions">
                 <button class="btn btn-secondary" onclick="navigateToPage('product_list.html')">取消</button>
                 <button class="btn btn-primary" onclick="updateProduct()">保存修改</button>
@@ -1491,8 +1491,8 @@
             <!-- 信息提示栏 -->
             <div class="info-bar">
               <div class="info-bar-content">
-                <div class="info-bar-title">商品详情编辑</div>
-                <div class="info-bar-desc">修改商品内容、属性、媒体、SKU 和 SEO 信息，支持多语言版本更新、库存 SKU 映射。</div>
+                <div class="info-bar-title">产品详情编辑</div>
+                <div class="info-bar-desc">修改产品内容、属性、媒体、SKU 和 SEO 信息，支持多语言版本更新、库存 SKU 映射。</div>
               </div>
               <div class="info-bar-tag" id="spuTag">--</div>
             </div>
@@ -1513,21 +1513,21 @@
                   <div class="form-section-card-header">
                     <div>
                       <div class="form-section-card-title">基本信息</div>
-                      <div class="form-section-card-subtitle">商品编码由系统生成不可修改，编辑页可维护运营可编辑字段及 SKU 商品编码。</div>
+                      <div class="form-section-card-subtitle">产品编码由系统生成不可修改，编辑页可维护运营可编辑字段及 SKU 产品编码。</div>
                     </div>
                   </div>
 
                   <div class="form-group">
                     <label class="form-label">
-                      <span>商品标题（英语）</span>
+                      <span>产品标题（英语）</span>
                       <span class="char-count" id="titleCount">0/120</span>
                     </label>
-                    <input class="form-input" type="text" id="productTitle" placeholder="请输入商品标题" maxlength="120" oninput="updateCharCount(this, 'titleCount', 120)" />
+                    <input class="form-input" type="text" id="productTitle" placeholder="请输入产品标题" maxlength="120" oninput="updateCharCount(this, 'titleCount', 120)" />
                   </div>
 
                   <div class="form-row-2">
                     <div class="form-group">
-                      <label class="form-label">商品类别</label>
+                      <label class="form-label">产品类别</label>
                       <select class="form-select" id="productCategory">
                         <option value="">请选择分类</option>
                         <option value="human-hair">Human Hair</option>
@@ -1536,18 +1536,18 @@
                       </select>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">商品所属分类</label>
+                      <label class="form-label">产品所属分类</label>
                       <input class="form-input" type="text" id="productSubcategory" placeholder="如：HD Lace Collection" />
                     </div>
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">商品关键词</label>
+                    <label class="form-label">产品关键词</label>
                     <input class="form-input" type="text" id="productKeywords" placeholder="如：body wave, natural black, pre-plucked hairline" />
                   </div>
 
                   <!-- 属性1 ~ 属性5 固定字段 -->
-                  <div class="spec-section-title" style="margin-bottom: 12px;">商品属性</div>
+                  <div class="spec-section-title" style="margin-bottom: 12px;">产品属性</div>
                   <div class="form-row-2">
                     <div class="form-group">
                       <label class="form-label">属性1</label>
@@ -1585,7 +1585,7 @@
 
                   <div class="form-group">
                     <label class="form-label">
-                      <span>商品参数</span>
+                      <span>产品参数</span>
                       <span class="form-hint">发质、长度、密度、蕾丝类型、帽型、护理说明</span>
                     </label>
                     <div class="rich-editor-simple">
@@ -1598,29 +1598,29 @@
                         <div class="rich-editor-btn" onclick="formatText('ul')">≡</div>
                       </div>
                       <div class="rich-editor-simple-area" contenteditable="true" id="productAttrEditor">
-                        <p>输入当前语言的商品属性内容；后续接入真实富文本编辑器。</p>
+                        <p>输入当前语言的产品属性内容；后续接入真实富文本编辑器。</p>
                       </div>
                     </div>
                   </div>
 
                   <div class="form-hint form-hint-flex">
-                    <span>如详情媒体包含视频，商品属性默认展示在视频下方。</span>
+                    <span>如详情媒体包含视频，产品属性默认展示在视频下方。</span>
                     <span>0/5000</span>
                   </div>
                 </div>
 
-                <!-- 商品媒体 -->
+                <!-- 产品媒体 -->
                 <div class="form-section-card">
                   <div class="form-section-card-header">
                     <div>
-                      <div class="form-section-card-title">商品媒体</div>
+                      <div class="form-section-card-title">产品媒体</div>
                       <div class="form-section-card-subtitle">支持上传图片或视频，拖拽可排序，最多 9 个。轮播第一项作为主图/主视频。</div>
                     </div>
                   </div>
 
-                  <!-- 商品轮播 -->
+                  <!-- 产品轮播 -->
                   <div class="media-block">
-                    <div class="spec-section-title">商品轮播</div>
+                    <div class="spec-section-title">产品轮播</div>
                     <div class="media-grid" id="carouselGrid">
                       <div class="media-add-card" onclick="simulateMediaUpload('carousel')">
                         <div class="plus">+</div>
@@ -1630,9 +1630,9 @@
                     </div>
                   </div>
 
-                  <!-- 商品详情 -->
+                  <!-- 产品详情 -->
                   <div class="media-block">
-                    <div class="spec-section-title">商品详情</div>
+                    <div class="spec-section-title">产品详情</div>
                     <div class="media-grid" id="detailGrid">
                       <div class="media-add-card" onclick="simulateMediaUpload('detail')">
                         <div class="plus">+</div>
@@ -1718,10 +1718,10 @@
                 <!-- 价格与状态 -->
                 <div class="sidebar-card">
                   <div class="sidebar-card-title">价格与状态</div>
-                  <div class="form-hint" style="margin-bottom: 16px;">商品售价和原价统一按美元维护。</div>
+                  <div class="form-hint" style="margin-bottom: 16px;">产品售价和原价统一按美元维护。</div>
 
                   <div class="form-group">
-                    <label class="form-label">商品状态</label>
+                    <label class="form-label">产品状态</label>
                     <select class="form-select" id="productStatus">
                       <option value="draft">草稿</option>
                       <option value="on-sale" selected>已上架</option>
@@ -1730,7 +1730,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">商品售价（美元）</label>
+                    <label class="form-label">产品售价（美元）</label>
                     <div class="price-input">
                       <span class="symbol">$</span>
                       <input class="form-input" type="number" id="productPrice" placeholder="0.00" />
@@ -1738,7 +1738,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">商品原价（美元）</label>
+                    <label class="form-label">产品原价（美元）</label>
                     <div class="price-input">
                       <span class="symbol">$</span>
                       <input class="form-input" type="number" id="productOriginalPrice" placeholder="0.00" />
@@ -1758,12 +1758,12 @@
                 <div class="sidebar-card">
                   <div class="sidebar-card-title">配送信息</div>
                   <div class="form-group">
-                    <label class="form-label">商品重量</label>
+                    <label class="form-label">产品重量</label>
                     <div class="price-input">
                       <input class="form-input" type="number" id="productWeight" placeholder="0" min="0" step="0.01" value="0" />
                       <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">g</span>
                     </div>
-                    <div class="form-hint" style="margin-top:4px;">商品净重，单位为克（g）</div>
+                    <div class="form-hint" style="margin-top:4px;">产品净重，单位为克（g）</div>
                   </div>
                   <div class="form-group">
                     <label class="form-label">包装长（cm）<span class="required">*</span></label>
@@ -1808,7 +1808,7 @@
                       <span style="padding: 10px 8px 10px 12px; border: 1px solid hsl(var(--border)); border-right: none; border-radius: 8px 0 0 8px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-size: 13px;">/products/</span>
                       <input class="form-input" type="text" id="seoSlug" placeholder="product-url-slug" style="border-radius: 0 8px 8px 0;" />
                     </div>
-                    <div class="form-hint" style="margin-top: 6px;">商品落地页URL标识，由标题自动生成可手动修改。</div>
+                    <div class="form-hint" style="margin-top: 6px;">产品落地页URL标识，由标题自动生成可手动修改。</div>
                   </div>
                 </div>
 
@@ -1819,7 +1819,7 @@
                     <button class="review-import-btn" onclick="downloadReviewTemplate()">下载评论模板</button>
                     <button class="review-import-btn" onclick="importReviews()">导入评论</button>
                   </div>
-                  <div class="review-import-hint">下载模板按格式填写，上传 CSV 文件批量导入评论到当前商品。</div>
+                  <div class="review-import-hint">下载模板按格式填写，上传 CSV 文件批量导入评论到当前产品。</div>
                 </div>
               </div>
             </div>
@@ -1835,23 +1835,23 @@
   <script>var CURRENT_PAGE = 'products';</script>
   <script src="../common/js/commons.js"></script>
   <script>
-    // ==================== 提交商品 ====================
+    // ==================== 提交产品 ====================
     function submitProduct() {
       const title = document.getElementById('productTitle').value;
       const category = document.getElementById('productCategory').value;
       const price = document.getElementById('productPrice').value;
 
       if (!title) {
-        showToast('error', '请填写商品标题');
+        showToast('error', '请填写产品标题');
         document.getElementById('productTitle').focus();
         return;
       }
       if (!category) {
-        showToast('error', '请选择商品类别');
+        showToast('error', '请选择产品类别');
         return;
       }
       if (!price) {
-        showToast('error', '请填写商品售价');
+        showToast('error', '请填写产品售价');
         document.getElementById('productPrice').focus();
         return;
       }
@@ -1896,7 +1896,7 @@
 
       products.unshift(newProduct);
       renderProducts();
-      showToast('success', `商品「${title}」提交成功，等待上架审核！`);
+      showToast('success', `产品「${title}」提交成功，等待上架审核！`);
       setTimeout(() => { navigateToPage('product_list.html'); }, 800);
     }
 
@@ -2507,7 +2507,7 @@
           // 预览前3条评论
           const preview = lines.slice(0, 4).join('<br>');
           const totalReviews = lines.length - 1; // 减去表头
-          showToast('success', `文件解析完成，共识别 ${totalReviews} 条评论，准备导入到当前商品`);
+          showToast('success', `文件解析完成，共识别 ${totalReviews} 条评论，准备导入到当前产品`);
           // 后续接入真实导入逻辑
         };
         reader.readAsText(file, 'UTF-8');
@@ -2565,7 +2565,7 @@
       overlay.innerHTML = `
         <div class="dialog">
           <div class="dialog-title">确认删除</div>
-          <div class="dialog-desc">确定要删除商品「${productName}」吗？此操作无法撤销。</div>
+          <div class="dialog-desc">确定要删除产品「${productName}」吗？此操作无法撤销。</div>
           <div class="dialog-actions">
             <button class="btn btn-secondary" onclick="this.closest('.dialog-overlay').remove()">取消</button>
             <button class="btn btn-destructive" onclick="deleteProduct('${productName}'); this.closest('.dialog-overlay').remove();">确认删除</button>
@@ -2583,7 +2583,7 @@
       if (index > -1) {
         products.splice(index, 1);
         renderProducts();
-        showToast('success', `商品「${name}」已删除`);
+        showToast('success', `产品「${name}」已删除`);
       }
     }
 
@@ -2591,7 +2591,7 @@
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
       exportBtn.addEventListener('click', () => {
-        showToast('success', '商品数据导出成功（模拟）');
+        showToast('success', '产品数据导出成功（模拟）');
       });
     }
 

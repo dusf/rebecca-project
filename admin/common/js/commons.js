@@ -1,5 +1,5 @@
-// ==================== 公共脚本 ====================
-// 此文件包含商品数据、Toast、侧边栏导航等所有页面共享的逻辑
+﻿// ==================== 公共脚本 ====================
+// 此文件包含产品数据、Toast、侧边栏导航等所有页面共享的逻辑
 
 
     // ==================== Toast 通知 ====================
@@ -29,27 +29,32 @@
       {
         section: '资产',
         items: [
-          { page: 'products', label: '商品',
+          { page: 'products', label: '产品',
             icon: '<svg viewBox="0 0 24 24"><path d="m21 7.5-9-5-9 5"/><path d="m21 7.5-9 5-9-5"/><path d="M21 7.5v9l-9 5-9-5v-9"/></svg>' },
           { page: 'social', label: '社媒',
             icon: '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.5 10.5 15.5 6.5"/><path d="M8.5 13.5 15.5 17.5"/></svg>' },
           { page: 'influencers', label: '网红',
             icon: '<svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
           { page: 'orders', label: '订单',
-            icon: '<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' }
+            icon: '<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' },
+          { page: 'inventory', label: '库存',
+            icon: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>' }
         ]
       },
       {
         section: '店铺',
         items: [
+          { page: 'categories', label: '分类',
+            icon: '<svg viewBox="0 0 24 24"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>' },
+          { page: 'attributes', label: '属性',
+            icon: '<svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>' },
           { page: 'series', label: '系列',
             icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>' },
-          { page: 'promotions', label: '促销',
+          { page: 'promotions', label: '折扣',
             icon: '<svg viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.45.94 3.38 0l6.63-6.63c.94-.94.94-2.45 0-3.38L12 2Z"/><path d="M7 7h.01"/></svg>' },
           { page: 'gifts', label: '赠品',
             icon: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 2.5 2.5v5"/><path d="M16.5 8v-2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-2.5 2.5h-5"/></svg>' },
-          { page: 'coupons', label: '优惠',
-            icon: '<svg viewBox="0 0 24 24"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M22 7H2v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7z"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><path d="M10 3l2 4 4-2-2 4 4 2-4 2 2 4-4-2-2 4-2-4-4 2 2-4-4-2 4-2-2-4z"/></svg>' },
+
           { page: 'content', label: '内容',
             icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>' },
           { page: 'users', label: '用户',
@@ -287,6 +292,10 @@
           <div class="shop-dropdown-action-icon members"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <span>成员管理</span>
         </div>
+        <div class="shop-dropdown-action" id="shopDropdownOrders">
+          <div class="shop-dropdown-action-icon orders"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+          <span>订单管理</span>
+        </div>
       `;
 
       document.body.appendChild(dropdown);
@@ -324,6 +333,17 @@
           window.handleSidebarNav('members');
         } else {
           navigateToPage('member/members.html');
+        }
+      });
+
+      dropdown.querySelector('#shopDropdownOrders').addEventListener('click', function() {
+        closeShopDropdown();
+        if (window.self !== window.top && window.parent && window.parent.handleSidebarNav) {
+          window.parent.handleSidebarNav('orders');
+        } else if (typeof window.handleSidebarNav === 'function') {
+          window.handleSidebarNav('orders');
+        } else {
+          navigateToPage('product/product_list.html');
         }
       });
 
@@ -493,7 +513,7 @@
       });
     }
 
-    // ==================== 商品数据 ====================
+    // ==================== 产品数据 ====================
     const products = [
       { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', seoSlug: 'iphone-15-pro-max', seriesCount: 3, seriesNames: ['2024秋冬系列', '旗舰系列', '热销推荐'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
       { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', seoSlug: 'macbook-air-m3', seriesCount: 2, seriesNames: ['笔记本系列', '学生特惠'], creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
@@ -560,12 +580,12 @@
     // ==================== 列配置 ====================
     const columnConfig = [
       { key: 'checkbox', label: '', fixed: 'left', width: '40px', alwaysShow: true, isCheckbox: true },
-      { key: 'productInfo', label: '商品信息', fixed: 'left', width: '240px', alwaysShow: true },
+      { key: 'productInfo', label: '产品信息', fixed: 'left', width: '240px', alwaysShow: true },
       { key: 'category', label: '分类', defaultShow: true },
       { key: 'price', label: '价格', defaultShow: true },
       { key: 'stock', label: '库存', defaultShow: true },
       { key: 'stockLink', label: '库存联动', defaultShow: true },
-      { key: 'status', label: '商品状态', defaultShow: true },
+      { key: 'status', label: '产品状态', defaultShow: true },
       { key: 'series', label: '所属系列', defaultShow: true },
       { key: 'creator', label: '创建人', defaultShow: true },
       { key: 'date', label: '创建时间', defaultShow: true },
@@ -789,9 +809,9 @@
       }
       var breadcrumb = document.getElementById('breadcrumb');
       if (pageId === 'products') {
-        breadcrumb.innerHTML = '<span>资产</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-current">商品列表</span>';
+        breadcrumb.innerHTML = '<span>资产</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-current">产品列表</span>';
       } else if (pageId === 'add-product') {
-        breadcrumb.innerHTML = '<span>资产</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-link" onclick="showPage(\'products\')">商品列表</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-current">添加商品</span>';
+        breadcrumb.innerHTML = '<span>资产</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-link" onclick="showPage(\'products\')">产品列表</span><span class="breadcrumb-separator">/</span><span class="breadcrumb-current">添加产品</span>';
       }
       document.querySelectorAll('.sidebar-item').forEach(function(item) {
         if (item.dataset.page === 'products' || (pageId === 'add-product' && item.dataset.page === 'products')) {
@@ -802,7 +822,7 @@
       });
     }
 
-    // ==================== 商品状态 Badge ====================
+    // ==================== 产品状态 Badge ====================
     function getStatusBadge(status) {
       var map = {
         'draft':    { label: '草稿',     cls: 'badge-secondary' },
@@ -814,7 +834,7 @@
     }
 
 
-    // ==================== 获取商品/系列查看URL ====================
+    // ==================== 获取产品/系列查看URL ====================
     function getShopBaseUrl() {
       var shop = getCurrentShop();
       if (!shop) return '';
@@ -841,7 +861,7 @@
       return base + '/collections/' + encodeURIComponent(slug);
     }
 
-    // ==================== 渲染商品表格 ====================
+    // ==================== 渲染产品表格 ====================
     function renderProducts(filter) {
       var tbody = document.getElementById('productTableBody');
       var filteredProducts = products.slice();
@@ -885,7 +905,7 @@
 
       if (filteredProducts.length === 0) {
         var colCount = visibleCols.length;
-        tbody.innerHTML = '<tr><td colspan="' + colCount + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="empty-state-title">暂无匹配商品</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + colCount + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="empty-state-title">暂无匹配产品</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
         return;
       }
 
@@ -978,7 +998,7 @@
       renderProducts(getCurrentFilter());
     }
 
-    // 商品表格排序点击
+    // 产品表格排序点击
     document.addEventListener('click', function(e) {
       var th = e.target.closest('th.sortable');
       if (!th) return;
@@ -1040,17 +1060,17 @@
     function exportSelected() {
       var checked = document.querySelectorAll('#productTableBody .checkbox.checked').length;
       if (checked === 0) {
-        showToast('info', '请先选择要导出的商品');
+        showToast('info', '请先选择要导出的产品');
         return;
       }
-      showToast('success', '已导出 ' + checked + ' 条商品');
+      showToast('success', '已导出 ' + checked + ' 条产品');
     }
 
     // ==================== 批量设置状态 ====================
     function batchSetStatus(status) {
       var checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');
       if (checkedEls.length === 0) {
-        showToast('info', '请先选择要操作的商品');
+        showToast('info', '请先选择要操作的产品');
         return;
       }
       var statusMap = { 'on-sale': '上架', 'off-sale': '下架', 'draft': '草稿' };
@@ -1067,13 +1087,13 @@
 
       renderProducts(getCurrentFilter());
       updateSelectedCount();
-      showToast('success', '已将 ' + checkedEls.length + ' 件商品设为\u300C' + statusText + '\u300D');
+      showToast('success', '已将 ' + checkedEls.length + ' 件产品设为\u300C' + statusText + '\u300D');
     }
 
     function addToProductSeries() {
       var checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');
       if (checkedEls.length === 0) {
-        showToast('info', '请先选择要添加到系列的商品');
+        showToast('info', '请先选择要添加到系列的产品');
         return;
       }
       var names = [];
@@ -1082,7 +1102,7 @@
         var nameEl = row.querySelector('.product-name');
         if (nameEl) names.push(nameEl.textContent);
       });
-      showToast('success', '已将 ' + names.length + ' 件商品添加到产品系列中');
+      showToast('success', '已将 ' + names.length + ' 件产品添加到产品系列中');
     }
 
     // ==================== 更多操作下拉 ====================
@@ -1117,7 +1137,7 @@
     function batchDelete() {
       var checkedEls = document.querySelectorAll('#productTableBody .checkbox.checked');
       if (checkedEls.length === 0) {
-        showToast('info', '请先选择要删除的商品');
+        showToast('info', '请先选择要删除的产品');
         return;
       }
       var names = [];
@@ -1132,7 +1152,7 @@
     function confirmBatchDelete(names) {
       var overlay = document.createElement('div');
       overlay.className = 'dialog-overlay';
-      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认批量删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除选中的 ' + names.length + ' 件商品吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="executeBatchDelete(' + JSON.stringify(names) + '); this.closest(\'.dialog-overlay\').remove();">确认删除</button></div></div>';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认批量删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除选中的 ' + names.length + ' 件产品吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="executeBatchDelete(' + JSON.stringify(names) + '); this.closest(\'.dialog-overlay\').remove();">确认删除</button></div></div>';
       overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();
       });
@@ -1146,14 +1166,14 @@
       });
       renderProducts(getCurrentFilter());
       updateSelectedCount();
-      showToast('success', '已删除 ' + names.length + ' 件商品');
+      showToast('success', '已删除 ' + names.length + ' 件产品');
     }
 
     // ==================== 删除确认 ====================
     function confirmDelete(name) {
       var overlay = document.createElement('div');
       overlay.className = 'dialog-overlay';
-      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除商品「' + name + '」吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="this.closest(\'.dialog-overlay\').remove();showToast(\'success\', \'已删除: ' + name + '\')">确认删除</button></div></div>';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">确认删除</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">确定要删除产品「' + name + '」吗？此操作无法撤销。</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" onclick="this.closest(\'.dialog-overlay\').remove();showToast(\'success\', \'已删除: ' + name + '\')">确认删除</button></div></div>';
       overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();
       });

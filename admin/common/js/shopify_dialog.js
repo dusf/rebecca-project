@@ -1,4 +1,4 @@
-// ==================== Shopify 授权对话框管理器（父页面级） ====================
+﻿// ==================== Shopify 授权对话框管理器（父页面级） ====================
 // 此脚本由 admin/index.html 加载，将对话框 HTML 注入父页面 #dialogHost 中，
 // 确保遮罩覆盖整个浏览器视口（含侧边栏和顶栏），与平台管理的对话框架构一致。
 //
@@ -55,7 +55,7 @@
 
   // ==================== 步骤指示器更新 ====================
   // 每个步骤的对话框自带静态步骤指示器，无需 JS 动态切换。
-  // 只需在打开对话框时动态设置步骤3标签（产品端:"同步商品"/系列端:"同步系列"）。
+  // 只需在打开对话框时动态设置步骤3标签（产品端:"同步产品"/系列端:"同步系列"）。
 
   function updateSteps(currentStep) {
     // 步骤指示器在各对话框 HTML 中已静态写好，此函数仅用于兼容性保留。
@@ -80,7 +80,7 @@
         '" onclick="ShopifyAuth.selectSite(\'' + store.id + '\')">' +
         '<div class="sync-site-info-v3">' +
           '<div class="sync-site-name-v3">' + store.name +
-            '<span class="sync-site-badge">' + store.productCount + '件商品</span></div>' +
+            '<span class="sync-site-badge">' + store.productCount + '件产品</span></div>' +
           '<div class="sync-site-domain-v3">' + store.domain + '</div>' +
         '</div>' +
       '</div>';
@@ -104,7 +104,7 @@
     if (!hooks) return;
 
     var items = hooks.getItems ? hooks.getItems(_state.selectedSiteId) : [];
-    var isProduct = hooks.step3Label === '同步商品';
+    var isProduct = hooks.step3Label === '同步产品';
 
     var html = '<div class="sync-series-children">';
     items.forEach(function(item) {
@@ -113,7 +113,7 @@
       html += '<div class="sync-series-child-check">' + (sel ? '&#10003;' : '') + '</div>';
       html += '<span style="flex:1">' + item.title + '</span>';
       if (isProduct) {
-        // 商品：显示分类、价格、库存
+        // 产品：显示分类、价格、库存
         html += '<span style="font-size:11px;color:hsl(var(--muted-foreground));margin-right:12px;">' + (item.category || '') + '</span>';
         html += '<span style="font-weight:500;font-size:13px;margin-right:12px;">&yen;' + (item.price || 0) + '</span>';
         html += '<span style="font-size:11px;color:hsl(var(--muted-foreground))">' + (item.stock || '') + '</span>';
@@ -188,7 +188,7 @@
 
       ensureDialogs(function() {
         // 自定义步骤3标签
-        setStep3Label(hooks.step3Label || '同步商品');
+        setStep3Label(hooks.step3Label || '同步产品');
 
         // 自定义描述文字
         var descEl = document.getElementById('shopifyAuthDesc');

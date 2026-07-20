@@ -97,6 +97,7 @@
       'social':       'product/product_list.html',
       'influencers':  'product/product_list.html',
       'orders':       'product/product_list.html',
+      'inventory':    'product/product_list.html',
       'series':       'collection/collection_list.html',
       'collection-create': 'collection/collection_form.html',
       'collection-form':   'collection/collection_form.html',
@@ -120,15 +121,18 @@
     // 面包屑配置：page -> [分类, 页面名] 或 [分类, {label: '中间页', page: 'pageKey'}, 页面名]
     var BREADCRUMB_CONFIG = {
       'dashboard':    ['仪表盘', '概览'],
-      'products':     ['资产', '商品列表'],
-      'add-product':  ['资产', {label: '商品列表', page: 'products'}, '添加商品'],
+      'products':     ['资产', '产品列表'],
+      'add-product':  ['资产', {label: '产品列表', page: 'products'}, '添加产品'],
       'orders':       ['销售', '订单管理'],
+      'inventory':    ['资产', '库存管理'],
+      'categories':     ['店铺', '分类管理'],
+      'attributes':     ['店铺', '属性管理'],
       'series':         ['店铺', '产品系列'],
       'collection-form':['店铺', {label: '产品系列', page: 'series'}, '编辑系列'],
       'collection-create':['店铺', {label: '产品系列', page: 'series'}, '创建系列'],
-      'promotions':   ['营销', '促销活动'],
+      'promotions':   ['营销', '折扣'],
       'gifts':        ['营销', '赠品管理'],
-      'coupons':      ['营销', '优惠券管理'],
+
       'content':      ['内容', '内容管理'],
       'users':        ['用户', '用户管理'],
       'settings':     ['店铺管理', '店铺配置'],
@@ -282,7 +286,7 @@
           <div class="breadcrumb" id="breadcrumb">
             <span>资产</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-current">商品列表</span>
+            <span class="breadcrumb-current">产品列表</span>
           </div>
         </div>
       </header>

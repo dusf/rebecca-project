@@ -1,4 +1,4 @@
-// ==================== 系列表单脚本 ====================
+﻿// ==================== 系列表单脚本 ====================
 // 系列数据
 function loadCollections() {
   try {
@@ -176,12 +176,12 @@ function getProductPool() {
 
 // 条件字段定义
 var COND_FIELDS = [
-  { value: 'name', label: '商品标题', ops: ['contains', 'not_contains'], valType: 'text' },
-  { value: 'category', label: '商品分类', ops: ['equals', 'not_equals'], valType: 'select' },
-  { value: 'tags', label: '商品标记', ops: ['contains', 'not_contains'], valType: 'tags' },
-  { value: 'price', label: '商品售价', ops: ['gt', 'lt', 'eq', 'between'], valType: 'number' },
-  { value: 'originalPrice', label: '商品原价', ops: ['gt', 'lt', 'eq', 'between'], valType: 'number' },
-  { value: 'status', label: '商品状态', ops: ['equals', 'not_equals'], valType: 'status' },
+  { value: 'name', label: '产品标题', ops: ['contains', 'not_contains'], valType: 'text' },
+  { value: 'category', label: '产品分类', ops: ['equals', 'not_equals'], valType: 'select' },
+  { value: 'tags', label: '产品标记', ops: ['contains', 'not_contains'], valType: 'tags' },
+  { value: 'price', label: '产品售价', ops: ['gt', 'lt', 'eq', 'between'], valType: 'number' },
+  { value: 'originalPrice', label: '产品原价', ops: ['gt', 'lt', 'eq', 'between'], valType: 'number' },
+  { value: 'status', label: '产品状态', ops: ['equals', 'not_equals'], valType: 'status' },
 ];
 
 var OP_LABELS = { contains: '包含', not_contains: '不包含', equals: '等于', not_equals: '不等于', gt: '大于', lt: '小于', eq: '等于', between: '区间' };

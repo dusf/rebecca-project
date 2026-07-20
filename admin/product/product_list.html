@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店铺商城后台管理系统 - 商品列表</title>
+  <title>店铺商城后台管理系统 - 产品列表</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../common/css/commons.css?v=3">
   <style>
-    /* ==================== 商品列表页专用样式 ==================== */
+    /* ==================== 产品列表页专用样式 ==================== */
     /* 统计卡片 */
     .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
     .stats-grid {
@@ -298,22 +298,22 @@
     <div class="main-area">
       <!-- 内容区域 -->
       <div class="content">
-        <!-- ==================== 商品列表页面 ==================== -->
+        <!-- ==================== 产品列表页面 ==================== -->
         <div class="page active" id="page-products">
           <div class="page-header">
             <div>
-              <div class="page-title">商品列表<span class="count-badge">(128件)</span></div>
+              <div class="page-title">产品列表<span class="count-badge">(128件)</span></div>
               <div class="page-subtitle">
                 <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  只能查看自己所属部门及其下级小组的商品数据
+                  只能查看自己所属部门及其下级小组的产品数据
                 </span>
               </div>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
               <button class="btn btn-secondary" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
               <button class="btn btn-secondary" onclick="window.parent.ShopifyAuth.open()" style="background:hsl(142 50% 40%);color:#fff;" onmouseover="this.style.background='hsl(142 55% 33%)'" onmouseout="this.style.background='hsl(142 50% 40%)'">拉取shopify</button>
-              <button class="btn btn-primary" onclick="navigateToPage('add_product.html')">添加商品</button>
+              <button class="btn btn-primary" onclick="navigateToPage('add_product.html')">添加产品</button>
             </div>
           </div>
 
@@ -322,7 +322,7 @@
             <div class="toolbar-left">
               <div class="search-input">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(30 10% 50%);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" placeholder="搜索商品名称、SPU..." id="productSearch" />
+                <input type="text" placeholder="搜索产品名称、SPU..." id="productSearch" />
               </div>
               <select class="filter-select" id="categoryFilter">
                 <option value="">全部分类</option>
@@ -379,7 +379,7 @@
                   </tr>
                 </thead>
                 <tbody id="productTableBody">
-                  <!-- 商品数据由 JS 动态填充 -->
+                  <!-- 产品数据由 JS 动态填充 -->
                 </tbody>
               </table>
             </div>
@@ -476,10 +476,10 @@
     window.ShopifyAuthHooks = {
       stores: shopifyProductStores,
       getItems: function(siteId) { return shopifyProductsMap[siteId] || []; },
-      step3Label: '同步商品',
-      step3Title: '选择要同步的商品',
-      syncBtnLabel: '同步选中的商品',
-      step1Desc: '授权后可拉取 Shopify 店铺的商品数据，快速同步到当前<br/>商城后台的商品列表中。',
+      step3Label: '同步产品',
+      step3Title: '选择要同步的产品',
+      syncBtnLabel: '同步选中的产品',
+      step1Desc: '授权后可拉取 Shopify 店铺的产品数据，快速同步到当前<br/>商城后台的产品列表中。',
       setStoreDomain: function(domain) {},
       onSync: function(selectedIds, siteId) {
         var productList = shopifyProductsMap[siteId] || [];
@@ -512,8 +512,8 @@
         });
 
         renderProducts();
-        var msg = '已同步 ' + newCount + ' 个商品';
-        if (skippedCount > 0) msg += '，跳过 ' + skippedCount + ' 个重复名称的商品';
+        var msg = '已同步 ' + newCount + ' 个产品';
+        if (skippedCount > 0) msg += '，跳过 ' + skippedCount + ' 个重复名称的产品';
         showToast('success', msg);
       }
     };

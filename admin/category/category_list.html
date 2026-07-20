@@ -12,40 +12,6 @@
     /* ==================== 分类管理页专用样式 ==================== */
     .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
     
-    /* 统计卡片 */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid hsl(var(--border));
-      border-radius: 12px;
-      padding: 20px;
-      transition: box-shadow 0.2s;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .stat-card:hover { box-shadow: 0 4px 20px hsl(var(--shadow-color) / 0.1); }
-
-    .stat-card-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-    }
-    .stat-card-title { font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); }
-    .stat-card-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-    .stat-card-icon.blue { background: hsl(30 40% 92%); color: hsl(var(--primary)); }
-    .stat-card-icon.green { background: hsl(142 50% 92%); color: hsl(var(--success)); }
-    .stat-card-icon.orange { background: hsl(38 80% 92%); color: hsl(var(--warning)); }
-    .stat-card-icon.red { background: hsl(0 70% 92%); color: hsl(var(--error)); }
-    .stat-card-value { font-size: 28px; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; }
-    .stat-card-change { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-
     /* 工具栏 */
     .toolbar {
       display: flex; align-items: center; justify-content: space-between;
@@ -274,50 +240,6 @@
             </div>
           </div>
 
-          <!-- 统计卡片 -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">全部分类</div>
-                <div class="stat-card-icon blue">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statTotal">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">分类总数</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">已启用</div>
-                <div class="stat-card-icon green">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statActive">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">正常使用中</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">已禁用</div>
-                <div class="stat-card-icon orange">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statDisabled">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">暂停使用中</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">关联商品</div>
-                <div class="stat-card-icon red">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statProducts">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">关联商品总数</div>
-            </div>
-          </div>
-
           <!-- 工具栏 -->
           <div class="toolbar">
             <div class="toolbar-left">
@@ -540,14 +462,8 @@
       var tbody = document.getElementById('categoryTableBody');
       if (!tbody) return;
 
-      // 更新统计
+      // 更新计数
       document.getElementById('categoryCount').textContent = '(' + categories.length + '个)';
-      document.getElementById('statTotal').textContent = categories.length;
-      document.getElementById('statActive').textContent = categories.filter(function(c) { return c.status === 'active'; }).length;
-      document.getElementById('statDisabled').textContent = categories.filter(function(c) { return c.status === 'disabled'; }).length;
-      var totalProducts = 0;
-      categories.forEach(function(c) { totalProducts += (c.productCount || 0); });
-      document.getElementById('statProducts').textContent = totalProducts;
 
       // 分页
       var totalPages = Math.ceil(filtered.length / pageSize) || 1;

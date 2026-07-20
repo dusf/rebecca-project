@@ -40,31 +40,6 @@
       font-size: 11px; opacity: 0.7; margin-left: 4px;
     }
 
-    /* 统计卡片 */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
-    }
-    .stat-card {
-      background: rgba(255, 255, 255, 0.9); border: 1px solid hsl(var(--border));
-      border-radius: 12px; padding: 20px; transition: box-shadow 0.2s;
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    }
-    .stat-card:hover { box-shadow: 0 4px 20px hsl(var(--shadow-color) / 0.1); }
-    .stat-card-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-    }
-    .stat-card-title { font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); }
-    .stat-card-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-    .stat-card-icon.blue { background: hsl(30 40% 92%); color: hsl(var(--primary)); }
-    .stat-card-icon.green { background: hsl(142 50% 92%); color: hsl(var(--success)); }
-    .stat-card-icon.orange { background: hsl(38 80% 92%); color: hsl(var(--warning)); }
-    .stat-card-icon.red { background: hsl(0 70% 92%); color: hsl(var(--error)); }
-    .stat-card-value { font-size: 28px; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; }
-    .stat-card-change { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-
     /* 工具栏 */
     .toolbar {
       display: flex; align-items: center; justify-content: space-between;
@@ -321,50 +296,6 @@
           <div class="category-switcher">
             <div class="category-switcher-label">选择分类：</div>
             <div class="category-tabs" id="categoryTabs"><!-- JS动态生成 --></div>
-          </div>
-
-          <!-- 统计卡片 -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">当前分类属性</div>
-                <div class="stat-card-icon blue">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statTotal">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">属性总数</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">已启用</div>
-                <div class="stat-card-icon green">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statActive">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">正常使用中</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">必填属性</div>
-                <div class="stat-card-icon orange">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statRequired">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">商品必填项</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <div class="stat-card-title">选项值总数</div>
-                <div class="stat-card-icon red">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value" id="statOptions">0</div>
-              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">所有选项值</div>
-            </div>
           </div>
 
           <!-- 工具栏 -->
@@ -765,12 +696,6 @@
       var catAttrs = getCategoryAttrs(currentCategoryId);
 
       document.getElementById('attrCount').textContent = '(' + catAttrs.length + '个)';
-      document.getElementById('statTotal').textContent = catAttrs.length;
-      document.getElementById('statActive').textContent = catAttrs.filter(function(a) { return a.status === 'active'; }).length;
-      document.getElementById('statRequired').textContent = catAttrs.filter(function(a) { return a.isRequired; }).length;
-      var totalOpts = 0;
-      catAttrs.forEach(function(a) { totalOpts += (a.options ? a.options.length : 0); });
-      document.getElementById('statOptions').textContent = totalOpts;
 
       var totalPages = Math.ceil(filtered.length / pageSize) || 1;
       if (currentPage > totalPages) currentPage = totalPages;

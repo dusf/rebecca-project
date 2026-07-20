@@ -302,7 +302,7 @@
         <div class="page active" id="page-products">
           <div class="page-header">
             <div>
-              <div class="page-title">产品列表<span class="count-badge">(128件)</span></div>
+              <div class="page-title">产品列表<span class="count-badge" id="productCount">(0件)</span></div>
               <div class="page-subtitle">
                 <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -325,12 +325,7 @@
                 <input type="text" placeholder="搜索产品名称、SPU..." id="productSearch" />
               </div>
               <select class="filter-select" id="categoryFilter">
-                <option value="">全部分类</option>
-                <option value="electronics">数码电子</option>
-                <option value="clothing">服饰鞋包</option>
-                <option value="food">食品饮料</option>
-                <option value="home">家居生活</option>
-                <option value="beauty">美妆护肤</option>
+                <!-- 由 buildCategoryFilter() 动态生成 -->
               </select>
               <select class="filter-select" id="statusFilter">
                 <option value="">全部状态</option>
@@ -423,11 +418,19 @@
     // ==================== 初始化 ====================
     buildCustomColPanel();
     renderTableHead();
+    buildCategoryFilter();
     renderProducts();
+    updateProductCount();
 
     function refreshPage() {
       renderProducts();
+      updateProductCount();
       showToast('success', '数据已刷新');
+    }
+
+    function updateProductCount() {
+      var el = document.getElementById('productCount');
+      if (el) el.textContent = '(' + products.length + '件)';
     }
   </script>
 
@@ -448,27 +451,27 @@
 
     var shopifyProductsMap = {
       'site-1': [
-        { id: 'sp-1-1', title: 'iPhone 15 Pro 保护壳', category: '数码电子', price: 129, stock: '3款200件' },
-        { id: 'sp-1-2', title: 'USB-C 快充数据线 2m', category: '数码电子', price: 49, stock: '1款500件' },
-        { id: 'sp-1-3', title: '无线充电底座', category: '数码电子', price: 199, stock: '2款150件' },
-        { id: 'sp-1-4', title: '蓝牙音箱 Mini', category: '数码电子', price: 299, stock: '4款80件' },
-        { id: 'sp-1-5', title: '笔记本散热支架', category: '数码电子', price: 89, stock: '1款300件' },
-        { id: 'sp-1-6', title: 'Type-C 拓展坞 7合1', category: '数码电子', price: 259, stock: '2款120件' },
-        { id: 'sp-1-7', title: '降噪耳机收纳盒', category: '数码电子', price: 79, stock: '3款400件' },
-        { id: 'sp-1-8', title: 'iPad 磁吸键盘套', category: '数码电子', price: 399, stock: '2款60件' }
+        { id: 'sp-1-1', title: 'Natural Black Full Wig 20"', category: '女士全头套', price: 1299, stock: '3款200件' },
+        { id: 'sp-1-2', title: 'Blonde Lace Front Wig', category: '女士全头套', price: 1599, stock: '1款500件' },
+        { id: 'sp-1-3', title: 'Curly Human Hair Wig', category: '女士全头套', price: 1899, stock: '2款150件' },
+        { id: 'sp-1-4', title: 'Short Bob Wig', category: '女士全头套', price: 899, stock: '4款80件' },
+        { id: 'sp-1-5', title: 'Clip-in Extensions 18"', category: '女士接发', price: 399, stock: '1款300件' },
+        { id: 'sp-1-6', title: 'Tape-in Extensions 22"', category: '女士接发', price: 599, stock: '2款120件' },
+        { id: 'sp-1-7', title: 'I-Tip Extensions 20"', category: '女士接发', price: 499, stock: '3款400件' },
+        { id: 'sp-1-8', title: 'Silk Hair Scarf Set', category: '发饰配件', price: 199, stock: '2款60件' }
       ],
       'site-2': [
-        { id: 'sp-2-1', title: '春季棉麻衬衫', category: '服饰鞋包', price: 199, stock: '5款300件' },
-        { id: 'sp-2-2', title: '真皮斜挎包', category: '服饰鞋包', price: 599, stock: '3款80件' },
-        { id: 'sp-2-3', title: '运动跑步鞋 Air', category: '服饰鞋包', price: 459, stock: '6款200件' },
-        { id: 'sp-2-4', title: '女士太阳镜 UV400', category: '服饰鞋包', price: 299, stock: '2款150件' },
-        { id: 'sp-2-5', title: '羊毛围巾格纹款', category: '服饰鞋包', price: 169, stock: '1款250件' }
+        { id: 'sp-2-1', title: 'Pearl Hair Clips (6-pack)', category: '发饰配件', price: 199, stock: '5款300件' },
+        { id: 'sp-2-2', title: 'Velvet Hair Band Set', category: '发饰配件', price: 129, stock: '3款80件' },
+        { id: 'sp-2-3', title: 'Argan Oil Hair Serum', category: '护理产品', price: 258, stock: '6款200件' },
+        { id: 'sp-2-4', title: 'Keratin Deep Conditioner', category: '护理产品', price: 168, stock: '2款150件' },
+        { id: 'sp-2-5', title: 'Leave-in Conditioner Spray', category: '护理产品', price: 128, stock: '1款250件' }
       ],
       'site-3': [
-        { id: 'sp-3-1', title: '日本抹茶粉 100g', category: '食品饮料', price: 138, stock: '1款500件' },
-        { id: 'sp-3-2', title: '限定樱花杯', category: '家居生活', price: 258, stock: '2款100件' },
-        { id: 'sp-3-3', title: '北海道奶酪蛋糕', category: '食品饮料', price: 89, stock: '1款300件' },
-        { id: 'sp-3-4', title: '无添加洗面奶', category: '美妆护肤', price: 158, stock: '2款400件' }
+        { id: 'sp-3-1', title: 'Custom Color Full Wig', category: '定制假发', price: 2599, stock: '1款50件' },
+        { id: 'sp-3-2', title: 'Hand-tied Lace Wig', category: '定制假发', price: 3299, stock: '2款30件' },
+        { id: 'sp-3-3', title: 'Boho Braided Headband', category: '发饰配件', price: 69, stock: '1款300件' },
+        { id: 'sp-3-4', title: 'Heat Protectant Spray', category: '护理产品', price: 98, stock: '2款400件' }
       ]
     };
 
@@ -493,7 +496,7 @@
           var exists = products.some(function(p) { return p.name === sp.title; });
           if (exists) { skippedCount++; return; }
 
-          var spuPrefix = { '数码电子': 'SPU-DZ', '服饰鞋包': 'SPU-FS', '食品饮料': 'SPU-SP', '家居生活': 'SPU-JJ', '美妆护肤': 'SPU-MZ' };
+          var spuPrefix = { '女士全头套': 'SPU-FW', '女士接发': 'SPU-HE', '发饰配件': 'SPU-HA', '护理产品': 'SPU-CP', '定制假发': 'SPU-CW' };
           var prefix = spuPrefix[sp.category] || 'SPU-IM';
           var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return p.id; })) + 1 : 1;
           var spuNum = String(10000 + newId).slice(1);

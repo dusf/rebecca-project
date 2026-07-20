@@ -514,18 +514,44 @@
       });
     }
 
+    // ==================== 产品分类数据（全局共享） ====================
+    var categories = [
+      { id: 1, nameEn: "Women's Full Wigs", nameZh: '女士全头套', nameEs: 'Pelucas Completas', sortOrder: 1, productCount: 86, status: 'active', isPreset: true, createdAt: '2026-03-15', updatedAt: '2026-07-18' },
+      { id: 2, nameEn: 'Hair Extensions', nameZh: '女士接发', nameEs: 'Extensiones de Cabello', sortOrder: 2, productCount: 42, status: 'active', isPreset: true, createdAt: '2026-03-15', updatedAt: '2026-07-18' },
+      { id: 3, nameEn: 'Hair Accessories', nameZh: '发饰配件', nameEs: 'Accesorios para el Cabello', sortOrder: 3, productCount: 28, status: 'active', isPreset: false, createdAt: '2026-04-22', updatedAt: '2026-07-10' },
+      { id: 4, nameEn: 'Care Products', nameZh: '护理产品', nameEs: 'Productos de Cuidado', sortOrder: 4, productCount: 15, status: 'active', isPreset: false, createdAt: '2026-05-08', updatedAt: '2026-07-12' },
+      { id: 5, nameEn: 'Custom Wigs', nameZh: '定制假发', nameEs: 'Pelucas Personalizadas', sortOrder: 5, productCount: 0, status: 'disabled', isPreset: false, createdAt: '2026-06-01', updatedAt: '2026-06-15' }
+    ];
+
+    /** 为产品列表页等页面动态生成分类筛选下拉菜单 */
+    function buildCategoryFilter(selectId) {
+      var select = document.getElementById(selectId || 'categoryFilter');
+      if (!select) return;
+      var currentVal = select.value;
+      var html = '<option value="">全部分类</option>';
+      categories.forEach(function(c) {
+        html += '<option value="' + c.nameZh + '">' + c.nameZh + '</option>';
+      });
+      select.innerHTML = html;
+      if (currentVal) {
+        // 尝试恢复之前选中的值
+        var exists = categories.some(function(c) { return c.nameZh === currentVal; });
+        if (exists) select.value = currentVal;
+      }
+    }
+
     // ==================== 产品数据 ====================
     const products = [
-      { id: 1, name: 'iPhone 15 Pro Max', spu: 'SPU-DZ-00001', category: '数码电子', price: 9999, originalPrice: 10999, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', seoSlug: 'iphone-15-pro-max', seriesCount: 3, seriesNames: ['2024秋冬系列', '旗舰系列', '热销推荐'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
-      { id: 2, name: 'MacBook Air M3', spu: 'SPU-DZ-00002', category: '数码电子', price: 8999, originalPrice: 9499, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', seoSlug: 'macbook-air-m3', seriesCount: 2, seriesNames: ['笔记本系列', '学生特惠'], creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
-      { id: 3, name: 'AirPods Pro 2', spu: 'SPU-DZ-00003', category: '数码电子', price: 1899, originalPrice: 1999, stock: '3款8件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seoSlug: 'airpods-pro-2', seriesCount: 1, seriesNames: ['音频系列'], creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
-      { id: 4, name: 'Nike Air Max 270', spu: 'SPU-FS-00001', category: '服饰鞋包', price: 899, originalPrice: 1299, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', status: 'on-sale', seoSlug: 'nike-air-max-270', seriesCount: 2, seriesNames: ['运动潮流', '春季新品'], creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
-      { id: 5, name: 'Adidas Ultraboost', spu: 'SPU-FS-00002', category: '服饰鞋包', price: 1299, originalPrice: 1599, stock: '4款0件', stockLink: false, stockUpdateTime: '', status: 'draft', seoSlug: 'adidas-ultraboost', seriesCount: 0, seriesNames: [], creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
-      { id: 6, name: '星巴克精品咖啡豆', spu: 'SPU-SP-00001', category: '食品饮料', price: 128, originalPrice: 158, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', status: 'draft', seoSlug: 'starbucks-premium-coffee', seriesCount: 1, seriesNames: ['进口精选'], creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
-      { id: 7, name: '戴森 V15 吸尘器', spu: 'SPU-JJ-00001', category: '家居生活', price: 4990, originalPrice: 5490, stock: '3款15件', stockLink: false, stockUpdateTime: '', status: 'on-sale', seoSlug: 'dyson-v15-vacuum', seriesCount: 2, seriesNames: ['高端家电', '品质生活'], creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
-      { id: 8, name: '兰蔻小黑瓶精华', spu: 'SPU-MZ-00001', category: '美妆护肤', price: 1080, originalPrice: 1280, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', status: 'on-sale', seoSlug: 'lancome-advanced-genifique', seriesCount: 3, seriesNames: ['护肤精选', '明星产品', '节日礼盒'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
-      { id: 9, name: 'SK-II 神仙水', spu: 'SPU-MZ-00002', category: '美妆护肤', price: 1590, originalPrice: 1690, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seoSlug: 'sk-ii-facial-treatment-essence', seriesCount: 1, seriesNames: ['护肤精选'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
-      { id: 10, name: '小米智能手环 8', spu: 'SPU-DZ-00004', category: '数码电子', price: 249, originalPrice: 299, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', seoSlug: 'mi-band-8', seriesCount: 2, seriesNames: ['智能穿戴', '性价比之王'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
+      { id: 1, name: 'Natural Black Full Wig 20"', spu: 'SPU-FW-00001', category: '女士全头套', price: 1299, originalPrice: 1599, stock: '12款36件', stockLink: true, stockUpdateTime: '2026-07-07 09:30', status: 'on-sale', seoSlug: 'natural-black-full-wig-20', seriesCount: 3, seriesNames: ['2024秋冬系列', '旗舰系列', '热销推荐'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-06-15', updateDate: '2026-07-02' },
+      { id: 2, name: 'Blonde Lace Front Wig', spu: 'SPU-FW-00002', category: '女士全头套', price: 1599, originalPrice: 1899, stock: '6款12件', stockLink: true, stockUpdateTime: '2026-07-07 08:15', status: 'on-sale', seoSlug: 'blonde-lace-front-wig', seriesCount: 2, seriesNames: ['高端系列', '学生特惠'], creator: '李四', org: '手机组', orgPath: '总部/数码事业部/手机组', date: '2026-06-12', updateDate: '2026-07-01' },
+      { id: 3, name: 'Clip-in Hair Extensions 18"', spu: 'SPU-HE-00001', category: '女士接发', price: 399, originalPrice: 499, stock: '3款8件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seoSlug: 'clip-in-hair-extensions-18', seriesCount: 1, seriesNames: ['接发系列'], creator: '王五', org: '配件组', orgPath: '总部/数码事业部/配件组', date: '2026-06-10', updateDate: '2026-06-28' },
+      { id: 4, name: 'Tape-in Extensions 22"', spu: 'SPU-HE-00002', category: '女士接发', price: 599, originalPrice: 799, stock: '5款120件', stockLink: true, stockUpdateTime: '2026-07-06 22:45', status: 'on-sale', seoSlug: 'tape-in-extensions-22', seriesCount: 2, seriesNames: ['接发系列', '春季新品'], creator: '赵六', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-08', updateDate: '2026-06-25' },
+      { id: 5, name: 'Silk Hair Scarf Set', spu: 'SPU-HA-00001', category: '发饰配件', price: 199, originalPrice: 259, stock: '4款0件', stockLink: false, stockUpdateTime: '', status: 'draft', seoSlug: 'silk-hair-scarf-set', seriesCount: 0, seriesNames: [], creator: '钱七', org: '运动鞋组', orgPath: '总部/服饰事业部/运动鞋组', date: '2026-06-05', updateDate: '2026-06-20' },
+      { id: 6, name: 'Pearl Hair Clips (6-pack)', spu: 'SPU-HA-00002', category: '发饰配件', price: 89, originalPrice: 128, stock: '2款500件', stockLink: true, stockUpdateTime: '2026-07-07 10:00', status: 'draft', seoSlug: 'pearl-hair-clips-6-pack', seriesCount: 1, seriesNames: ['发饰精选'], creator: '孙八', org: '进口食品组', orgPath: '总部/食品事业部/进口食品组', date: '2026-06-03', updateDate: '2026-06-18' },
+      { id: 7, name: 'Argan Oil Hair Serum', spu: 'SPU-CP-00001', category: '护理产品', price: 258, originalPrice: 328, stock: '3款15件', stockLink: false, stockUpdateTime: '', status: 'on-sale', seoSlug: 'argan-oil-hair-serum', seriesCount: 2, seriesNames: ['高端护理', '品质生活'], creator: '周九', org: '家电组', orgPath: '总部/家居事业部/家电组', date: '2026-06-01', updateDate: '2026-06-15' },
+      { id: 8, name: 'Keratin Deep Conditioner', spu: 'SPU-CP-00002', category: '护理产品', price: 168, originalPrice: 198, stock: '4款88件', stockLink: true, stockUpdateTime: '2026-07-07 07:30', status: 'on-sale', seoSlug: 'keratin-deep-conditioner', seriesCount: 3, seriesNames: ['护理精选', '明星产品', '节日礼盒'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-28', updateDate: '2026-06-10' },
+      { id: 9, name: 'Custom Color Full Wig', spu: 'SPU-CW-00001', category: '定制假发', price: 2599, originalPrice: 2999, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seoSlug: 'custom-color-full-wig', seriesCount: 1, seriesNames: ['定制系列'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
+      { id: 10, name: 'Boho Braided Headband', spu: 'SPU-HA-00003', category: '发饰配件', price: 69, originalPrice: 99, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', seoSlug: 'boho-braided-headband', seriesCount: 2, seriesNames: ['发饰精选', '性价比之王'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
     ];
 
     // ==================== 组织架构数据 ====================
@@ -875,8 +901,7 @@
           });
         }
         if (filter.category) {
-          var catMap = { electronics: '数码电子', clothing: '服饰鞋包', food: '食品饮料', home: '家居生活', beauty: '美妆护肤' };
-          filteredProducts = filteredProducts.filter(function(p) { return p.category === catMap[filter.category]; });
+          filteredProducts = filteredProducts.filter(function(p) { return p.category === filter.category; });
         }
         if (filter.status) {
           filteredProducts = filteredProducts.filter(function(p) { return p.status === filter.status; });
@@ -927,11 +952,11 @@
       };
 
       var categoryIconMap = {
-        '数码电子': svgIcon.phone,
-        '服饰鞋包': svgIcon.shirt,
-        '食品饮料': svgIcon.coffee,
-        '家居生活': svgIcon.home,
-        '美妆护肤': svgIcon.droplet,
+        '女士全头套': svgIcon.shirt,
+        '女士接发': svgIcon.droplet,
+        '发饰配件': svgIcon.box,
+        '护理产品': svgIcon.home,
+        '定制假发': svgIcon.phone,
       };
 
       tbody.innerHTML = filteredProducts.map(function(p) {

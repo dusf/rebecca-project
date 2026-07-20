@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 分类管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=4">
+  <style>
+    /* ==================== 分类管理页专用样式 ==================== */
+    .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 20px;
+      transition: box-shadow 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .stat-card:hover { box-shadow: 0 4px 20px hsl(var(--shadow-color) / 0.1); }
+
+    .stat-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .stat-card-title { font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+    .stat-card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .stat-card-icon.blue { background: hsl(30 40% 92%); color: hsl(var(--primary)); }
+    .stat-card-icon.green { background: hsl(142 50% 92%); color: hsl(var(--success)); }
+    .stat-card-icon.orange { background: hsl(38 80% 92%); color: hsl(var(--warning)); }
+    .stat-card-icon.red { background: hsl(0 70% 92%); color: hsl(var(--error)); }
+    .stat-card-value { font-size: 28px; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; }
+    .stat-card-change { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+    /* 工具栏 */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; }
+    .toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .search-input {
+      display: flex; align-items: center;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid hsl(var(--border)); border-radius: 8px;
+      padding: 8px 12px; gap: 8px; width: 280px;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .search-input:focus-within { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1); }
+    .search-input input {
+      background: none; border: none; outline: none;
+      font-size: 14px; color: hsl(var(--foreground)); width: 100%; font-family: var(--font-sans);
+    }
+
+    /* 更多操作下拉 */
+    .more-actions-dropdown {
+      position: fixed;
+      background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 99999; min-width: 160px; overflow: hidden; display: none;
+    }
+    .more-actions-dropdown.show { display: block !important; }
+    .more-actions-item {
+      padding: 9px 16px; font-size: 13px; color: hsl(var(--foreground));
+      cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .more-actions-item:hover { background: hsl(var(--primary-50)); }
+
+    /* 分类语言信息单元格 tooltip */
+    .lang-cell {
+      display: inline-flex; align-items: center; gap: 4px; position: relative; cursor: default;
+    }
+    .lang-cell-icon {
+      display: inline-flex; align-items: center; color: hsl(var(--muted-foreground));
+      opacity: 0.4; transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .lang-cell:hover .lang-cell-icon { opacity: 1; color: hsl(var(--primary)); }
+    .lang-tooltip {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 6px 0; z-index: 99999; min-width: 200px; white-space: nowrap;
+    }
+    .lang-cell-icon:hover .lang-tooltip { display: block; }
+    .lang-tooltip-item {
+      padding: 7px 14px; font-size: 13px; color: hsl(var(--foreground));
+      transition: background 0.15s; cursor: default; display: flex; gap: 8px;
+    }
+    .lang-tooltip-item:hover { background: hsl(var(--primary-50)); }
+    .lang-tooltip-item .lang-code {
+      font-weight: 600; color: hsl(var(--muted-foreground)); min-width: 24px; text-transform: uppercase;
+    }
+
+    /* 产品数量单元格 tooltip */
+    .count-cell {
+      display: inline-flex; align-items: center; gap: 4px; position: relative; cursor: default;
+    }
+    .count-cell-value { font-weight: 500; color: hsl(var(--foreground)); }
+    .count-cell-icon {
+      display: inline-flex; align-items: center; color: hsl(var(--muted-foreground));
+      opacity: 0.4; transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .count-cell:hover .count-cell-icon { opacity: 1; color: hsl(var(--primary)); }
+    .count-tooltip {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 8px 0; z-index: 99999; min-width: 160px; white-space: nowrap;
+    }
+    .count-cell-icon:hover .count-tooltip { display: block; }
+    .count-tooltip-item {
+      padding: 6px 14px; font-size: 13px; color: hsl(var(--foreground));
+      transition: background 0.15s; cursor: default;
+    }
+    .count-tooltip-item:hover { background: hsl(var(--primary-50)); }
+
+    /* 对话框内表单样式 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+    .form-label .required {
+      color: hsl(var(--error));
+      margin-left: 2px;
+    }
+    .form-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    /* 多语言输入行 */
+    .lang-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .lang-input-tag {
+      min-width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      background: hsl(var(--primary-50)); color: hsl(var(--primary-700)); flex-shrink: 0;
+    }
+    .lang-input-tag.en { background: #e8f0fe; color: #1a56db; }
+    .lang-input-tag.zh { background: #fef3e2; color: #b65712; }
+    .lang-input-tag.es { background: #e8f5e9; color: #2e7d32; }
+    .lang-input-row input {
+      flex: 1;
+      padding: 8px 12px; font-size: 13px; font-family: var(--font-sans);
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+      border: 1px solid hsl(var(--border)); border-radius: 8px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+      height: 36px;
+    }
+    .lang-input-row input:hover { border-color: hsl(30 20% 78%); }
+    .lang-input-row input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12); }
+
+    /* 单选组 */
+    .radio-group {
+      display: flex; gap: 16px; align-items: center;
+    }
+    .radio-item {
+      display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; user-select: none;
+    }
+    .radio-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid hsl(var(--border)); background: hsl(var(--background));
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .radio-item.active .radio-dot {
+      border-color: hsl(var(--primary)); background: hsl(var(--primary));
+    }
+    .radio-item.active .radio-dot::after {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: white;
+    }
+
+    /* 数字输入 */
+    .num-input {
+      width: 80px;
+      padding: 8px 12px; font-size: 14px; font-family: var(--font-sans);
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+      border: 1px solid hsl(var(--border)); border-radius: 8px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+      height: 36px; text-align: center;
+    }
+    .num-input:hover { border-color: hsl(30 20% 78%); }
+    .num-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12); }
+
+    /* 预设分类标记 */
+    .preset-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+      background: hsl(30 40% 92%); color: hsl(30 40% 45%);
+    }
+
+    /* 分类名称单元格 */
+    .category-name-cell {
+      font-weight: 600; font-size: 14px; color: hsl(var(--foreground));
+    }
+
+    /* 添加多语言按钮 */
+    .add-lang-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: hsl(var(--primary)); cursor: pointer; border: none;
+      background: none; padding: 4px 0; font-family: var(--font-sans); font-weight: 500;
+    }
+    .add-lang-btn:hover { color: hsl(var(--primary-600)); }
+
+    /* 成功按钮 */
+    .btn-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); }
+    .btn-success:hover { background: hsl(142 60% 30%); box-shadow: 0 2px 8px hsl(var(--success) / 0.3); }
+  </style>
+  <!-- Beacon SDK -->
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL', versionCode:'1.0.0', channelID:'share',
+          delay:1000, sessionDuration:30*60*1000, isOversea:false, needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href, 'referrer':document.referrer, 'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    <div class="main-area">
+      <div class="content">
+        <div class="page active" id="page-categories">
+          <div class="page-header">
+            <div>
+              <div class="page-title">店铺分类管理<span class="count-badge" id="categoryCount">(0个)</span></div>
+              <div class="page-subtitle">
+                <span style="font-size:12px;color:hsl(var(--muted-foreground));display:inline-flex;align-items:center;gap:3px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  分类名称支持多语言配置（en/zh/es），前台按买家语言自动展示
+                </span>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <button class="btn btn-primary" onclick="openCategoryDialog()">新增分类</button>
+            </div>
+          </div>
+
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">全部分类</div>
+                <div class="stat-card-icon blue">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statTotal">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">分类总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">已启用</div>
+                <div class="stat-card-icon green">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statActive">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">正常使用中</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">已禁用</div>
+                <div class="stat-card-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statDisabled">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">暂停使用中</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">关联商品</div>
+                <div class="stat-card-icon red">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statProducts">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">关联商品总数</div>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-input">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(30 10% 50%);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="搜索分类名称..." id="categorySearch" />
+              </div>
+              <select class="filter-select" id="statusFilter">
+                <option value="">全部状态</option>
+                <option value="active">已启用</option>
+                <option value="disabled">已禁用</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 批量操作栏 -->
+          <div class="bulk-action-bar" id="bulkActionBar">
+            <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
+            <div class="bulk-actions">
+              <button class="btn btn-success btn-sm" id="btnBatchEnable" onclick="batchSetStatus('active')" disabled>批量启用</button>
+              <button class="btn btn-secondary btn-sm" id="btnBatchDisable" onclick="batchSetStatus('disabled')" disabled>批量禁用</button>
+              <button class="btn btn-destructive btn-sm" id="btnBatchDelete" onclick="batchDelete()" disabled>批量删除</button>
+              <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+                <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                  更多操作
+                </button>
+              </div>
+              <div class="custom-col-wrapper" id="customColWrapper">
+                <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  自定义列
+                </button>
+              </div>
+              <div class="custom-col-wrapper">
+                <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="table-card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr id="categoryTableHead"><!-- JS动态生成 --></tr>
+                </thead>
+                <tbody id="categoryTableBody"><!-- JS动态填充 --></tbody>
+              </table>
+            </div>
+            <div class="pagination-bar">
+              <span class="pagination-info" id="paginationInfo">显示 0 条</span>
+              <div class="pagination-buttons" id="paginationButtons"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 自定义列弹出层 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"><!-- JS动态生成 --></div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="resetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <!-- 更多操作下拉 -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="batchSetStatus('active')">批量启用</div>
+    <div class="more-actions-item" onclick="batchSetStatus('disabled')">批量禁用</div>
+  </div>
+
+  <script>var CURRENT_PAGE = 'categories';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 分类数据 ====================
+    var categories = [
+      { id: 1, nameEn: "Women's Full Wigs", nameZh: '女士全头套', nameEs: 'Pelucas Completas', sortOrder: 1, productCount: 86, status: 'active', isPreset: true, createdAt: '2026-03-15', updatedAt: '2026-07-18' },
+      { id: 2, nameEn: 'Hair Extensions', nameZh: '女士接发', nameEs: 'Extensiones de Cabello', sortOrder: 2, productCount: 42, status: 'active', isPreset: true, createdAt: '2026-03-15', updatedAt: '2026-07-18' },
+      { id: 3, nameEn: 'Hair Accessories', nameZh: '发饰配件', nameEs: 'Accesorios para el Cabello', sortOrder: 3, productCount: 28, status: 'active', isPreset: false, createdAt: '2026-04-22', updatedAt: '2026-07-10' },
+      { id: 4, nameEn: 'Care Products', nameZh: '护理产品', nameEs: 'Productos de Cuidado', sortOrder: 4, productCount: 15, status: 'active', isPreset: false, createdAt: '2026-05-08', updatedAt: '2026-07-12' },
+      { id: 5, nameEn: 'Custom Wigs', nameZh: '定制假发', nameEs: 'Pelucas Personalizadas', sortOrder: 5, productCount: 0, status: 'disabled', isPreset: false, createdAt: '2026-06-01', updatedAt: '2026-06-15' }
+    ];
+
+    var currentSort = { field: 'sortOrder', dir: 'asc' };
+    var pageSize = 10;
+    var currentPage = 1;
+
+    // ==================== 自定义列配置 ====================
+    var CUSTOM_COLS = [
+      { key: 'id', label: 'ID', required: true, active: true, width: '80px', fixed: 'left' },
+      { key: 'nameZh', label: '分类名称', required: true, active: true, width: null },
+      { key: 'multiLang', label: '多语言', required: false, active: true, width: '120px' },
+      { key: 'sortOrder', label: '排序', required: false, active: true, width: '80px' },
+      { key: 'productCount', label: '关联商品', required: false, active: true, width: '100px' },
+      { key: 'status', label: '状态', required: false, active: true, width: '100px' },
+      { key: 'isPreset', label: '类型', required: false, active: true, width: '80px' },
+      { key: 'createdAt', label: '创建时间', required: false, active: true, width: '120px' },
+      { key: 'updatedAt', label: '更新时间', required: false, active: true, width: '120px' },
+      { key: 'actions', label: '操作', required: true, active: true, width: '120px', fixed: 'right' }
+    ];
+
+    function buildCustomColPanel() {
+      var body = document.getElementById('customColBody');
+      if (!body) return;
+      var html = '';
+      CUSTOM_COLS.forEach(function(col) {
+        var disabledClass = col.required ? ' disabled' : '';
+        var activeClass = col.active ? ' active' : '';
+        html += '<div class="custom-col-item' + activeClass + disabledClass + '" data-key="' + col.key + '" onclick="toggleCol(\'' + col.key + '\')">';
+        if (!col.required) html += '<span class="drag-handle">⠿</span>';
+        html += '<div class="col-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+        html += '<span>' + col.label + '</span></div>';
+      });
+      body.innerHTML = html;
+    }
+
+    function toggleCol(key) {
+      var col = CUSTOM_COLS.find(function(c) { return c.key === key; });
+      if (!col || col.required) return;
+      col.active = !col.active;
+      buildCustomColPanel();
+      renderTableHead();
+      renderCategories();
+    }
+
+    function resetCustomCols() {
+      CUSTOM_COLS.forEach(function(c) { if (!c.required) c.active = true; });
+      buildCustomColPanel();
+      renderTableHead();
+      renderCategories();
+    }
+
+    function toggleCustomColPanel() {
+      var panel = document.getElementById('customColPanel');
+      var btn = document.querySelector('#customColWrapper .btn');
+      if (!panel || !btn) return;
+      if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
+      var rect = btn.getBoundingClientRect();
+      panel.style.top = (rect.bottom + 6) + 'px';
+      panel.style.left = Math.max(8, rect.right - 240) + 'px';
+      panel.classList.add('show');
+    }
+
+    document.addEventListener('click', function(e) {
+      var panel = document.getElementById('customColPanel');
+      var wrapper = document.getElementById('customColWrapper');
+      if (panel && panel.classList.contains('show') && wrapper && !wrapper.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove('show');
+      }
+    });
+
+    // ==================== 表格渲染 ====================
+    function renderTableHead() {
+      var head = document.getElementById('categoryTableHead');
+      if (!head) return;
+      var html = '<th class="col-fixed-left" style="width:48px;"><div class="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg></div></th>';
+      CUSTOM_COLS.forEach(function(col) {
+        if (!col.active) return;
+        var style = '';
+        var cls = '';
+        if (col.width) style += 'width:' + col.width + ';';
+        if (col.fixed === 'left') { cls += ' col-fixed-left'; style += 'left:48px;'; }
+        if (col.fixed === 'right') cls += ' col-fixed-right';
+        if (['sortOrder', 'createdAt', 'updatedAt', 'productCount'].indexOf(col.key) !== -1) {
+          cls += ' sortable';
+          if (currentSort.field === col.key) cls += ' sorted';
+        }
+        html += '<th class="' + cls + '" style="' + style + '" data-sort="' + col.key + '" onclick="handleSort(\'' + col.key + '\')">' + col.label;
+        if (['sortOrder', 'createdAt', 'updatedAt', 'productCount'].indexOf(col.key) !== -1) {
+          var icon = currentSort.field === col.key ? (currentSort.dir === 'asc' ? '▲' : '▼') : '⇅';
+          html += '<span class="sort-icon">' + icon + '</span>';
+        }
+        html += '</th>';
+      });
+      head.innerHTML = html;
+    }
+
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.field = field;
+        currentSort.dir = 'asc';
+      }
+      renderTableHead();
+      renderCategories();
+    }
+
+    function getFilteredCategories() {
+      var search = (document.getElementById('categorySearch').value || '').toLowerCase();
+      var status = document.getElementById('statusFilter').value;
+      var filtered = categories.filter(function(c) {
+        if (status && c.status !== status) return false;
+        if (search) {
+          var matchName = (c.nameZh + c.nameEn + c.nameEs).toLowerCase().indexOf(search) !== -1;
+          if (!matchName) return false;
+        }
+        return true;
+      });
+      // 排序
+      filtered.sort(function(a, b) {
+        var av = a[currentSort.field], bv = b[currentSort.field];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        if (av < bv) return currentSort.dir === 'asc' ? -1 : 1;
+        if (av > bv) return currentSort.dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+      return filtered;
+    }
+
+    function renderCategories() {
+      var filtered = getFilteredCategories();
+      var tbody = document.getElementById('categoryTableBody');
+      if (!tbody) return;
+
+      // 更新统计
+      document.getElementById('categoryCount').textContent = '(' + categories.length + '个)';
+      document.getElementById('statTotal').textContent = categories.length;
+      document.getElementById('statActive').textContent = categories.filter(function(c) { return c.status === 'active'; }).length;
+      document.getElementById('statDisabled').textContent = categories.filter(function(c) { return c.status === 'disabled'; }).length;
+      var totalProducts = 0;
+      categories.forEach(function(c) { totalProducts += (c.productCount || 0); });
+      document.getElementById('statProducts').textContent = totalProducts;
+
+      // 分页
+      var totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      var start = (currentPage - 1) * pageSize;
+      var pageData = filtered.slice(start, start + pageSize);
+
+      document.getElementById('paginationInfo').textContent = filtered.length === 0 ? '无数据' : ('显示 ' + (start + 1) + '-' + Math.min(start + pageSize, filtered.length) + ' 条，共 ' + filtered.length + ' 条');
+      renderPagination(totalPages);
+
+      var html = '';
+      pageData.forEach(function(c) {
+        html += '<tr data-id="' + c.id + '">';
+        html += '<td class="col-fixed-left"><div class="checkbox" onclick="toggleRowCheckbox(this, event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg></div></td>';
+        CUSTOM_COLS.forEach(function(col) {
+          if (!col.active) return;
+          var style = '';
+          var cls = '';
+          if (col.fixed === 'left') { cls += ' col-fixed-left'; style += 'left:48px;'; }
+          if (col.fixed === 'right') cls += ' col-fixed-right';
+
+          var val = '';
+          switch (col.key) {
+            case 'id':
+              val = c.id;
+              break;
+            case 'nameZh':
+              val = '<div class="category-name-cell">' + escHtml(c.nameZh) + '</div>' +
+                '<div style="font-size:12px;color:hsl(var(--muted-foreground));margin-top:2px;">' + escHtml(c.nameEn) + '</div>';
+              break;
+            case 'multiLang':
+              val = '<div class="lang-cell">' +
+                '<span style="font-size:13px;">' + escHtml(c.nameZh) + '</span>' +
+                '<span class="lang-cell-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+                '<div class="lang-tooltip">' +
+                '<div class="lang-tooltip-item"><span class="lang-code">en</span>' + escHtml(c.nameEn) + '</div>' +
+                '<div class="lang-tooltip-item"><span class="lang-code">zh</span>' + escHtml(c.nameZh) + '</div>' +
+                '<div class="lang-tooltip-item"><span class="lang-code">es</span>' + escHtml(c.nameEs || '-') + '</div>' +
+                '</div></span></div>';
+              break;
+            case 'sortOrder':
+              val = c.sortOrder;
+              break;
+            case 'productCount':
+              val = '<div class="count-cell">' +
+                '<span class="count-cell-value">' + c.productCount + '</span>';
+              if (c.productCount > 0) {
+                val += '<span class="count-cell-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
+                '<div class="count-tooltip"><div class="count-tooltip-item">查看关联商品列表 →</div></div></span>';
+              }
+              val += '</div>';
+              break;
+            case 'status':
+              val = c.status === 'active' 
+                ? '<span class="badge badge-success">已启用</span>' 
+                : '<span class="badge badge-warning">已禁用</span>';
+              break;
+            case 'isPreset':
+              val = c.isPreset ? '<span class="preset-badge">系统预设</span>' : '<span class="badge badge-secondary">自定义</span>';
+              break;
+            case 'createdAt':
+              val = c.createdAt;
+              break;
+            case 'updatedAt':
+              val = c.updatedAt;
+              break;
+            case 'actions':
+              val = '<div class="action-group">' +
+                '<div class="action-btn" onclick="openCategoryDialog(' + c.id + ')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>' +
+                '<div class="action-btn danger" onclick="confirmDeleteCategory(' + c.id + ')" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+                '</div>';
+              break;
+            default:
+              val = '';
+          }
+          html += '<td class="' + cls + '" style="' + style + '">' + val + '</td>';
+        });
+        html += '</tr>';
+      });
+
+      if (pageData.length === 0) {
+        var colCount = CUSTOM_COLS.filter(function(c) { return c.active; }).length + 1;
+        html = '<tr><td colspan="' + colCount + '" style="text-align:center;padding:48px 16px;color:hsl(var(--muted-foreground));font-size:14px;">暂无分类数据</td></tr>';
+      }
+
+      tbody.innerHTML = html;
+      updateBulkBar();
+    }
+
+    function renderPagination(totalPages) {
+      var container = document.getElementById('paginationButtons');
+      if (!container) return;
+      var html = '';
+      html += '<div class="page-btn' + (currentPage === 1 ? ' disabled' : '') + '" onclick="goToPage(' + (currentPage - 1) + ')">‹</div>';
+      for (var i = 1; i <= totalPages; i++) {
+        html += '<div class="page-btn' + (i === currentPage ? ' active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</div>';
+      }
+      html += '<div class="page-btn' + (currentPage === totalPages ? ' disabled' : '') + '" onclick="goToPage(' + (currentPage + 1) + ')">›</div>';
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      var filtered = getFilteredCategories();
+      var totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderCategories();
+    }
+
+    // ==================== 复选框 ====================
+    function toggleSelectAll() {
+      var checkAll = document.getElementById('selectAllCheckbox');
+      var isAllChecked = checkAll.classList.contains('checked');
+      var tbody = document.getElementById('categoryTableBody');
+      var checkboxes = tbody ? tbody.querySelectorAll('.checkbox') : [];
+      if (isAllChecked) {
+        checkAll.classList.remove('checked');
+        checkAll.querySelector('svg').style.display = 'none';
+        checkboxes.forEach(function(cb) { cb.classList.remove('checked'); cb.querySelector('svg').style.display = 'none'; });
+      } else {
+        checkAll.classList.add('checked');
+        checkAll.querySelector('svg').style.display = 'block';
+        checkboxes.forEach(function(cb) { cb.classList.add('checked'); cb.querySelector('svg').style.display = 'block'; });
+      }
+      updateBulkBar();
+    }
+
+    function toggleRowCheckbox(cb, e) {
+      e.stopPropagation();
+      cb.classList.toggle('checked');
+      cb.querySelector('svg').style.display = cb.classList.contains('checked') ? 'block' : 'none';
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
+      var tbody = document.getElementById('categoryTableBody');
+      var checked = tbody ? tbody.querySelectorAll('.checkbox.checked') : [];
+      document.getElementById('selectedCount').textContent = checked.length;
+      var hasSelection = checked.length > 0;
+      ['btnBatchEnable', 'btnBatchDisable', 'btnBatchDelete'].forEach(function(id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.disabled = !hasSelection;
+      });
+    }
+
+    function getSelectedIds() {
+      var tbody = document.getElementById('categoryTableBody');
+      var checkboxes = tbody ? tbody.querySelectorAll('.checkbox.checked') : [];
+      var ids = [];
+      checkboxes.forEach(function(cb) {
+        var row = cb.closest('tr');
+        if (row && row.dataset.id) ids.push(parseInt(row.dataset.id));
+      });
+      return ids;
+    }
+
+    // ==================== 批量操作 ====================
+    function batchSetStatus(status) {
+      var ids = getSelectedIds();
+      if (ids.length === 0) { showToast('info', '请先选择分类'); return; }
+      var label = status === 'active' ? '启用' : '禁用';
+      ids.forEach(function(id) {
+        var c = categories.find(function(cat) { return cat.id === id; });
+        if (c) c.status = status;
+      });
+      renderCategories();
+      showToast('success', '已批量' + label + ' ' + ids.length + ' 个分类');
+    }
+
+    function batchDelete() {
+      var ids = getSelectedIds();
+      if (ids.length === 0) { showToast('info', '请先选择分类'); return; }
+      // 检查是否包含预设分类
+      var presetNames = [];
+      ids.forEach(function(id) {
+        var c = categories.find(function(cat) { return cat.id === id; });
+        if (c && c.isPreset) presetNames.push(c.nameZh);
+      });
+      if (presetNames.length > 0) {
+        showToast('info', '系统预设分类「' + presetNames.join('、') + '」不可删除，请先取消选择');
+        return;
+      }
+      openConfirmDialog('确认批量删除', '确定要删除选中的 ' + ids.length + ' 个分类吗？此操作无法撤销。', function() {
+        categories = categories.filter(function(c) { return ids.indexOf(c.id) === -1; });
+        renderCategories();
+        showToast('success', '已删除 ' + ids.length + ' 个分类');
+      });
+    }
+
+    function confirmDeleteCategory(id) {
+      var c = categories.find(function(cat) { return cat.id === id; });
+      if (!c) return;
+      if (c.isPreset) { showToast('info', '系统预设分类不可删除'); return; }
+      if (c.productCount > 0) { showToast('info', '该分类下有关联商品（' + c.productCount + '件），请先移除关联商品后再删除'); return; }
+      openConfirmDialog('确认删除', '确定要删除分类「' + c.nameZh + '」吗？此操作无法撤销。', function() {
+        categories = categories.filter(function(cat) { return cat.id !== id; });
+        renderCategories();
+        showToast('success', '已删除分类: ' + c.nameZh);
+      });
+    }
+
+    // ==================== 通用确认对话框（全屏遮罩） ====================
+    function openConfirmDialog(title, desc, onConfirm) {
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">' + escHtml(title) + '</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">' + desc + '</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" id="confirmDialogBtn">确认删除</button></div></div>';
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+      overlay.querySelector('#confirmDialogBtn').addEventListener('click', function() {
+        overlay.remove();
+        if (typeof onConfirm === 'function') onConfirm();
+      });
+    }
+
+    // ==================== 新增/编辑分类对话框（全屏遮罩） ====================
+    function openCategoryDialog(editId) {
+      var existing = document.querySelector('.category-dialog-overlay');
+      if (existing) existing.remove();
+
+      var cat = null;
+      if (editId) cat = categories.find(function(c) { return c.id === editId; });
+
+      var isEdit = !!cat;
+      var title = isEdit ? '编辑分类' : '新增分类';
+
+      var nameEn = cat ? cat.nameEn : '';
+      var nameZh = cat ? cat.nameZh : '';
+      var nameEs = cat ? (cat.nameEs || '') : '';
+      var sortOrder = cat ? cat.sortOrder : (categories.length + 1);
+      var status = cat ? cat.status : 'active';
+
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay category-dialog-overlay';
+      var dialogHTML = '<div class="dialog" style="width:560px;">' +
+        '<div class="dialog-header">' +
+          '<div class="dialog-title">' + title + '</div>' +
+          '<button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+        '</div>' +
+        '<div class="dialog-body">' +
+          '<div class="dialog-desc" style="margin-bottom:20px;">分类名称支持多语言配置，前台按买家语言自动展示</div>' +
+          '<div class="form-group">' +
+            '<div class="form-label">分类名称（多语言）<span class="required">*</span></div>' +
+            '<div class="lang-input-row">' +
+              '<span class="lang-input-tag en">EN</span>' +
+              '<input type="text" id="catNameEn" placeholder="英文名称（必填，前台兜底语言）" value="' + escAttr(nameEn) + '" />' +
+            '</div>' +
+            '<div class="lang-input-row">' +
+              '<span class="lang-input-tag zh">ZH</span>' +
+              '<input type="text" id="catNameZh" placeholder="中文名称" value="' + escAttr(nameZh) + '" />' +
+            '</div>' +
+            '<div class="lang-input-row">' +
+              '<span class="lang-input-tag es">ES</span>' +
+              '<input type="text" id="catNameEs" placeholder="西班牙语名称" value="' + escAttr(nameEs) + '" />' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<div class="form-label">排序</div>' +
+            '<input type="number" class="num-input" id="catSortOrder" value="' + sortOrder + '" min="1" />' +
+            '<div class="form-hint">数字越小越靠前</div>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<div class="form-label">状态</div>' +
+            '<div class="radio-group">' +
+              '<div class="radio-item' + (status === 'active' ? ' active' : '') + '" data-value="active" onclick="selectRadio(this, \'catStatus\')"><span class="radio-dot"></span>启用</div>' +
+              '<div class="radio-item' + (status === 'disabled' ? ' active' : '') + '" data-value="disabled" onclick="selectRadio(this, \'catStatus\')"><span class="radio-dot"></span>禁用</div>' +
+            '</div>' +
+            '<input type="hidden" id="catStatus" value="' + status + '" />' +
+          '</div>' +
+        '</div>' +
+        '<div class="dialog-actions">' +
+          '<button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button>' +
+          '<button class="btn btn-primary" id="saveCategoryBtn">保存</button>' +
+        '</div>' +
+      '</div>';
+
+      overlay.innerHTML = dialogHTML;
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+
+      // 保存按钮
+      overlay.querySelector('#saveCategoryBtn').addEventListener('click', function() {
+        var en = (overlay.querySelector('#catNameEn').value || '').trim();
+        var zh = (overlay.querySelector('#catNameZh').value || '').trim();
+        var es = (overlay.querySelector('#catNameEs').value || '').trim();
+        var so = parseInt(overlay.querySelector('#catSortOrder').value) || 1;
+        var st = overlay.querySelector('#catStatus').value;
+
+        if (!en) { showToast('error', '英文名称不能为空（前台兜底语言）'); return; }
+        if (!zh) { showToast('error', '中文名称不能为空'); return; }
+
+        if (isEdit) {
+          // 编辑
+          cat.nameEn = en;
+          cat.nameZh = zh;
+          cat.nameEs = es;
+          cat.sortOrder = so;
+          cat.status = st;
+          cat.updatedAt = new Date().toISOString().split('T')[0];
+          showToast('success', '分类已更新');
+        } else {
+          // 新增
+          var maxId = 0;
+          categories.forEach(function(c) { if (c.id > maxId) maxId = c.id; });
+          var today = new Date().toISOString().split('T')[0];
+          categories.push({
+            id: maxId + 1,
+            nameEn: en, nameZh: zh, nameEs: es,
+            sortOrder: so, productCount: 0, status: st,
+            isPreset: false, createdAt: today, updatedAt: today
+          });
+          showToast('success', '分类已创建');
+        }
+        renderCategories();
+        overlay.remove();
+      });
+    }
+
+    // 单选组
+    window.selectRadio = function(el, hiddenId) {
+      var group = el.parentElement;
+      group.querySelectorAll('.radio-item').forEach(function(item) { item.classList.remove('active'); });
+      el.classList.add('active');
+      document.getElementById(hiddenId).value = el.dataset.value;
+    };
+
+    // ==================== 更多操作下拉 ====================
+    function toggleMoreActions() {
+      var dropdown = document.getElementById('moreActionsDropdown');
+      if (!dropdown) return;
+      if (dropdown.classList.contains('show')) { dropdown.classList.remove('show'); dropdown.style.display = 'none'; return; }
+      var btn = document.getElementById('btnMoreActions');
+      if (!btn) return;
+      var rect = btn.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.left = Math.max(8, rect.left) + 'px';
+      dropdown.classList.add('show');
+      dropdown.style.display = 'block';
+    }
+
+    document.addEventListener('click', function(e) {
+      var wrapper = document.getElementById('moreActionsWrapper');
+      var dropdown = document.getElementById('moreActionsDropdown');
+      if (dropdown && wrapper && !wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show'); dropdown.style.display = 'none';
+      }
+    });
+
+    // ==================== 搜索/筛选 ====================
+    document.getElementById('categorySearch').addEventListener('input', function() {
+      currentPage = 1;
+      renderCategories();
+    });
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      currentPage = 1;
+      renderCategories();
+      initSearchableSelects();
+    });
+
+    // ==================== 刷新 ====================
+    function refreshPage() {
+      currentPage = 1;
+      renderCategories();
+      showToast('success', '数据已刷新');
+    }
+
+    // ==================== HTML转义 ====================
+    function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    // ==================== 初始化 ====================
+    buildCustomColPanel();
+    renderTableHead();
+    renderCategories();
+  </script>
+</body>
+</html>

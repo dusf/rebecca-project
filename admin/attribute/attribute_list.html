@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 属性管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=4">
+  <style>
+    /* ==================== 属性管理页专用样式 ==================== */
+    .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
+
+    /* 分类切换器（顶部栏） */
+    .category-switcher {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid hsl(var(--border)); border-radius: 12px;
+      padding: 14px 20px; margin-bottom: 20px;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .category-switcher-label {
+      font-size: 14px; font-weight: 600; color: hsl(var(--foreground)); flex-shrink: 0;
+    }
+    .category-tabs {
+      display: flex; gap: 8px; flex: 1; flex-wrap: wrap;
+    }
+    .category-tab {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent;
+      background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+    }
+    .category-tab:hover { background: hsl(var(--primary-50)); color: hsl(var(--primary)); }
+    .category-tab.active {
+      background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: hsl(var(--primary));
+    }
+    .category-tab .tab-count {
+      font-size: 11px; opacity: 0.7; margin-left: 4px;
+    }
+
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.9); border: 1px solid hsl(var(--border));
+      border-radius: 12px; padding: 20px; transition: box-shadow 0.2s;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .stat-card:hover { box-shadow: 0 4px 20px hsl(var(--shadow-color) / 0.1); }
+    .stat-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .stat-card-title { font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+    .stat-card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .stat-card-icon.blue { background: hsl(30 40% 92%); color: hsl(var(--primary)); }
+    .stat-card-icon.green { background: hsl(142 50% 92%); color: hsl(var(--success)); }
+    .stat-card-icon.orange { background: hsl(38 80% 92%); color: hsl(var(--warning)); }
+    .stat-card-icon.red { background: hsl(0 70% 92%); color: hsl(var(--error)); }
+    .stat-card-value { font-size: 28px; font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; }
+    .stat-card-change { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+    /* 工具栏 */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; }
+    .toolbar-right { display: flex; align-items: center; gap: 8px; }
+    .search-input {
+      display: flex; align-items: center;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid hsl(var(--border)); border-radius: 8px;
+      padding: 8px 12px; gap: 8px; width: 280px;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .search-input:focus-within { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1); }
+    .search-input input {
+      background: none; border: none; outline: none;
+      font-size: 14px; color: hsl(var(--foreground)); width: 100%; font-family: var(--font-sans);
+    }
+
+    /* 更多操作下拉 */
+    .more-actions-dropdown {
+      position: fixed; background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 99999; min-width: 160px; overflow: hidden; display: none;
+    }
+    .more-actions-dropdown.show { display: block !important; }
+    .more-actions-item {
+      padding: 9px 16px; font-size: 13px; color: hsl(var(--foreground));
+      cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .more-actions-item:hover { background: hsl(var(--primary-50)); }
+
+    /* 语言信息 tooltip */
+    .lang-cell {
+      display: inline-flex; align-items: center; gap: 4px; position: relative; cursor: default;
+    }
+    .lang-cell-icon {
+      display: inline-flex; align-items: center; color: hsl(var(--muted-foreground));
+      opacity: 0.4; transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .lang-cell:hover .lang-cell-icon { opacity: 1; color: hsl(var(--primary)); }
+    .lang-tooltip {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 6px 0; z-index: 99999; min-width: 200px; white-space: nowrap;
+    }
+    .lang-cell-icon:hover .lang-tooltip { display: block; }
+    .lang-tooltip-item {
+      padding: 7px 14px; font-size: 13px; color: hsl(var(--foreground));
+      transition: background 0.15s; cursor: default; display: flex; gap: 8px;
+    }
+    .lang-tooltip-item:hover { background: hsl(var(--primary-50)); }
+    .lang-tooltip-item .lang-code {
+      font-weight: 600; color: hsl(var(--muted-foreground)); min-width: 24px; text-transform: uppercase;
+    }
+
+    /* 选项值数量单元格 */
+    .count-cell {
+      display: inline-flex; align-items: center; gap: 4px; position: relative; cursor: default;
+    }
+    .count-cell-value { font-weight: 500; color: hsl(var(--foreground)); }
+    .count-cell-icon {
+      display: inline-flex; align-items: center; color: hsl(var(--muted-foreground));
+      opacity: 0.4; transition: opacity 0.15s; flex-shrink: 0;
+    }
+    .count-cell:hover .count-cell-icon { opacity: 1; color: hsl(var(--primary)); }
+    .count-tooltip {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: #FFFFFF; border: 1px solid hsl(var(--border));
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 8px 0; z-index: 99999; min-width: 180px; white-space: nowrap;
+    }
+    .count-cell-icon:hover .count-tooltip { display: block; }
+    .count-tooltip-item {
+      padding: 6px 14px; font-size: 13px; color: hsl(var(--foreground));
+      transition: background 0.15s; cursor: default;
+    }
+    .count-tooltip-item:hover { background: hsl(var(--primary-50)); }
+
+    /* ==================== 对话框内表单样式 ==================== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: hsl(var(--foreground)); margin-bottom: 6px;
+    }
+    .form-label .required { color: hsl(var(--error)); margin-left: 2px; }
+    .form-hint {
+      font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 4px;
+    }
+
+    /* 多语言输入行 */
+    .lang-input-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .lang-input-tag {
+      min-width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      background: hsl(var(--primary-50)); color: hsl(var(--primary-700)); flex-shrink: 0;
+    }
+    .lang-input-tag.en { background: #e8f0fe; color: #1a56db; }
+    .lang-input-tag.zh { background: #fef3e2; color: #b65712; }
+    .lang-input-tag.es { background: #e8f5e9; color: #2e7d32; }
+    .lang-input-row input {
+      flex: 1; padding: 8px 12px; font-size: 13px; font-family: var(--font-sans);
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+      border: 1px solid hsl(var(--border)); border-radius: 8px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+      height: 36px;
+    }
+    .lang-input-row input:hover { border-color: hsl(30 20% 78%); }
+    .lang-input-row input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12); }
+
+    /* 单选组 */
+    .radio-group {
+      display: flex; gap: 16px; align-items: center;
+    }
+    .radio-item {
+      display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; user-select: none;
+    }
+    .radio-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid hsl(var(--border)); background: hsl(var(--background));
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .radio-item.active .radio-dot { border-color: hsl(var(--primary)); background: hsl(var(--primary)); }
+    .radio-item.active .radio-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: white; }
+
+    /* 数字输入 */
+    .num-input {
+      width: 80px; padding: 8px 12px; font-size: 14px; font-family: var(--font-sans);
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+      border: 1px solid hsl(var(--border)); border-radius: 8px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+      height: 36px; text-align: center;
+    }
+    .num-input:hover { border-color: hsl(30 20% 78%); }
+    .num-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12); }
+
+    /* 属性对话框 */
+    .attr-dialog { width: 680px !important; }
+
+    /* 选项值表格 */
+    .option-table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden;
+      margin-top: 8px;
+    }
+    .option-table th {
+      padding: 8px 12px; font-size: 12px; font-weight: 600;
+      color: hsl(30 10% 36%); text-align: left; background: #F5F0EB;
+      border-bottom: 1px solid #EBE4DB;
+    }
+    .option-table td {
+      padding: 8px 12px; font-size: 13px; color: hsl(var(--foreground));
+      border-bottom: 1px solid #F6F6F6;
+    }
+    .option-table tr:last-child td { border-bottom: none; }
+    .option-table input {
+      width: 100%; padding: 6px 8px; font-size: 13px; font-family: var(--font-sans);
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+      border: 1px solid hsl(var(--border)); border-radius: 6px; outline: none;
+      transition: border-color 0.15s; box-sizing: border-box; height: 32px;
+    }
+    .option-table input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.12); }
+    .option-delete-btn {
+      width: 28px; height: 28px; border-radius: 6px; border: none;
+      background: hsl(0 70% 92%); color: hsl(var(--error)); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .option-delete-btn:hover { background: hsl(0 84% 60%); color: white; }
+    .option-delete-btn svg { width: 14px; height: 14px; }
+
+    /* 添加选项按钮 */
+    .add-option-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: hsl(var(--primary)); cursor: pointer;
+      border: none; background: none; padding: 6px 0; font-family: var(--font-sans); font-weight: 500;
+      margin-top: 6px;
+    }
+    .add-option-btn:hover { color: hsl(var(--primary-600)); }
+
+    /* 成功按钮 */
+    .btn-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); }
+    .btn-success:hover { background: hsl(142 60% 30%); box-shadow: 0 2px 8px hsl(var(--success) / 0.3); }
+
+    /* 输入类型 badge */
+    .input-type-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .input-type-badge.single { background: hsl(30 40% 92%); color: hsl(30 40% 45%); }
+    .input-type-badge.multiple { background: hsl(142 50% 92%); color: hsl(142 60% 30%); }
+    .input-type-badge.text { background: hsl(210 30% 92%); color: hsl(210 60% 40%); }
+
+    /* 必填 badge */
+    .required-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .required-badge.yes { background: hsl(0 70% 92%); color: hsl(0 84% 50%); }
+    .required-badge.no { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+
+    /* 属性名单元格 */
+    .attr-name-cell { font-weight: 600; font-size: 14px; color: hsl(var(--foreground)); }
+  </style>
+  <!-- Beacon SDK -->
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL', versionCode:'1.0.0', channelID:'share',
+          delay:1000, sessionDuration:30*60*1000, isOversea:false, needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href, 'referrer':document.referrer, 'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    <div class="main-area">
+      <div class="content">
+        <div class="page active" id="page-attributes">
+          <div class="page-header">
+            <div>
+              <div class="page-title">店铺属性管理<span class="count-badge" id="attrCount">(0个)</span></div>
+              <div class="page-subtitle">
+                <span style="font-size:12px;color:hsl(var(--muted-foreground));display:inline-flex;align-items:center;gap:3px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  属性绑定到分类，切换分类自动切换属性列表；所有属性名/选项值均支持多语言
+                </span>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <button class="btn btn-primary" onclick="openAttributeDialog()">新增属性</button>
+            </div>
+          </div>
+
+          <!-- 分类切换器 -->
+          <div class="category-switcher">
+            <div class="category-switcher-label">选择分类：</div>
+            <div class="category-tabs" id="categoryTabs"><!-- JS动态生成 --></div>
+          </div>
+
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">当前分类属性</div>
+                <div class="stat-card-icon blue">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statTotal">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">属性总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">已启用</div>
+                <div class="stat-card-icon green">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statActive">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">正常使用中</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">必填属性</div>
+                <div class="stat-card-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statRequired">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">商品必填项</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <div class="stat-card-title">选项值总数</div>
+                <div class="stat-card-icon red">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value" id="statOptions">0</div>
+              <div class="stat-card-change" style="color:hsl(var(--muted-foreground));">所有选项值</div>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-input">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(30 10% 50%);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="搜索属性名称..." id="attrSearch" />
+              </div>
+              <select class="filter-select" id="typeFilter">
+                <option value="">全部类型</option>
+                <option value="single">单选</option>
+                <option value="multiple">多选</option>
+                <option value="text">文本</option>
+              </select>
+              <select class="filter-select" id="attrStatusFilter">
+                <option value="">全部状态</option>
+                <option value="active">已启用</option>
+                <option value="disabled">已禁用</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 批量操作栏 -->
+          <div class="bulk-action-bar" id="bulkActionBar">
+            <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
+            <div class="bulk-actions">
+              <button class="btn btn-success btn-sm" id="btnBatchEnable" onclick="batchSetAttrStatus('active')" disabled>批量启用</button>
+              <button class="btn btn-secondary btn-sm" id="btnBatchDisable" onclick="batchSetAttrStatus('disabled')" disabled>批量禁用</button>
+              <button class="btn btn-destructive btn-sm" id="btnBatchDelete" onclick="batchDeleteAttrs()" disabled>批量删除</button>
+              <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+                <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                  更多操作
+                </button>
+              </div>
+              <div class="custom-col-wrapper" id="customColWrapper">
+                <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  自定义列
+                </button>
+              </div>
+              <div class="custom-col-wrapper">
+                <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="table-card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr id="attrTableHead"><!-- JS动态生成 --></tr>
+                </thead>
+                <tbody id="attrTableBody"><!-- JS动态填充 --></tbody>
+              </table>
+            </div>
+            <div class="pagination-bar">
+              <span class="pagination-info" id="paginationInfo">显示 0 条</span>
+              <div class="pagination-buttons" id="paginationButtons"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"><!-- JS动态生成 --></div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="resetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <!-- 更多操作下拉 -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="batchSetAttrStatus('active')">批量启用</div>
+    <div class="more-actions-item" onclick="batchSetAttrStatus('disabled')">批量禁用</div>
+  </div>
+
+  <script>var CURRENT_PAGE = 'attributes';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 分类数据（与分类页面共享） ====================
+    var shopCategories = [
+      { id: 1, nameEn: "Women's Full Wigs", nameZh: '女士全头套', nameEs: 'Pelucas Completas' },
+      { id: 2, nameEn: 'Hair Extensions', nameZh: '女士接发', nameEs: 'Extensiones de Cabello' }
+    ];
+
+    var currentCategoryId = 1;
+
+    // ==================== 属性数据 ====================
+    var attributes = [
+      // 女士全头套 分类下的属性
+      { id: 1, categoryId: 1, nameEn: 'Hair Material', nameZh: '发丝材质', nameEs: 'Material del Cabello', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 1, labelEn: '100% Human Hair', labelZh: '全真发', labelEs: 'Cabello 100% Humano', sortOrder: 1, status: 'active' },
+          { id: 2, labelEn: 'Human Hair Blend', labelZh: '人发混丝', labelEs: 'Mezcla de Cabello Humano', sortOrder: 2, status: 'active' },
+          { id: 3, labelEn: 'Heat-Resistant Synthetic', labelZh: '高温化纤丝', labelEs: 'Fibra Sintética Resistente al Calor', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 2, categoryId: 1, nameEn: 'Hair Length', nameZh: '发丝长度', nameEs: 'Longitud del Cabello', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 4, labelEn: '30cm', labelZh: '30cm', labelEs: '30cm', sortOrder: 1, status: 'active' },
+          { id: 5, labelEn: '40cm', labelZh: '40cm', labelEs: '40cm', sortOrder: 2, status: 'active' },
+          { id: 6, labelEn: '50cm', labelZh: '50cm', labelEs: '50cm', sortOrder: 3, status: 'active' },
+          { id: 7, labelEn: '60cm', labelZh: '60cm', labelEs: '60cm', sortOrder: 4, status: 'active' },
+          { id: 8, labelEn: '70cm', labelZh: '70cm', labelEs: '70cm', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 3, categoryId: 1, nameEn: 'Hair Color', nameZh: '发色', nameEs: 'Color del Cabello', inputType: 'multiple', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 9, labelEn: 'Natural Black', labelZh: '自然黑', labelEs: 'Negro Natural', sortOrder: 1, status: 'active' },
+          { id: 10, labelEn: 'Dark Tea', labelZh: '黑茶', labelEs: 'Té Oscuro', sortOrder: 2, status: 'active' },
+          { id: 11, labelEn: 'Chestnut Brown', labelZh: '栗棕', labelEs: 'Castaño', sortOrder: 3, status: 'active' },
+          { id: 12, labelEn: 'Ash Blonde', labelZh: '亚麻', labelEs: 'Rubio Ceniza', sortOrder: 4, status: 'active' },
+          { id: 13, labelEn: 'Milk Tea', labelZh: '奶茶', labelEs: 'Té con Leche', sortOrder: 5, status: 'active' },
+          { id: 14, labelEn: 'Highlight', labelZh: '挑染', labelEs: 'Reflejos', sortOrder: 6, status: 'active' },
+          { id: 15, labelEn: 'Ombre/Gradient', labelZh: '渐变', labelEs: 'Degradado', sortOrder: 7, status: 'active' }
+        ] },
+      { id: 4, categoryId: 1, nameEn: 'Suitable Style', nameZh: '适用风格', nameEs: 'Estilo Adecuado', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 16, labelEn: 'Daily Commute', labelZh: '日常通勤', labelEs: 'Uso Diario', sortOrder: 1, status: 'active' },
+          { id: 17, labelEn: 'Influencer Style', labelZh: '网红造型', labelEs: 'Estilo Influencer', sortOrder: 2, status: 'active' },
+          { id: 18, labelEn: 'Traditional/Ancient', labelZh: '古风', labelEs: 'Estilo Antiguo', sortOrder: 3, status: 'active' },
+          { id: 19, labelEn: 'Photoshoot/Stage', labelZh: '写真舞台', labelEs: 'Sesión de Fotos/Escenario', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 5, categoryId: 1, nameEn: 'Target Audience', nameZh: '适用人群', nameEs: 'Público Objetivo', inputType: 'single', isRequired: true, sortOrder: 5, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 20, labelEn: 'Youth Styling', labelZh: '少女造型', labelEs: 'Estilo Juvenil', sortOrder: 1, status: 'active' },
+          { id: 21, labelEn: 'Gray Hair Coverage', labelZh: '中青年遮白', labelEs: 'Cobertura de Canas', sortOrder: 2, status: 'active' },
+          { id: 22, labelEn: 'Volume Enhancement', labelZh: '发量少增发', labelEs: 'Aumento de Volumen', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 6, categoryId: 1, nameEn: 'Wig Style', nameZh: '发型款式', nameEs: 'Estilo de Peluca', inputType: 'single', isRequired: true, sortOrder: 6, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 23, labelEn: 'Short Bob', labelZh: '短发波波头', labelEs: 'Bob Corto', sortOrder: 1, status: 'active' },
+          { id: 24, labelEn: 'Mid-Length Straight', labelZh: '中长直发', labelEs: 'Liso Medio', sortOrder: 2, status: 'active' },
+          { id: 25, labelEn: 'Big Waves', labelZh: '大波浪', labelEs: 'Ondas Grandes', sortOrder: 3, status: 'active' },
+          { id: 26, labelEn: 'Wool Curls', labelZh: '羊毛卷', labelEs: 'Rizos Lanosos', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 7, categoryId: 1, nameEn: 'Bangs Style', nameZh: '刘海样式', nameEs: 'Estilo de Flequillo', inputType: 'single', isRequired: true, sortOrder: 7, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 27, labelEn: 'Wispy Bangs', labelZh: '空气刘海', labelEs: 'Flequillo Ligero', sortOrder: 1, status: 'active' },
+          { id: 28, labelEn: 'Side-Swept Bangs', labelZh: '八字刘海', labelEs: 'Flequillo Lateral', sortOrder: 2, status: 'active' },
+          { id: 29, labelEn: 'No Bangs', labelZh: '无刘海', labelEs: 'Sin Flequillo', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 8, categoryId: 1, nameEn: 'Cap Construction', nameZh: '内网工艺', nameEs: 'Construcción de la Base', inputType: 'single', isRequired: true, sortOrder: 8, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 30, labelEn: 'Standard Machine Weft', labelZh: '普通机织', labelEs: 'Tejido a Máquina Estándar', sortOrder: 1, status: 'active' },
+          { id: 31, labelEn: 'Breathable Ice Silk Mesh', labelZh: '透气冰丝网', labelEs: 'Malla de Seda Helada Transpirable', sortOrder: 2, status: 'active' },
+          { id: 32, labelEn: 'Front Lace & Silk Top', labelZh: '前蕾丝递针', labelEs: 'Encaje Frontal con Aguja', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 9, categoryId: 1, nameEn: 'Density', nameZh: '发量厚薄', nameEs: 'Densidad', inputType: 'single', isRequired: true, sortOrder: 9, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 33, labelEn: 'Light & Thin', labelZh: '轻薄款', labelEs: 'Ligero y Fino', sortOrder: 1, status: 'active' },
+          { id: 34, labelEn: 'Normal Density', labelZh: '正常发量', labelEs: 'Densidad Normal', sortOrder: 2, status: 'active' },
+          { id: 35, labelEn: 'Heavy (180%)', labelZh: '加厚高颅顶', labelEs: 'Densidad Alta (180%)', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 10, categoryId: 1, nameEn: 'Free Gift', nameZh: '配套赠品', nameEs: 'Regalo de Cortesía', inputType: 'single', isRequired: false, sortOrder: 10, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 36, labelEn: 'Yes (Comb + Wig Cap)', labelZh: '有（梳子+发网）', labelEs: 'Sí (Peine + Red)', sortOrder: 1, status: 'active' },
+          { id: 37, labelEn: 'No Free Gift', labelZh: '无赠品', labelEs: 'Sin Regalo', sortOrder: 2, status: 'active' }
+        ] },
+      // 女士接发 分类下的属性
+      { id: 11, categoryId: 2, nameEn: 'Hair Material', nameZh: '发丝材质', nameEs: 'Material del Cabello', inputType: 'single', isRequired: true, sortOrder: 1, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 38, labelEn: '100% Human Hair', labelZh: '全真发', labelEs: 'Cabello 100% Humano', sortOrder: 1, status: 'active' },
+          { id: 39, labelEn: 'Human Hair Blend', labelZh: '人发混丝', labelEs: 'Mezcla de Cabello Humano', sortOrder: 2, status: 'active' },
+          { id: 40, labelEn: 'Heat-Resistant Synthetic', labelZh: '高温化纤丝', labelEs: 'Fibra Sintética', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 12, categoryId: 2, nameEn: 'Hair Length', nameZh: '发丝长度', nameEs: 'Longitud del Cabello', inputType: 'single', isRequired: true, sortOrder: 2, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 41, labelEn: '30cm', labelZh: '30cm', labelEs: '30cm', sortOrder: 1, status: 'active' },
+          { id: 42, labelEn: '40cm', labelZh: '40cm', labelEs: '40cm', sortOrder: 2, status: 'active' },
+          { id: 43, labelEn: '50cm', labelZh: '50cm', labelEs: '50cm', sortOrder: 3, status: 'active' },
+          { id: 44, labelEn: '60cm', labelZh: '60cm', labelEs: '60cm', sortOrder: 4, status: 'active' },
+          { id: 45, labelEn: '70cm', labelZh: '70cm', labelEs: '70cm', sortOrder: 5, status: 'active' }
+        ] },
+      { id: 13, categoryId: 2, nameEn: 'Hair Color', nameZh: '发色', nameEs: 'Color del Cabello', inputType: 'multiple', isRequired: true, sortOrder: 3, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 46, labelEn: 'Natural Black', labelZh: '自然黑', labelEs: 'Negro Natural', sortOrder: 1, status: 'active' },
+          { id: 47, labelEn: 'Dark Tea', labelZh: '黑茶', labelEs: 'Té Oscuro', sortOrder: 2, status: 'active' },
+          { id: 48, labelEn: 'Chestnut Brown', labelZh: '栗棕', labelEs: 'Castaño', sortOrder: 3, status: 'active' },
+          { id: 49, labelEn: 'Ash Blonde', labelZh: '亚麻', labelEs: 'Rubio Ceniza', sortOrder: 4, status: 'active' },
+          { id: 50, labelEn: 'Milk Tea', labelZh: '奶茶', labelEs: 'Té con Leche', sortOrder: 5, status: 'active' },
+          { id: 51, labelEn: 'Highlight', labelZh: '挑染', labelEs: 'Reflejos', sortOrder: 6, status: 'active' },
+          { id: 52, labelEn: 'Ombre/Gradient', labelZh: '渐变', labelEs: 'Degradado', sortOrder: 7, status: 'active' }
+        ] },
+      { id: 14, categoryId: 2, nameEn: 'Suitable Style', nameZh: '适用风格', nameEs: 'Estilo Adecuado', inputType: 'single', isRequired: true, sortOrder: 4, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 53, labelEn: 'Daily Commute', labelZh: '日常通勤', labelEs: 'Uso Diario', sortOrder: 1, status: 'active' },
+          { id: 54, labelEn: 'Influencer Style', labelZh: '网红造型', labelEs: 'Estilo Influencer', sortOrder: 2, status: 'active' },
+          { id: 55, labelEn: 'Traditional/Ancient', labelZh: '古风', labelEs: 'Estilo Antiguo', sortOrder: 3, status: 'active' },
+          { id: 56, labelEn: 'Photoshoot/Stage', labelZh: '写真舞台', labelEs: 'Sesión de Fotos/Escenario', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 15, categoryId: 2, nameEn: 'Target Audience', nameZh: '适用人群', nameEs: 'Público Objetivo', inputType: 'single', isRequired: true, sortOrder: 5, status: 'active', createdAt: '2026-03-20', updatedAt: '2026-07-15',
+        options: [
+          { id: 57, labelEn: 'Youth Styling', labelZh: '少女造型', labelEs: 'Estilo Juvenil', sortOrder: 1, status: 'active' },
+          { id: 58, labelEn: 'Gray Hair Coverage', labelZh: '中青年遮白', labelEs: 'Cobertura de Canas', sortOrder: 2, status: 'active' },
+          { id: 59, labelEn: 'Volume Enhancement', labelZh: '发量少增发', labelEs: 'Aumento de Volumen', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 16, categoryId: 2, nameEn: 'Extension Type', nameZh: '接发类型', nameEs: 'Tipo de Extensión', inputType: 'single', isRequired: true, sortOrder: 6, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 60, labelEn: 'Clip-In Wefts', labelZh: '卡扣片接', labelEs: 'Clip de Sujeción', sortOrder: 1, status: 'active' },
+          { id: 61, labelEn: '8D Invisible Tape', labelZh: '8D 无痕接发', labelEs: 'Cinta Invisible 8D', sortOrder: 2, status: 'active' },
+          { id: 62, labelEn: 'Feather Extensions', labelZh: '羽毛接发', labelEs: 'Extensiones de Pluma', sortOrder: 3, status: 'active' }
+        ] },
+      { id: 17, categoryId: 2, nameEn: 'Package Size', nameZh: '套装规格', nameEs: 'Tamaño del Paquete', inputType: 'single', isRequired: true, sortOrder: 7, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 63, labelEn: '3-Piece Set', labelZh: '3片装', labelEs: 'Juego de 3 Piezas', sortOrder: 1, status: 'active' },
+          { id: 64, labelEn: '5-Piece Set', labelZh: '5片装', labelEs: 'Juego de 5 Piezas', sortOrder: 2, status: 'active' },
+          { id: 65, labelEn: '7-Piece Set', labelZh: '7片装', labelEs: 'Juego de 7 Piezas', sortOrder: 3, status: 'active' },
+          { id: 66, labelEn: 'Single Strand Bulk', labelZh: '单束散装', labelEs: 'Hebra Individual', sortOrder: 4, status: 'active' }
+        ] },
+      { id: 18, categoryId: 2, nameEn: 'Application', nameZh: '使用方式', nameEs: 'Aplicación', inputType: 'single', isRequired: true, sortOrder: 8, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 67, labelEn: 'Self-Application (Home Use)', labelZh: '家用自戴', labelEs: 'Auto-aplicación (Uso Doméstico)', sortOrder: 1, status: 'active' },
+          { id: 68, labelEn: 'Professional Salon Application', labelZh: '理发店专业嫁接', labelEs: 'Aplicación Profesional en Salón', sortOrder: 2, status: 'active' }
+        ] },
+      { id: 19, categoryId: 2, nameEn: 'Free Gift', nameZh: '配套赠品', nameEs: 'Regalo de Cortesía', inputType: 'single', isRequired: false, sortOrder: 9, status: 'active', createdAt: '2026-04-01', updatedAt: '2026-07-15',
+        options: [
+          { id: 69, labelEn: 'Yes (Comb + Wig Cap)', labelZh: '有（梳子+发网）', labelEs: 'Sí (Peine + Red)', sortOrder: 1, status: 'active' },
+          { id: 70, labelEn: 'No Free Gift', labelZh: '无赠品', labelEs: 'Sin Regalo', sortOrder: 2, status: 'active' }
+        ] }
+    ];
+
+    var currentSort = { field: 'sortOrder', dir: 'asc' };
+    var pageSize = 10;
+    var currentPage = 1;
+
+    // ==================== 自定义列配置 ====================
+    var CUSTOM_COLS = [
+      { key: 'id', label: 'ID', required: true, active: true, width: '80px', fixed: 'left' },
+      { key: 'nameZh', label: '属性名称', required: true, active: true, width: null },
+      { key: 'multiLang', label: '多语言', required: false, active: true, width: '120px' },
+      { key: 'inputType', label: '输入类型', required: false, active: true, width: '90px' },
+      { key: 'isRequired', label: '必填', required: false, active: true, width: '70px' },
+      { key: 'optionsCount', label: '选项值', required: false, active: true, width: '90px' },
+      { key: 'sortOrder', label: '排序', required: false, active: true, width: '70px' },
+      { key: 'status', label: '状态', required: false, active: true, width: '90px' },
+      { key: 'createdAt', label: '创建时间', required: false, active: true, width: '110px' },
+      { key: 'updatedAt', label: '更新时间', required: false, active: true, width: '110px' },
+      { key: 'actions', label: '操作', required: true, active: true, width: '120px', fixed: 'right' }
+    ];
+
+    // ==================== 分类切换 ====================
+    function renderCategoryTabs() {
+      var container = document.getElementById('categoryTabs');
+      if (!container) return;
+      var html = '';
+      shopCategories.forEach(function(cat) {
+        var active = cat.id === currentCategoryId ? ' active' : '';
+        var count = getCategoryAttrs(cat.id).length;
+        html += '<div class="category-tab' + active + '" data-cat-id="' + cat.id + '" onclick="switchCategory(' + cat.id + ')">' + escHtml(cat.nameZh) + '<span class="tab-count">(' + count + ')</span></div>';
+      });
+      container.innerHTML = html;
+    }
+
+    function switchCategory(catId) {
+      currentCategoryId = catId;
+      currentPage = 1;
+      renderCategoryTabs();
+      renderAll();
+    }
+
+    function getCategoryAttrs(catId) {
+      return attributes.filter(function(a) { return a.categoryId === catId; });
+    }
+
+    function getCurrentCatName() {
+      var cat = shopCategories.find(function(c) { return c.id === currentCategoryId; });
+      return cat ? cat.nameZh : '';
+    }
+
+    // ==================== 自定义列面板 ====================
+    function buildCustomColPanel() {
+      var body = document.getElementById('customColBody');
+      if (!body) return;
+      var html = '';
+      CUSTOM_COLS.forEach(function(col) {
+        var disabledClass = col.required ? ' disabled' : '';
+        var activeClass = col.active ? ' active' : '';
+        html += '<div class="custom-col-item' + activeClass + disabledClass + '" data-key="' + col.key + '" onclick="toggleCol(\'' + col.key + '\')">';
+        if (!col.required) html += '<span class="drag-handle">⠿</span>';
+        html += '<div class="col-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+        html += '<span>' + col.label + '</span></div>';
+      });
+      body.innerHTML = html;
+    }
+
+    function toggleCol(key) {
+      var col = CUSTOM_COLS.find(function(c) { return c.key === key; });
+      if (!col || col.required) return;
+      col.active = !col.active;
+      buildCustomColPanel();
+      renderTableHead();
+      renderAttributes();
+    }
+
+    function resetCustomCols() {
+      CUSTOM_COLS.forEach(function(c) { if (!c.required) c.active = true; });
+      buildCustomColPanel();
+      renderTableHead();
+      renderAttributes();
+    }
+
+    function toggleCustomColPanel() {
+      var panel = document.getElementById('customColPanel');
+      var btn = document.querySelector('#customColWrapper .btn');
+      if (!panel || !btn) return;
+      if (panel.classList.contains('show')) { panel.classList.remove('show'); return; }
+      var rect = btn.getBoundingClientRect();
+      panel.style.top = (rect.bottom + 6) + 'px';
+      panel.style.left = Math.max(8, rect.right - 240) + 'px';
+      panel.classList.add('show');
+    }
+
+    document.addEventListener('click', function(e) {
+      var panel = document.getElementById('customColPanel');
+      var wrapper = document.getElementById('customColWrapper');
+      if (panel && panel.classList.contains('show') && wrapper && !wrapper.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove('show');
+      }
+    });
+
+    // ==================== 表格渲染 ====================
+    function renderTableHead() {
+      var head = document.getElementById('attrTableHead');
+      if (!head) return;
+      var html = '<th class="col-fixed-left" style="width:48px;"><div class="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg></div></th>';
+      CUSTOM_COLS.forEach(function(col) {
+        if (!col.active) return;
+        var style = '';
+        var cls = '';
+        if (col.width) style += 'width:' + col.width + ';';
+        if (col.fixed === 'left') { cls += ' col-fixed-left'; style += 'left:48px;'; }
+        if (col.fixed === 'right') cls += ' col-fixed-right';
+        if (['sortOrder', 'createdAt', 'updatedAt'].indexOf(col.key) !== -1) {
+          cls += ' sortable';
+          if (currentSort.field === col.key) cls += ' sorted';
+        }
+        html += '<th class="' + cls + '" style="' + style + '" data-sort="' + col.key + '" onclick="handleSort(\'' + col.key + '\')">' + col.label;
+        if (['sortOrder', 'createdAt', 'updatedAt'].indexOf(col.key) !== -1) {
+          var icon = currentSort.field === col.key ? (currentSort.dir === 'asc' ? '▲' : '▼') : '⇅';
+          html += '<span class="sort-icon">' + icon + '</span>';
+        }
+        html += '</th>';
+      });
+      head.innerHTML = html;
+    }
+
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.field = field;
+        currentSort.dir = 'asc';
+      }
+      renderTableHead();
+      renderAttributes();
+    }
+
+    function getFilteredAttrs() {
+      var list = getCategoryAttrs(currentCategoryId);
+      var search = (document.getElementById('attrSearch').value || '').toLowerCase();
+      var type = document.getElementById('typeFilter').value;
+      var status = document.getElementById('attrStatusFilter').value;
+
+      var filtered = list.filter(function(a) {
+        if (type && a.inputType !== type) return false;
+        if (status && a.status !== status) return false;
+        if (search) {
+          if ((a.nameZh + a.nameEn + a.nameEs).toLowerCase().indexOf(search) === -1) return false;
+        }
+        return true;
+      });
+
+      filtered.sort(function(a, b) {
+        var av = a[currentSort.field], bv = b[currentSort.field];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        if (av < bv) return currentSort.dir === 'asc' ? -1 : 1;
+        if (av > bv) return currentSort.dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+      return filtered;
+    }
+
+    function renderAttributes() {
+      var filtered = getFilteredAttrs();
+      var tbody = document.getElementById('attrTableBody');
+      if (!tbody) return;
+
+      var catAttrs = getCategoryAttrs(currentCategoryId);
+
+      document.getElementById('attrCount').textContent = '(' + catAttrs.length + '个)';
+      document.getElementById('statTotal').textContent = catAttrs.length;
+      document.getElementById('statActive').textContent = catAttrs.filter(function(a) { return a.status === 'active'; }).length;
+      document.getElementById('statRequired').textContent = catAttrs.filter(function(a) { return a.isRequired; }).length;
+      var totalOpts = 0;
+      catAttrs.forEach(function(a) { totalOpts += (a.options ? a.options.length : 0); });
+      document.getElementById('statOptions').textContent = totalOpts;
+
+      var totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      var start = (currentPage - 1) * pageSize;
+      var pageData = filtered.slice(start, start + pageSize);
+
+      document.getElementById('paginationInfo').textContent = filtered.length === 0 ? '无数据' : ('显示 ' + (start + 1) + '-' + Math.min(start + pageSize, filtered.length) + ' 条，共 ' + filtered.length + ' 条');
+      renderPagination(totalPages);
+
+      var html = '';
+      pageData.forEach(function(a) {
+        html += '<tr data-id="' + a.id + '">';
+        html += '<td class="col-fixed-left"><div class="checkbox" onclick="toggleRowCheckbox(this, event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polyline points="20 6 9 17 4 12"/></svg></div></td>';
+        CUSTOM_COLS.forEach(function(col) {
+          if (!col.active) return;
+          var style = '';
+          var cls = '';
+          if (col.fixed === 'left') { cls += ' col-fixed-left'; style += 'left:48px;'; }
+          if (col.fixed === 'right') cls += ' col-fixed-right';
+          var val = '';
+          switch (col.key) {
+            case 'id': val = a.id; break;
+            case 'nameZh':
+              val = '<div class="attr-name-cell">' + escHtml(a.nameZh) + '</div><div style="font-size:12px;color:hsl(var(--muted-foreground));margin-top:2px;">' + escHtml(a.nameEn) + '</div>';
+              break;
+            case 'multiLang':
+              val = '<div class="lang-cell"><span style="font-size:13px;">' + escHtml(a.nameZh) + '</span>' +
+                '<span class="lang-cell-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+                '<div class="lang-tooltip"><div class="lang-tooltip-item"><span class="lang-code">en</span>' + escHtml(a.nameEn) + '</div>' +
+                '<div class="lang-tooltip-item"><span class="lang-code">zh</span>' + escHtml(a.nameZh) + '</div>' +
+                '<div class="lang-tooltip-item"><span class="lang-code">es</span>' + escHtml(a.nameEs || '-') + '</div></div></span></div>';
+              break;
+            case 'inputType':
+              var types = { single: '单选', multiple: '多选', text: '文本' };
+              val = '<span class="input-type-badge ' + a.inputType + '">' + (types[a.inputType] || a.inputType) + '</span>';
+              break;
+            case 'isRequired':
+              val = a.isRequired ? '<span class="required-badge yes">是</span>' : '<span class="required-badge no">否</span>';
+              break;
+            case 'optionsCount':
+              var optCount = a.options ? a.options.length : 0;
+              val = '<div class="count-cell"><span class="count-cell-value">' + optCount + '</span>';
+              if (optCount > 0 && (a.inputType === 'single' || a.inputType === 'multiple')) {
+                val += '<span class="count-cell-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+                '<div class="count-tooltip">';
+                a.options.slice(0, 8).forEach(function(o) { val += '<div class="count-tooltip-item">' + escHtml(o.labelZh) + '</div>'; });
+                if (a.options.length > 8) val += '<div class="count-tooltip-item" style="color:hsl(var(--muted-foreground));">...共' + a.options.length + '个选项</div>';
+                val += '</div></span>';
+              }
+              val += '</div>';
+              break;
+            case 'sortOrder': val = a.sortOrder; break;
+            case 'status':
+              val = a.status === 'active' ? '<span class="badge badge-success">已启用</span>' : '<span class="badge badge-warning">已禁用</span>';
+              break;
+            case 'createdAt': val = a.createdAt; break;
+            case 'updatedAt': val = a.updatedAt; break;
+            case 'actions':
+              val = '<div class="action-group">' +
+                '<div class="action-btn" onclick="openAttributeDialog(' + a.id + ')" title="编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>' +
+                '<div class="action-btn danger" onclick="confirmDeleteAttr(' + a.id + ')" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+                '</div>';
+              break;
+            default: val = '';
+          }
+          html += '<td class="' + cls + '" style="' + style + '">' + val + '</td>';
+        });
+        html += '</tr>';
+      });
+
+      if (pageData.length === 0) {
+        var colCount = CUSTOM_COLS.filter(function(c) { return c.active; }).length + 1;
+        html = '<tr><td colspan="' + colCount + '" style="text-align:center;padding:48px 16px;color:hsl(var(--muted-foreground));font-size:14px;">' + getCurrentCatName() + ' 分类下暂无属性数据</td></tr>';
+      }
+
+      tbody.innerHTML = html;
+      updateBulkBar();
+    }
+
+    function renderPagination(totalPages) {
+      var container = document.getElementById('paginationButtons');
+      if (!container) return;
+      var html = '<div class="page-btn' + (currentPage === 1 ? ' disabled' : '') + '" onclick="goToPage(' + (currentPage - 1) + ')">‹</div>';
+      for (var i = 1; i <= totalPages; i++) {
+        html += '<div class="page-btn' + (i === currentPage ? ' active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</div>';
+      }
+      html += '<div class="page-btn' + (currentPage === totalPages ? ' disabled' : '') + '" onclick="goToPage(' + (currentPage + 1) + ')">›</div>';
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      var filtered = getFilteredAttrs();
+      var totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderAttributes();
+    }
+
+    // ==================== 复选框 ====================
+    function toggleSelectAll() {
+      var checkAll = document.getElementById('selectAllCheckbox');
+      var isAllChecked = checkAll.classList.contains('checked');
+      var tbody = document.getElementById('attrTableBody');
+      var checkboxes = tbody ? tbody.querySelectorAll('.checkbox') : [];
+      if (isAllChecked) {
+        checkAll.classList.remove('checked'); checkAll.querySelector('svg').style.display = 'none';
+        checkboxes.forEach(function(cb) { cb.classList.remove('checked'); cb.querySelector('svg').style.display = 'none'; });
+      } else {
+        checkAll.classList.add('checked'); checkAll.querySelector('svg').style.display = 'block';
+        checkboxes.forEach(function(cb) { cb.classList.add('checked'); cb.querySelector('svg').style.display = 'block'; });
+      }
+      updateBulkBar();
+    }
+
+    function toggleRowCheckbox(cb, e) {
+      e.stopPropagation();
+      cb.classList.toggle('checked');
+      cb.querySelector('svg').style.display = cb.classList.contains('checked') ? 'block' : 'none';
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
+      var tbody = document.getElementById('attrTableBody');
+      var checked = tbody ? tbody.querySelectorAll('.checkbox.checked') : [];
+      document.getElementById('selectedCount').textContent = checked.length;
+      var hasSelection = checked.length > 0;
+      ['btnBatchEnable', 'btnBatchDisable', 'btnBatchDelete'].forEach(function(id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.disabled = !hasSelection;
+      });
+    }
+
+    function getSelectedIds() {
+      var tbody = document.getElementById('attrTableBody');
+      var checkboxes = tbody ? tbody.querySelectorAll('.checkbox.checked') : [];
+      var ids = [];
+      checkboxes.forEach(function(cb) {
+        var row = cb.closest('tr');
+        if (row && row.dataset.id) ids.push(parseInt(row.dataset.id));
+      });
+      return ids;
+    }
+
+    // ==================== 批量操作 ====================
+    function batchSetAttrStatus(status) {
+      var ids = getSelectedIds();
+      if (ids.length === 0) { showToast('info', '请先选择属性'); return; }
+      var label = status === 'active' ? '启用' : '禁用';
+      ids.forEach(function(id) {
+        var a = attributes.find(function(attr) { return attr.id === id; });
+        if (a) a.status = status;
+      });
+      renderAll();
+      showToast('success', '已批量' + label + ' ' + ids.length + ' 个属性');
+    }
+
+    function batchDeleteAttrs() {
+      var ids = getSelectedIds();
+      if (ids.length === 0) { showToast('info', '请先选择属性'); return; }
+      openConfirmDialog('确认批量删除', '确定要删除选中的 ' + ids.length + ' 个属性吗？此操作无法撤销。', function() {
+        attributes = attributes.filter(function(a) { return ids.indexOf(a.id) === -1; });
+        renderAll();
+        showToast('success', '已删除 ' + ids.length + ' 个属性');
+      });
+    }
+
+    function confirmDeleteAttr(id) {
+      var a = attributes.find(function(attr) { return attr.id === id; });
+      if (!a) return;
+      openConfirmDialog('确认删除', '确定要删除属性「' + a.nameZh + '」吗？此操作无法撤销。', function() {
+        attributes = attributes.filter(function(attr) { return attr.id !== id; });
+        renderAll();
+        showToast('success', '已删除属性: ' + a.nameZh);
+      });
+    }
+
+    // ==================== 通用确认对话框（全屏遮罩） ====================
+    function openConfirmDialog(title, desc, onConfirm) {
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = '<div class="dialog"><div class="dialog-header"><div class="dialog-title">' + escHtml(title) + '</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="dialog-desc">' + desc + '</div><div class="dialog-actions"><button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button><button class="btn btn-destructive" id="confirmDialogBtn">确认删除</button></div></div>';
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+      overlay.querySelector('#confirmDialogBtn').addEventListener('click', function() {
+        overlay.remove();
+        if (typeof onConfirm === 'function') onConfirm();
+      });
+    }
+
+    // ==================== 新增/编辑属性对话框 ====================
+    function openAttributeDialog(editId) {
+      var existing = document.querySelector('.attr-dialog-overlay');
+      if (existing) existing.remove();
+
+      var attr = null;
+      if (editId) attr = attributes.find(function(a) { return a.id === editId; });
+      var isEdit = !!attr;
+      var title = isEdit ? '编辑属性' : '新增属性';
+      var nameEn = attr ? attr.nameEn : '';
+      var nameZh = attr ? attr.nameZh : '';
+      var nameEs = attr ? (attr.nameEs || '') : '';
+      var sortOrder = attr ? attr.sortOrder : (getCategoryAttrs(currentCategoryId).length + 1);
+      var status = attr ? attr.status : 'active';
+      var inputType = attr ? attr.inputType : 'single';
+      var isRequired = attr ? attr.isRequired : true;
+
+      // 深拷贝选项值
+      var options = attr && attr.options ? JSON.parse(JSON.stringify(attr.options)) : [];
+
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay attr-dialog-overlay';
+
+      var dialogHTML = '<div class="dialog attr-dialog">' +
+        '<div class="dialog-header">' +
+          '<div class="dialog-title">' + title + '</div>' +
+          '<button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+        '</div>' +
+        '<div class="dialog-body">' +
+          '<div class="dialog-desc" style="margin-bottom:20px;">绑定分类：<strong>' + getCurrentCatName() + '</strong>，属性名和选项值均支持多语言</div>' +
+          '<div class="form-group">' +
+            '<div class="form-label">属性名称（多语言）<span class="required">*</span></div>' +
+            '<div class="lang-input-row"><span class="lang-input-tag en">EN</span><input type="text" id="attrNameEn" placeholder="英文名称（必填，前台兜底语言）" value="' + escAttr(nameEn) + '" /></div>' +
+            '<div class="lang-input-row"><span class="lang-input-tag zh">ZH</span><input type="text" id="attrNameZh" placeholder="中文名称" value="' + escAttr(nameZh) + '" /></div>' +
+            '<div class="lang-input-row"><span class="lang-input-tag es">ES</span><input type="text" id="attrNameEs" placeholder="西班牙语名称" value="' + escAttr(nameEs) + '" /></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:24px;flex-wrap:wrap;">' +
+            '<div class="form-group" style="flex:1;min-width:160px;">' +
+              '<div class="form-label">输入类型<span class="required">*</span></div>' +
+              '<div class="radio-group">' +
+                '<div class="radio-item' + (inputType === 'single' ? ' active' : '') + '" data-value="single" onclick="selectRadio(this, \'attrInputType\')"><span class="radio-dot"></span>单选</div>' +
+                '<div class="radio-item' + (inputType === 'multiple' ? ' active' : '') + '" data-value="multiple" onclick="selectRadio(this, \'attrInputType\')"><span class="radio-dot"></span>多选</div>' +
+                '<div class="radio-item' + (inputType === 'text' ? ' active' : '') + '" data-value="text" onclick="selectRadio(this, \'attrInputType\')"><span class="radio-dot"></span>文本</div>' +
+              '</div>' +
+              '<input type="hidden" id="attrInputType" value="' + inputType + '" />' +
+            '</div>' +
+            '<div class="form-group" style="min-width:120px;">' +
+              '<div class="form-label">是否必填</div>' +
+              '<div class="radio-group">' +
+                '<div class="radio-item' + (isRequired ? ' active' : '') + '" data-value="true" onclick="selectRadio(this, \'attrRequired\')"><span class="radio-dot"></span>是</div>' +
+                '<div class="radio-item' + (!isRequired ? ' active' : '') + '" data-value="false" onclick="selectRadio(this, \'attrRequired\')"><span class="radio-dot"></span>否</div>' +
+              '</div>' +
+              '<input type="hidden" id="attrRequired" value="' + isRequired + '" />' +
+            '</div>' +
+            '<div class="form-group" style="min-width:100px;">' +
+              '<div class="form-label">排序</div>' +
+              '<input type="number" class="num-input" id="attrSortOrder" value="' + sortOrder + '" min="1" />' +
+            '</div>' +
+            '<div class="form-group" style="min-width:120px;">' +
+              '<div class="form-label">状态</div>' +
+              '<div class="radio-group">' +
+                '<div class="radio-item' + (status === 'active' ? ' active' : '') + '" data-value="active" onclick="selectRadio(this, \'attrStatus\')"><span class="radio-dot"></span>启用</div>' +
+                '<div class="radio-item' + (status === 'disabled' ? ' active' : '') + '" data-value="disabled" onclick="selectRadio(this, \'attrStatus\')"><span class="radio-dot"></span>禁用</div>' +
+              '</div>' +
+              '<input type="hidden" id="attrStatus" value="' + status + '" />' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group" id="optionsSection" style="display:' + (inputType === 'text' ? 'none' : 'block') + ';">' +
+            '<div class="form-label">选项值（多语言）</div>' +
+            '<div class="form-hint" style="margin-bottom:8px;">点击"新增选项"添加选项值，每个选项值需填写多语言名称</div>' +
+            '<div id="optionsContainer"><!-- JS动态生成 --></div>' +
+            '<button class="add-option-btn" id="addOptionBtn" onclick="addOptionRow()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 新增选项</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dialog-actions">' +
+          '<button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button>' +
+          '<button class="btn btn-primary" id="saveAttrBtn">保存</button>' +
+        '</div>' +
+      '</div>';
+
+      overlay.innerHTML = dialogHTML;
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+
+      // 渲染初始选项值
+      overlay._options = options;
+      renderOptionsTable(overlay);
+
+      // 输入类型切换：文本类型隐藏选项值区域
+      overlay.querySelectorAll('.radio-item[data-value]').forEach(function(item) {
+        if (item.parentElement.parentElement.querySelector('#attrInputType')) {
+          item.addEventListener('click', function() {
+            var inputTypeVal = overlay.querySelector('#attrInputType').value;
+            var optSection = overlay.querySelector('#optionsSection');
+            if (optSection) optSection.style.display = inputTypeVal === 'text' ? 'none' : 'block';
+          });
+        }
+      });
+
+      // 保存按钮
+      overlay.querySelector('#saveAttrBtn').addEventListener('click', function() {
+        var en = (overlay.querySelector('#attrNameEn').value || '').trim();
+        var zh = (overlay.querySelector('#attrNameZh').value || '').trim();
+        var es = (overlay.querySelector('#attrNameEs').value || '').trim();
+        var it = overlay.querySelector('#attrInputType').value;
+        var req = overlay.querySelector('#attrRequired').value === 'true';
+        var so = parseInt(overlay.querySelector('#attrSortOrder').value) || 1;
+        var st = overlay.querySelector('#attrStatus').value;
+
+        if (!en) { showToast('error', '英文名称不能为空'); return; }
+        if (!zh) { showToast('error', '中文名称不能为空'); return; }
+
+        // 收集选项值
+        var opts = [];
+        if (it !== 'text') {
+          var rows = overlay.querySelectorAll('.option-row');
+          var valid = true;
+          rows.forEach(function(row) {
+            var enVal = (row.querySelector('.opt-en').value || '').trim();
+            var zhVal = (row.querySelector('.opt-zh').value || '').trim();
+            var esVal = (row.querySelector('.opt-es').value || '').trim();
+            if (!enVal || !zhVal) { valid = false; return; }
+            var sortVal = parseInt(row.querySelector('.opt-sort').value) || 1;
+            opts.push({ id: row._optData ? row._optData.id : 0, labelEn: enVal, labelZh: zhVal, labelEs: esVal, sortOrder: sortVal, status: 'active' });
+          });
+          if (!valid) { showToast('error', '每个选项值的英文和中文名称不能为空'); return; }
+        }
+
+        var today = new Date().toISOString().split('T')[0];
+        if (isEdit) {
+          attr.nameEn = en; attr.nameZh = zh; attr.nameEs = es;
+          attr.inputType = it; attr.isRequired = req;
+          attr.sortOrder = so; attr.status = st;
+          attr.updatedAt = today;
+          attr.options = opts;
+          showToast('success', '属性已更新');
+        } else {
+          var maxId = 0;
+          attributes.forEach(function(a) { if (a.id > maxId) maxId = a.id; });
+          var newOpts = opts.map(function(o, idx) {
+            return { id: maxId * 100 + idx + 1, labelEn: o.labelEn, labelZh: o.labelZh, labelEs: o.labelEs, sortOrder: o.sortOrder, status: 'active' };
+          });
+          attributes.push({
+            id: maxId + 1, categoryId: currentCategoryId,
+            nameEn: en, nameZh: zh, nameEs: es,
+            inputType: it, isRequired: req, sortOrder: so,
+            status: st, createdAt: today, updatedAt: today,
+            options: newOpts
+          });
+          showToast('success', '属性已创建');
+        }
+        renderAll();
+        overlay.remove();
+      });
+    }
+
+    function renderOptionsTable(overlay) {
+      var container = overlay.querySelector('#optionsContainer');
+      if (!container) return;
+      var options = overlay._options || [];
+      var html = '<table class="option-table"><thead><tr><th style="width:35%;">EN（英文）</th><th style="width:35%;">ZH（中文）</th><th style="width:20%;">ES（西语）</th><th style="width:50px;">排序</th><th style="width:40px;"></th></tr></thead><tbody>';
+      options.forEach(function(opt, idx) {
+        html += '<tr class="option-row">' +
+          '<td><input type="text" class="opt-en" value="' + escAttr(opt.labelEn) + '" placeholder="英文名称（必填）" /></td>' +
+          '<td><input type="text" class="opt-zh" value="' + escAttr(opt.labelZh) + '" placeholder="中文名称（必填）" /></td>' +
+          '<td><input type="text" class="opt-es" value="' + escAttr(opt.labelEs || '') + '" placeholder="西班牙语" /></td>' +
+          '<td><input type="number" class="opt-sort" value="' + (opt.sortOrder || 1) + '" min="1" style="width:50px;text-align:center;" /></td>' +
+          '<td><button class="option-delete-btn" onclick="deleteOptionRow(this)" title="删除选项"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>' +
+          '</tr>';
+        container.querySelectorAll('.option-row').forEach(function(r, i) { r._optData = options[i]; });
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+      // 绑定 _optData
+      container.querySelectorAll('.option-row').forEach(function(r, i) { r._optData = options[i]; });
+    }
+
+    window.addOptionRow = function() {
+      var overlay = document.querySelector('.attr-dialog-overlay');
+      if (!overlay) return;
+      var options = overlay._options || [];
+      var maxSort = 0;
+      options.forEach(function(o) { if (o.sortOrder > maxSort) maxSort = o.sortOrder; });
+      options.push({ id: 0, labelEn: '', labelZh: '', labelEs: '', sortOrder: maxSort + 1, status: 'active' });
+      overlay._options = options;
+      renderOptionsTable(overlay);
+    };
+
+    window.deleteOptionRow = function(btn) {
+      var overlay = document.querySelector('.attr-dialog-overlay');
+      if (!overlay) return;
+      var row = btn.closest('tr');
+      var idx = Array.from(row.parentElement.querySelectorAll('.option-row')).indexOf(row);
+      var options = overlay._options || [];
+      options.splice(idx, 1);
+      overlay._options = options;
+      renderOptionsTable(overlay);
+    };
+
+    // 单选组
+    window.selectRadio = function(el, hiddenId) {
+      var group = el.parentElement;
+      group.querySelectorAll('.radio-item').forEach(function(item) { item.classList.remove('active'); });
+      el.classList.add('active');
+      var hidden = document.getElementById(hiddenId);
+      if (hidden) hidden.value = el.dataset.value;
+    };
+
+    // ==================== 更多操作下拉 ====================
+    function toggleMoreActions() {
+      var dropdown = document.getElementById('moreActionsDropdown');
+      if (!dropdown) return;
+      if (dropdown.classList.contains('show')) { dropdown.classList.remove('show'); dropdown.style.display = 'none'; return; }
+      var btn = document.getElementById('btnMoreActions');
+      if (!btn) return;
+      var rect = btn.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.left = Math.max(8, rect.left) + 'px';
+      dropdown.classList.add('show'); dropdown.style.display = 'block';
+    }
+
+    document.addEventListener('click', function(e) {
+      var wrapper = document.getElementById('moreActionsWrapper');
+      var dropdown = document.getElementById('moreActionsDropdown');
+      if (dropdown && wrapper && !wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show'); dropdown.style.display = 'none';
+      }
+    });
+
+    // ==================== 搜索/筛选 ====================
+    document.getElementById('attrSearch').addEventListener('input', function() { currentPage = 1; renderAttributes(); });
+    document.getElementById('typeFilter').addEventListener('change', function() { currentPage = 1; renderAttributes(); });
+    document.getElementById('attrStatusFilter').addEventListener('change', function() { currentPage = 1; renderAttributes(); });
+
+    // ==================== 刷新 ====================
+    function refreshPage() { currentPage = 1; renderAll(); showToast('success', '数据已刷新'); }
+
+    function renderAll() {
+      renderCategoryTabs();
+      renderTableHead();
+      renderAttributes();
+    }
+
+    // ==================== HTML转义 ====================
+    function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    // ==================== 初始化 ====================
+    buildCustomColPanel();
+    renderAll();
+  </script>
+</body>
+</html>

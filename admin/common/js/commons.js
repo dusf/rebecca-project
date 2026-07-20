@@ -116,7 +116,8 @@
     const PAGE_ROUTES = {
       'products':      'product/product_list.html',
       'add-product':   'product/add_product.html',
-
+      'categories':    'category/category_list.html',
+      'attributes':    'attribute/attribute_list.html',
 
       'settings':      'shop/shop_settings.html'
     };

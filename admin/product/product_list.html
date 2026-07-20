@@ -1,0 +1,522 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 产品列表</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <style>
+    /* ==================== 产品列表页专用样式 ==================== */
+    /* 统计卡片 */
+    .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 20px;
+      transition: box-shadow 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 20px hsl(var(--shadow-color) / 0.1);
+    }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .stat-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .stat-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .stat-card-icon.blue { background: hsl(30 40% 92%); color: hsl(var(--primary)); }
+    .stat-card-icon.green { background: hsl(142 50% 92%); color: hsl(var(--success)); }
+    .stat-card-icon.orange { background: hsl(38 80% 92%); color: hsl(var(--warning)); }
+    .stat-card-icon.red { background: hsl(0 70% 92%); color: hsl(var(--error)); }
+
+    .stat-card-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      line-height: 1.2;
+    }
+
+    .stat-card-change {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-card-change.up { color: hsl(var(--success)); }
+    .stat-card-change.down { color: hsl(var(--error)); }
+
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 搜索框 */
+    .search-input {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      padding: 8px 12px;
+      gap: 8px;
+      width: 280px;
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .search-input:focus-within {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .search-input input {
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      width: 100%;
+      font-family: var(--font-sans);
+    }
+
+    /* 日期筛选 */
+    .filter-date {
+      display: inline-flex;
+      align-items: center;
+      background-color: #FFFFFF;
+      border: 1.5px solid hsl(30 15% 88%);
+      border-radius: 10px;
+      height: 38px;
+      padding: 0 14px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      font-family: var(--font-sans);
+      outline: none;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+      min-width: 140px;
+      cursor: pointer;
+    }
+    .filter-date:hover {
+      border-color: hsl(30 20% 78%);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+    .filter-date:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+    }
+    .filter-date::-webkit-calendar-picker-indicator {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .filter-date-sep {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      flex-shrink: 0;
+    }
+
+    /* 所属系列单元格 */
+    .series-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+      cursor: default;
+    }
+    .series-cell-count {
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+    .series-cell-icon {
+      display: inline-flex;
+      align-items: center;
+      color: hsl(var(--muted-foreground));
+      opacity: 0.4;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .series-cell:hover .series-cell-icon {
+      opacity: 1;
+      color: hsl(var(--primary));
+    }
+    .series-tooltip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: #FFFFFF;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 6px 0;
+      z-index: 99999;
+      min-width: 160px;
+      white-space: nowrap;
+    }
+    .series-cell-icon:hover .series-tooltip {
+      display: block;
+    }
+    .series-tooltip-item {
+      padding: 7px 14px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      transition: background 0.15s;
+      cursor: default;
+    }
+    .series-tooltip-item:hover {
+      background: hsl(var(--primary-50));
+    }
+
+    /* 更多操作下拉菜单 */
+    .more-actions-dropdown {
+      position: fixed;
+      background: #FFFFFF;
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 99999;
+      min-width: 160px;
+      overflow: hidden;
+    }
+    .more-actions-dropdown.show {
+      display: block !important;
+    }
+    .more-actions-item {
+      padding: 9px 16px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .more-actions-item:hover {
+      background: hsl(var(--primary-50));
+    }
+
+    /* 成功按钮 */
+    .btn-success {
+      background: hsl(var(--success));
+      color: hsl(var(--success-foreground));
+    }
+    .btn-success:hover {
+      background: hsl(142 60% 30%);
+      box-shadow: 0 2px 8px hsl(var(--success) / 0.3);
+    }
+  </style>
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL',
+          versionCode:'1.0.0',
+          channelID:'share',
+          delay:1000,
+          sessionDuration:30*60*1000,
+          isOversea:false,
+          needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href,
+          'referrer':document.referrer,
+          'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ==================== 侧边栏 ==================== -->
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    </aside>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main-area">
+      <!-- 内容区域 -->
+      <div class="content">
+        <!-- ==================== 产品列表页面 ==================== -->
+        <div class="page active" id="page-products">
+          <div class="page-header">
+            <div>
+              <div class="page-title">产品列表<span class="count-badge">(128件)</span></div>
+              <div class="page-subtitle">
+                <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  只能查看自己所属部门及其下级小组的产品数据
+                </span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <button class="btn btn-secondary" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
+              <button class="btn btn-secondary" onclick="window.parent.ShopifyAuth.open()" style="background:hsl(142 50% 40%);color:#fff;" onmouseover="this.style.background='hsl(142 55% 33%)'" onmouseout="this.style.background='hsl(142 50% 40%)'">拉取shopify</button>
+              <button class="btn btn-primary" onclick="navigateToPage('add_product.html')">添加产品</button>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-input">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(30 10% 50%);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="搜索产品名称、SPU..." id="productSearch" />
+              </div>
+              <select class="filter-select" id="categoryFilter">
+                <option value="">全部分类</option>
+                <option value="electronics">数码电子</option>
+                <option value="clothing">服饰鞋包</option>
+                <option value="food">食品饮料</option>
+                <option value="home">家居生活</option>
+                <option value="beauty">美妆护肤</option>
+              </select>
+              <select class="filter-select" id="statusFilter">
+                <option value="">全部状态</option>
+                <option value="on-sale">已上架</option>
+                <option value="off-sale">已下架</option>
+                <option value="draft">草稿</option>
+              </select>
+              <input type="date" class="filter-date" id="dateFrom" placeholder="开始日期" />
+              <span class="filter-date-sep">至</span>
+              <input type="date" class="filter-date" id="dateTo" placeholder="结束日期" />
+            </div>
+          </div>
+
+          <!-- 批量操作栏 -->
+          <div class="bulk-action-bar" id="bulkActionBar">
+            <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
+            <div class="bulk-actions">
+              <button class="btn btn-success btn-sm" id="btnBatchOnSale" onclick="batchSetStatus('on-sale')" disabled>批量上架</button>
+              <button class="btn btn-destructive btn-sm" id="btnBatchOffSale" onclick="batchSetStatus('off-sale')" disabled>批量下架</button>
+              <button class="btn btn-secondary btn-sm" id="btnBatchDelete" onclick="batchDelete()" disabled>批量删除</button>
+              <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+                <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                  更多操作
+                </button>
+              </div>
+              <div class="custom-col-wrapper" id="customColWrapper">
+                <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  自定义列
+                </button>
+              </div>
+              <div class="custom-col-wrapper">
+                <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="table-card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr id="productTableHead">
+                    <!-- 由JS动态生成 -->
+                  </tr>
+                </thead>
+                <tbody id="productTableBody">
+                  <!-- 产品数据由 JS 动态填充 -->
+                </tbody>
+              </table>
+            </div>
+            <!-- 分页 -->
+            <div class="pagination-bar">
+              <span class="pagination-info">显示 1-10 条，共 128 条</span>
+              <div class="pagination-buttons">
+                <div class="page-btn disabled">‹</div>
+                <div class="page-btn active">1</div>
+                <div class="page-btn">2</div>
+                <div class="page-btn">3</div>
+                <div class="page-btn">4</div>
+                <div class="page-btn">...</div>
+                <div class="page-btn">13</div>
+                <div class="page-btn">›</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 自定义列弹出层 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody">
+      <!-- 由JS动态生成 -->
+    </div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="resetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <script>var CURRENT_PAGE = 'products';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 初始化 ====================
+    buildCustomColPanel();
+    renderTableHead();
+    renderProducts();
+
+    function refreshPage() {
+      renderProducts();
+      showToast('success', '数据已刷新');
+    }
+  </script>
+
+  <!-- 更多操作下拉菜单（挂载到 body 级别，避免被表格遮挡） -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="batchSetStatus('draft')">批量设为草稿</div>
+    <div class="more-actions-item" onclick="addToProductSeries()">添加到产品系列中</div>
+  </div>
+
+  <!-- ==================== Shopify 授权钩子（供父页面 shopify_dialog.js 调用） ==================== -->
+  <script>
+    // Shopify 模拟店铺站点数据
+    var shopifyProductStores = [
+      { id: 'site-1', name: 'QVR品牌站', domain: 'qvr.myshopify.com', productCount: 128 },
+      { id: 'site-2', name: 'Fashion Plus', domain: 'fashion-plus.myshopify.com', productCount: 56 },
+      { id: 'site-3', name: 'Tokyo Select', domain: 'tokyo-select.myshopify.com', productCount: 42 }
+    ];
+
+    var shopifyProductsMap = {
+      'site-1': [
+        { id: 'sp-1-1', title: 'iPhone 15 Pro 保护壳', category: '数码电子', price: 129, stock: '3款200件' },
+        { id: 'sp-1-2', title: 'USB-C 快充数据线 2m', category: '数码电子', price: 49, stock: '1款500件' },
+        { id: 'sp-1-3', title: '无线充电底座', category: '数码电子', price: 199, stock: '2款150件' },
+        { id: 'sp-1-4', title: '蓝牙音箱 Mini', category: '数码电子', price: 299, stock: '4款80件' },
+        { id: 'sp-1-5', title: '笔记本散热支架', category: '数码电子', price: 89, stock: '1款300件' },
+        { id: 'sp-1-6', title: 'Type-C 拓展坞 7合1', category: '数码电子', price: 259, stock: '2款120件' },
+        { id: 'sp-1-7', title: '降噪耳机收纳盒', category: '数码电子', price: 79, stock: '3款400件' },
+        { id: 'sp-1-8', title: 'iPad 磁吸键盘套', category: '数码电子', price: 399, stock: '2款60件' }
+      ],
+      'site-2': [
+        { id: 'sp-2-1', title: '春季棉麻衬衫', category: '服饰鞋包', price: 199, stock: '5款300件' },
+        { id: 'sp-2-2', title: '真皮斜挎包', category: '服饰鞋包', price: 599, stock: '3款80件' },
+        { id: 'sp-2-3', title: '运动跑步鞋 Air', category: '服饰鞋包', price: 459, stock: '6款200件' },
+        { id: 'sp-2-4', title: '女士太阳镜 UV400', category: '服饰鞋包', price: 299, stock: '2款150件' },
+        { id: 'sp-2-5', title: '羊毛围巾格纹款', category: '服饰鞋包', price: 169, stock: '1款250件' }
+      ],
+      'site-3': [
+        { id: 'sp-3-1', title: '日本抹茶粉 100g', category: '食品饮料', price: 138, stock: '1款500件' },
+        { id: 'sp-3-2', title: '限定樱花杯', category: '家居生活', price: 258, stock: '2款100件' },
+        { id: 'sp-3-3', title: '北海道奶酪蛋糕', category: '食品饮料', price: 89, stock: '1款300件' },
+        { id: 'sp-3-4', title: '无添加洗面奶', category: '美妆护肤', price: 158, stock: '2款400件' }
+      ]
+    };
+
+    // 父页面 Shopify 对话框钩子
+    window.ShopifyAuthHooks = {
+      stores: shopifyProductStores,
+      getItems: function(siteId) { return shopifyProductsMap[siteId] || []; },
+      step3Label: '同步产品',
+      step3Title: '选择要同步的产品',
+      syncBtnLabel: '同步选中的产品',
+      step1Desc: '授权后可拉取 Shopify 店铺的产品数据，快速同步到当前<br/>商城后台的产品列表中。',
+      setStoreDomain: function(domain) {},
+      onSync: function(selectedIds, siteId) {
+        var productList = shopifyProductsMap[siteId] || [];
+        var selected = productList.filter(function(sp) { return selectedIds.indexOf(sp.id) !== -1; });
+        if (selected.length === 0) return;
+
+        var today = new Date().toISOString().split('T')[0];
+        var newCount = 0, skippedCount = 0;
+
+        selected.forEach(function(sp) {
+          var exists = products.some(function(p) { return p.name === sp.title; });
+          if (exists) { skippedCount++; return; }
+
+          var spuPrefix = { '数码电子': 'SPU-DZ', '服饰鞋包': 'SPU-FS', '食品饮料': 'SPU-SP', '家居生活': 'SPU-JJ', '美妆护肤': 'SPU-MZ' };
+          var prefix = spuPrefix[sp.category] || 'SPU-IM';
+          var newId = products.length > 0 ? Math.max.apply(null, products.map(function(p) { return p.id; })) + 1 : 1;
+          var spuNum = String(10000 + newId).slice(1);
+          var spu = prefix + '-' + spuNum;
+
+          products.push({
+            id: newId, name: sp.title, spu: spu, category: sp.category, price: sp.price,
+            originalPrice: Math.round(sp.price * 1.2), stock: sp.stock, stockLink: false,
+            stockUpdateTime: '', status: 'draft',
+            seoSlug: sp.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, ''),
+            seriesCount: 0, seriesNames: [], creator: 'Shopify', org: '导入组',
+            orgPath: '总部/导入组', date: today, updateDate: today,
+            sourceShopify: true, shopifySite: siteId
+          });
+          newCount++;
+        });
+
+        renderProducts();
+        var msg = '已同步 ' + newCount + ' 个产品';
+        if (skippedCount > 0) msg += '，跳过 ' + skippedCount + ' 个重复名称的产品';
+        showToast('success', msg);
+      }
+    };
+  </script>
+</body>
+</html>

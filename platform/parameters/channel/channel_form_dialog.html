@@ -1,0 +1,123 @@
+<!-- 添加/编辑渠道对话框 -->
+<div class="dialog-overlay" id="channelDialogOverlay" style="display:none;" onclick="closeChannelDialog()">
+  <div class="dialog" style="width:620px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="channelDialogTitle">新增渠道</span>
+      <button class="dialog-close" onclick="closeChannelDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="channelMode" value="add">
+      <input type="hidden" id="channelEditId" value="">
+
+      <!-- 前置选择：物流商 + 账号 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">所属物流商<span class="required-star">*</span></label>
+          <select class="form-input" id="channelProvider" onchange="onChannelProviderChange()">
+            <option value="">请选择物流商</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">所属账号<span class="required-star">*</span></label>
+          <select class="form-input" id="channelAccount">
+            <option value="">请先选择物流商</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 渠道名称 + 渠道代码 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">渠道名称<span class="required-star">*</span></label>
+          <input class="form-input" id="channelName" placeholder="如：云途-特惠普货-美国" maxlength="100">
+          <div class="form-hint">建议格式：{物流商}-{服务类型}-{国家}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">渠道代码<span class="required-star">*</span></label>
+          <input class="form-input" id="channelCode" placeholder="如：YUNTU_ECONOMY_US" maxlength="30">
+          <div class="form-hint">字母、数字、下划线，最大30字符，唯一</div>
+        </div>
+      </div>
+
+      <!-- 服务类型 + 预估时效 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">服务类型<span class="required-star">*</span></label>
+          <select class="form-input" id="channelServiceType">
+            <option value="">请选择服务类型</option>
+            <option value="经济">经济 - 价格低，时效慢</option>
+            <option value="标准">标准 - 价格适中，时效适中</option>
+            <option value="快速">快速 - 价格高，时效快</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">预估时效（天）<span class="form-label-hint">选填</span></label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="form-input" id="channelDeliveryMinDays" placeholder="最短" type="number" min="1" max="999">
+            <span style="color:hsl(var(--muted-foreground));white-space:nowrap;">至</span>
+            <input class="form-input" id="channelDeliveryMaxDays" placeholder="最长" type="number" min="1" max="999">
+          </div>
+        </div>
+      </div>
+
+      <!-- 配送国家 -->
+      <div class="form-group">
+        <label class="form-label">配送国家/地区<span class="required-star">*</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="channelCountryTags">
+          <span style="font-size:13px;color:hsl(var(--muted-foreground));">未选择</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="openChannelCountryPicker()">+ 选择国家/地区</button>
+        <div class="form-hint">可配送的国家/地区，可多选</div>
+        <input type="hidden" id="channelCountries" value="[]">
+      </div>
+
+      <!-- 排序 + 状态 -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">排序<span class="form-label-hint">选填</span></label>
+          <input class="form-input" id="channelSortOrder" type="number" placeholder="数字越小越靠前" value="999" min="0" max="9999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-input" id="channelStatus">
+            <option value="enabled">启用</option>
+            <option value="disabled">禁用</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 描述 -->
+      <div class="form-group">
+        <label class="form-label">描述/备注<span class="form-label-hint">选填</span></label>
+        <textarea class="form-textarea" id="channelDescription" placeholder="补充说明（选填）" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeChannelDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitChannel()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 选择国家子对话框 -->
+<div class="dialog-overlay" id="channelCountryPickerOverlay" style="display:none;z-index:10000;" onclick="closeChannelCountryPicker()">
+  <div class="dialog" style="width:500px;max-height:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">选择配送国家/地区</span>
+      <button class="dialog-close" onclick="closeChannelCountryPicker()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="text" class="search-input" id="channelCountryPickerSearch" placeholder="搜索国家/地区..." oninput="filterChannelCountryPicker()" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+      <div class="country-check-grid" id="channelCountryPickerList"></div>
+    </div>
+    <div class="dialog-actions">
+      <span style="flex:1;font-size:13px;color:hsl(var(--muted-foreground));">已选 <strong id="channelCountryPickerCount">0</strong> 个</span>
+      <button class="btn btn-secondary" onclick="closeChannelCountryPicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmChannelCountryPicker()">确定</button>
+    </div>
+  </div>
+</div>

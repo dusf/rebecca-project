@@ -1,0 +1,47 @@
+<style>
+  .er-config-section { margin-bottom: 18px; }
+  .er-config-hint { font-size: 11px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+</style>
+<div class="dialog-overlay" id="erConfigDialogOverlay" style="display:none;" onclick="closeERConfigDialog()">
+  <div class="dialog" style="max-width:600px;min-height:520px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">数据源配置</span>
+      <button class="dialog-close" onclick="closeERConfigDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <div class="er-config-section">
+        <label class="form-label">API 地址</label>
+        <input class="form-input" type="text" id="erConfigApiUrl" placeholder="https://api.exchangerate-api.com/v4/latest/USD">
+      </div>
+      <div class="er-config-section">
+        <label class="form-label">API Key</label>
+        <input class="form-input" type="text" id="erConfigApiKey" placeholder="输入 API Key">
+      </div>
+      <div class="er-config-section">
+        <label class="form-label">请求参数模板</label>
+        <input class="form-input" type="text" id="erConfigApiParams" placeholder="如 ?base=USD&symbols={symbols}">
+        <div class="er-config-hint">留空使用默认参数</div>
+      </div>
+      <div class="er-config-section">
+        <label class="form-label">自动刷新间隔（分钟）</label>
+        <select class="form-select" id="erConfigInterval">
+          <option value="5">5 分钟</option>
+          <option value="15" selected>15 分钟</option>
+          <option value="30">30 分钟</option>
+          <option value="60">60 分钟</option>
+        </select>
+      </div>
+      <div class="er-config-section">
+        <label class="form-label">汇率波动告警阈值（±%）</label>
+        <input class="form-input" type="number" id="erConfigThreshold" step="0.5" min="1" max="50" placeholder="3" style="width:120px;">
+        <div class="er-config-hint">超过此百分比自动暂停该币种更新，回落至阈值内自动恢复</div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeERConfigDialog()">取消</button>
+      <button class="btn btn-primary" onclick="saveERConfigDialog()">保存配置</button>
+    </div>
+  </div>
+</div>

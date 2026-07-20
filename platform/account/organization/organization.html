@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组织机构 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <link rel="stylesheet" href="css/organization.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">组织机构<span class="count-badge" id="orgCount"></span></div>
+        <div class="page-subtitle">管理集团/公司/部门/小组的组织层级结构，拖拽排序需要遵守直系父子层级规则</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" onclick="handleAdd()">+ 添加组织</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索组织名称..." id="searchInput">
+        <select class="filter-select" id="typeFilter">
+          <option value="">全部类型</option>
+          <option value="group">集团</option>
+          <option value="company">公司</option>
+          <option value="dept">部门</option>
+          <option value="team">小组</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+        <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="customColWrapper"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        <div class="custom-col-wrapper"><button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="table-card org-tree-table">
+      <div class="table-wrapper">
+        <table id="orgTreeTable">
+          <colgroup>
+            <col class="pre-col" style="width:4%;">
+            <col style="width:44%;">
+            <col style="width:14%;">
+            <col style="width:14%;">
+            <col style="width:10%;">
+            <col style="width:8%;">
+            <col style="width:6%;">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="pre-col" style="width:4%; min-width:60px; padding:0;"><div class="pre-col-wrap"><span style="width:14px;flex-shrink:0;"></span><div class="checkbox" onclick="puToggleAllCheckboxes(this,'orgTableBody')"></div></div></th>
+              <th data-col="name">组织名称</th>
+              <th data-col="type">组织类型</th>
+              <th data-col="parent">上级组织</th>
+              <th data-col="sort">排序</th>
+              <th data-col="status">状态</th>
+              <th data-col="actions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="orgTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script src="js/organization.js"></script>
+</body>
+</html>

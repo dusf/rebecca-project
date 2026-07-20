@@ -1,0 +1,2630 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 添加产品</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <style>
+    /* ==================== 添加产品页面 ==================== */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    .form-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      width: 100%;
+    }
+
+    .add-product-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .add-product-container .page-header {
+      margin-bottom: 24px;
+    }
+
+    .form-section {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .form-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-section-title-icon {
+      color: hsl(var(--primary));
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .form-section-title-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+
+    .form-label .required {
+      color: hsl(var(--error));
+      margin-left: 2px;
+    }
+
+    .form-input {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .form-input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .form-select {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    .form-select:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-textarea {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      resize: vertical;
+      min-height: 100px;
+      font-family: var(--font-sans);
+      line-height: 1.6;
+    }
+
+    .form-textarea:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* ==================== 图片上传区 ==================== */
+    .upload-area {
+      border: 2px dashed hsl(var(--border));
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: hsl(var(--muted) / 0.3);
+    }
+
+    .upload-area:hover {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--primary-50));
+    }
+
+    .upload-area-icon {
+      font-size: 40px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 12px;
+    }
+
+    .upload-area-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+
+    .upload-area-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 6px;
+    }
+
+    .upload-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .upload-preview-item {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: hsl(var(--muted));
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--muted-foreground));
+      font-size: 24px;
+    }
+
+    .upload-preview-item .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: hsl(var(--error));
+      color: white;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .upload-preview-item:hover .remove-btn {
+      opacity: 1;
+    }
+
+    /* ==================== 规格管理 ==================== */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .spec-table th {
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted));
+      border-bottom: 1px solid hsl(var(--border));
+      text-align: left;
+    }
+
+    .spec-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .spec-table .spec-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .spec-table .spec-input:focus {
+      border-color: hsl(var(--primary));
+    }
+
+    .spec-row-delete {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .spec-row-delete:hover {
+      background: hsl(0 84% 90%);
+      color: hsl(var(--error));
+    }
+
+    /* ==================== 开关 ==================== */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle {
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+      background: hsl(var(--border));
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle.active {
+      background: hsl(var(--primary));
+    }
+
+    .toggle-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      background: white;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle.active .toggle-dot {
+      left: 22px;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      color: hsl(var(--foreground));
+    }
+
+    /* ==================== 标签选择 ==================== */
+    .tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-item {
+      padding: 6px 14px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .tag-item:hover {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+    }
+
+    .tag-item.selected {
+      background: hsl(var(--primary));
+      color: white;
+      border-color: hsl(var(--primary));
+    }
+
+    /* ==================== Toast 提示 ==================== */
+    .toast-container {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      padding: 14px 20px;
+      box-shadow: 0 8px 30px hsl(var(--shadow-color) / 0.16);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: toastIn 0.3s ease;
+      min-width: 300px;
+    }
+
+    .toast.success { border-left: 4px solid hsl(var(--success)); }
+    .toast.error { border-left: 4px solid hsl(var(--error)); }
+    .toast.info { border-left: 4px solid hsl(var(--info)); }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    .toast.success .toast-icon { color: hsl(var(--success)); }
+    .toast.error .toast-icon { color: hsl(var(--error)); }
+    .toast.info .toast-icon { color: hsl(var(--info)); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-8px); }
+    }
+
+    /* ==================== 对话框 ==================== */
+    .dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+
+    .dialog {
+      background: hsl(var(--card));
+      border-radius: 16px;
+      padding: 24px;
+      width: 420px;
+      max-width: 90vw;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      animation: dialogIn 0.3s ease;
+    }
+
+    .dialog-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .dialog-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 24px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes dialogIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ==================== checkbox ==================== */
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid hsl(var(--border));
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      background: hsl(var(--background));
+    }
+
+    .checkbox.checked {
+      background: hsl(var(--primary));
+      border-color: hsl(var(--primary));
+      color: white;
+      font-size: 12px;
+    }
+
+    /* ==================== 响应式 ==================== */
+    @media (max-width: 1200px) {
+      .form-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .sidebar {
+        width: 220px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .toolbar-left, .toolbar-right {
+        width: 100%;
+      }
+    }
+
+    /* ==================== 页面过渡 ==================== */
+    .page-enter {
+      animation: pageEnter 0.3s ease;
+    }
+
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== 空状态 ==================== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 16px;
+    }
+
+    .empty-state-icon svg {
+      width: 48px;
+      height: 48px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .empty-state-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 8px;
+      margin-bottom: 20px;
+    }
+
+    /* ==================== 进度条/滑块 ==================== */
+    .price-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .price-symbol {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .rich-editor {
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .rich-editor-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: hsl(var(--muted));
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .rich-editor-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      transition: all 0.15s;
+    }
+
+    .rich-editor-btn:hover {
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
+
+    .rich-editor-area {
+      padding: 12px;
+      min-height: 200px;
+      font-size: 14px;
+      line-height: 1.8;
+      outline: none;
+    }
+
+    /* ==================== 添加产品页面 - 新版商城风格 ==================== */
+    .add-product-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .add-product-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 8px 0;
+    }
+
+    .add-product-header .page-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .add-product-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .info-bar {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .info-bar-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-bar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .info-bar-desc {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .info-bar-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .lang-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      width: fit-content;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .lang-tab {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: transparent;
+      font-family: var(--font-sans);
+    }
+
+    .lang-tab:hover {
+      color: hsl(var(--foreground));
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .lang-tab.active {
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .lang-tab-add {
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+    }
+
+    .lang-tab-add:hover {
+      color: hsl(var(--primary));
+    }
+
+    .add-product-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .add-product-main {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .add-product-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .form-section-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .form-section-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .form-section-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 4px;
+    }
+
+    .form-section-card-subtitle {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.5;
+    }
+
+    .form-section-card-action {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+
+    .form-section-card-action:hover {
+      background: hsl(var(--primary-50));
+      border-color: hsl(var(--primary-200));
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+
+    .form-label .char-count {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      font-weight: 400;
+    }
+
+    .form-input {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+      width: 100%;
+    }
+
+    .form-input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-select {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      width: 100%;
+    }
+
+    .form-textarea {
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      outline: none;
+      resize: vertical;
+      min-height: 120px;
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      width: 100%;
+    }
+
+    .form-textarea:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.5;
+    }
+
+    .form-hint-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tag-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 20px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      transition: all 0.15s;
+    }
+
+    .tag-pill .remove {
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .tag-pill .remove:hover {
+      color: hsl(var(--error));
+    }
+
+    .tag-add-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border: 1px dashed hsl(var(--border));
+      border-radius: 20px;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+
+    .tag-add-btn:hover {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+    }
+
+    .tag-input {
+      width: 80px;
+      padding: 4px 8px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 20px;
+      font-size: 13px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .rich-editor-simple {
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      overflow: hidden;
+      background: hsl(var(--background));
+    }
+
+    .rich-editor-simple-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: hsl(var(--muted));
+      border-bottom: 1px solid hsl(var(--border));
+      overflow-x: auto;
+    }
+
+    .rich-editor-simple-area {
+      padding: 12px;
+      min-height: 160px;
+      font-size: 14px;
+      line-height: 1.8;
+      outline: none;
+    }
+
+    /* 媒体区域 - 上下两行布局 */
+    .media-block {
+      margin-bottom: 24px;
+    }
+    .media-block:last-child {
+      margin-bottom: 0;
+    }
+    .media-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    /* 添加媒体卡片 */
+    .media-add-card {
+      width: 120px;
+      height: 120px;
+      border: 1.5px dashed hsl(var(--border));
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: hsl(var(--background));
+      color: hsl(var(--muted-foreground));
+      flex-shrink: 0;
+    }
+    .media-add-card:hover {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--primary-50));
+    }
+    .media-add-card .plus {
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .media-add-card .text {
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+    }
+    .media-add-card .count {
+      font-size: 11px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* 媒体预览卡片 */
+    .media-card {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+      flex-shrink: 0;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: hsl(var(--muted));
+    }
+    .media-card:hover {
+      border-color: hsl(var(--primary-300));
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .media-card.dragging {
+      opacity: 0.4;
+    }
+    .media-card.drag-over {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    }
+    .media-card img, .media-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .media-card .media-type-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .media-card .media-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .media-card:hover .media-delete {
+      opacity: 1;
+    }
+    .media-card .media-delete:hover {
+      background: hsl(var(--error));
+    }
+    .media-card .media-order {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .spec-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin: 20px 0 12px;
+    }
+
+    .spec-section-title:first-child {
+      margin-top: 0;
+    }
+
+    /* 动态规格块 */
+    .spec-block {
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      padding: 14px;
+      background: hsl(var(--background));
+    }
+
+    .spec-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .spec-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      outline: none;
+      min-width: 60px;
+      transition: border-color 0.15s;
+    }
+
+    .spec-title:hover {
+      border-color: hsl(var(--border));
+    }
+
+    .spec-title:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+      background: hsl(var(--card));
+    }
+
+    .spec-delete {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+
+    .spec-delete:hover {
+      background: hsl(0 84% 90%);
+      color: hsl(var(--error));
+    }
+
+    .spec-filters select:empty {
+      display: none;
+    }
+
+    /* SKU 批量操作栏（在卡片内部，去除多余背景和圆角） */
+    #skuBulkActionBar {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid hsl(var(--border));
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-top: 4px;
+    }
+
+    #skuBulkActionBar .bulk-actions {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    #skuBulkActionBar .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* 内联批量编辑面板 */
+    .bulk-inline-edit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .bulk-edit-label {
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      white-space: nowrap;
+    }
+
+    .bulk-inline-edit .form-input {
+      width: 160px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .spec-filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: hsl(var(--muted));
+      border-radius: 8px;
+      margin-top: 16px;
+      margin-bottom: 12px;
+    }
+
+    .spec-filters select {
+      min-width: 120px;
+      padding: 6px 10px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 13px;
+      background: hsl(var(--background));
+      font-family: var(--font-sans);
+      outline: none;
+    }
+
+    .spec-link-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+    }
+
+    .spec-link-toggle .checkbox {
+      width: 16px;
+      height: 16px;
+    }
+
+    .sku-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .sku-table th {
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted));
+      border-bottom: 1px solid hsl(var(--border));
+      white-space: nowrap;
+    }
+
+    .sku-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid hsl(var(--border));
+      vertical-align: middle;
+    }
+
+    .sku-table input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .sku-table input:focus {
+      border-color: hsl(var(--primary));
+    }
+
+    .sku-table .img-upload-cell {
+      width: 40px;
+      height: 40px;
+      border: 1px dashed hsl(var(--border));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: hsl(var(--muted-foreground));
+      font-size: 18px;
+      background: hsl(var(--background));
+    }
+
+    .sku-table .img-upload-cell:hover {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+    }
+
+    .sku-table .currency {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .sku-empty {
+      padding: 24px;
+      text-align: center;
+      color: hsl(var(--muted-foreground));
+      font-size: 13px;
+    }
+
+    .sidebar-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .sidebar-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 16px;
+    }
+
+    .sidebar-card .form-group {
+      margin-bottom: 16px;
+    }
+
+    .price-input {
+      position: relative;
+    }
+
+    .price-input .symbol {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+    }
+
+    .price-input input {
+      padding-left: 28px;
+    }
+
+    .review-import-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .review-import-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+
+    .review-import-btn:hover {
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+      background: hsl(var(--primary-50));
+    }
+
+    .review-import-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .add-product-layout {
+        grid-template-columns: 1fr;
+      }
+      .add-product-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .media-section {
+        grid-template-columns: 1fr;
+      }
+      .form-row-2 {
+        grid-template-columns: 1fr;
+      }
+      .add-product-actions {
+        flex-wrap: wrap;
+      }
+    }
+
+  
+  </style>
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL',
+          versionCode:'1.0.0',
+          channelID:'share',
+          delay:1000,
+          sessionDuration:30*60*1000,
+          isOversea:false,
+          needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href,
+          'referrer':document.referrer,
+          'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ==================== 侧边栏 ==================== -->
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main-area">
+      <!-- 内容区域 -->
+      <div class="content">
+        <!-- ==================== 添加产品页面 ==================== -->
+        <div class="page active" id="page-add-product">
+          <div class="add-product-container">
+            <!-- 页面头部 -->
+            <div class="add-product-header">
+              <div class="page-title">添加产品</div>
+              <div class="add-product-actions">
+                <button class="btn btn-secondary" onclick="navigateToPage('product_list.html')">返回</button>
+                <button class="btn btn-primary" onclick="submitProduct()">保存</button>
+              </div>
+            </div>
+
+            <!-- 信息提示栏 -->
+            <div class="info-bar">
+              <div class="info-bar-content">
+                <div class="info-bar-title">新版商城产品资料</div>
+                <div class="info-bar-desc">内容、属性、媒体、SKU 和 SEO 在同一页面维护；支持多语言版本录入、评论 CSV 导入、库存 SKU 映射。</div>
+              </div>
+              <div class="info-bar-tag">美元基准价</div>
+            </div>
+
+            <!-- 语言切换 Tab -->
+            <div class="lang-tabs" id="langTabs">
+              <button class="lang-tab active" data-lang="en">英语</button>
+              <button class="lang-tab" data-lang="de">德语</button>
+              <button class="lang-tab" data-lang="fr">法语</button>
+              <button class="lang-tab-add" onclick="addLang()">+ 新增</button>
+            </div>
+
+            <div class="add-product-layout">
+              <!-- 左侧主内容 -->
+              <div class="add-product-main">
+                <!-- 基本信息 -->
+                <div class="form-section-card">
+                  <div class="form-section-card-header">
+                    <div>
+                      <div class="form-section-card-title">基本信息</div>
+                      <div class="form-section-card-subtitle">产品编码创建后由系统生成，添加页只维护运营可编辑字段。</div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span>产品标题（英语）</span>
+                      <span class="char-count" id="titleCount">0/120</span>
+                    </label>
+                    <input class="form-input" type="text" id="productTitle" placeholder="请输入产品标题" maxlength="120" oninput="updateCharCount(this, 'titleCount', 120)" />
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">产品类别</label>
+                      <select class="form-select" id="productCategory">
+                        <option value="">请选择分类</option>
+                        <option value="human-hair">Human Hair</option>
+                        <option value="synthetic">Synthetic</option>
+                        <option value="accessories">Accessories</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">产品所属分类</label>
+                      <input class="form-input" type="text" id="productSubcategory" placeholder="如：HD Lace Collection" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">产品关键词</label>
+                    <input class="form-input" type="text" id="productKeywords" placeholder="如：body wave, natural black, pre-plucked hairline" />
+                  </div>
+
+                  <!-- 属性1 ~ 属性5 固定字段 -->
+                  <div class="spec-section-title" style="margin-bottom: 12px;">产品属性</div>
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">属性1</label>
+                      <input class="form-input" type="text" id="attr1" placeholder="属性1（如：材质）" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">属性2</label>
+                      <input class="form-input" type="text" id="attr2" placeholder="属性2（如：长度）" />
+                    </div>
+                  </div>
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">属性3</label>
+                      <input class="form-input" type="text" id="attr3" placeholder="属性3（如：密度）" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">属性4</label>
+                      <input class="form-input" type="text" id="attr4" placeholder="属性4（如：蕾丝类型）" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">属性5</label>
+                    <input class="form-input" type="text" id="attr5" placeholder="属性5" style="max-width: 50%;" />
+                  </div>
+                  <div class="form-hint" style="margin-bottom: 16px;">以上5个属性为固定字段，商家按需自由填写，每个属性输入框仅填写一个值。</div>
+
+                  <!-- 产品标记（多标签输入） -->
+                  <div class="form-group">
+                    <label class="form-label">产品标记（Tags）</label>
+                    <div class="tag-pills" id="productTags">
+                      <button class="tag-add-btn" onclick="showProductTagInput(this)">+ 添加标记</button>
+                    </div>
+                    <div class="form-hint" style="margin-top: 6px;">输入后回车添加，点击标签上的 × 删除。标记用于产品系列智能筛选和前端过滤。</div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span>产品参数</span>
+                      <span class="form-hint">发质、长度、密度、蕾丝类型、帽型、护理说明</span>
+                    </label>
+                    <div class="rich-editor-simple">
+                      <div class="rich-editor-simple-toolbar">
+                        <div class="rich-editor-btn" onclick="formatText('bold')">B</div>
+                        <div class="rich-editor-btn" onclick="formatText('italic')">I</div>
+                        <div class="rich-editor-btn" onclick="formatText('underline')">U</div>
+                        <div class="rich-editor-btn" onclick="formatText('h2')">H2</div>
+                        <div class="rich-editor-btn" onclick="formatText('ol')">☰</div>
+                        <div class="rich-editor-btn" onclick="formatText('ul')">≡</div>
+                      </div>
+                      <div class="rich-editor-simple-area" contenteditable="true" id="productAttrEditor">
+                        <p>输入当前语言的产品属性内容；后续接入真实富文本编辑器。</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-hint form-hint-flex">
+                    <span>如详情媒体包含视频，产品属性默认展示在视频下方。</span>
+                    <span>0/5000</span>
+                  </div>
+                </div>
+
+                <!-- 产品媒体 -->
+                <div class="form-section-card">
+                  <div class="form-section-card-header">
+                    <div>
+                      <div class="form-section-card-title">产品媒体</div>
+                      <div class="form-section-card-subtitle">支持上传图片或视频，拖拽可排序，最多 9 个。轮播第一项作为主图/主视频。</div>
+                    </div>
+                  </div>
+
+                  <!-- 产品轮播 -->
+                  <div class="media-block">
+                    <div class="spec-section-title">产品轮播</div>
+                    <div class="media-grid" id="carouselGrid">
+                      <div class="media-add-card" onclick="simulateMediaUpload('carousel')">
+                        <div class="plus">+</div>
+                        <div class="text">添加图片/视频</div>
+                        <div class="count" id="carouselCount">(0/9)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 产品详情 -->
+                  <div class="media-block">
+                    <div class="spec-section-title">产品详情</div>
+                    <div class="media-grid" id="detailGrid">
+                      <div class="media-add-card" onclick="simulateMediaUpload('detail')">
+                        <div class="plus">+</div>
+                        <div class="text">添加图片/视频</div>
+                        <div class="count" id="detailCount">(0/9)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SKU 规格 -->
+                <div class="form-section-card">
+                  <div class="form-section-card-header">
+                    <div>
+                      <div class="form-section-card-title">SKU 规格</div>
+                      <div class="form-section-card-subtitle">按规格组合生成 SKU，规格名称和选项值均可自定义。价格以美元为基准。</div>
+                    </div>
+                  </div>
+
+                  <!-- 新增规格按钮 -->
+                  <button class="form-section-card-action" onclick="addSpec()" style="margin-bottom: 12px;">+ 新增规格</button>
+
+                  <!-- 动态规格列表 -->
+                  <div id="specsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- JS 动态生成 -->
+                  </div>
+
+                  <!-- 筛选与联动 -->
+                  <div class="spec-filters" id="specFiltersRow">
+                    <!-- JS 动态生成 -->
+                    <div class="spec-link-toggle" onclick="toggleStockLink(this)">
+                      <div class="checkbox checked" id="stockLinkToggle">✓</div>
+                      <span>库存联动</span>
+                    </div>
+                  </div>
+
+                  <!-- SKU 批量操作栏 -->
+                  <div class="bulk-action-bar" id="skuBulkActionBar">
+                    <div class="bulk-selected-count">已选 <span class="count" id="skuSelectedCount">0</span> 项</div>
+                    <div class="bulk-actions" id="skuBulkActions">
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuImage()" disabled id="btnBatchImage">批量图片</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuName()" disabled id="btnBatchName">批量名称</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuInvCode()" disabled id="btnBatchInvCode">批量库存编码</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuStock()" disabled id="btnBatchStock">批量库存</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuQty()" disabled id="btnBatchQty">批量基数</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSkuPrice()" disabled id="btnBatchPrice">批量价格</button>
+                      <input type="file" id="batchImageInput" accept="image/*" style="display:none;" onchange="handleBatchImageUpload(event)" />
+                    </div>
+                    <div class="bulk-inline-edit" id="skuBulkInlineEdit" style="display: none;">
+                      <span class="bulk-edit-label" id="skuBulkEditLabel">批量名称：</span>
+                      <input type="text" class="form-input" id="skuBulkEditInput" placeholder="请输入值" />
+                      <button class="btn btn-primary btn-sm" onclick="confirmBulkEdit()">确认</button>
+                      <button class="btn btn-secondary btn-sm" onclick="cancelBulkEdit()">取消</button>
+                    </div>
+                  </div>
+
+                  <!-- SKU 表格 -->
+                  <div class="table-card" style="border-top: none; border-radius: 0 0 8px 8px; overflow: hidden;">
+                    <div class="table-wrapper">
+                      <table class="sku-table">
+                        <thead>
+                          <tr>
+                            <th><div class="checkbox" onclick="toggleAllSkuCheckboxes(this)"></div></th>
+                            <th>图片</th>
+                            <th>SKU 名称（英语）</th>
+                            <th>库存SKU编码</th>
+                            <th>库存</th>
+                            <th>购买基数</th>
+                            <th>价格（美元）</th>
+                          </tr>
+                        </thead>
+                        <tbody id="skuTableBody">
+                          <!-- 由 JS 生成 -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右侧边栏 -->
+              <div class="add-product-sidebar">
+                <!-- 价格与状态 -->
+                <div class="sidebar-card">
+                  <div class="sidebar-card-title">价格与状态</div>
+                  <div class="form-hint" style="margin-bottom: 16px;">产品售价和原价统一按美元维护。</div>
+
+                  <div class="form-group">
+                    <label class="form-label">产品状态</label>
+                    <select class="form-select" id="productStatus">
+                      <option value="draft">草稿</option>
+                      <option value="on-sale" selected>已上架</option>
+                      <option value="off-sale">已下架</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">产品售价（美元）</label>
+                    <div class="price-input">
+                      <span class="symbol">$</span>
+                      <input class="form-input" type="number" id="productPrice" placeholder="0.00" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">产品原价（美元）</label>
+                    <div class="price-input">
+                      <span class="symbol">$</span>
+                      <input class="form-input" type="number" id="productOriginalPrice" placeholder="0.00" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">是否征税</label>
+                    <select class="form-select" id="taxStatus">
+                      <option value="taxable">按税率规则征税</option>
+                      <option value="exempt">免税</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 配送信息 -->
+                <div class="sidebar-card">
+                  <div class="sidebar-card-title">配送信息</div>
+                  <div class="form-group">
+                    <label class="form-label">产品重量</label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productWeight" placeholder="0" min="0" step="0.01" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">g</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">产品净重，单位为克（g）</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装长（cm）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackLen" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装长度，单位为cm，保留1位小数</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装宽（cm）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackWid" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装宽度，单位为cm，保留1位小数</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">包装高（cm）<span class="required">*</span></label>
+                    <div class="price-input">
+                      <input class="form-input" type="number" id="productPackHgt" placeholder="0" min="0" step="0.1" value="0" />
+                      <span class="symbol" style="font-size:13px;color:hsl(var(--muted-foreground));margin-left:8px;">cm</span>
+                    </div>
+                    <div class="form-hint" style="margin-top:4px;">包装高度，单位为cm，保留1位小数</div>
+                  </div>
+                </div>
+
+                <!-- SEO 配置 -->
+                <div class="sidebar-card">
+                  <div class="sidebar-card-title">SEO 配置</div>
+                  <div class="form-group">
+                    <label class="form-label">网页标题</label>
+                    <input class="form-input" type="text" id="seoTitle" placeholder="请输入网页标题" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">网页描述</label>
+                    <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" style="min-height: 80px; resize: vertical;"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">URL 网址名称</label>
+                    <div style="display: flex; align-items: center; gap: 0;">
+                      <span style="padding: 10px 8px 10px 12px; border: 1px solid hsl(var(--border)); border-right: none; border-radius: 8px 0 0 8px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-size: 13px;">/products/</span>
+                      <input class="form-input" type="text" id="seoSlug" placeholder="product-url-slug" style="border-radius: 0 8px 8px 0;" />
+                    </div>
+                    <div class="form-hint" style="margin-top: 6px;">产品落地页URL标识，由标题自动生成可手动修改。</div>
+                  </div>
+                </div>
+
+                <!-- 评论导入 -->
+                <div class="sidebar-card">
+                  <div class="sidebar-card-title">评论导入</div>
+                  <div class="review-import-buttons">
+                    <button class="review-import-btn" onclick="downloadReviewTemplate()">下载评论模板</button>
+                    <button class="review-import-btn" onclick="importReviews()">导入评论</button>
+                  </div>
+                  <div class="review-import-hint">下载模板按格式填写，上传 CSV 文件批量导入评论到当前产品。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>var CURRENT_PAGE = 'products';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 提交产品 ====================
+    function submitProduct() {
+      const title = document.getElementById('productTitle').value;
+      const category = document.getElementById('productCategory').value;
+      const price = document.getElementById('productPrice').value;
+
+      if (!title) {
+        showToast('error', '请填写产品标题');
+        document.getElementById('productTitle').focus();
+        return;
+      }
+      if (!category) {
+        showToast('error', '请选择产品类别');
+        return;
+      }
+      if (!price) {
+        showToast('error', '请填写产品售价');
+        document.getElementById('productPrice').focus();
+        return;
+      }
+
+      const catCodeMap = { 'human-hair': 'HH', 'synthetic': 'SY', 'accessories': 'AC' };
+      const catNameMap = { 'human-hair': 'Human Hair', 'synthetic': 'Synthetic', 'accessories': 'Accessories' };
+      const catCode = catCodeMap[category] || 'OT';
+      const spu = 'SPU-' + catCode + '-' + String(products.length + 1).padStart(5, '0');
+
+      // 收集产品标记
+      const productTags = Array.from(document.getElementById('productTags').querySelectorAll('.tag-pill'))
+        .map(p => p.childNodes[0].textContent.trim());
+
+      const newProduct = {
+        id: products.length + 1,
+        name: title,
+        spu: spu,
+        category: catNameMap[category] || 'Accessories',
+        price: parseFloat(price),
+        originalPrice: parseFloat(document.getElementById('productOriginalPrice').value) || null,
+        stock: '1款0件',
+        site: 1,
+        status: document.getElementById('productStatus').value,
+        date: new Date().toISOString().split('T')[0],
+        // 新增字段
+        attr1: document.getElementById('attr1').value,
+        attr2: document.getElementById('attr2').value,
+        attr3: document.getElementById('attr3').value,
+        attr4: document.getElementById('attr4').value,
+        attr5: document.getElementById('attr5').value,
+        tags: productTags,
+        seoSlug: document.getElementById('seoSlug').value,
+        seoTitle: document.getElementById('seoTitle').value,
+        seoDesc: document.getElementById('seoDesc').value,
+        weight: parseFloat(document.getElementById('productWeight').value) || 0,
+        size_inch: parseFloat(document.getElementById('productSize').value) || 0,
+        pack_len: parseFloat(document.getElementById('productPackLen').value) || 0,
+        pack_wid: parseFloat(document.getElementById('productPackWid').value) || 0,
+        pack_hgt: parseFloat(document.getElementById('productPackHgt').value) || 0,
+        skuData: skuData,  // 包含 invCode 的完整 SKU 数据
+      };
+
+      products.unshift(newProduct);
+      renderProducts();
+      showToast('success', `产品「${title}」提交成功，等待上架审核！`);
+      setTimeout(() => { navigateToPage('product_list.html'); }, 800);
+    }
+
+    // ==================== 保存草稿 ====================
+    function saveDraft() {
+      showToast('info', '草稿已保存');
+    }
+
+    // ==================== 字符计数 ====================
+    function updateCharCount(input, elId, max) {
+      const count = input.value.length;
+      const el = document.getElementById(elId);
+      if (el) el.textContent = `${count}/${max}`;
+    }
+
+    // ==================== URL Slug 自动生成 ====================
+    function generateSlugFromTitle() {
+      const title = document.getElementById('productTitle').value.trim();
+      const slugInput = document.getElementById('seoSlug');
+      // 只在 slug 为空或与当前 title 高度相关时自动更新
+      if (!slugInput.value || slugInput.value === titleToSlug(slugInput.dataset.lastTitle || '')) {
+        const slug = titleToSlug(title);
+        slugInput.value = slug;
+        slugInput.dataset.lastTitle = title;
+      }
+    }
+
+    function titleToSlug(title) {
+      return title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')      // 移除特殊字符
+        .replace(/\s+/g, '-')           // 空格转连字符
+        .replace(/-+/g, '-')            // 合并多个连字符
+        .replace(/^-+|-+$/g, '')        // 移除首尾连字符
+        .substring(0, 80);              // 限制长度
+    }
+
+    // 监听标题输入，自动生成 slug
+    document.getElementById('productTitle').addEventListener('input', function() {
+      updateCharCount(this, 'titleCount', 120);
+      generateSlugFromTitle();
+    });
+
+    // ==================== 语言切换 ====================
+    document.getElementById('langTabs')?.addEventListener('click', function(e) {
+      if (e.target.classList.contains('lang-tab')) {
+        document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        showToast('info', `已切换语言：${e.target.textContent}`);
+      }
+    });
+
+    function addLang() {
+      const name = prompt('请输入新增语言名称（如：日语）');
+      if (name) {
+        const tabs = document.getElementById('langTabs');
+        const addBtn = tabs.querySelector('.lang-tab-add');
+        const tab = document.createElement('button');
+        tab.className = 'lang-tab';
+        tab.textContent = name;
+        tab.dataset.lang = name;
+        tabs.insertBefore(tab, addBtn);
+        showToast('success', `已添加语言：${name}`);
+      }
+    }
+
+    // ==================== 动态规格管理 ====================
+    let specsData = [
+      { id: 'spec-1', name: '颜色', values: ['黑色', '棕色', '高光色'] },
+      { id: 'spec-2', name: '尺码', values: ['18码', '22码', '26码'] }
+    ];
+    let specIdCounter = 2;
+
+    function addSpec() {
+      specIdCounter++;
+      specsData.push({ id: 'spec-' + specIdCounter, name: '规格' + specIdCounter, values: [] });
+      renderSpecs();
+      updateSpecFilters();
+      renderSkuTable();
+    }
+
+    function removeSpec(specId) {
+      specsData = specsData.filter(s => s.id !== specId);
+      renderSpecs();
+      updateSpecFilters();
+      renderSkuTable();
+    }
+
+    function updateSpecName(specId, newName) {
+      const spec = specsData.find(s => s.id === specId);
+      if (spec) spec.name = newName.trim() || spec.name;
+      updateSpecFilters();
+    }
+
+    function specNameChanged(specId, el) {
+      const newName = el.textContent.trim();
+      const spec = specsData.find(s => s.id === specId);
+      if (spec && newName !== spec.name) {
+        spec.name = newName || '未命名规格';
+        el.textContent = spec.name;
+        updateSpecFilters();
+      }
+    }
+
+    function renderSpecs() {
+      const container = document.getElementById('specsContainer');
+      container.innerHTML = specsData.map(spec => `
+        <div class="spec-block" data-spec-id="${spec.id}">
+          <div class="spec-title-row">
+            <span class="spec-title" contenteditable="true"
+                  onblur="specNameChanged('${spec.id}', this)">${spec.name}</span>
+            <span class="spec-delete" onclick="removeSpec('${spec.id}')" title="删除此规格">×</span>
+          </div>
+          <div class="tag-pills" id="tags-${spec.id}">
+            ${spec.values.map(v => `<div class="tag-pill">${v}<span class="remove" onclick="removeSpecTag('${spec.id}', '${v.replace(/'/g, "\\'")}')">×</span></div>`).join('')}
+            <button class="tag-add-btn" onclick="showSpecTagInput(this, '${spec.id}')">+ 添加${spec.name}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let activeTagInput = null;
+    function showSpecTagInput(btn, specId) {
+      if (activeTagInput) hideTagInput();
+      const spec = specsData.find(s => s.id === specId);
+      const input = document.createElement('input');
+      input.className = 'tag-input';
+      input.placeholder = spec ? spec.name : '值';
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          addSpecTag(specId, input.value, btn);
+        } else if (e.key === 'Escape') {
+          hideTagInput();
+        }
+      });
+      input.addEventListener('blur', function() {
+        if (input.value.trim()) addSpecTag(specId, input.value, btn);
+        else hideTagInput();
+      });
+      btn.parentElement.insertBefore(input, btn);
+      input.focus();
+      activeTagInput = input;
+    }
+
+    function hideTagInput() {
+      if (activeTagInput) {
+        activeTagInput.remove();
+        activeTagInput = null;
+      }
+    }
+
+    function addSpecTag(specId, value, btn) {
+      if (!value.trim()) return;
+      const spec = specsData.find(s => s.id === specId);
+      if (spec && !spec.values.includes(value.trim())) {
+        spec.values.push(value.trim());
+        renderSpecs();
+        updateSpecFilters();
+        renderSkuTable();
+      }
+      hideTagInput();
+    }
+
+    function removeSpecTag(specId, tagValue) {
+      const spec = specsData.find(s => s.id === specId);
+      if (spec) {
+        spec.values = spec.values.filter(v => v !== tagValue);
+        renderSpecs();
+        updateSpecFilters();
+        renderSkuTable();
+      }
+    }
+
+    // ==================== 筛选器 ====================
+    function updateSpecFilters() {
+      const row = document.getElementById('specFiltersRow');
+      // 保留库存联动 toggle，重建前面的 select
+      const linkToggle = row.querySelector('.spec-link-toggle');
+      row.querySelectorAll('select').forEach(s => s.remove());
+      specsData.forEach(spec => {
+        const sel = document.createElement('select');
+        sel.id = 'filter-' + spec.id;
+        sel.onchange = function() { renderSkuTable(); };
+        sel.innerHTML = `<option value="">${spec.name}</option>`
+          + spec.values.map(v => `<option value="${v}">${v}</option>`).join('');
+        row.insertBefore(sel, linkToggle);
+      });
+    }
+
+    // ==================== SKU 规格生成 ====================
+    let skuData = [];
+    function renderSkuTable() {
+      // 收集过滤条件
+      const filters = {};
+      specsData.forEach(spec => {
+        const sel = document.getElementById('filter-' + spec.id);
+        if (sel && sel.value) filters[spec.id] = sel.value;
+      });
+
+      // 获取所有规格的值组合
+      const allValues = specsData.map(spec => {
+        let vals = spec.values;
+        if (filters[spec.id]) vals = vals.filter(v => v === filters[spec.id]);
+        return { specId: spec.id, specName: spec.name, values: vals };
+      });
+
+      const tbody = document.getElementById('skuTableBody');
+      const hasEmpty = allValues.some(sv => sv.values.length === 0);
+      if (hasEmpty || specsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="sku-empty">请为所有规格添加选项值后生成 SKU</div></td></tr>';
+        return;
+      }
+
+      // 生成笛卡尔积
+      let combos = [{}];
+      for (const sv of allValues) {
+        const next = [];
+        for (const combo of combos) {
+          for (const v of sv.values) {
+            next.push({ ...combo, [sv.specId]: { name: sv.specName, value: v } });
+          }
+        }
+        combos = next;
+      }
+
+      const basePrice = parseFloat(document.getElementById('productPrice').value) || 129;
+      let idx = 1;
+      skuData = combos.map(combo => {
+        const keyParts = specsData.map(s => combo[s.id] ? `${combo[s.id].name}:${combo[s.id].value}` : '').filter(Boolean);
+        const key = keyParts.join('|');
+        const nameParts = specsData.map(s => combo[s.id] ? combo[s.id].value : '').filter(Boolean);
+        const name = nameParts.join('*');
+        const existing = skuData.find(item => item.key === key);
+        return existing || {
+          key,
+          name,
+          specs: combo,
+          code: `HG-${idx.toString().padStart(2, '0')}-BW22`,
+          stock: '',
+          invCode: '',
+          qty: 1,
+          price: basePrice
+        };
+        idx++;
+      });
+
+      tbody.innerHTML = skuData.map(item => `
+        <tr data-key="${item.key}">
+          <td><div class="checkbox" onclick="toggleSkuCheckbox(this)"></div></td>
+          <td>
+            <div class="img-upload-cell" onclick="showToast('info', '选择 SKU 图片')"
+                 style="${item.img ? `background-image:url(${item.img});background-size:cover;background-position:center;` : ''}">${item.img ? '' : '+'}</div>
+          </td>
+          <td><input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" /></td>
+          <td><input value="${item.invCode || ''}" onchange="updateSkuData('${item.key}', 'invCode', this.value)" placeholder="库存系统货品编码" /></td>
+          <td><input type="number" value="${item.stock}" placeholder="-" ${stockLinkEnabled ? 'disabled' : ''} style="${stockLinkEnabled ? 'opacity:0.5' : ''}" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
+          <td><input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" /></td>
+          <td>
+            <div class="currency">
+              <span>$</span>
+              <input type="number" value="${item.price}" onchange="updateSkuData('${item.key}', 'price', this.value)" />
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      skuUpdateBulkBar();
+    }
+
+    function updateSkuData(key, field, value) {
+      const item = skuData.find(s => s.key === key);
+      if (item) item[field] = value;
+    }
+
+    function toggleSkuCheckbox(el) {
+      el.classList.toggle('checked');
+      el.innerHTML = el.classList.contains('checked') ? '✓' : '';
+      skuUpdateBulkBar();
+    }
+
+    function toggleAllSkuCheckboxes(el) {
+      const isChecked = !el.classList.contains('checked');
+      el.classList.toggle('checked');
+      el.innerHTML = isChecked ? '✓' : '';
+      document.querySelectorAll('#skuTableBody .checkbox').forEach(cb => {
+        cb.classList.toggle('checked', isChecked);
+        cb.innerHTML = isChecked ? '✓' : '';
+      });
+      skuUpdateBulkBar();
+    }
+
+    function skuUpdateBulkBar() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      const count = checked.length;
+      document.getElementById('skuSelectedCount').textContent = count;
+      const buttons = document.querySelectorAll('#skuBulkActionBar .bulk-actions .btn');
+      buttons.forEach(b => { b.disabled = count === 0; });
+      // 如果开了库存联动，库存按钮始终 disabled
+      if (stockLinkEnabled) {
+        document.getElementById('btnBatchStock').disabled = true;
+      }
+    }
+
+    function getCheckedSkuKeys() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      if (checked.length === 0) {
+        showToast('info', '请先勾选需要操作的 SKU 行');
+        return [];
+      }
+      return Array.from(checked).map(cb => cb.closest('tr').dataset.key);
+    }
+
+    // ==================== 批量图片 ====================
+    function batchSkuImage() {
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      document.getElementById('batchImageInput').value = '';
+      document.getElementById('batchImageInput').click();
+    }
+
+    function handleBatchImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const keys = getCheckedSkuKeysInfo();
+      if (keys.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const imgUrl = e.target.result;
+        keys.forEach(info => {
+          const item = skuData.find(s => s.key === info.key);
+          if (item) item.img = imgUrl;
+          const cell = info.row.querySelector('.img-upload-cell');
+          if (cell) {
+            cell.style.backgroundImage = `url(${imgUrl})`;
+            cell.style.backgroundSize = 'cover';
+            cell.style.backgroundPosition = 'center';
+            cell.textContent = '';
+          }
+        });
+        showToast('success', `已批量设置 ${keys.length} 条 SKU 图片`);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function getCheckedSkuKeysInfo() {
+      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      return Array.from(checked).map(cb => ({
+        key: cb.closest('tr').dataset.key,
+        row: cb.closest('tr')
+      }));
+    }
+
+    // ==================== 批量内联编辑（替代 prompt 对话框） ====================
+    let bulkEditField = null;
+
+    function showBulkEdit(field, label, type) {
+      if (field === 'stock' && stockLinkEnabled) {
+        showToast('info', '库存联动已开启，请先关闭联动后再手动设置库存');
+        return;
+      }
+      bulkEditField = field;
+      const inputEl = document.getElementById('skuBulkEditInput');
+      document.getElementById('skuBulkEditLabel').textContent = label + '：';
+      inputEl.type = type === 'number' ? 'number' : 'text';
+      inputEl.placeholder = '请输入' + label.replace('批量', '');
+      inputEl.value = '';
+      document.getElementById('skuBulkActions').style.display = 'none';
+      document.getElementById('skuBulkInlineEdit').style.display = 'flex';
+      inputEl.focus();
+      inputEl.onkeydown = function(e) {
+        if (e.key === 'Enter') confirmBulkEdit();
+        else if (e.key === 'Escape') cancelBulkEdit();
+      };
+    }
+
+    function confirmBulkEdit() {
+      if (!bulkEditField) return;
+      const inputEl = document.getElementById('skuBulkEditInput');
+      const value = inputEl.value.trim();
+      if (value === '') {
+        showToast('info', '请输入值');
+        inputEl.focus();
+        return;
+      }
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      keys.forEach(key => {
+        updateSkuData(key, bulkEditField, value);
+      });
+      renderSkuTable();
+      showToast('success', `已批量设置 ${keys.length} 条 SKU ${inputEl.placeholder.replace('请输入', '')}`);
+      closeBulkEdit();
+    }
+
+    function cancelBulkEdit() {
+      closeBulkEdit();
+    }
+
+    function closeBulkEdit() {
+      bulkEditField = null;
+      document.getElementById('skuBulkInlineEdit').style.display = 'none';
+      document.getElementById('skuBulkActions').style.display = 'flex';
+    }
+
+    // ==================== 批量名称 ====================
+    function batchSkuName() {
+      showBulkEdit('name', '批量名称', 'text');
+    }
+
+    // ==================== 批量库存编码 ====================
+    function batchSkuInvCode() {
+      showBulkEdit('invCode', '批量库存编码', 'text');
+    }
+
+    // ==================== 批量库存 ====================
+    function batchSkuStock() {
+      showBulkEdit('stock', '批量库存', 'number');
+    }
+
+    // ==================== 批量基数 ====================
+    function batchSkuQty() {
+      showBulkEdit('qty', '批量基数', 'number');
+    }
+
+    // ==================== 批量价格 ====================
+    function batchSkuPrice() {
+      showBulkEdit('price', '批量价格', 'number');
+    }
+
+    let stockLinkEnabled = true;
+    function toggleStockLink(el) {
+      const checkbox = el.querySelector('.checkbox');
+      checkbox.classList.toggle('checked');
+      stockLinkEnabled = checkbox.classList.contains('checked');
+      checkbox.innerHTML = stockLinkEnabled ? '✓' : '';
+      // 更新库存输入框的 disabled 状态
+      document.querySelectorAll('#skuTableBody td:nth-child(5) input').forEach(inp => {
+        inp.disabled = stockLinkEnabled;
+        inp.style.opacity = stockLinkEnabled ? '0.5' : '1';
+      });
+      skuUpdateBulkBar();
+      showToast('info', stockLinkEnabled ? '库存联动已开启，库存不可手动编辑' : '库存联动已关闭，可手动编辑库存');
+    }
+
+    // ==================== 媒体上传（支持预览、删除、拖拽排序） ====================
+    const mediaData = { carousel: [], detail: [] };
+    const MAX_MEDIA = 9;
+
+    // 模拟上传用随机颜色生成占位图/视频
+    const mockColors = [
+      '#C9A96E', '#6B8F71', '#5B7FBF', '#C06070', '#8B7A9E',
+      '#D4A76A', '#5A9E8F', '#7B9EC7', '#C78B8B', '#A08BB5',
+    ];
+    const mockLabels = ['主图', '角度2', '细节', '佩戴', '对比', '包装', '色卡', '材质', '场景'];
+
+    function simulateMediaUpload(type) {
+      if (mediaData[type].length >= MAX_MEDIA) {
+        showToast('error', '最多上传 9 个媒体文件');
+        return;
+      }
+      const isVideo = Math.random() < 0.2; // 20% 概率模拟视频
+      const idx = mediaData[type].length;
+      const color = mockColors[idx % mockColors.length];
+      const label = mockLabels[idx % mockLabels.length];
+      mediaData[type].push({
+        id: Date.now() + Math.random(),
+        type: isVideo ? 'video' : 'image',
+        label: label,
+        color: color,
+        // 真实场景这里放 URL，模拟用颜色生成占位
+      });
+      renderMediaGrid(type);
+      showToast('success', `${type === 'carousel' ? '轮播' : '详情'}${isVideo ? '视频' : '图片'}上传成功`);
+    }
+
+    function renderMediaGrid(type) {
+      const grid = document.getElementById(type === 'carousel' ? 'carouselGrid' : 'detailGrid');
+      const items = mediaData[type];
+      const countEl = document.getElementById(type + 'Count');
+
+      // 先清空，再重建（保留添加按钮）
+      let html = items.map((item, i) => {
+        const isVideo = item.type === 'video';
+        return `
+        <div class="media-card" draggable="true"
+             data-id="${item.id}" data-index="${i}" data-type="${type}"
+             ondragstart="handleMediaDragStart(event)"
+             ondragover="handleMediaDragOver(event)"
+             ondragleave="handleMediaDragLeave(event)"
+             ondrop="handleMediaDrop(event, '${type}')"
+             ondragend="handleMediaDragEnd(event)">
+          ${isVideo
+            ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,${item.color},${item.color}88);display:flex;align-items:center;justify-content:center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" opacity="0.7"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+               </div>`
+            : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${item.color},${item.color}88);display:flex;align-items:center;justify-content:center;font-size:20px;color:white;font-weight:600;">${item.label}</div>`
+          }
+          <span class="media-type-badge">${isVideo ? '视频' : '图片'}</span>
+          <span class="media-delete" onclick="deleteMedia('${type}', ${i}, event)">×</span>
+          <span class="media-order">${i + 1}</span>
+        </div>`;
+      }).join('');
+
+      // 添加按钮
+      html += `
+        <div class="media-add-card" onclick="simulateMediaUpload('${type}')">
+          <div class="plus">+</div>
+          <div class="text">添加图片/视频</div>
+          <div class="count">(${items.length}/${MAX_MEDIA})</div>
+        </div>`;
+
+      grid.innerHTML = html;
+      if (countEl) countEl.textContent = `(${items.length}/${MAX_MEDIA})`;
+    }
+
+    function deleteMedia(type, index, event) {
+      event.stopPropagation();
+      mediaData[type].splice(index, 1);
+      renderMediaGrid(type);
+      showToast('info', '媒体已删除');
+    }
+
+    // ==================== 媒体拖拽排序 ====================
+    let mediaDragItem = null;
+
+    function handleMediaDragStart(e) {
+      mediaDragItem = e.target.closest('.media-card');
+      if (!mediaDragItem) return;
+      mediaDragItem.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', mediaDragItem.dataset.index);
+    }
+
+    function handleMediaDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const card = e.target.closest('.media-card');
+      if (card && card !== mediaDragItem) {
+        card.classList.add('drag-over');
+      }
+    }
+
+    function handleMediaDragLeave(e) {
+      const card = e.target.closest('.media-card');
+      if (card) card.classList.remove('drag-over');
+    }
+
+    function handleMediaDrop(e, type) {
+      e.preventDefault();
+      const target = e.target.closest('.media-card');
+      if (!target || !mediaDragItem || target === mediaDragItem) return;
+      target.classList.remove('drag-over');
+
+      const fromIdx = parseInt(mediaDragItem.dataset.index);
+      const toIdx = parseInt(target.dataset.index);
+      if (isNaN(fromIdx) || isNaN(toIdx)) return;
+
+      const items = mediaData[type];
+      const [moved] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, moved);
+      renderMediaGrid(type);
+    }
+
+    function handleMediaDragEnd(e) {
+      document.querySelectorAll('.media-card').forEach(c => {
+        c.classList.remove('dragging', 'drag-over');
+      });
+      mediaDragItem = null;
+    }
+
+    // ==================== 评论导入 ====================
+    function downloadReviewTemplate() {
+      // 生成 CSV 评论模版
+      const headers = ['用户昵称', '评分(1-5)', '评论标题', '评论内容', '评论时间(YYYY-MM-DD HH:mm:ss)'];
+      const sampleRow = ['示例用户', '5', '非常满意', '产品质量很好，物流也很快，推荐购买！', '2026-07-01 10:30:00'];
+      
+      // BOM for UTF-8 Excel compatibility
+      const BOM = '\uFEFF';
+      const csvContent = BOM + headers.join(',') + '\n' + sampleRow.join(',') + '\n';
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '评论导入模板.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('success', '评论模板下载成功！请按模版格式填写后导入');
+    }
+
+    function importReviews() {
+      // 创建隐藏的文件选择器
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const text = ev.target.result;
+          const lines = text.split('\n').filter(l => l.trim());
+          if (lines.length < 2) {
+            showToast('error', 'CSV文件格式错误，请使用下载的模板格式');
+            return;
+          }
+          // 预览前3条评论
+          const preview = lines.slice(0, 4).join('<br>');
+          const totalReviews = lines.length - 1; // 减去表头
+          showToast('success', `文件解析完成，共识别 ${totalReviews} 条评论，准备导入到当前产品`);
+          // 后续接入真实导入逻辑
+        };
+        reader.readAsText(file, 'UTF-8');
+      };
+      input.click();
+    }
+
+    // ==================== 产品标记输入 ====================
+    let activeProductTagInput = null;
+    function showProductTagInput(btn) {
+      if (activeProductTagInput) {
+        activeProductTagInput.remove();
+        activeProductTagInput = null;
+      }
+      const input = document.createElement('input');
+      input.className = 'tag-input';
+      input.placeholder = '输入标记';
+      input.style.width = '100px';
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && input.value.trim()) {
+          addProductTag(btn, input.value.trim());
+        } else if (e.key === 'Escape') {
+          input.remove();
+          activeProductTagInput = null;
+        }
+      });
+      input.addEventListener('blur', function() {
+        if (input.value.trim()) {
+          addProductTag(btn, input.value.trim());
+        } else {
+          input.remove();
+          activeProductTagInput = null;
+        }
+      });
+      btn.parentElement.insertBefore(input, btn);
+      input.focus();
+      activeProductTagInput = input;
+    }
+
+    function addProductTag(btn, value) {
+      if (activeProductTagInput) {
+        activeProductTagInput.remove();
+        activeProductTagInput = null;
+      }
+      const pill = document.createElement('div');
+      pill.className = 'tag-pill';
+      pill.innerHTML = `${value}<span class="remove" onclick="this.parentElement.remove()">×</span>`;
+      btn.parentElement.insertBefore(pill, btn);
+    }
+
+    // ==================== 删除确认 ====================
+    function confirmDelete(productName) {
+      const overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = `
+        <div class="dialog">
+          <div class="dialog-title">确认删除</div>
+          <div class="dialog-desc">确定要删除产品「${productName}」吗？此操作无法撤销。</div>
+          <div class="dialog-actions">
+            <button class="btn btn-secondary" onclick="this.closest('.dialog-overlay').remove()">取消</button>
+            <button class="btn btn-destructive" onclick="deleteProduct('${productName}'); this.closest('.dialog-overlay').remove();">确认删除</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+      document.body.appendChild(overlay);
+    }
+
+    function deleteProduct(name) {
+      const index = products.findIndex(p => p.name === name);
+      if (index > -1) {
+        products.splice(index, 1);
+        renderProducts();
+        showToast('success', `产品「${name}」已删除`);
+      }
+    }
+
+    // ==================== 导出 ====================
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        showToast('success', '产品数据导出成功（模拟）');
+      });
+    }
+
+    // ==================== 富文本编辑 ====================
+    function formatText(type) {
+      const editor = document.getElementById('productAttrEditor') || document.getElementById('richEditor');
+      if (!editor) return;
+      switch (type) {
+        case 'bold': document.execCommand('bold'); break;
+        case 'italic': document.execCommand('italic'); break;
+        case 'underline': document.execCommand('underline'); break;
+        case 'h2': document.execCommand('formatBlock', false, 'h2'); break;
+        case 'h3': document.execCommand('formatBlock', false, 'h3'); break;
+        case 'ol': document.execCommand('insertOrderedList'); break;
+        case 'ul': document.execCommand('insertUnorderedList'); break;
+      }
+      editor.focus();
+    }
+
+    // ==================== 分页交互 ====================
+    document.querySelectorAll('.page-btn:not(.disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        showToast('info', `切换到第 ${btn.textContent} 页`);
+      });
+    });
+
+
+    // ==================== 初始化 ====================
+    renderSpecs();
+    updateSpecFilters();
+    renderSkuTable();
+  </script>
+</body>
+</html>

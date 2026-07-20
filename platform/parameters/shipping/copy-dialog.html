@@ -1,0 +1,30 @@
+<!-- 复制运费规则对话框 -->
+<div class="dialog-overlay" id="shippingCopyDialogOverlay" style="display:none;" onclick="closeShippingCopyDialog()">
+  <div class="dialog" style="width:520px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">复制运费规则</span>
+      <button class="dialog-close" onclick="closeShippingCopyDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="shippingCopySourceChannelId" value="">
+      <div class="dialog-desc" style="margin-bottom:16px;">选择目标渠道，将源渠道的运费规则复制到目标渠道。</div>
+      <div class="form-group">
+        <label class="form-label">源渠道</label>
+        <div style="font-size:14px;padding:8px 0;font-weight:600;" id="shippingCopySourceLabel">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">目标渠道<span class="required-star">*</span></label>
+        <select class="form-input" id="shippingCopyTargetChannel">
+          <option value="">请选择目标渠道</option>
+        </select>
+        <div class="form-hint">目标渠道将获得与源渠道完全相同的运费规则</div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeShippingCopyDialog()">取消</button>
+      <button class="btn btn-primary" onclick="confirmShippingCopy()">复制</button>
+    </div>
+  </div>
+</div>

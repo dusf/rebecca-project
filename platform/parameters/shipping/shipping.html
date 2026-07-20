@@ -1,0 +1,1012 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>运费管理 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    /* Tab 导航 */
+    .shipping-tabs { display: flex; gap: 0; border-bottom: 2px solid hsl(var(--border)); margin-bottom: 20px; }
+    .shipping-tab { padding: 10px 24px; font-size: 14px; font-weight: 500; color: hsl(var(--muted-foreground)); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; }
+    .shipping-tab:hover { color: hsl(var(--foreground)); }
+    .shipping-tab.active { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); font-weight: 600; }
+    .inline-config-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .inline-config-row label { font-size: 13px; font-weight: 500; min-width: 90px; color: hsl(var(--muted-foreground)); }
+    .inline-config-row input, .inline-config-row select { height: 34px; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 0 10px; font-size: 13px; }
+    .inline-config-row input[type="number"] { width: 100px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <script>
+    // ========== JS 错误显示（调试用） ==========
+    window.onerror = function(msg, url, line, col, err) {
+      var el = document.getElementById('jsError');
+      if (el) {
+        el.innerHTML = '<div style="background:#fee;border:2px solid red;padding:12px;border-radius:8px;margin:16px;font-family:monospace;font-size:12px;"><b style="color:red;">JS Error:</b> ' + msg + '<br>File: ' + url + ' Ln:' + line + ' Col:' + col + '</div>';
+        el.style.display = 'block';
+      }
+    };
+  </script>
+  <div id="jsError" style="display:none;background:#fee;border:2px solid red;padding:12px;border-radius:8px;margin:16px;font-family:monospace;font-size:12px;"></div>
+  <div class="content">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">运费<span class="count-badge" id="shippingCount"></span></div>
+        <div class="page-subtitle">管理物流商、授权账号、渠道及运费模板</div>
+      </div>
+      <button class="btn btn-primary" id="btnAdd" onclick="handleAdd()">+ 添加物流商</button>
+    </div>
+
+    <!-- Tab 切换 -->
+    <div class="shipping-tabs">
+      <button class="shipping-tab active" onclick="switchTab('providers')">物流商</button>
+      <button class="shipping-tab" onclick="switchTab('accounts')">授权账号</button>
+      <button class="shipping-tab" onclick="switchTab('channels')">渠道</button>
+      <button class="shipping-tab" onclick="switchTab('templates')">运费模板</button>
+    </div>
+
+    <!-- Tab 1: 物流商 -->
+    <div class="tab-content active" id="tab-providers">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input class="search-input" type="text" placeholder="搜索物流商名称/代码..." oninput="currentPage=1;renderTable()" id="providerSearch">
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="providerTypeFilter">
+            <option value="">全部类型</option>
+            <option value="专线物流">专线物流</option>
+            <option value="国际快递">国际快递</option>
+            <option value="邮政">邮政</option>
+            <option value="平台物流">平台物流</option>
+            <option value="货代">货代</option>
+            <option value="供应链">供应链</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="providerStatusFilter">
+            <option value="">全部状态</option>
+            <option value="active">启用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="bulk-action-bar" id="bulkActionBar">
+        <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+          <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+          <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="customColWrapper"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        </div>
+      </div>
+      <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th data-col="name">物流商名称</th><th data-col="code">代码</th><th data-col="type">物流商类型</th><th data-col="accountCount">授权账号数</th><th data-col="channelCount">启用渠道数</th><th data-col="status">状态</th><th data-col="actions" style="width:140px">操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="shippingPagination"></div></div>
+    </div>
+
+    <!-- Tab 2: 授权账号 -->
+    <div class="tab-content" id="tab-accounts">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input class="search-input" type="text" placeholder="搜索账号名称/代码..." oninput="currentPage=1;renderTable()" id="accountSearch">
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="accountProviderFilter">
+            <option value="">全部物流商</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="accountStatusFilter">
+            <option value="">全部状态</option>
+            <option value="active">启用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="bulk-action-bar" id="bulkActionBar2">
+        <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount2">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+          <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+          <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="customColWrapper2"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        </div>
+      </div>
+      <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody2')"></div></th><th data-col="name">账号名称</th><th data-col="code">账号代码</th><th data-col="provider">所属物流商</th><th data-col="channelCount">渠道数</th><th data-col="activeChannelCount">启用渠道数</th><th data-col="status">状态</th><th data-col="actions2" style="width:140px">操作</th></tr></thead><tbody id="tableBody2"></tbody></table></div><div class="pagination-bar" id="shippingPagination2"></div></div>
+    </div>
+
+    <!-- Tab 3: 渠道 -->
+    <div class="tab-content" id="tab-channels">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input class="search-input" type="text" placeholder="搜索渠道名称/代码..." oninput="currentPage=1;renderTable()" id="channelSearch">
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="channelProviderFilter">
+            <option value="">全部物流商</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="channelServiceFilter">
+            <option value="">全部服务类型</option>
+            <option value="经济">经济</option>
+            <option value="标准">标准</option>
+            <option value="快速">快速</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="channelStatusFilter">
+            <option value="">全部状态</option>
+            <option value="active">启用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="bulk-action-bar" id="bulkActionBar3">
+        <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount3">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+          <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+          <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="customColWrapper3"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        </div>
+      </div>
+      <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody3')"></div></th><th data-col="name">渠道名称</th><th data-col="code">渠道代码</th><th data-col="provider">所属物流商</th><th data-col="account">所属账号</th><th data-col="serviceType">服务类型</th><th data-col="countries">绑定国家</th><th data-col="billingType">计费方式</th><th data-col="status">状态</th><th data-col="actions3" style="width:160px">操作</th></tr></thead><tbody id="tableBody3"></tbody></table></div><div class="pagination-bar" id="shippingPagination3"></div></div>
+    </div>
+
+    <!-- Tab 4: 运费模板 -->
+    <div class="tab-content" id="tab-templates">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input class="search-input" type="text" placeholder="搜索渠道名称..." oninput="currentPage=1;renderTable()" id="templateSearch">
+          <select class="filter-select" onchange="currentPage=1;renderTable()" id="templateBillingFilter">
+            <option value="">全部计费方式</option>
+            <option value="amount">按订单金额区间</option>
+            <option value="weight">按订单重量区间</option>
+            <option value="fixed">固定金额</option>
+          </select>
+        </div>
+      </div>
+      <div class="bulk-action-bar" id="bulkActionBar4">
+        <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount4">0</span> 条</div>
+        <div class="bulk-actions">
+          <div class="custom-col-wrapper" id="customColWrapper4"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        </div>
+      </div>
+      <div class="table-card"><div class="table-wrapper"><table><thead><tr><th data-col="channel">渠道</th><th data-col="billingType">计费方式</th><th data-col="freeShip">包邮门槛</th><th data-col="insurance">运费险</th><th data-col="taxIncluded">运费含税</th><th data-col="remoteFee">偏远附加费</th><th data-col="actions4" style="width:140px">操作</th></tr></thead><tbody id="tableBody4"></tbody></table></div><div class="pagination-bar" id="shippingPagination4"></div></div>
+    </div>
+  </div>
+
+  <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
+
+  <script>
+  // ========== 行内公共工具函数（不依赖 page_utils.js，确保 iframe 环境可靠） ==========
+
+  // ---- Toast ----
+  function showToast(type, message) {
+    if (window.parent && typeof window.parent.showToast === 'function') {
+      window.parent.showToast(type, message);
+    }
+  }
+
+  // ---- 复选框 ----
+  window.puToggleCheckbox = function(el) {
+    el.classList.toggle('checked');
+    el.innerHTML = el.classList.contains('checked') ? '\u2713' : '';
+    window.puUpdateBulkBar();
+  };
+  window.puToggleAllCheckboxes = function(el, tbodyId) {
+    var isChecked = !el.classList.contains('checked');
+    el.classList.toggle('checked', isChecked);
+    el.innerHTML = isChecked ? '\u2713' : '';
+    var tbody = document.getElementById(tbodyId || 'tableBody');
+    if (tbody) {
+      var cbs = tbody.querySelectorAll('.checkbox');
+      for (var k = 0; k < cbs.length; k++) {
+        cbs[k].classList.toggle('checked', isChecked);
+        cbs[k].innerHTML = isChecked ? '\u2713' : '';
+      }
+    }
+    window.puUpdateBulkBar();
+  };
+  window.puGetCheckedCount = function(tbodyId) {
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return 0;
+    return tbody.querySelectorAll('tr .checkbox.checked').length;
+  };
+
+  // ---- 批量操作栏 ----
+  window.puUpdateBulkBar = function() {
+    var bar = document.getElementById('bulkActionBar');
+    var tbody = document.getElementById('tableBody');
+    var count = tbody ? tbody.querySelectorAll('.checkbox.checked').length : 0;
+    var countEl = document.getElementById('puSelectedCount');
+    if (countEl) countEl.textContent = count;
+    if (bar) {
+      var btns = bar.querySelectorAll('.bulk-actions > .btn');
+      for (var i = 0; i < btns.length; i++) {
+        if (count === 0) { btns[i].setAttribute('disabled', ''); }
+        else { btns[i].removeAttribute('disabled'); }
+      }
+    }
+  };
+  window.puDoBatchAction = function(name) {};
+
+  // ---- 选中状态保存/恢复 ----
+  window.puSaveCheckedIds = function(tbodyId) {
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return [];
+    var ids = [];
+    tbody.querySelectorAll('tr .checkbox.checked').forEach(function(cb) {
+      var tr = cb.closest('tr');
+      if (tr && tr.dataset.id) ids.push(tr.dataset.id);
+    });
+    return ids;
+  };
+  window.puRestoreCheckedIds = function(tbodyId, ids) {
+    if (!ids || !ids.length) return;
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function(tr) {
+      if (!tr.dataset.id || ids.indexOf(tr.dataset.id) === -1) return;
+      var cb = tr.querySelector('.checkbox');
+      if (cb) { cb.classList.add('checked'); cb.innerHTML = '\u2713'; }
+    });
+  };
+
+  // ---- 自定义列 ----
+  window.puToggleCustomColPanel = function() {
+    var panel = document.getElementById('customColPanel');
+    if (!panel) return;
+    if (panel.classList.contains('show')) { panel.classList.remove('show'); panel.style.display = 'none'; }
+    else { panel.style.display = 'block'; panel.classList.add('show'); }
+  };
+  window.puBuildCustomColPanel = function(columns, visibleCols) {
+    var body = document.getElementById('customColBody');
+    if (!body) return;
+    body.innerHTML = '';
+    columns.forEach(function(c) {
+      if (c.alwaysShow) return;
+      var item = document.createElement('div');
+      item.className = 'custom-col-item';
+      if (visibleCols.indexOf(c.key) !== -1) item.classList.add('checked');
+      item.innerHTML = '<span class="custom-col-check"></span>' + c.label;
+      item.addEventListener('click', function() {
+        var idx = window.PU_CONFIG.visibleCols.indexOf(c.key);
+        if (idx !== -1) { window.PU_CONFIG.visibleCols.splice(idx, 1); }
+        else { window.PU_CONFIG.visibleCols.push(c.key); }
+        if (window.PU_CONFIG.onColumnsChange) window.PU_CONFIG.onColumnsChange();
+      });
+      body.appendChild(item);
+    });
+  };
+  window.puResetCustomCols = function() {
+    var cfg = window.PU_CONFIG;
+    if (!cfg || !cfg.columns) return;
+    cfg.visibleCols = cfg.columns.filter(function(c) { return c.defaultShow !== false; }).map(function(c) { return c.key; });
+    puBuildCustomColPanel(cfg.columns, cfg.visibleCols);
+    if (cfg.onColumnsChange) cfg.onColumnsChange();
+  };
+  window.puSyncTableHead = function(cfg) {
+    var tr = document.querySelector('.table-card table thead tr');
+    if (!tr || !cfg || !cfg.visibleCols) return;
+    var ths = tr.querySelectorAll('th[data-col]');
+    for (var i = 0; i < ths.length; i++) {
+      ths[i].style.display = cfg.visibleCols.indexOf(ths[i].getAttribute('data-col')) === -1 ? 'none' : '';
+    }
+  };
+
+  // ---- 分页 ----
+  window.puSlicePage = function(data, page, size) {
+    page = page || 1; size = size || 10;
+    return data.slice((page - 1) * size, page * size);
+  };
+  window.puRenderPagination = function(opt) {
+    var c = document.getElementById(opt.containerId || 'shippingPagination');
+    if (!c) return;
+    var total = opt.total || 0, ps = opt.pageSize || 10, cur = opt.currentPage || 1;
+    var tp = Math.ceil(total / ps) || 1;
+    if (cur > tp) cur = tp;
+    var s = total === 0 ? 0 : (cur - 1) * ps + 1;
+    var e = Math.min(cur * ps, total);
+    var h = '<span class="pagination-info">' + s + '-' + e + ' \u6761\uff0c\u5171 ' + total + ' \u6761</span>';
+    h += '<div class="pagination-buttons">';
+    h += '<div class="page-btn' + (cur <= 1 ? ' disabled' : '') + '" data-page="' + (cur - 1) + '">\u2039</div>';
+    var pages = [];
+    if (tp <= 7) { for (var i = 1; i <= tp; i++) pages.push(i); }
+    else {
+      pages.push(1);
+      if (cur > 3) pages.push('...');
+      for (var i = Math.max(2, cur - 1); i <= Math.min(tp - 1, cur + 1); i++) pages.push(i);
+      if (cur < tp - 2) pages.push('...');
+      pages.push(tp);
+    }
+    for (var i = 0; i < pages.length; i++) {
+      var p = pages[i];
+      if (p === '...') { h += '<div class="page-btn disabled">...</div>'; }
+      else { h += '<div class="page-btn' + (p === cur ? ' active' : '') + '" data-page="' + p + '">' + p + '</div>'; }
+    }
+    h += '<div class="page-btn' + (cur >= tp ? ' disabled' : '') + '" data-page="' + (cur + 1) + '">\u203a</div>';
+    h += '</div>';
+    c.innerHTML = h;
+    c.querySelectorAll('.page-btn:not(.disabled):not([data-page="..."])').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var pg = parseInt(this.getAttribute('data-page'));
+        if (pg && pg !== cur && opt.onPageChange) opt.onPageChange(pg);
+      });
+    });
+  };
+  </script>
+  <script>
+  // ========== SVG 图标 ==========
+  var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+
+  var currentPage = 1, pageSize = 10;
+  var currentTab = 'providers';
+
+  // ========== 示例数据 ==========
+  var providers = [
+    { id: 1, name: '云途', code: 'YUNTU', type: '专线物流', website: 'https://www.yuntoupost.com', status: 'active' },
+    { id: 2, name: '燕文', code: 'YANWEN', type: '专线物流', website: 'https://www.yw56.com.cn', status: 'active' },
+    { id: 3, name: 'USPS', code: 'USPS', type: '邮政', website: 'https://www.usps.com', status: 'active' },
+    { id: 4, name: 'DHL', code: 'DHL', type: '国际快递', website: 'https://www.dhl.com', status: 'active' },
+    { id: 5, name: 'FBA物流专线', code: 'FBA', type: '专线物流', website: '', status: 'active' },
+    { id: 6, name: '志远国际', code: 'ZHIYUAN', type: '专线物流', website: '', status: 'active' },
+    { id: 7, name: '京东Fop物流', code: 'JD_FOP', type: '专线物流', website: '', status: 'disabled' },
+    { id: 8, name: '天捷速递', code: 'TIANJIE', type: '专线物流', website: '', status: 'active' },
+    { id: 9, name: '惠程荣达', code: 'HUICHENG', type: '专线物流', website: '', status: 'active' },
+    { id: 10, name: '环亚国际', code: 'HUANYA', type: '货代', website: '', status: 'disabled' },
+    { id: 11, name: '河南邮政', code: 'HENAN_POST', type: '邮政', website: '', status: 'active' },
+    { id: 12, name: '许昌腾云供应链', code: 'TENGYUN', type: '供应链', website: '', status: 'active' },
+    { id: 13, name: '跨越速运', code: 'KUAYUE', type: '快递', website: '', status: 'active' }
+  ];
+  var nextPId = 14;
+
+  var accounts = [
+    { id: 1, providerId: 1, name: '惠程荣达', code: 'HUICHENG_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 2, providerId: 1, name: '惠程-TEMU专用', code: 'HUICHENG_02', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 3, providerId: 2, name: '燕文标准账号', code: 'YANWEN_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 4, providerId: 2, name: '燕文经济账号', code: 'YANWEN_02', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'disabled' },
+    { id: 5, providerId: 3, name: 'USPS主账号', code: 'USPS_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 6, providerId: 4, name: 'DHL国际账号', code: 'DHL_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 7, providerId: 6, name: '志远美国专线', code: 'ZHIYUAN_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 8, providerId: 5, name: 'FBA主账号', code: 'FBA_MAIN', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 9, providerId: 8, name: '天捷速递主账号', code: 'TIANJIE_MAIN', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 10, providerId: 10, name: '环亚国际主账号', code: 'HUANYA_MAIN', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 11, providerId: 11, name: '河南邮政主账号', code: 'HENAN_POST_01', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 12, providerId: 12, name: '腾云供应链主账号', code: 'TENGYUN_MAIN', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' },
+    { id: 13, providerId: 4, name: 'DHL亚太账号', code: 'DHL_APAC', apiKey: '***', apiSecret: '***', callbackUrl: '', status: 'active' }
+  ];
+  var nextAId = 14;
+
+  var channels = [
+    { id: 1, accountId: 1, name: 'FBA物流专线--美国', code: 'FBA_US', serviceType: '标准', countries: ['美国'], estimatedDays: '7-12工作日', billingType: 'amount', status: 'active' },
+    { id: 2, accountId: 1, name: '云途全球特惠', code: 'YUNTU_GLOBAL', serviceType: '经济', countries: ['美国','英国','德国','法国','日本','澳洲'], estimatedDays: '15-25工作日', billingType: 'weight', status: 'active' },
+    { id: 3, accountId: 1, name: '云途欧洲专线', code: 'YUNTU_EU', serviceType: '标准', countries: ['英国','德国','法国'], estimatedDays: '10-15工作日', billingType: 'amount', status: 'active' },
+    { id: 4, accountId: 3, name: '燕文经济全球', code: 'YANWEN_ECO', serviceType: '经济', countries: ['美国','加拿大','英国','德国'], estimatedDays: '10-20工作日', billingType: 'weight', status: 'active' },
+    { id: 5, accountId: 5, name: 'USPS First Class', code: 'USPS_FC', serviceType: '经济', countries: ['美国'], estimatedDays: '5-10工作日', billingType: 'weight', status: 'active' },
+    { id: 6, accountId: 5, name: 'USPS Priority', code: 'USPS_PR', serviceType: '标准', countries: ['美国'], estimatedDays: '3-5工作日', billingType: 'weight', status: 'active' },
+    { id: 7, accountId: 6, name: 'DHL Express', code: 'DHL_EX', serviceType: '快速', countries: ['美国','英国','德国','法国','日本','澳洲','加拿大'], estimatedDays: '3-7工作日', billingType: 'weight', status: 'active' },
+    { id: 8, accountId: 6, name: 'DHL Economy', code: 'DHL_ECO', serviceType: '经济', countries: ['英国','德国','法国'], estimatedDays: '7-12工作日', billingType: 'amount', status: 'disabled' },
+    { id: 9, accountId: 7, name: 'ES8美国空派', code: 'ES8_US', serviceType: '快速', countries: ['美国'], estimatedDays: '5-8工作日', billingType: 'fixed', status: 'active' },
+    { id: 10, accountId: 3, name: '燕文标准-加拿大线', code: 'YANWEN_CA', serviceType: '标准', countries: ['加拿大'], estimatedDays: '10-18工作日', billingType: 'amount', status: 'active' },
+    { id: 11, accountId: 8, name: 'FBA物流专线-欧洲', code: 'FBA_EU', serviceType: '标准', countries: ['英国','德国','法国','意大利','西班牙'], estimatedDays: '15-25工作日', billingType: 'weight', status: 'active' },
+    { id: 12, accountId: 9, name: '天捷欧洲快递专线', code: 'TJ_EU_EX', serviceType: '快速', countries: ['英国','德国','法国'], estimatedDays: '5-8工作日', billingType: 'weight', status: 'active' },
+    { id: 13, accountId: 10, name: '环亚日本线', code: 'HUANYA_JP', serviceType: '标准', countries: ['日本'], estimatedDays: '5-10工作日', billingType: 'amount', status: 'active' },
+    { id: 14, accountId: 11, name: '河南邮政国际经济', code: 'HN_POST_ECO', serviceType: '经济', countries: ['美国','英国','澳洲'], estimatedDays: '12-20工作日', billingType: 'weight', status: 'active' },
+    { id: 15, accountId: 12, name: '腾云南美专线', code: 'TY_SOUTHAM', serviceType: '标准', countries: ['巴西','智利','阿根廷'], estimatedDays: '15-25工作日', billingType: 'amount', status: 'active' },
+    { id: 16, accountId: 13, name: 'DHL亚太速递', code: 'DHL_APAC_EX', serviceType: '快速', countries: ['日本','韩国','新加坡','澳洲'], estimatedDays: '2-4工作日', billingType: 'weight', status: 'active' },
+    { id: 17, accountId: 6, name: 'DHL中东专线', code: 'DHL_ME', serviceType: '标准', countries: ['阿联酋','沙特阿拉伯','以色列'], estimatedDays: '4-7工作日', billingType: 'weight', status: 'active' }
+  ];
+  var nextChId = 18;
+
+  // 运费模板（按渠道+国家）
+  var templates = [
+    { id: 1, channelId: 1, countryCode: 'US', billingType: 'amount', rules: [{from:0,to:30,fee:8},{from:30,to:80,fee:5},{from:80,to:150,fee:3},{from:150,to:0,fee:0}], freeShippingThreshold: 100, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 2, channelId: 2, countryCode: 'US', billingType: 'weight', rules: [{from:0,to:500,fee:5},{from:500,to:1000,fee:8},{from:1000,to:2000,fee:12},{from:2000,to:0,fee:15}], freeShippingThreshold: 0, remoteFeeRules: [], insuranceEnabled: true, insuranceRate: 1, insuranceHolder: 'merchant', isTaxIncluded: false },
+    { id: 3, channelId: 3, countryCode: 'GB', billingType: 'amount', rules: [{from:0,to:50,fee:10},{from:50,to:100,fee:6},{from:100,to:200,fee:4},{from:200,to:0,fee:0}], freeShippingThreshold: 120, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: true },
+    { id: 4, channelId: 4, countryCode: 'US', billingType: 'weight', rules: [{from:0,to:500,fee:6},{from:500,to:1000,fee:9},{from:1000,to:0,fee:14}], freeShippingThreshold: 0, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 5, channelId: 5, countryCode: 'US', billingType: 'fixed', rules: [{from:0,to:0,fee:8}], freeShippingThreshold: 0, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 6, channelId: 7, countryCode: 'US', billingType: 'weight', rules: [{from:0,to:500,fee:20},{from:500,to:1000,fee:30},{from:1000,to:2000,fee:45},{from:2000,to:0,fee:60}], freeShippingThreshold: 200, remoteFeeRules: [], insuranceEnabled: true, insuranceRate: 1.5, insuranceHolder: 'merchant', isTaxIncluded: false },
+    { id: 7, channelId: 9, countryCode: 'US', billingType: 'fixed', rules: [{from:0,to:0,fee:10}], freeShippingThreshold: 0, remoteFeeRules: [{country:'ZA',type:'fixed',amount:8},{country:'BR',type:'percent',percent:30}], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 8, channelId: 10, countryCode: 'CA', billingType: 'amount', rules: [{from:0,to:50,fee:12},{from:50,to:120,fee:7},{from:120,to:200,fee:4},{from:200,to:0,fee:0}], freeShippingThreshold: 150, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 9, channelId: 11, countryCode: 'GB', billingType: 'weight', rules: [{from:0,to:500,fee:15},{from:500,to:1000,fee:25},{from:1000,to:2000,fee:40},{from:2000,to:0,fee:55}], freeShippingThreshold: 150, remoteFeeRules: [], insuranceEnabled: true, insuranceRate: 1.2, insuranceHolder: 'platform', isTaxIncluded: true },
+    { id: 10, channelId: 12, countryCode: 'DE', billingType: 'weight', rules: [{from:0,to:500,fee:25},{from:500,to:1000,fee:38},{from:1000,to:2000,fee:55},{from:2000,to:0,fee:75}], freeShippingThreshold: 200, remoteFeeRules: [{country:'PT',type:'fixed',amount:10},{country:'GR',type:'percent',percent:25}], insuranceEnabled: true, insuranceRate: 2, insuranceHolder: 'merchant', isTaxIncluded: false },
+    { id: 11, channelId: 13, countryCode: 'JP', billingType: 'amount', rules: [{from:0,to:50,fee:6},{from:50,to:100,fee:4},{from:100,to:200,fee:2},{from:200,to:0,fee:0}], freeShippingThreshold: 80, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 12, channelId: 14, countryCode: 'US', billingType: 'weight', rules: [{from:0,to:300,fee:4},{from:300,to:800,fee:7},{from:800,to:1500,fee:10},{from:1500,to:0,fee:13}], freeShippingThreshold: 0, remoteFeeRules: [], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 13, channelId: 15, countryCode: 'BR', billingType: 'amount', rules: [{from:0,to:30,fee:15},{from:30,to:80,fee:10},{from:80,to:150,fee:6},{from:150,to:0,fee:0}], freeShippingThreshold: 100, remoteFeeRules: [{country:'AR',type:'fixed',amount:12}], insuranceEnabled: false, insuranceRate: 0, insuranceHolder: 'platform', isTaxIncluded: false },
+    { id: 14, channelId: 16, countryCode: 'JP', billingType: 'weight', rules: [{from:0,to:300,fee:30},{from:300,to:500,fee:45},{from:500,to:1000,fee:65},{from:1000,to:0,fee:90}], freeShippingThreshold: 300, remoteFeeRules: [], insuranceEnabled: true, insuranceRate: 2.5, insuranceHolder: 'merchant', isTaxIncluded: false },
+    { id: 15, channelId: 17, countryCode: 'AE', billingType: 'weight', rules: [{from:0,to:500,fee:35},{from:500,to:1000,fee:55},{from:1000,to:0,fee:80}], freeShippingThreshold: 0, remoteFeeRules: [{country:'IL',type:'fixed',amount:15}], insuranceEnabled: true, insuranceRate: 1.5, insuranceHolder: 'platform', isTaxIncluded: false }
+  ];
+  var nextTplId = 16;
+
+  // ========== 辅助函数 ==========
+  function findProvider(id) { for (var i=0;i<providers.length;i++) if (providers[i].id===id) return providers[i]; return null; }
+  function findAccount(id) { for (var i=0;i<accounts.length;i++) if (accounts[i].id===id) return accounts[i]; return null; }
+  function findChannel(id) { for (var i=0;i<channels.length;i++) if (channels[i].id===id) return channels[i]; return null; }
+  function findTemplate(id) { for (var i=0;i<templates.length;i++) if (templates[i].id===id) return templates[i]; return null; }
+
+  function getProviderIdByChannel(channelId) {
+    var ch = findChannel(channelId); if (!ch) return null;
+    var ac = findAccount(ch.accountId); if (!ac) return null;
+    return ac.providerId;
+  }
+  function getProviderIdByAccount(accountId) {
+    var ac = findAccount(accountId); return ac ? ac.providerId : null;
+  }
+  function getChannelCountByProvider(providerId) {
+    var count = 0; accounts.forEach(function(a) {
+      if (a.providerId !== providerId) return;
+      channels.forEach(function(ch) { if (ch.accountId === a.id && ch.status === 'active') count++; });
+    }); return count;
+  }
+
+  // ========== Tab 切换 ==========
+  function switchTab(tab) {
+    currentTab = tab; currentPage = 1;
+    document.querySelectorAll('.shipping-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('.shipping-tab[onclick*="' + tab + '"]').classList.add('active');
+    var btnAdd = document.getElementById('btnAdd');
+    if (tab === 'providers') { btnAdd.style.display = ''; btnAdd.textContent = '+ 添加物流商'; btnAdd.onclick = function(){ handleAdd(); }; }
+    else if (tab === 'accounts') { btnAdd.style.display = ''; btnAdd.textContent = '+ 添加授权账号'; btnAdd.onclick = function(){ handleAdd(); }; }
+    else if (tab === 'channels') { btnAdd.style.display = ''; btnAdd.textContent = '+ 添加渠道'; btnAdd.onclick = function(){ handleAdd(); }; }
+    else if (tab === 'templates') { btnAdd.style.display = 'none'; }
+    // 更新 PU_CONFIG 引用
+    if (tab === 'providers') window.PU_CONFIG = PU_CONFIG_PROVIDER;
+    else if (tab === 'accounts') window.PU_CONFIG = PU_CONFIG_ACCOUNT;
+    else if (tab === 'channels') window.PU_CONFIG = PU_CONFIG_CHANNEL;
+    else if (tab === 'templates') window.PU_CONFIG = PU_CONFIG_TEMPLATE;
+    // 填充账号/渠道页面的物流商筛选下拉
+    if (tab === 'accounts') populateAccountProviderFilter();
+    if (tab === 'channels') populateChannelProviderFilter();
+    renderTable();
+  }
+
+  function populateAccountProviderFilter() {
+    var sel = document.getElementById('accountProviderFilter');
+    if (!sel || sel._populated) return;
+    sel._populated = true;
+    providers.forEach(function(p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
+  }
+  function populateChannelProviderFilter() {
+    var sel = document.getElementById('channelProviderFilter');
+    if (!sel || sel._populated) return;
+    sel._populated = true;
+    providers.forEach(function(p) { var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
+  }
+
+  // ========== 添加按钮 ==========
+  function handleAdd() {
+    if (currentTab === 'providers') {
+      if (window.parent && window.parent.openShippingProviderDialog) window.parent.openShippingProviderDialog('add', null);
+    } else if (currentTab === 'accounts') {
+      if (window.parent && window.parent.openShippingAccountDialog) window.parent.openShippingAccountDialog('add', null);
+    } else if (currentTab === 'channels') {
+      if (window.parent && window.parent.openShippingChannelDialog) window.parent.openShippingChannelDialog('add', null);
+    }
+  }
+
+  // ========== 操作按钮 ==========
+  function handleEditProvider(id) { if (window.parent && window.parent.openShippingProviderDialog) window.parent.openShippingProviderDialog('edit', id); }
+  function handleEditAccount(id) { if (window.parent && window.parent.openShippingAccountDialog) window.parent.openShippingAccountDialog('edit', id); }
+  function handleEditChannel(id) { if (window.parent && window.parent.openShippingChannelDialog) window.parent.openShippingChannelDialog('edit', id); }
+  function handleConfigRate(channelId) { if (window.parent && window.parent.openShippingRateDialog) window.parent.openShippingRateDialog(channelId); }
+
+  function handleToggleProvider(id) {
+    var p = findProvider(id); if (!p) return;
+    p.status = p.status === 'active' ? 'disabled' : 'active';
+    renderTable(); closeAllMore();
+    showToast('success', '已' + (p.status === 'active' ? '启用' : '停用') + '「' + p.name + '」');
+  }
+  function handleToggleAccount(id) {
+    var a = findAccount(id); if (!a) return;
+    a.status = a.status === 'active' ? 'disabled' : 'active';
+    renderTable(); closeAllMore();
+    showToast('success', '已' + (a.status === 'active' ? '启用' : '停用') + '「' + a.name + '」');
+  }
+  function handleToggleChannel(id) {
+    var ch = findChannel(id); if (!ch) return;
+    ch.status = ch.status === 'active' ? 'disabled' : 'active';
+    renderTable(); closeAllMore();
+    showToast('success', '已' + (ch.status === 'active' ? '启用' : '停用') + '「' + ch.name + '」');
+  }
+
+  function handleDeleteProvider(id) { if (window.parent && window.parent.openShippingDeleteDialog) window.parent.openShippingDeleteDialog('provider', id); }
+  function handleDeleteAccount(id) { if (window.parent && window.parent.openShippingDeleteDialog) window.parent.openShippingDeleteDialog('account', id); }
+  function handleDeleteChannel(id) { if (window.parent && window.parent.openShippingDeleteDialog) window.parent.openShippingDeleteDialog('channel', id); }
+
+  function handleCopyTemplate(channelId) { if (window.parent && window.parent.openShippingCopyDialog) window.parent.openShippingCopyDialog(channelId); }
+
+  // ========== 供父页面调用的数据函数 ==========
+  window.findProvider = findProvider;
+  window.findAccount = findAccount;
+  window.findChannel = findChannel;
+  window.findTemplate = findTemplate;
+  window.providers = providers;
+  window.accounts = accounts;
+  window.channels = channels;
+  window.templates = templates;
+
+  window.providerAddItem = function(name, code, type, website, status) {
+    providers.push({ id: nextPId++, name: name, code: code, type: type, website: website || '', status: status });
+  };
+  window.providerUpdateItem = function(id, name, code, type, website, status) {
+    var p = findProvider(id); if (!p) return;
+    p.name = name; p.code = code; p.type = type; p.website = website || ''; p.status = status;
+  };
+  window.providerDeleteItem = function(id) { providers = providers.filter(function(p) { return p.id !== id; }); };
+  window.providerBatchDeleteItems = function(ids) { providers = providers.filter(function(p) { return ids.indexOf(p.id) === -1; }); };
+
+  window.accountAddItem = function(providerId, name, code, apiKey, apiSecret, callbackUrl, status) {
+    accounts.push({ id: nextAId++, providerId: providerId, name: name, code: code, apiKey: apiKey || '', apiSecret: apiSecret || '', callbackUrl: callbackUrl || '', status: status });
+  };
+  window.accountUpdateItem = function(id, providerId, name, code, apiKey, apiSecret, callbackUrl, status) {
+    var a = findAccount(id); if (!a) return;
+    a.providerId = providerId; a.name = name; a.code = code; a.apiKey = apiKey || ''; a.apiSecret = apiSecret || ''; a.callbackUrl = callbackUrl || ''; a.status = status;
+  };
+  window.accountDeleteItem = function(id) { accounts = accounts.filter(function(a) { return a.id !== id; }); };
+  window.accountBatchDeleteItems = function(ids) { accounts = accounts.filter(function(a) { return ids.indexOf(a.id) === -1; }); };
+
+  window.channelAddItem = function(accountId, name, code, serviceType, countries, estimatedDays, billingType, status) {
+    channels.push({ id: nextChId++, accountId: accountId, name: name, code: code, serviceType: serviceType, countries: countries, estimatedDays: estimatedDays || '', billingType: billingType || 'amount', status: status });
+  };
+  window.channelUpdateItem = function(id, accountId, name, code, serviceType, countries, estimatedDays, billingType, status) {
+    var ch = findChannel(id); if (!ch) return;
+    ch.accountId = accountId; ch.name = name; ch.code = code; ch.serviceType = serviceType; ch.countries = countries; ch.estimatedDays = estimatedDays || ''; ch.billingType = billingType || 'amount'; ch.status = status;
+  };
+  window.channelDeleteItem = function(id) { channels = channels.filter(function(ch) { return ch.id !== id; }); };
+  window.channelBatchDeleteItems = function(ids) { channels = channels.filter(function(ch) { return ids.indexOf(ch.id) === -1; }); };
+
+  window.templateSaveItem = function(tpl) {
+    var existing = findTemplate(tpl.id);
+    if (existing) { Object.assign(existing, tpl); } else { tpl.id = nextTplId++; templates.push(tpl); }
+  };
+
+  window.renderShippingTable = function() { renderTable(); };
+
+  // ========== 主渲染 ==========
+  function renderTable() {
+    if (currentTab === 'providers') renderProviderTable();
+    else if (currentTab === 'accounts') renderAccountTable();
+    else if (currentTab === 'channels') renderChannelTable();
+    else if (currentTab === 'templates') renderTemplateTable();
+  }
+
+  function renderProviderTable() {
+    var search = (document.getElementById('providerSearch').value || '').toLowerCase();
+    var typeVal = document.getElementById('providerTypeFilter').value;
+    var sVal = document.getElementById('providerStatusFilter').value;
+    var filtered = providers.filter(function(p) {
+      if (search && p.name.toLowerCase().indexOf(search)===-1 && p.code.toLowerCase().indexOf(search)===-1) return false;
+      if (typeVal && p.type !== typeVal) return false;
+      if (sVal && p.status !== sVal) return false;
+      return true;
+    });
+    var pageData = puSlicePage(filtered, currentPage, pageSize);
+    var cols = PU_CONFIG_PROVIDER.visibleCols;
+    var tbody = document.getElementById('tableBody');
+    var checkedIds = puSaveCheckedIds('tableBody');
+    document.getElementById('shippingCount').textContent = '(' + filtered.length + '个)';
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无物流商</div><div class="empty-state-desc">点击"添加物流商"开始配置</div></td></tr>';
+      puUpdateBulkBar(); document.getElementById('shippingPagination').innerHTML = ''; return;
+    }
+    var sm = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+    tbody.innerHTML = pageData.map(function(p) {
+      var s = sm[p.status] || { label: p.status, cls: 'badge-secondary' };
+      var menuId = 'pm_' + p.id;
+      var acctCount = accounts.filter(function(a) { return a.providerId === p.id; }).length;
+      var chCount = getChannelCountByProvider(p.id);
+      var row = '<tr data-id="' + p.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>';
+      if (cols.indexOf('name')!==-1) row += '<td><strong>' + p.name + '</strong></td>';
+      if (cols.indexOf('code')!==-1) row += '<td>' + p.code + '</td>';
+      if (cols.indexOf('type')!==-1) row += '<td>' + p.type + '</td>';
+      if (cols.indexOf('accountCount')!==-1) row += '<td>' + acctCount + '</td>';
+      if (cols.indexOf('channelCount')!==-1) row += '<td>' + chCount + '</td>';
+      if (cols.indexOf('status')!==-1) row += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      if (cols.indexOf('actions')!==-1) row += '<td><div class="action-group">' +
+        '<div class="action-btn" title="编辑" onclick="handleEditProvider(' + p.id + ')">' + editIcon + '</div>' +
+        '<div class="action-btn danger" title="删除" onclick="handleDeleteProvider(' + p.id + ')">' + deleteIcon + '</div>' +
+        '<div class="action-more-wrapper"><div class="action-btn" title="更多" onclick="event.stopPropagation();toggleMore(\'' + menuId + '\')">' + moreIcon + '</div>' +
+        '<div class="action-more-menu" id="' + menuId + '" style="display:none;"><div class="action-more-item" onclick="handleToggleProvider(' + p.id + ')">' + (p.status==='active'?'停用':'启用') + '</div></div></div>' +
+        '</div></td>';
+      row += '</tr>'; return row;
+    }).join('');
+    puRestoreCheckedIds('tableBody', checkedIds);
+    puSyncTableHead(PU_CONFIG_PROVIDER); puBuildCustomColPanel(PU_CONFIG_PROVIDER.columns, PU_CONFIG_PROVIDER.visibleCols); puUpdateBulkBar();
+    puRenderPagination({ total: filtered.length, pageSize: pageSize, currentPage: currentPage, containerId: 'shippingPagination', onPageChange: function(p) { currentPage = p; renderTable(); } });
+  }
+
+  function renderAccountTable() {
+    var search = (document.getElementById('accountSearch').value || '').toLowerCase();
+    var pVal = document.getElementById('accountProviderFilter').value;
+    var sVal = document.getElementById('accountStatusFilter').value;
+    var filtered = accounts.filter(function(a) {
+      if (search && a.name.toLowerCase().indexOf(search)===-1 && a.code.toLowerCase().indexOf(search)===-1) return false;
+      if (pVal && a.providerId !== parseInt(pVal)) return false;
+      if (sVal && a.status !== sVal) return false;
+      return true;
+    });
+    var pageData = puSlicePage(filtered, currentPage, pageSize);
+    var cols = PU_CONFIG_ACCOUNT.visibleCols;
+    var tbody = document.getElementById('tableBody2');
+    var checkedIds = puSaveCheckedIds('tableBody2');
+    document.getElementById('shippingCount').textContent = '(' + filtered.length + '个)';
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无授权账号</div><div class="empty-state-desc">点击"添加授权账号"开始配置</div></td></tr>';
+      puUpdateBulkBar(); document.getElementById('shippingPagination2').innerHTML = ''; return;
+    }
+    var sm = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+    tbody.innerHTML = pageData.map(function(a) {
+      var p = findProvider(a.providerId);
+      var s = sm[a.status] || { label: a.status, cls: 'badge-secondary' };
+      var menuId = 'am_' + a.id;
+      var chCount = channels.filter(function(ch) { return ch.accountId === a.id; }).length;
+      var activeChCount = channels.filter(function(ch) { return ch.accountId === a.id && ch.status === 'active'; }).length;
+      var row = '<tr data-id="' + a.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>';
+      if (cols.indexOf('name')!==-1) row += '<td><strong>' + a.name + '</strong></td>';
+      if (cols.indexOf('code')!==-1) row += '<td>' + a.code + '</td>';
+      if (cols.indexOf('provider')!==-1) row += '<td>' + (p ? p.name : '—') + '</td>';
+      if (cols.indexOf('channelCount')!==-1) row += '<td>' + chCount + '</td>';
+      if (cols.indexOf('activeChannelCount')!==-1) row += '<td>' + activeChCount + '</td>';
+      if (cols.indexOf('status')!==-1) row += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      if (cols.indexOf('actions2')!==-1) row += '<td><div class="action-group">' +
+        '<div class="action-btn" title="编辑" onclick="handleEditAccount(' + a.id + ')">' + editIcon + '</div>' +
+        '<div class="action-btn danger" title="删除" onclick="handleDeleteAccount(' + a.id + ')">' + deleteIcon + '</div>' +
+        '<div class="action-more-wrapper"><div class="action-btn" title="更多" onclick="event.stopPropagation();toggleMore(\'' + menuId + '\')">' + moreIcon + '</div>' +
+        '<div class="action-more-menu" id="' + menuId + '" style="display:none;"><div class="action-more-item" onclick="handleToggleAccount(' + a.id + ')">' + (a.status==='active'?'停用':'启用') + '</div></div></div>' +
+        '</div></td>';
+      row += '</tr>'; return row;
+    }).join('');
+    puRestoreCheckedIds('tableBody2', checkedIds);
+    puSyncTableHead2(); puBuildCustomColPanel2(); puUpdateBulkBar();
+    puRenderPagination({ total: filtered.length, pageSize: pageSize, currentPage: currentPage, containerId: 'shippingPagination2', onPageChange: function(p) { currentPage = p; renderTable(); } });
+  }
+
+  function renderChannelTable() {
+    var search = (document.getElementById('channelSearch').value || '').toLowerCase();
+    var pVal = document.getElementById('channelProviderFilter').value;
+    var srvVal = document.getElementById('channelServiceFilter').value;
+    var sVal = document.getElementById('channelStatusFilter').value;
+    var filtered = channels.filter(function(ch) {
+      if (search && ch.name.toLowerCase().indexOf(search)===-1 && ch.code.toLowerCase().indexOf(search)===-1) return false;
+      if (pVal) { var ac = findAccount(ch.accountId); if (!ac || ac.providerId !== parseInt(pVal)) return false; }
+      if (srvVal && ch.serviceType !== srvVal) return false;
+      if (sVal && ch.status !== sVal) return false;
+      return true;
+    });
+    var pageData = puSlicePage(filtered, currentPage, pageSize);
+    var cols = PU_CONFIG_CHANNEL.visibleCols;
+    var tbody = document.getElementById('tableBody3');
+    var checkedIds = puSaveCheckedIds('tableBody3');
+    document.getElementById('shippingCount').textContent = '(' + filtered.length + '个)';
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无渠道</div><div class="empty-state-desc">点击"添加渠道"开始配置</div></td></tr>';
+      puUpdateBulkBar(); document.getElementById('shippingPagination3').innerHTML = ''; return;
+    }
+    var sm = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+    var billingLabels = { amount: '按金额', weight: '按重量', fixed: '固定' };
+    tbody.innerHTML = pageData.map(function(ch) {
+      var ac = findAccount(ch.accountId);
+      var p = ac ? findProvider(ac.providerId) : null;
+      var s = sm[ch.status] || { label: ch.status, cls: 'badge-secondary' };
+      var menuId = 'cm_' + ch.id;
+      var ctags = '<div class="country-tags">' + (ch.countries||[]).map(function(c){ return '<span class="country-tag">'+c+'</span>'; }).join('') + '</div>';
+      var row = '<tr data-id="' + ch.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>';
+      if (cols.indexOf('name')!==-1) row += '<td><strong>' + ch.name + '</strong></td>';
+      if (cols.indexOf('code')!==-1) row += '<td>' + ch.code + '</td>';
+      if (cols.indexOf('provider')!==-1) row += '<td>' + (p ? p.name : '—') + '</td>';
+      if (cols.indexOf('account')!==-1) row += '<td>' + (ac ? ac.name : '—') + '</td>';
+      if (cols.indexOf('serviceType')!==-1) row += '<td>' + ch.serviceType + '</td>';
+      if (cols.indexOf('countries')!==-1) row += '<td>' + ctags + '</td>';
+      if (cols.indexOf('billingType')!==-1) row += '<td>' + (billingLabels[ch.billingType]||ch.billingType) + '</td>';
+      if (cols.indexOf('status')!==-1) row += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      if (cols.indexOf('actions3')!==-1) row += '<td><div class="action-group">' +
+        '<div class="action-btn" title="编辑" onclick="handleEditChannel(' + ch.id + ')">' + editIcon + '</div>' +
+        '<div class="action-btn" title="配置运费" onclick="handleConfigRate(' + ch.id + ')" style="color:hsl(var(--primary))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>' +
+        '<div class="action-btn danger" title="删除" onclick="handleDeleteChannel(' + ch.id + ')">' + deleteIcon + '</div>' +
+        '<div class="action-more-wrapper"><div class="action-btn" title="更多" onclick="event.stopPropagation();toggleMore(\'' + menuId + '\')">' + moreIcon + '</div>' +
+        '<div class="action-more-menu" id="' + menuId + '" style="display:none;">' +
+        '<div class="action-more-item" onclick="handleToggleChannel(' + ch.id + ')">' + (ch.status==='active'?'停用':'启用') + '</div>' +
+        '<div class="action-more-item" onclick="handleCopyTemplate(' + ch.id + ')">复制运费规则</div>' +
+        '</div></div>' +
+        '</div></td>';
+      row += '</tr>'; return row;
+    }).join('');
+    puRestoreCheckedIds('tableBody3', checkedIds);
+    puSyncTableHead3(); puBuildCustomColPanel3(); puUpdateBulkBar();
+    puRenderPagination({ total: filtered.length, pageSize: pageSize, currentPage: currentPage, containerId: 'shippingPagination3', onPageChange: function(p) { currentPage = p; renderTable(); } });
+  }
+
+  function renderTemplateTable() {
+    var search = (document.getElementById('templateSearch').value || '').toLowerCase();
+    var bVal = document.getElementById('templateBillingFilter').value;
+    var filtered = templates.filter(function(t) {
+      if (search) { var ch = findChannel(t.channelId); if (!ch || ch.name.toLowerCase().indexOf(search)===-1) return false; }
+      if (bVal && t.billingType !== bVal) return false;
+      return true;
+    });
+    var pageData = puSlicePage(filtered, currentPage, pageSize);
+    var cols = PU_CONFIG_TEMPLATE.visibleCols;
+    var tbody = document.getElementById('tableBody4');
+    document.getElementById('shippingCount').textContent = '(' + filtered.length + '个)';
+    var billingLabels = { amount: '按金额', weight: '按重量', fixed: '固定' };
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="' + cols.length + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无运费模板</div><div class="empty-state-desc">在渠道管理中点击"配置运费"添加运费规则</div></td></tr>';
+      document.getElementById('shippingPagination4').innerHTML = ''; return;
+    }
+    tbody.innerHTML = pageData.map(function(t) {
+      var ch = findChannel(t.channelId);
+      var chName = ch ? ch.name : '未知渠道';
+      var freeShip = t.freeShippingThreshold > 0 ? '满$' + t.freeShippingThreshold + '包邮' : '—';
+      var insurance = t.insuranceEnabled ? (t.insuranceRate + '% (' + (t.insuranceHolder==='platform'?'平台承担':'商家承担') + ')') : '未启用';
+      var taxStr = t.isTaxIncluded ? '含税' : '不含税';
+      var remoteStr = (t.remoteFeeRules && t.remoteFeeRules.length > 0) ? t.remoteFeeRules.length + '个地区' : '未配置';
+      var row = '<tr data-id="' + t.id + '">';
+      if (cols.indexOf('channel')!==-1) row += '<td><strong>' + chName + '</strong></td>';
+      if (cols.indexOf('billingType')!==-1) row += '<td>' + (billingLabels[t.billingType]||t.billingType) + '</td>';
+      if (cols.indexOf('freeShip')!==-1) row += '<td>' + freeShip + '</td>';
+      if (cols.indexOf('insurance')!==-1) row += '<td>' + insurance + '</td>';
+      if (cols.indexOf('taxIncluded')!==-1) row += '<td>' + taxStr + '</td>';
+      if (cols.indexOf('remoteFee')!==-1) row += '<td>' + remoteStr + '</td>';
+      if (cols.indexOf('actions4')!==-1) row += '<td><div class="action-group">' +
+        '<div class="action-btn" title="编辑运费规则" onclick="handleConfigRate(' + t.channelId + ')" style="color:hsl(var(--primary))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>' +
+        '<div class="action-btn" title="复制运费规则" onclick="handleCopyTemplate(' + t.channelId + ')" style="color:hsl(var(--primary))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>' +
+        '</div></td>';
+      row += '</tr>'; return row;
+    }).join('');
+    puSyncTableHead4(); puBuildCustomColPanel4();
+    puRenderPagination({ total: filtered.length, pageSize: pageSize, currentPage: currentPage, containerId: 'shippingPagination4', onPageChange: function(p) { currentPage = p; renderTable(); } });
+  }
+
+  // ========== 更多菜单 ==========
+  function toggleMore(menuId) {
+    var menu = document.getElementById(menuId); if (!menu) return;
+    if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+    closeAllMore(); menu.style.display = 'block';
+  }
+  function closeAllMore() {
+    var menus = document.querySelectorAll('.action-more-menu');
+    for (var i=0;i<menus.length;i++) menus[i].style.display = 'none';
+  }
+  document.addEventListener('click', function(e) { if (!e.target.closest('.action-more-wrapper')) closeAllMore(); });
+
+  // ========== PU_CONFIG（按Tab区分） ==========
+  var PU_CONFIG_PROVIDER = {
+    columns: [
+      { key: 'name', label: '物流商名称', defaultShow: true, alwaysShow: true },
+      { key: 'code', label: '代码', defaultShow: true, alwaysShow: false },
+      { key: 'type', label: '物流商类型', defaultShow: true, alwaysShow: false },
+      { key: 'accountCount', label: '授权账号数', defaultShow: true, alwaysShow: false },
+      { key: 'channelCount', label: '启用渠道数', defaultShow: true, alwaysShow: false },
+      { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+      { key: 'actions', label: '操作', defaultShow: true, alwaysShow: true }
+    ],
+    visibleCols: ['name','code','type','accountCount','channelCount','status','actions'],
+    batchActions: [
+      { name: 'enable', handler: function(ids) { ids.forEach(function(id) { var p=findProvider(id); if(p)p.status='active'; }); renderTable(); showToast('success','已启用 '+ids.length+' 条'); } },
+      { name: 'disable', handler: function(ids) { ids.forEach(function(id) { var p=findProvider(id); if(p)p.status='disabled'; }); renderTable(); showToast('success','已停用 '+ids.length+' 条'); } },
+      { name: 'delete', handler: function(ids) { if (window.parent && window.parent.openShippingBatchDeleteDialog) window.parent.openShippingBatchDeleteDialog('provider', ids); } }
+    ],
+    onColumnsChange: function() { renderTable(); }
+  };
+
+  var PU_CONFIG_ACCOUNT = {
+    columns: [
+      { key: 'name', label: '账号名称', defaultShow: true, alwaysShow: true },
+      { key: 'code', label: '账号代码', defaultShow: true, alwaysShow: false },
+      { key: 'provider', label: '所属物流商', defaultShow: true, alwaysShow: false },
+      { key: 'channelCount', label: '渠道数', defaultShow: true, alwaysShow: false },
+      { key: 'activeChannelCount', label: '启用渠道数', defaultShow: true, alwaysShow: false },
+      { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+      { key: 'actions2', label: '操作', defaultShow: true, alwaysShow: true }
+    ],
+    visibleCols: ['name','code','provider','channelCount','activeChannelCount','status','actions2'],
+    batchActions: [
+      { name: 'enable', handler: function(ids) { ids.forEach(function(id) { var a=findAccount(id); if(a)a.status='active'; }); renderTable(); showToast('success','已启用 '+ids.length+' 条'); } },
+      { name: 'disable', handler: function(ids) { ids.forEach(function(id) { var a=findAccount(id); if(a)a.status='disabled'; }); renderTable(); showToast('success','已停用 '+ids.length+' 条'); } },
+      { name: 'delete', handler: function(ids) { if (window.parent && window.parent.openShippingBatchDeleteDialog) window.parent.openShippingBatchDeleteDialog('account', ids); } }
+    ],
+    onColumnsChange: function() { renderTable(); }
+  };
+
+  var PU_CONFIG_CHANNEL = {
+    columns: [
+      { key: 'name', label: '渠道名称', defaultShow: true, alwaysShow: true },
+      { key: 'code', label: '渠道代码', defaultShow: true, alwaysShow: false },
+      { key: 'provider', label: '所属物流商', defaultShow: true, alwaysShow: false },
+      { key: 'account', label: '所属账号', defaultShow: true, alwaysShow: false },
+      { key: 'serviceType', label: '服务类型', defaultShow: true, alwaysShow: false },
+      { key: 'countries', label: '绑定国家', defaultShow: true, alwaysShow: false },
+      { key: 'billingType', label: '计费方式', defaultShow: true, alwaysShow: false },
+      { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+      { key: 'actions3', label: '操作', defaultShow: true, alwaysShow: true }
+    ],
+    visibleCols: ['name','code','provider','account','serviceType','countries','billingType','status','actions3'],
+    batchActions: [
+      { name: 'enable', handler: function(ids) { ids.forEach(function(id) { var ch=findChannel(id); if(ch)ch.status='active'; }); renderTable(); showToast('success','已启用 '+ids.length+' 条'); } },
+      { name: 'disable', handler: function(ids) { ids.forEach(function(id) { var ch=findChannel(id); if(ch)ch.status='disabled'; }); renderTable(); showToast('success','已停用 '+ids.length+' 条'); } },
+      { name: 'delete', handler: function(ids) { if (window.parent && window.parent.openShippingBatchDeleteDialog) window.parent.openShippingBatchDeleteDialog('channel', ids); } }
+    ],
+    onColumnsChange: function() { renderTable(); }
+  };
+
+  var PU_CONFIG_TEMPLATE = {
+    columns: [
+      { key: 'channel', label: '渠道', defaultShow: true, alwaysShow: true },
+      { key: 'billingType', label: '计费方式', defaultShow: true, alwaysShow: false },
+      { key: 'freeShip', label: '包邮门槛', defaultShow: true, alwaysShow: false },
+      { key: 'insurance', label: '运费险', defaultShow: true, alwaysShow: false },
+      { key: 'taxIncluded', label: '运费含税', defaultShow: true, alwaysShow: false },
+      { key: 'remoteFee', label: '偏远附加费', defaultShow: true, alwaysShow: false },
+      { key: 'actions4', label: '操作', defaultShow: true, alwaysShow: true }
+    ],
+    visibleCols: ['channel','billingType','freeShip','insurance','taxIncluded','remoteFee','actions4'],
+    batchActions: [],
+    onColumnsChange: function() { renderTable(); }
+  };
+
+  // 默认 PU_CONFIG
+  window.PU_CONFIG = PU_CONFIG_PROVIDER;
+
+  // 获取当前 active tab 的 tbody id 和 selected count id
+  function getActiveTbodyId() {
+    if (currentTab === 'providers') return 'tableBody';
+    if (currentTab === 'accounts') return 'tableBody2';
+    if (currentTab === 'channels') return 'tableBody3';
+    return 'tableBody4';
+  }
+  function getActiveSelectedCountId() {
+    if (currentTab === 'providers') return 'puSelectedCount';
+    if (currentTab === 'accounts') return 'puSelectedCount2';
+    if (currentTab === 'channels') return 'puSelectedCount3';
+    return 'puSelectedCount4';
+  }
+  function getActiveBulkBarId() {
+    if (currentTab === 'providers') return 'bulkActionBar';
+    if (currentTab === 'accounts') return 'bulkActionBar2';
+    if (currentTab === 'channels') return 'bulkActionBar3';
+    return 'bulkActionBar4';
+  }
+  function getActivePaginationId() {
+    if (currentTab === 'providers') return 'shippingPagination';
+    if (currentTab === 'accounts') return 'shippingPagination2';
+    if (currentTab === 'channels') return 'shippingPagination3';
+    return 'shippingPagination4';
+  }
+
+  // 重写 puDoBatchAction 以支持多tab
+  var _origPuDoBatchAction = window.puDoBatchAction;
+  window.puDoBatchAction = function(name) {
+    var tbodyId = getActiveTbodyId();
+    var checkedBoxes = document.querySelectorAll('#' + tbodyId + ' .checkbox.checked');
+    var ids = [];
+    checkedBoxes.forEach(function(b) { var tr = b.closest('tr'); if (tr && tr.dataset.id) ids.push(parseInt(tr.dataset.id)); });
+    if (!ids.length) { showToast('info', '请先选择项目'); return; }
+    var cfg = window.PU_CONFIG;
+    var action = cfg.batchActions.find(function(a) { return a.name === name; });
+    if (action && action.handler) { action.handler(ids); }
+    else if (_origPuDoBatchAction) { _origPuDoBatchAction(name); }
+  };
+
+  // 重写 puUpdateBulkBar 以支持多tab
+  var _origPuUpdateBulkBar = window.puUpdateBulkBar;
+  window.puUpdateBulkBar = function() {
+    var bar = document.getElementById(getActiveBulkBarId());
+    if (!bar) return;
+    var tbodyId = getActiveTbodyId();
+    var checked = document.querySelectorAll('#' + tbodyId + ' .checkbox.checked');
+    var count = checked.length;
+    var countEl = document.getElementById(getActiveSelectedCountId());
+    if (countEl) countEl.textContent = count;
+    var btns = bar.querySelectorAll('.bulk-actions > .btn');
+    for (var i = 0; i < btns.length; i++) {
+      if (count === 0) { btns[i].setAttribute('disabled', ''); }
+      else { btns[i].removeAttribute('disabled'); }
+    }
+  };
+
+  function puSyncTableHead2() {
+    var headRow = document.querySelector('#tab-accounts table thead tr');
+    if (!headRow) return;
+    var cols = PU_CONFIG_ACCOUNT.visibleCols;
+    var ths = headRow.querySelectorAll('th[data-col]');
+    ths.forEach(function(th) {
+      var key = th.getAttribute('data-col');
+      th.style.display = cols.indexOf(key) !== -1 ? '' : 'none';
+    });
+  }
+  function puSyncTableHead3() {
+    var headRow = document.querySelector('#tab-channels table thead tr');
+    if (!headRow) return;
+    var cols = PU_CONFIG_CHANNEL.visibleCols;
+    var ths = headRow.querySelectorAll('th[data-col]');
+    ths.forEach(function(th) {
+      var key = th.getAttribute('data-col');
+      th.style.display = cols.indexOf(key) !== -1 ? '' : 'none';
+    });
+  }
+  function puSyncTableHead4() {
+    var headRow = document.querySelector('#tab-templates table thead tr');
+    if (!headRow) return;
+    var cols = PU_CONFIG_TEMPLATE.visibleCols;
+    var ths = headRow.querySelectorAll('th[data-col]');
+    ths.forEach(function(th) {
+      var key = th.getAttribute('data-col');
+      th.style.display = cols.indexOf(key) !== -1 ? '' : 'none';
+    });
+  }
+
+  function puBuildCustomColPanel2() {
+    var body = document.getElementById('customColBody');
+    if (!body) return;
+    body.innerHTML = '';
+    PU_CONFIG_ACCOUNT.columns.forEach(function(col) {
+      if (col.alwaysShow) return;
+      var item = document.createElement('div');
+      item.className = 'custom-col-item';
+      var key = col.key;
+      var checked = PU_CONFIG_ACCOUNT.visibleCols.indexOf(key) !== -1;
+      if (checked) item.classList.add('checked');
+      item.innerHTML = '<span class="custom-col-check"></span>' + col.label;
+      item.addEventListener('click', function() {
+        var idx = PU_CONFIG_ACCOUNT.visibleCols.indexOf(key);
+        if (idx !== -1) { PU_CONFIG_ACCOUNT.visibleCols.splice(idx, 1); } else { PU_CONFIG_ACCOUNT.visibleCols.push(key); }
+        if (PU_CONFIG_ACCOUNT.onColumnsChange) PU_CONFIG_ACCOUNT.onColumnsChange();
+      });
+      body.appendChild(item);
+    });
+  }
+  function puBuildCustomColPanel3() {
+    var body = document.getElementById('customColBody');
+    if (!body) return;
+    body.innerHTML = '';
+    PU_CONFIG_CHANNEL.columns.forEach(function(col) {
+      if (col.alwaysShow) return;
+      var item = document.createElement('div');
+      item.className = 'custom-col-item';
+      var key = col.key;
+      var checked = PU_CONFIG_CHANNEL.visibleCols.indexOf(key) !== -1;
+      if (checked) item.classList.add('checked');
+      item.innerHTML = '<span class="custom-col-check"></span>' + col.label;
+      item.addEventListener('click', function() {
+        var idx = PU_CONFIG_CHANNEL.visibleCols.indexOf(key);
+        if (idx !== -1) { PU_CONFIG_CHANNEL.visibleCols.splice(idx, 1); } else { PU_CONFIG_CHANNEL.visibleCols.push(key); }
+        if (PU_CONFIG_CHANNEL.onColumnsChange) PU_CONFIG_CHANNEL.onColumnsChange();
+      });
+      body.appendChild(item);
+    });
+  }
+  function puBuildCustomColPanel4() {
+    var body = document.getElementById('customColBody');
+    if (!body) return;
+    body.innerHTML = '';
+    PU_CONFIG_TEMPLATE.columns.forEach(function(col) {
+      if (col.alwaysShow) return;
+      var item = document.createElement('div');
+      item.className = 'custom-col-item';
+      var key = col.key;
+      var checked = PU_CONFIG_TEMPLATE.visibleCols.indexOf(key) !== -1;
+      if (checked) item.classList.add('checked');
+      item.innerHTML = '<span class="custom-col-check"></span>' + col.label;
+      item.addEventListener('click', function() {
+        var idx = PU_CONFIG_TEMPLATE.visibleCols.indexOf(key);
+        if (idx !== -1) { PU_CONFIG_TEMPLATE.visibleCols.splice(idx, 1); } else { PU_CONFIG_TEMPLATE.visibleCols.push(key); }
+        if (PU_CONFIG_TEMPLATE.onColumnsChange) PU_CONFIG_TEMPLATE.onColumnsChange();
+      });
+      body.appendChild(item);
+    });
+  }
+
+  // ========== 初始化（在脚本末尾直接执行，不依赖 DOMContentLoaded） ==========
+  try {
+    renderProviderTable();
+    // 如果成功，在页面隐藏 debug 信息
+    var errEl = document.getElementById('jsError');
+    if (errEl) errEl.style.display = 'none';
+  } catch(e) {
+    var errEl = document.getElementById('jsError');
+    if (errEl) {
+      errEl.innerHTML = '<div style="background:#fee;border:2px solid red;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;"><b style="color:red;">Init Error:</b> ' + e.message + '<br>Stack: ' + (e.stack||'') + '</div>';
+      errEl.style.display = 'block';
+    }
+  }
+  </script>
+</body>
+</html>

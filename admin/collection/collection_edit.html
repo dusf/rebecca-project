@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 系列表单</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="css/collection.css">
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var b=new BeaconAction({appkey:'0WEB06U85YBSLJNL',versionCode:'1.0.0',channelID:'share',delay:1000,sessionDuration:30*60*1000,isOversea:false,needReportRqdEvent:false});
+        b.onDirectUserAction('preview_page_view',{url:location.href,referrer:document.referrer,title:document.title,sandbox_id:'49c44b8548684771af9c8336e0973782'});
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebarContainer"></aside>
+  <div class="main-area">
+    <div class="content">
+      <div class="page active" id="page-collection-form">
+        <div class="collection-form-container">
+          <div class="page-header">
+            <div>
+              <div class="page-title" id="formTitle">创建系列</div>
+              <div class="page-subtitle" id="formSubtitle">设置系列信息、关联产品并配置排序方式</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <button class="btn btn-secondary" onclick="navigateToPage('collection_list.html')">返回</button>
+              <button class="btn btn-primary" id="btnSave" onclick="saveCollection()">保存</button>
+            </div>
+          </div>
+          <div class="form-layout">
+            <div class="form-main">
+              <div class="form-card">
+                <div class="form-card-title">基本信息</div>
+                <div class="form-group">
+                  <label class="form-label"><span>系列名称 <span class="required">*</span></span><span class="char-count" id="nameCount">0/100</span></label>
+                  <input class="form-input" type="text" id="collectionName" placeholder="请输入系列名称" maxlength="100" oninput="updateNameCount()" />
+                  <div class="form-hint">用于前端展示和后台识别</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">封面图</label>
+                  <div class="cover-upload" id="coverUpload" onclick="uploadCover()">
+                    <span class="upload-icon">+</span><span class="upload-text">上传封面图</span>
+                    <span class="remove-cover" onclick="removeCover(event)">&times;</span>
+                  </div>
+                  <div class="form-hint">建议尺寸 800x800px，支持 PNG/JPG/WebP，最大 5MB</div>
+                  <input type="file" id="coverInput" accept="image/*" style="display:none;" onchange="handleCoverUpload(event)" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">状态</label>
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="toggle active" id="statusToggle" onclick="toggleStatusUI()"><div class="toggle-dot"></div></div>
+                    <span class="toggle-label" id="statusLabel">启用</span>
+                  </div>
+                  <div class="form-hint">禁用后前端落地页将返回 404</div>
+                </div>
+              </div>
+              <div class="form-card">
+                <div class="assoc-products-section">
+                  <div class="assoc-products-header">
+                    <div>
+                      <div class="assoc-products-title">已关联产品</div>
+                      <div class="form-hint">关联产品将在前端系列落地页展示</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="openProductPicker()">关联产品</button>
+                  </div>
+                  <div id="assocProductList" class="assoc-product-list">
+                    <div class="assoc-empty">暂未关联产品，点击「关联产品」开始添加</div>
+                  </div>
+                  <div class="form-hint" style="margin-top:8px;" id="assocCount">已关联 0 个产品</div>
+                </div>
+              </div>
+              <div class="form-card">
+                <div class="form-card-title">排序设置</div>
+                <div class="form-group">
+                  <label class="form-label">排序方式</label>
+                  <select class="sort-select" id="sortMethod" onchange="onSortMethodChange()">
+                    <option value="created-desc">创建时间 新-旧</option>
+                    <option value="created-asc">创建时间 旧-新</option>
+                    <option value="title-asc">产品标题 A-Z</option>
+                    <option value="title-desc">产品标题 Z-A</option>
+                    <option value="price-desc">产品价格 高-低</option>
+                    <option value="price-asc">产品价格 低-高</option>
+                    <option value="manual">手动排序</option>
+                  </select>
+                  <div class="form-hint" id="sortHint">新产品默认排在已关联产品列表末尾</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-sidebar">
+              <div class="form-card">
+                <div class="form-card-title">SEO 配置</div>
+                <div class="form-group">
+                  <label class="form-label"><span>页面标题</span><span class="char-count" id="seoTitleCount">0/200</span></label>
+                  <input class="form-input" type="text" id="seoTitle" placeholder="用于搜索引擎展示的标题" maxlength="200" oninput="updateSeoTitleCount()" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label"><span>页面描述</span><span class="char-count" id="seoDescCount">0/500</span></label>
+                  <textarea class="form-textarea" id="seoDesc" placeholder="用于搜索引擎结果摘要描述" maxlength="500" oninput="updateSeoDescCount()"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">网址名称</label>
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <span style="padding:10px 8px 10px 12px;border:1px solid hsl(var(--border));border-right:none;border-radius:8px 0 0 8px;background:hsl(var(--muted));color:hsl(var(--muted-foreground));font-size:13px;">/collections/</span>
+                    <input class="form-input" type="text" id="seoSlug" placeholder="summer-sale" style="border-radius:0 8px 8px 0;" maxlength="100" />
+                  </div>
+                  <div class="form-hint">若不填写会自动生成。仅支持小写字母、数字、连字符</div>
+                </div>
+              </div>
+              <div class="form-card">
+                <div class="form-card-title">提示</div>
+                <div class="form-card-subtitle">填写系列基本信息完成创建；关联产品后将在前端分类页面中展示。</div>
+                <div style="font-size:13px;color:hsl(var(--muted-foreground));line-height:1.8;">
+                  <div>&middot; 系列名称必填，限100字符</div>
+                  <div>&middot; 一个产品可属于多个系列</div>
+                  <div>&middot; 禁用后前端落地页404</div>
+                  <div>&middot; SEO信息有助于搜索引擎排名</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- 产品选择对话框 -->
+<div class="dialog-overlay" id="productPickerOverlay" style="display:none;">
+  <div class="product-picker-dialog">
+    <div class="product-picker-header">
+      <div class="product-picker-title">选择产品</div>
+      <span class="product-picker-close" onclick="closeProductPicker()">&times;</span>
+    </div>
+    <div class="product-picker-body">
+      <div class="condition-logic-toggle">
+        <span>筛选逻辑：</span>
+        <label class="toggle-option" onclick="setConditionLogic('ALL')">
+          <div class="radio checked" id="logicAll"></div><span>符合所有条件</span>
+        </label>
+        <label class="toggle-option" onclick="setConditionLogic('ANY')">
+          <div class="radio" id="logicAny"></div><span>符合任何条件</span>
+        </label>
+      </div>
+      <div class="condition-rows" id="conditionRows"></div>
+      <div class="add-condition-btn" onclick="addCondition()">+ 添加条件</div>
+      <div class="picker-select-all" onclick="toggleSelectAllPicker()">
+        <div class="checkbox" id="pickerSelectAllCb"></div>
+        <span>全选</span>
+        <span class="picker-selected-count" id="pickerSelectedCount"></span>
+      </div>
+      <div class="picker-product-grid" id="pickerProductGrid"></div>
+      <div class="picker-empty" id="pickerEmpty" style="display:none;">
+        <div class="picker-empty-icon">&#128230;</div>
+        <div>暂无符合条件的产品</div>
+      </div>
+    </div>
+    <div class="product-picker-footer">
+      <span id="pickerFooterInfo" style="font-size:13px;color:hsl(var(--muted-foreground));"></span>
+      <div style="display:flex;gap:12px;">
+        <button class="btn btn-secondary" onclick="closeProductPicker()">取消</button>
+        <button class="btn btn-primary" onclick="confirmProductPicker()">确认添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>var CURRENT_PAGE = 'series';</script>
+<script src="../common/js/commons.js"></script>
+<script src="js/collection_form.js"></script>
+</body>
+</html>

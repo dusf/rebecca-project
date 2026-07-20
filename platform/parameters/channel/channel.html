@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物流渠道管理 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <link rel="stylesheet" href="css/channel.css">
+</head>
+<body>
+  <div class="content">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">物流渠道<span class="count-badge" id="chHeaderCount"></span></div>
+        <div class="page-subtitle">管理物流渠道及运费配置</div>
+      </div>
+    </div>
+
+    <!-- 左右分栏布局 -->
+    <div class="channel-layout">
+      <!-- ====== 左侧：渠道列表面板 ====== -->
+      <div class="channel-left">
+        <!-- 标题 + 新增按钮 -->
+        <div class="channel-left-titlebar">
+          <div class="channel-left-title">
+            <span class="channel-left-title-text">物流渠道</span>
+          </div>
+          <div class="channel-left-titlebar-actions">
+            <button class="btn btn-primary btn-sm" onclick="handleAddChannel()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              新增渠道
+            </button>
+            <button class="channel-filter-refresh" onclick="refreshPage()" title="刷新">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 筛选工具栏 -->
+        <div class="channel-left-filters">
+          <div class="channel-filter-search">
+            <svg class="channel-filter-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="channel-filter-search-input" id="chFilterSearch" placeholder="搜索渠道名称/代码..." oninput="chCurrentPage=1;renderChannelList()">
+          </div>
+          <div class="channel-filter-row">
+            <select class="filter-select channel-filter-select" id="chFilterProvider" onchange="onChProvFilterChange()">
+              <option value="">全部物流商</option>
+            </select>
+            <select class="filter-select channel-filter-select" id="chFilterServiceType" onchange="chCurrentPage=1;renderChannelList()">
+              <option value="">全部服务类型</option>
+              <option value="经济">经济</option>
+              <option value="标准">标准</option>
+              <option value="快速">快速</option>
+            </select>
+            <select class="filter-select channel-filter-select" id="chFilterStatus" onchange="chCurrentPage=1;renderChannelList()">
+              <option value="">全部状态</option>
+              <option value="enabled">启用</option>
+              <option value="disabled">禁用</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 渠道列表卡片 -->
+        <div class="channel-card-list" id="chCardList"></div>
+
+        <!-- 分页 -->
+        <div class="pagination-bar" id="chPagination" style="border-top:1px solid #F0F2F6;"></div>
+      </div>
+
+      <!-- ====== 右侧：详情面板 ====== -->
+      <div class="channel-right">
+        <div class="channel-right-header">
+          <div class="channel-detail-tabs">
+            <button class="channel-detail-tab active" data-tab="cost" onclick="switchDetailTab('cost')">运费配置<span class="tab-badge">0</span></button>
+            <button class="channel-detail-tab" id="detailInfoTabBtn" data-tab="info" onclick="switchDetailTab('info')">渠道信息</button>
+          </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div class="channel-right-empty" id="detailEmpty" style="display:flex;">
+          <div class="empty-state">
+            <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="empty-state-title">请从左侧选择一个渠道</div>
+            <div class="empty-state-desc">选择后可查看详情与管理运费配置</div>
+          </div>
+        </div>
+
+        <!-- 详情内容 -->
+        <div class="channel-detail-body" id="detailInfoTab" style="display:none;">
+          <!-- 运费配置 Tab -->
+          <div class="tab-content cost-tab active" data-tab="cost" style="padding:0;">
+            <!-- 运费工具栏 -->
+            <div class="cost-toolbar" style="margin-bottom:16px;">
+              <div class="cost-toolbar-left" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="text" class="search-input" id="costFilterSearch" placeholder="搜索运费名称..." oninput="costCurrentPage=1;renderCostList()" style="width:200px;min-width:160px;">
+                <select class="filter-select" id="costFilterCountry" onchange="costCurrentPage=1;renderCostList()">
+                  <option value="">全部适用国家</option>
+                  <option value="__global__">全球兜底</option>
+                </select>
+                <select class="filter-select" id="costFilterStatus" onchange="costCurrentPage=1;renderCostList()">
+                  <option value="">全部状态</option>
+                  <option value="enabled">启用</option>
+                  <option value="disabled">禁用</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="handleAddCost()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                新增运费
+              </button>
+            </div>
+
+            <!-- 运费列表 -->
+            <div class="cost-list-wrap">
+              <div class="cost-list-scroll">
+                <table class="cost-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width:160px;">运费名称</th>
+                      <th style="min-width:170px;">适用国家</th>
+                      <th style="min-width:100px;">首重</th>
+                      <th style="min-width:100px;">续重</th>
+                      <th style="min-width:80px;">DIM系数</th>
+                      <th style="min-width:60px;">状态</th>
+                      <th style="min-width:150px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="costTableBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination-bar" id="costPagination"></div>
+            </div>
+          </div>
+          <!-- 渠道信息 Tab -->
+          <div class="tab-content" data-tab="info" style="padding:0;" id="tabInfo">
+            <div class="channel-info-form-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script src="js/channel.js"></script>
+</body>
+</html>

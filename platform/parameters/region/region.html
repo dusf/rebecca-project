@@ -1,0 +1,1991 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地区 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    /* ========== 顶部国家选择器 ========== */
+    .region-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .region-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .country-select-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .country-select {
+      padding: 8px 40px 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background-color: #fff;
+      cursor: pointer;
+      outline: none;
+      color: hsl(var(--foreground));
+      min-width: 200px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .country-select:hover {
+      border-color: hsl(var(--primary));
+    }
+
+    .country-select:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsla(215,35%,50%,0.12);
+    }
+
+    .country-select-arrow {
+      position: absolute;
+      right: 12px;
+      width: 18px;
+      height: 18px;
+      color: hsl(var(--foreground));
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .country-select:disabled {
+      background-color: hsl(var(--muted));
+      cursor: not-allowed;
+    }
+
+
+    .level-meta {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted));
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* ========== 层级说明条 ========== */
+    .level-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      flex-shrink: 0;
+    }
+
+    .level-info-label {
+      font-weight: 600;
+      color: hsl(220 10% 38%);
+      margin-right: 4px;
+    }
+
+    .level-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .level-tag.l1 { background: hsl(215 35% 92%); color: hsl(215 35% 42%); }
+    .level-tag.l2 { background: hsl(142 50% 92%); color: hsl(142 76% 32%); }
+    .level-tag.l3 { background: hsl(38 80% 92%); color: hsl(38 92% 36%); }
+
+    .level-arrow {
+      color: hsl(var(--border));
+      font-size: 14px;
+    }
+
+    /* ========== 树形表格 ========== */
+    .tree-table {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 0 0 12px 12px;
+      border-top: none;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tree-table .table-wrapper {
+      overflow: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .tree-table table {
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .tree-table thead {
+      background: #EDEFF5;
+    }
+
+    .tree-table th[data-col="actions"] {
+      white-space: nowrap;
+    }
+
+    .tree-table th {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(220 10% 35%);
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid #DDE0E8;
+      position: sticky;
+      top: 0;
+      background: #EDEFF5;
+      z-index: 2;
+    }
+
+    .tree-table td {
+      padding: 11px 16px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      border-bottom: 1px solid #F0F2F6;
+      vertical-align: middle;
+    }
+
+    .tree-table tr:last-child td { border-bottom: none; }
+    .tree-table tbody tr:hover td { background: hsl(220 15% 97%); }
+
+    /* 行内编辑行样式 */
+    .editing-row td {
+      background: hsl(48 80% 96%) !important;
+      border-bottom: 2px solid hsl(48 80% 60%);
+    }
+
+    .editing-row input.form-input,
+    .editing-row select.form-select {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 2px hsla(215,35%,50%,0.12);
+    }
+
+    .editable-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .editable-btn-save {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: hsl(var(--primary));
+      color: #fff;
+      transition: opacity 0.15s;
+    }
+    .editable-btn-save:hover { opacity: 0.9; }
+
+    .editable-btn-cancel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid hsl(var(--border));
+      background: #fff;
+      color: hsl(var(--muted-foreground));
+      transition: background 0.15s;
+    }
+    .editable-btn-cancel:hover { background: hsl(var(--muted)); }
+
+    /* 层级缩进样式 */
+    .row-l0 .tree-name { font-weight: 600; color: hsl(215 35% 32%); }
+    .row-l1 .tree-name { font-weight: 500; color: hsl(142 60% 28%); }
+    .row-l2 .tree-name { color: hsl(38 60% 34%); }
+
+    .tree-name { font-size: 13px; }
+
+    .indent-l1 { padding-left: 32px; }
+    .indent-l2 { padding-left: 56px; }
+
+    /* 展开/折叠图标 */
+    .tree-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-right: 2px;
+      flex-shrink: 0;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .tree-toggle:hover {
+      background: hsl(220 10% 88%);
+      color: hsl(var(--foreground));
+    }
+
+    .tree-toggle svg {
+      width: 12px;
+      height: 12px;
+      transition: transform 0.2s;
+    }
+
+    .tree-toggle.expanded svg {
+      transform: rotate(90deg);
+    }
+
+    .tree-toggle.leaf {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .tree-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    /* 操作列 */
+    .action-group { display: flex; align-items: center; gap: 4px; }
+    .action-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 6px; cursor: pointer;
+      transition: all 0.15s; color: hsl(var(--muted-foreground));
+    }
+    .action-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+    .action-btn.danger:hover { background: hsl(0 80% 94%); color: hsl(0 80% 44%); }
+    .action-btn svg { width: 15px; height: 15px; }
+
+    .action-more-wrapper { position: relative; }
+    .action-more-menu {
+      position: absolute; top: calc(100% + 4px); right: 0;
+      background: #fff; border: 1px solid hsl(var(--border));
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 500; min-width: 120px; padding: 4px 0; white-space: nowrap;
+    }
+    .action-more-item {
+      padding: 8px 14px; font-size: 13px; cursor: pointer;
+      color: hsl(var(--foreground)); transition: background 0.1s;
+    }
+    .action-more-item:hover { background: hsl(var(--muted)); }
+
+    /* 操作列紧缩，不撑开剩余空间（参考商城账号列表 .table-card 做法） */
+    .tree-table th[data-col="actions"] {
+      white-space: nowrap;
+    }
+    .tree-table td:last-child {
+      padding-right: 16px;
+    }
+
+    /* 空状态 */
+    .region-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .region-empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .region-empty-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: hsl(var(--muted-foreground));
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .region-empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+
+    .region-empty-desc {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* 列可见性 */
+    .col-hidden { display: none; }
+
+    /* ========== 拖拽相关样式 ========== */
+    body.dragging-active {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .drag-handle-icon svg {
+      pointer-events: none;
+    }
+
+    /* 添加行占位 */
+    .add-row-placeholder td {
+      background: hsl(48 80% 96%) !important;
+      border-bottom: 2px solid hsl(48 80% 60%);
+    }
+
+    /* 前置列（拖拽手柄 + 复选框） */
+    .pre-col { width: 4%; min-width: 60px; padding: 0 !important; }
+    .pre-col-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 11px 16px 11px 4px;
+    }
+    th.pre-col .pre-col-wrap {
+      padding: 10px 16px 10px 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">地区<span class="count-badge" id="regionCount"></span></div>
+        <div class="page-subtitle">管理各国省、市、区/县级行政区划，支持拖拽排序与行内编辑</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary" onclick="downloadRegionFlatTemplate()" title="每行一个地区节点，含上级引用名">下载模板</button>
+        <button class="btn btn-secondary" onclick="triggerRegionImport()" title="从CSV文件批量导入地区数据（自动识别两种格式）">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          导入CSV
+        </button>
+        <input type="file" id="regionImportFile" accept=".csv" style="display:none;" onchange="handleRegionImportFile(this)">
+        <button class="btn btn-primary" onclick="handleAddRegion()">+ 添加地区</button>
+      </div>
+    </div>
+
+    <!-- 顶部国家选择 -->
+    <div class="region-header">
+      <div class="region-header-left">
+        <div class="country-select-wrapper">
+          <select class="country-select" id="countrySelect" onchange="selectCountry(this.value)">
+          </select>
+          <svg class="country-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <span class="level-meta" id="levelMeta"></span>
+      </div>
+    </div>
+
+    <!-- 层级说明条 -->
+    <div class="level-info" id="levelInfo"></div>
+
+    <!-- 批量操作栏（始终可见） -->
+    <div class="bulk-action-bar" id="regionBulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="regionSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-destructive btn-sm" onclick="regionBatchDelete()" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="regionMoreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnRegionMoreActions" onclick="regionToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg> 更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="regionCustomColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="regionToggleCustomColPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列
+          </button>
+        </div>
+        <div class="custom-col-wrapper">
+          <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 树形表格 -->
+    <div class="tree-table">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="pre-col"><div class="pre-col-wrap"><span style="width:14px;flex-shrink:0;"></span><div class="checkbox" onclick="regionToggleAllCheckboxes(this)"></div></div></th>
+              <th data-col="name" style="width:35%">地区名称</th>
+              <th data-col="level" style="width:12%">层级</th>
+              <th data-col="parent" style="width:12%">上级地区</th>
+              <th data-col="status" style="width:12%">状态</th>
+              <th data-col="actions" style="width:8%">操作</th>
+            </tr>
+          </thead>
+          <tbody id="regionTableBody">
+            <tr>
+              <td colspan="7">
+                <div class="region-empty">
+                  <div class="region-empty-icon">
+                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </div>
+                  <div class="region-empty-title">请选择国家</div>
+                  <div class="region-empty-desc">选择国家后，将展示该国的省市区数据</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="regionCustomColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="regionCustomColBody"></div>
+    <div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="regionResetCustomCols()">恢复默认</button></div>
+  </div>
+
+  <!-- 更多操作下拉 -->
+  <div class="more-actions-dropdown" id="regionMoreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="regionDoMoreAction('export')">导出选中地区</div>
+  </div>
+
+  <script>
+    // ========== SVG 图标 ==========
+    var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+    var gripSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/></svg>';
+    var saveIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+    // ========== 地区配置数据 ==========
+    var regionConfig = [
+      {
+        id: 'CN', name: '中国', code: 'CN',
+        levels: ['省/直辖市', '市', '区/县'],
+        data: [
+          { id: 'GD',    name: '广东省',     level: 0, parent: null,   status: 'active', sort: 1 },
+          { id: 'GZ',    name: '广州市',     level: 1, parent: 'GD',   status: 'active', sort: 1 },
+          { id: 'SZ-C',  name: '深圳市',     level: 1, parent: 'GD',   status: 'active', sort: 2 },
+          { id: 'TH',    name: '天河区',     level: 2, parent: 'GZ',   status: 'active', sort: 1 },
+          { id: 'HZ',    name: '海珠区',     level: 2, parent: 'GZ',   status: 'active', sort: 2 },
+          { id: 'NS',    name: '南山区',     level: 2, parent: 'SZ-C', status: 'active', sort: 1 },
+          { id: 'FT',    name: '福田区',     level: 2, parent: 'SZ-C', status: 'active', sort: 2 },
+          { id: 'JS',    name: '江苏省',     level: 0, parent: null,   status: 'active', sort: 2 },
+          { id: 'NJ',    name: '南京市',     level: 1, parent: 'JS',   status: 'active', sort: 1 },
+          { id: 'GL',    name: '鼓楼区',     level: 2, parent: 'NJ',   status: 'active', sort: 1 },
+          { id: 'SH',    name: '上海市',     level: 0, parent: null,   status: 'active', sort: 3 },
+          { id: 'PD',    name: '浦东新区',   level: 2, parent: 'SH',   status: 'active', sort: 1 },
+          { id: 'HP',    name: '黄浦区',     level: 2, parent: 'SH',   status: 'active', sort: 2 }
+        ]
+      },
+      {
+        id: 'US', name: '美国', code: 'US',
+        levels: ['州', '城市'],
+        data: [
+          { id: 'US-CA', name: 'California',     level: 0, parent: null,     status: 'active', sort: 1 },
+          { id: 'US-LA', name: 'Los Angeles',    level: 1, parent: 'US-CA',  status: 'active', sort: 1 },
+          { id: 'US-SF', name: 'San Francisco',  level: 1, parent: 'US-CA',  status: 'active', sort: 2 },
+          { id: 'US-NY', name: 'New York',       level: 0, parent: null,     status: 'active', sort: 2 },
+          { id: 'US-NYC',name: 'New York City',  level: 1, parent: 'US-NY',  status: 'active', sort: 1 },
+          { id: 'US-TX', name: 'Texas',          level: 0, parent: null,     status: 'active', sort: 3 },
+          { id: 'US-HOU',name: 'Houston',        level: 1, parent: 'US-TX',  status: 'active', sort: 1 }
+        ]
+      },
+      {
+        id: 'JP', name: '日本', code: 'JP',
+        levels: ['都道府県', '市区町村'],
+        data: [
+          { id: 'JP-TK', name: '東京都',         level: 0, parent: null,     status: 'active', sort: 1 },
+          { id: 'JP-SJ', name: '新宿区',         level: 1, parent: 'JP-TK',  status: 'active', sort: 1 },
+          { id: 'JP-SB', name: '渋谷区',         level: 1, parent: 'JP-TK',  status: 'active', sort: 2 },
+          { id: 'JP-OS', name: '大阪府',         level: 0, parent: null,     status: 'active', sort: 2 },
+          { id: 'JP-OSC',name: '大阪市',         level: 1, parent: 'JP-OS',  status: 'active', sort: 1 }
+        ]
+      },
+      {
+        id: 'GB', name: '英国', code: 'GB',
+        levels: ['地区', '郡', '区'],
+        data: []
+      }
+    ];
+
+    var currentCountryId = null;
+    var collapsedSet = {};
+
+    // ========== 行内编辑状态 ==========
+    var editingRowId = null;    // 正在行内编辑的节点 ID（null=无编辑）
+    var isAddingRow = false;    // 是否处于行添加模式
+
+    // ========== 拖拽状态 ==========
+    var currentDragId = null;
+    var currentDragNode = null;
+
+    // ========== 从国家页面同步国家数据到 regionConfig ==========
+    function syncCountriesFromCountryPage() {
+      if (!window.parent || !window.parent.PARAM_COUNTRY_DATA) return;
+      var countries = window.parent.PARAM_COUNTRY_DATA;
+      if (!countries || !countries.length) return;
+      countries.forEach(function(c) {
+        var existing = regionConfig.find(function(rc) { return rc.id === c.id; });
+        if (existing) {
+          existing.name = c.name || existing.name;
+          existing.code = c.code || existing.code;
+          if (c.levels && c.levels.length) {
+            existing.levels = c.levels;
+          }
+        } else {
+          regionConfig.push({
+            id: c.id,
+            name: c.name,
+            code: c.code,
+            levels: c.levels || ['一级', '二级', '三级'],
+            data: []
+          });
+        }
+      });
+    }
+
+    // ========== 渲染国家下拉选择器 ==========
+    function renderCountrySelect() {
+      syncCountriesFromCountryPage();
+
+      var sel = document.getElementById('countrySelect');
+      var html = '<option value="">请选择国家</option>';
+      regionConfig.forEach(function(c) {
+        var selected = c.id === currentCountryId ? ' selected' : '';
+        html += '<option value="' + c.id + '"' + selected + '>' + c.name + ' (' + c.code + ')</option>';
+      });
+      sel.innerHTML = html;
+
+      var countEl = document.getElementById('regionCount');
+      var totalRegions = 0;
+      regionConfig.forEach(function(c) { totalRegions += c.data.length; });
+      if (countEl) countEl.textContent = '(' + totalRegions + '个)';
+
+      var metaEl = document.getElementById('levelMeta');
+      if (currentCountryId) {
+        var country = getCurrentCountry();
+        if (country) metaEl.textContent = buildLevelCountText(country);
+      } else {
+        metaEl.textContent = '';
+      }
+    }
+
+    // ========== 选择国家 ==========
+    function selectCountry(cid) {
+      currentCountryId = cid || null;
+      editingRowId = null;
+      isAddingRow = false;
+      if (currentCountryId) {
+        renderDetail();
+      } else {
+        document.getElementById('regionTableBody').innerHTML =
+          '<tr><td colspan="' + regionVisibleCount() + '"><div class="region-empty"><div class="region-empty-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="region-empty-title">请选择国家</div><div class="region-empty-desc">选择国家后，将展示该国的省市区数据</div></div></td></tr>';
+        document.getElementById('levelMeta').textContent = '';
+        document.getElementById('levelInfo').innerHTML = '';
+      }
+    }
+
+    // ========== 刷新页面数据 ==========
+    function refreshPage() {
+      if (currentCountryId) {
+        editingRowId = null;
+        isAddingRow = false;
+        renderDetail();
+      }
+    }
+
+    // ========== 获取当前国家 ==========
+    function getCurrentCountry() {
+      for (var i = 0; i < regionConfig.length; i++) {
+        if (regionConfig[i].id === currentCountryId) return regionConfig[i];
+      }
+      return null;
+    }
+
+    // ========== 构建各级行政区划数量文本 ==========
+    function buildLevelCountText(country) {
+      var counts = {};
+      country.data.forEach(function(d) {
+        counts[d.level] = (counts[d.level] || 0) + 1;
+      });
+      var parts = [];
+      for (var i = 0; i < country.levels.length; i++) {
+        var cnt = counts[i] || 0;
+        parts.push(country.levels[i] + ' ' + cnt + '个');
+      }
+      return parts.join('，');
+    }
+
+    // ========== 统计各级地区数量文案 ==========
+    function buildLevelCountText(country) {
+      if (!country || !country.data) return '';
+      var counts = {};
+      country.data.forEach(function(d) {
+        counts[d.level] = (counts[d.level] || 0) + 1;
+      });
+      var parts = [];
+      for (var i = 0; i < country.levels.length; i++) {
+        parts.push(country.levels[i] + ' ' + (counts[i] || 0) + '个');
+      }
+      return parts.join('，');
+    }
+
+    // ========== 构建树形结构 ==========
+    function buildTree(data) {
+      var map = {};
+      var roots = [];
+      data.forEach(function(item) {
+        item.children = [];
+        map[item.id] = item;
+      });
+      data.forEach(function(item) {
+        if (item.parent && map[item.parent]) {
+          map[item.parent].children.push(item);
+        } else {
+          roots.push(item);
+        }
+      });
+      function sortChildren(node) {
+        node.children.sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || a.name.localeCompare(b.name); });
+        node.children.forEach(sortChildren);
+      }
+      roots.sort(function(a, b) { return (a.sort || 0) - (b.sort || 0) || a.name.localeCompare(b.name); });
+      roots.forEach(sortChildren);
+      return roots;
+    }
+
+    // ========== 渲染详情 ==========
+    function renderDetail() {
+      var country = getCurrentCountry();
+      if (!country) return;
+
+      document.getElementById('levelMeta').textContent = buildLevelCountText(country);
+      renderLevelInfo(country.levels);
+
+      var tree = buildTree(country.data);
+      renderTreeTable(tree, country.levels);
+    }
+
+    // ========== 渲染层级说明条 ==========
+    function renderLevelInfo(levels) {
+      var el = document.getElementById('levelInfo');
+      var html = '<span class="level-info-label">层级：</span>';
+      var lvlClasses = ['l1', 'l2', 'l3'];
+      levels.forEach(function(name, i) {
+        if (i > 0) html += '<span class="level-arrow">→</span>';
+        html += '<span class="level-tag ' + lvlClasses[i] + '">' + (i === 0 ? '一级' : i === 1 ? '二级' : '三级') + '：' + name + '</span>';
+      });
+      el.innerHTML = html;
+    }
+
+    // ========== 获取指定层级的所有地区（用于内联编辑下拉） ==========
+    function getRegionsByLevel(level, excludeId) {
+      var country = getCurrentCountry();
+      if (!country) return [];
+      var list = country.data.filter(function(d) { return d.level === level; });
+      if (excludeId) list = list.filter(function(d) { return d.id !== excludeId; });
+      list.sort(function(a, b) { return a.name.localeCompare(b.name); });
+      return list;
+    }
+
+    // ========== 渲染树形表格 ==========
+    function renderTreeTable(tree, levels) {
+      var tbody = document.getElementById('regionTableBody');
+
+      var prevChecked = [];
+      var prevCbs = document.querySelectorAll('#regionTableBody .region-checkbox.checked');
+      prevCbs.forEach(function(cb) { prevChecked.push(cb.getAttribute('data-region-id')); });
+
+      var vacCols = regionVisibleCount();
+
+      if (tree.length === 0 && !isAddingRow) {
+        tbody.innerHTML = '<tr><td colspan="' + vacCols + '"><div class="region-empty"><div class="region-empty-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="region-empty-title">暂无地区数据</div><div class="region-empty-desc">点击"添加地区"按钮添加行政区划</div></div></td></tr>';
+        regionUpdateBulkBar();
+        return;
+      }
+
+      if (tree.length === 0 && isAddingRow) {
+        // 空数据但有添加行，渲染添加行
+        tbody.innerHTML = renderAddRowHTML(levels, vacCols);
+        bindAddRowEvents();
+        regionUpdateBulkBar();
+        return;
+      }
+
+      var rows = [];
+      function walk(nodes, depth) {
+        nodes.forEach(function(node) {
+          var isExpanded = !collapsedSet[node.id];
+          var hasChildren = node.children && node.children.length > 0;
+          rows.push({ node: node, depth: depth, expanded: isExpanded, hasChildren: hasChildren });
+          if (hasChildren && isExpanded) {
+            walk(node.children, depth + 1);
+          }
+        });
+      }
+      walk(tree, 0);
+
+      var statusMap = {
+        active: { label: '启用', cls: 'badge-success' },
+        disabled: { label: '停用', cls: 'badge-secondary' }
+      };
+
+      var html = '';
+
+      // 添加行（在数据行前面）
+      if (isAddingRow) {
+        html += renderAddRowHTML(levels, vacCols);
+      }
+
+      rows.forEach(function(row) {
+        var node = row.node;
+        var depth = row.depth;
+        var levelName = levels[depth] || '';
+        var parentName = node.parent ? getNodeName(node.parent) : '--';
+        var s = statusMap[node.status] || { label: node.status, cls: 'badge-secondary' };
+        var menuId = 'regionMore_' + node.id;
+
+        // 如果是正在编辑的行，渲染为编辑行
+        if (editingRowId === node.id) {
+          html += renderEditRowHTML(node, depth, levelName, levels, vacCols);
+          return; // 跳过正常渲染
+        }
+
+        var toggleHtml = '';
+        if (row.hasChildren) {
+          var expClass = row.expanded ? ' expanded' : '';
+          toggleHtml = '<span class="tree-toggle' + expClass + '" data-tid="' + node.id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+        } else {
+          toggleHtml = '<span class="tree-toggle leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+        }
+
+        var indentClass = depth > 0 ? ' indent-l' + depth : '';
+
+        html += '<tr class="row-l' + depth + '" data-id="' + node.id + '" data-parent="' + (node.parent || '') + '" data-level="' + depth + '" data-sort="' + (node.sort || 0) + '">';
+
+        // 前置列：拖拽手柄 + 复选框
+        html += '<td class="pre-col"><div class="pre-col-wrap">';
+        html += '<span class="drag-handle-icon" draggable="true" data-drag-id="' + node.id + '">' + gripSvg + '</span>';
+        html += '<div class="checkbox region-checkbox" data-region-id="' + node.id + '" onclick="event.stopPropagation();regionToggleCheckbox(this)"></div>';
+        html += '</div></td>';
+
+        html += '<td><div class="tree-name-cell' + indentClass + '">' + toggleHtml + '<span class="tree-name">' + node.name + '</span></div></td>';
+        html += '<td><span class="level-tag l' + (depth + 1) + '">' + levelName + '</span></td>';
+        html += '<td style="color:hsl(var(--muted-foreground))">' + parentName + '</td>';
+        html += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+        html += '<td><div class="action-group">' +
+          '<div class="action-btn" title="编辑" onclick="handleEdit(\'' + node.id + '\')">' + editIcon + '</div>' +
+          '<div class="action-btn danger" title="删除" onclick="handleDelete(\'' + node.id + '\')">' + deleteIcon + '</div>' +
+          '<div class="action-more-wrapper">' +
+            '<div class="action-btn" title="更多" onclick="event.stopPropagation();toggleRowMore(\'' + menuId + '\')">' + moreIcon + '</div>' +
+            '<div class="action-more-menu" id="' + menuId + '" style="display:none;">' +
+              '<div class="action-more-item" onclick="handleToggleStatus(\'' + node.id + '\');closeAllRowMore()">' + (node.status === 'active' ? '停用' : '启用') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div></td>';
+        html += '</tr>';
+      });
+
+      tbody.innerHTML = html;
+
+      // 恢复之前已选中的复选框状态
+      prevChecked.forEach(function(id) {
+        var cb = tbody.querySelector('.region-checkbox[data-region-id="' + id + '"]');
+        if (cb) cb.classList.add('checked');
+      });
+
+      // 绑定展开/折叠
+      tbody.querySelectorAll('.tree-toggle:not(.leaf)').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var tid = this.dataset.tid;
+          if (collapsedSet[tid]) {
+            delete collapsedSet[tid];
+          } else {
+            collapsedSet[tid] = true;
+          }
+          renderDetail();
+        });
+      });
+
+      // 绑定拖拽事件
+      bindDragEvents(tbody);
+
+      // 绑定添加行事件
+      if (isAddingRow) bindAddRowEvents();
+
+      // 绑定编辑行事件
+      if (editingRowId) bindEditRowEvents();
+
+      regionUpdateBulkBar();
+      regionApplyColVisibility();
+    }
+
+    // ========== 渲染添加行 HTML ==========
+    function renderAddRowHTML(levels, vacCols) {
+      var country = getCurrentCountry();
+      var levOptions = '<option value="">请选择层级</option>';
+      for (var i = 0; i < levels.length; i++) {
+        levOptions += '<option value="' + i + '">' + levels[i] + '</option>';
+      }
+
+      var html = '<tr class="add-row-placeholder" id="regionAddRow" data-level="0">';
+      html += '<td class="pre-col"><div class="pre-col-wrap"><span style="width:14px;flex-shrink:0;"></span><span style="width:20px;flex-shrink:0;"></span></div></td>';
+      html += '<td><div class="tree-name-cell"><span class="tree-toggle leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span><input class="form-input" type="text" id="regionAddName" placeholder="输入地区名称" maxlength="50"></div></td>';
+      html += '<td><select class="form-select" id="regionAddLevel" onchange="onAddLevelChange()">' + levOptions + '</select></td>';
+      html += '<td><select class="form-select" id="regionAddParent"><option value="">无（顶级）</option></select></td>';
+      html += '<td><select class="form-select" id="regionAddStatus"><option value="active">启用</option><option value="disabled">停用</option></select></td>';
+      html += '<td><div class="editable-actions">' +
+        '<button class="editable-btn-save" onclick="saveAddRow()">' + saveIcon + ' 保存</button>' +
+        '<button class="editable-btn-cancel" onclick="cancelAddRow()">' + closeIcon + ' 取消</button>' +
+      '</div></td>';
+      html += '</tr>';
+      return html;
+    }
+
+    function bindAddRowEvents() {
+      // 初始化添加行的级联
+      onAddLevelChange();
+    }
+
+    function onAddLevelChange() {
+      var levSel = document.getElementById('regionAddLevel');
+      var parSel = document.getElementById('regionAddParent');
+      if (!levSel || !parSel) return;
+      var selectedLevel = parseInt(levSel.value, 10);
+      var country = getCurrentCountry();
+      if (!country) return;
+
+      var html = '<option value="">无（顶级地区）</option>';
+      if (selectedLevel > 0) {
+        var parents = getRegionsByLevel(selectedLevel - 1);
+        parents.forEach(function(p) {
+          html += '<option value="' + p.id + '">' + p.name + '</option>';
+        });
+      }
+      parSel.innerHTML = html;
+    }
+
+    function saveAddRow() {
+      var country = getCurrentCountry();
+      if (!country) return;
+      var name = (document.getElementById('regionAddName').value || '').trim();
+      var level = parseInt(document.getElementById('regionAddLevel').value, 10);
+      var parent = document.getElementById('regionAddParent').value || null;
+      var status = document.getElementById('regionAddStatus').value;
+
+      if (!name) { showToast('warning', '请输入地区名称'); return; }
+      if (isNaN(level)) { showToast('warning', '请选择层级'); return; }
+
+      // 计算 sort
+      var siblings = country.data.filter(function(d) { return d.parent === parent && d.level === level; });
+      var maxSort = 0;
+      siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+
+      var newItem = {
+        id: regionNextId(),
+        name: name,
+        level: level,
+        parent: parent,
+        status: status,
+        sort: maxSort + 1
+      };
+      country.data.push(newItem);
+
+      isAddingRow = false;
+      renderDetail();
+      renderCountrySelect();
+      showToast('success', '地区已添加');
+    }
+
+    function cancelAddRow() {
+      isAddingRow = false;
+      renderDetail();
+    }
+
+    // ========== 渲染编辑行 HTML ==========
+    function renderEditRowHTML(node, depth, levelName, levels, vacCols) {
+      var country = getCurrentCountry();
+      var levOptions = '';
+      for (var i = 0; i < levels.length; i++) {
+        var sel = i === node.level ? ' selected' : '';
+        levOptions += '<option value="' + i + '"' + sel + '>' + levels[i] + '</option>';
+      }
+
+      var parentOptions = '<option value="">无（顶级地区）</option>';
+      if (node.level > 0) {
+        var parents = getRegionsByLevel(node.level - 1, node.id);
+        parents.forEach(function(p) {
+          var psel = p.id === node.parent ? ' selected' : '';
+          parentOptions += '<option value="' + p.id + '"' + psel + '>' + p.name + '</option>';
+        });
+      } else if (node.parent) {
+        // 编辑行当前的 parent 可能不在默认下拉中（比如层级变了），补上
+        var pname = getNodeName(node.parent);
+        if (pname !== '--') {
+          var found = false;
+          parents.forEach(function(p) { if (p.id === node.parent) found = true; });
+          if (!found) parentOptions = parentOptions.replace('</select>', '') + '<option value="' + node.parent + '" selected>' + pname + '</option>';
+        }
+      }
+
+      var statusActive = node.status === 'active' ? ' selected' : '';
+      var statusDisabled = node.status === 'disabled' ? ' selected' : '';
+
+      var toggleHtml = '<span class="tree-toggle leaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>';
+
+      var indentClass = depth > 0 ? ' indent-l' + depth : '';
+
+      var html = '<tr class="editing-row" data-id="' + node.id + '" data-parent="' + (node.parent || '') + '" data-level="' + depth + '">';
+      html += '<td class="pre-col"><div class="pre-col-wrap"><span style="width:14px;flex-shrink:0;"></span><span style="width:20px;flex-shrink:0;"></span></div></td>';
+      html += '<td><div class="tree-name-cell' + indentClass + '">' + toggleHtml + '<input class="form-input" type="text" id="regionEditName" value="' + escHtml(node.name) + '" maxlength="50"></div></td>';
+      html += '<td><select class="form-select" id="regionEditLevel" onchange="onEditLevelChange()">' + levOptions + '</select></td>';
+      html += '<td><select class="form-select" id="regionEditParent">' + parentOptions + '</select></td>';
+      html += '<td><select class="form-select" id="regionEditStatus"><option value="active"' + statusActive + '>启用</option><option value="disabled"' + statusDisabled + '>停用</option></select></td>';
+      html += '<td><div class="editable-actions">' +
+        '<button class="editable-btn-save" onclick="saveEditRow(\'' + node.id + '\')">' + saveIcon + ' 保存</button>' +
+        '<button class="editable-btn-cancel" onclick="cancelEditRow()">' + closeIcon + ' 取消</button>' +
+      '</div></td>';
+      html += '</tr>';
+      return html;
+    }
+
+    function bindEditRowEvents() {
+      onEditLevelChange();
+    }
+
+    function onEditLevelChange() {
+      var levSel = document.getElementById('regionEditLevel');
+      var parSel = document.getElementById('regionEditParent');
+      if (!levSel || !parSel) return;
+      var selectedLevel = parseInt(levSel.value, 10);
+      var country = getCurrentCountry();
+      if (!country) return;
+      var editId = editingRowId;
+
+      var html = '<option value="">无（顶级地区）</option>';
+      if (selectedLevel > 0) {
+        var parents = getRegionsByLevel(selectedLevel - 1, editId);
+        parents.forEach(function(p) {
+          html += '<option value="' + p.id + '">' + p.name + '</option>';
+        });
+      }
+      parSel.innerHTML = html;
+    }
+
+    function saveEditRow(id) {
+      var r = findRegion(id);
+      if (!r) return;
+
+      var name = (document.getElementById('regionEditName').value || '').trim();
+      var level = parseInt(document.getElementById('regionEditLevel').value, 10);
+      var parent = document.getElementById('regionEditParent').value || null;
+      var status = document.getElementById('regionEditStatus').value;
+
+      if (!name) { showToast('warning', '请输入地区名称'); return; }
+      if (isNaN(level)) { showToast('warning', '请选择层级'); return; }
+
+      // 如果层级或父节点变了，需要更新 sort
+      if (r.level !== level || r.parent !== parent) {
+        var oldParent = r.parent;
+        r.level = level;
+        r.parent = parent;
+        var siblings = (getCurrentCountry().data || []).filter(function(d) { return d.parent === parent && d.level === level && d.id !== id; });
+        var maxSort = 0;
+        siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+        r.sort = maxSort + 1;
+        if (oldParent) renumberSorts(oldParent);
+      }
+
+      r.name = name;
+      r.status = status;
+
+      editingRowId = null;
+      renderDetail();
+      showToast('success', '地区已更新');
+    }
+
+    function cancelEditRow() {
+      editingRowId = null;
+      renderDetail();
+    }
+
+    function escHtml(s) {
+      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ========== 根据 ID 查找地区名称 ==========
+    function getNodeName(id) {
+      for (var i = 0; i < regionConfig.length; i++) {
+        var data = regionConfig[i].data;
+        for (var j = 0; j < data.length; j++) {
+          if (data[j].id === id) return data[j].name;
+        }
+      }
+      return '--';
+    }
+
+    // ========== 查找地区节点 ==========
+    function findRegion(id) {
+      for (var i = 0; i < regionConfig.length; i++) {
+        var data = regionConfig[i].data;
+        for (var j = 0; j < data.length; j++) {
+          if (data[j].id === id) return data[j];
+        }
+      }
+      return null;
+    }
+
+    // ========== 查找节点的所有后代 ==========
+    function getDescendantIds(id) {
+      var ids = [];
+      var country = getCurrentCountry();
+      if (!country) return ids;
+      var children = country.data.filter(function(d) { return d.parent === id; });
+      children.forEach(function(c) {
+        ids.push(c.id);
+        ids = ids.concat(getDescendantIds(c.id));
+      });
+      return ids;
+    }
+
+    // ========== 判断 targetId 是否是 ancestorId 的后代 ==========
+    function isDescendantOf(targetId, ancestorId) {
+      return getDescendantIds(ancestorId).indexOf(targetId) !== -1;
+    }
+
+    // ========== 操作：添加地区（行内添加） ==========
+    function handleAddRegion() {
+      if (!currentCountryId) {
+        showToast('warning', '请先选择国家');
+        return;
+      }
+      // 取消任何正在进行的编辑
+      editingRowId = null;
+      isAddingRow = true;
+      renderDetail();
+    }
+
+    // ========== 操作：触发文件选择 ==========
+    function triggerRegionImport() {
+      if (!currentCountryId) {
+        showToast('warning', '请先选择国家');
+        return;
+      }
+      document.getElementById('regionImportFile').click();
+    }
+
+    // ========== 操作：编辑（行内编辑） ==========
+    function handleEdit(id) {
+      // 取消添加行
+      isAddingRow = false;
+      editingRowId = id;
+      renderDetail();
+    }
+
+    // ========== 操作：删除（委托给父页面对话框，全屏遮罩） ==========
+    function handleDelete(id) {
+      if (window.parent && window.parent.openRegionDeleteDialog) {
+        window.parent.openRegionDeleteDialog(id);
+      }
+    }
+
+    // ================================================================
+    // ========== 拖拽排序 ==========
+    // ================================================================
+
+    function bindDragEvents(tbody) {
+      tbody.querySelectorAll('.drag-handle-icon').forEach(function(handle) {
+        handle.addEventListener('dragstart', handleDragStart);
+        handle.addEventListener('dragend', handleDragEnd);
+      });
+      tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
+        tr.addEventListener('dragover', handleDragOver);
+        tr.addEventListener('dragleave', handleDragLeave);
+        tr.addEventListener('drop', handleDrop);
+      });
+    }
+
+    function handleDragStart(e) {
+      var dragId = this.dataset.dragId;
+      var node = findRegion(dragId);
+      if (!node) { e.preventDefault(); return; }
+      currentDragId = dragId;
+      currentDragNode = node;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragId);
+      var row = this.closest('tr');
+      document.body.classList.add('dragging-active');
+      requestAnimationFrame(function() { if (row) row.classList.add('dragging'); });
+    }
+
+    function handleDragEnd(e) {
+      var tbody = document.getElementById('regionTableBody');
+      var row = tbody.querySelector('tr.dragging');
+      if (row) row.classList.remove('dragging');
+      document.body.classList.remove('dragging-active');
+      clearAllDragStates();
+      currentDragId = null;
+      currentDragNode = null;
+    }
+
+    function clearAllDragStates() {
+      var tbody = document.getElementById('regionTableBody');
+      if (!tbody) return;
+      tbody.querySelectorAll('tr').forEach(function(r) {
+        r.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-zone-highlight', 'drag-invalid');
+      });
+    }
+
+    function handleDragOver(e) {
+      if (!currentDragNode) return;
+      e.preventDefault();
+      var row = e.currentTarget;
+      var targetId = row.dataset.id;
+      if (targetId === currentDragId) { e.dataTransfer.dropEffect = 'none'; clearAllDragStates(); return; }
+      // 不能拖到自己后代上
+      if (isDescendantOf(targetId, currentDragId)) { e.dataTransfer.dropEffect = 'none'; clearAllDragStates(); row.classList.add('drag-invalid'); return; }
+
+      var targetNode = findRegion(targetId);
+      if (!targetNode) { e.dataTransfer.dropEffect = 'none'; return; }
+
+      clearAllDragStates();
+
+      var draggedLevel = currentDragNode.level;
+      var targetLevel = targetNode.level;
+
+      // 可以作为新父节点：目标层级 = 拖拽层级 - 1
+      var canBeParent = (targetLevel === draggedLevel - 1);
+
+      // 同级兄弟：同父且同层级
+      var isSibling = (currentDragNode.parent === targetNode.parent && draggedLevel === targetLevel);
+
+      if (!canBeParent && !isSibling) {
+        // 既不是兄弟也不是合法父节点，禁止拖入
+        e.dataTransfer.dropEffect = 'none';
+        row.classList.add('drag-invalid');
+        return;
+      }
+
+      row.classList.remove('drag-invalid');
+
+      var rect = row.getBoundingClientRect();
+      var y = e.clientY - rect.top;
+      var inTopZone = y < rect.height * 0.3;
+      var inBottomZone = y > rect.height * 0.7;
+
+      if (canBeParent && !inTopZone && !inBottomZone) {
+        // 拖到目标行中间 → 作为子节点
+        row.classList.add('drag-over-valid');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (isSibling && inTopZone) {
+        // 拖到兄弟上方 → 插入线（上方）
+        row.classList.add('drag-insert-before');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (isSibling && inBottomZone) {
+        // 拖到兄弟下方 → 插入线（下方）
+        row.classList.add('drag-insert-after');
+        e.dataTransfer.dropEffect = 'move';
+      } else if (canBeParent && (inTopZone || inBottomZone)) {
+        // 可以作为父节点但在边缘 → 同样作为子节点
+        row.classList.add('drag-over-valid');
+        e.dataTransfer.dropEffect = 'move';
+      } else {
+        e.dataTransfer.dropEffect = 'none';
+      }
+    }
+
+    function handleDragLeave(e) {
+      if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget)) {
+        var row = e.currentTarget;
+        row.classList.remove('drag-over-valid', 'drag-insert-before', 'drag-insert-after', 'drag-invalid');
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!currentDragNode) return;
+
+      var row = e.currentTarget;
+      var targetId = row.dataset.id;
+      var targetNode = findRegion(targetId);
+      if (!targetNode || targetId === currentDragId) return;
+
+      var rect = row.getBoundingClientRect();
+      var y = e.clientY - rect.top;
+      var inTopZone = y < rect.height * 0.3;
+      var inBottomZone = y > rect.height * 0.7;
+
+      var draggedLevel = currentDragNode.level;
+      var targetLevel = targetNode.level;
+      var canBeParent = (targetLevel === draggedLevel - 1);
+      var isSibling = (currentDragNode.parent === targetNode.parent && draggedLevel === targetLevel);
+
+      if (canBeParent && !inTopZone && !inBottomZone) {
+        // 拖入目标作为子节点
+        moveToParent(currentDragNode, targetNode);
+      } else if (isSibling) {
+        // 兄弟排序
+        reorderSibling(currentDragNode, targetNode, inTopZone ? 'before' : 'after');
+      } else if (canBeParent && (inTopZone || inBottomZone)) {
+        // 边界区域也作为子节点
+        moveToParent(currentDragNode, targetNode);
+      } else {
+        // 非法拖拽：提示用户
+        var targetLevelName = getCurrentCountry().levels[targetLevel] || '';
+        var draggedLevelName = getCurrentCountry().levels[draggedLevel] || '';
+        showToast('warning', '只能将「' + draggedLevelName + '」拖入「' + targetLevelName + '」作为其下级，或拖到同级兄弟间排序');
+        clearAllDragStates();
+        currentDragId = null;
+        currentDragNode = null;
+        return;
+      }
+
+      clearAllDragStates();
+      currentDragId = null;
+      currentDragNode = null;
+      renderDetail();
+      showToast('success', '排序已更新');
+    }
+
+    /**
+     * 将拖拽节点移动到目标节点的子级
+     */
+    function moveToParent(draggedNode, newParentNode) {
+      var oldParent = draggedNode.parent;
+      draggedNode.parent = newParentNode.id;
+      draggedNode.level = newParentNode.level + 1;
+
+      var country = getCurrentCountry();
+      var siblings = country.data.filter(function(d) {
+        return d.parent === newParentNode.id && d.level === draggedNode.level && d.id !== draggedNode.id;
+      });
+      var maxSort = 0;
+      siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+      draggedNode.sort = maxSort + 1;
+
+      if (oldParent) renumberSorts(oldParent);
+    }
+
+    /**
+     * 在同级兄弟间重排序
+     */
+    function reorderSibling(draggedNode, targetNode, position) {
+      var parentId = draggedNode.parent;
+      var country = getCurrentCountry();
+      var siblings = country.data.filter(function(d) {
+        return d.parent === parentId && d.id !== draggedNode.id;
+      }).sort(function(a, b) { return (a.sort || 0) - (b.sort || 0); });
+
+      var targetIndex = -1;
+      for (var i = 0; i < siblings.length; i++) {
+        if (siblings[i].id === targetNode.id) { targetIndex = i; break; }
+      }
+      if (targetIndex === -1) return;
+
+      var newOrder = [];
+      for (var j = 0; j < siblings.length; j++) {
+        if (j === targetIndex && position === 'before') newOrder.push(draggedNode);
+        newOrder.push(siblings[j]);
+        if (j === targetIndex && position === 'after') newOrder.push(draggedNode);
+      }
+      for (var k = 0; k < newOrder.length; k++) {
+        newOrder[k].sort = k + 1;
+      }
+    }
+
+    /**
+     * 重新编号某父节点下所有子节点的 sort
+     */
+    function renumberSorts(parentId) {
+      var country = getCurrentCountry();
+      if (!country) return;
+      var children = country.data.filter(function(d) { return d.parent === parentId; })
+        .sort(function(a, b) { return (a.sort || 0) - (b.sort || 0); });
+      for (var i = 0; i < children.length; i++) {
+        children[i].sort = i + 1;
+      }
+    }
+
+    // ================================================================
+    // ========== 供父页面调用的数据处理函数（保留 dialog_host 兼容） ==========
+    // ================================================================
+
+    window.getRegionNode = function(id) {
+      return findRegion(id);
+    };
+
+    window.regionHasChildren = function(id) {
+      var country = getCurrentCountry();
+      return country && country.data.some(function(d) { return d.parent === id; });
+    };
+
+    window.regionDeleteItem = function(id) {
+      for (var i = 0; i < regionConfig.length; i++) {
+        regionConfig[i].data = regionConfig[i].data.filter(function(d) { return d.id !== id && d.parent !== id; });
+      }
+    };
+
+    window.regionBatchDeleteItems = function(ids) {
+      for (var i = 0; i < regionConfig.length; i++) {
+        regionConfig[i].data = regionConfig[i].data.filter(function(d) {
+          return ids.indexOf(d.id) === -1 && ids.indexOf(d.parent) === -1;
+        });
+      }
+    };
+
+    // 自增 ID 计数器
+    var regionAutoId = 100;
+    function regionNextId() { return 'RG' + (regionAutoId++); }
+
+    window.regionAddItem = function(name, level, parent, status) {
+      var country = getCurrentCountry();
+      if (!country) return;
+      var siblings = country.data.filter(function(d) { return d.parent === (parent || null) && d.level === level; });
+      var maxSort = 0;
+      siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+      var newItem = {
+        id: regionNextId(),
+        name: name,
+        level: level,
+        parent: parent || null,
+        status: status || 'active',
+        sort: maxSort + 1
+      };
+      country.data.push(newItem);
+    };
+
+    window.regionUpdateItem = function(id, name, level, parent, status) {
+      var r = findRegion(id);
+      if (!r) return;
+      if (r.level !== level || r.parent !== parent) {
+        var oldParent = r.parent;
+        r.level = level;
+        r.parent = parent || null;
+        var country = getCurrentCountry();
+        var siblings = country.data.filter(function(d) { return d.parent === (parent || null) && d.level === level && d.id !== id; });
+        var maxSort = 0;
+        siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+        r.sort = maxSort + 1;
+        if (oldParent) renumberSorts(oldParent);
+      }
+      r.name = name;
+      r.status = status;
+    };
+
+    // 暴露给 dialog_host 调用的查询函数
+    window.getCurrentCountry = getCurrentCountry;
+    window.findRegion = findRegion;
+
+    window.renderRegionDetail = function() {
+      editingRowId = null;
+      isAddingRow = false;
+      renderDetail();
+      renderCountrySelect();
+    };
+
+    // ========== 复选框与批量操作 ==========
+
+    function regionToggleCheckbox(el) {
+      el.classList.toggle('checked');
+      regionUpdateBulkBar();
+    }
+
+    function regionToggleAllCheckboxes(headerCheckbox) {
+      var isChecked = headerCheckbox.classList.toggle('checked');
+      var checkboxes = document.querySelectorAll('#regionTableBody .region-checkbox');
+      checkboxes.forEach(function(cb) {
+        if (isChecked) {
+          cb.classList.add('checked');
+        } else {
+          cb.classList.remove('checked');
+        }
+      });
+      regionUpdateBulkBar();
+    }
+
+    function regionGetCheckedIds() {
+      var checked = document.querySelectorAll('#regionTableBody .region-checkbox.checked');
+      var ids = [];
+      checked.forEach(function(cb) {
+        ids.push(cb.getAttribute('data-region-id'));
+      });
+      return ids;
+    }
+
+    function regionUpdateBulkBar() {
+      var ids = regionGetCheckedIds();
+      document.getElementById('regionSelectedCount').textContent = ids.length;
+      var btns = document.querySelectorAll('#regionBulkActionBar .bulk-actions > .btn');
+      btns.forEach(function(btn) {
+        btn.disabled = ids.length === 0;
+      });
+    }
+
+    function regionBatchDelete() {
+      var ids = regionGetCheckedIds();
+      if (ids.length === 0) { showToast('info', '请先选择要删除的地区'); return; }
+      if (window.parent && window.parent.openRegionBatchDeleteDialog) {
+        window.parent.openRegionBatchDeleteDialog(ids);
+      }
+    }
+
+    // ========== 操作：切换状态 ==========
+    function handleToggleStatus(id) {
+      var r = findRegion(id);
+      if (!r) return;
+      r.status = r.status === 'active' ? 'disabled' : 'active';
+      renderDetail();
+      showToast('success', '已' + (r.status === 'active' ? '启用' : '停用') + '「' + r.name + '」');
+    }
+
+    // ========== 行级更多菜单 ==========
+    window.toggleRowMore = function(menuId) {
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+      closeAllRowMore();
+      menu.style.display = 'block';
+    };
+    window.closeAllRowMore = function() {
+      var menus = document.querySelectorAll('.action-more-menu');
+      menus.forEach(function(m) { m.style.display = 'none'; });
+    };
+    document.addEventListener('click', function(e) {
+      var wrapper = e.target.closest('.action-more-wrapper');
+      if (!wrapper) closeAllRowMore();
+    });
+
+    // ========== 处理导入文件 ==========
+    function handleRegionImportFile(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var country = getCurrentCountry();
+      if (!country) { showToast('error', '请先选择国家'); resetFileInput(); return; }
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var result = importRegionCSV(e.target.result, country);
+        if (result.success) {
+          showToast('success', '成功导入 ' + result.imported + ' 条地区数据' + (result.skipped > 0 ? '，跳过 ' + result.skipped + ' 条空行' : ''));
+          editingRowId = null;
+          isAddingRow = false;
+          renderDetail();
+          renderCountrySelect();
+        } else {
+          showToast('error', result.error || '导入失败');
+        }
+        resetFileInput();
+      };
+      reader.onerror = function() {
+        showToast('error', '文件读取失败');
+        resetFileInput();
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function resetFileInput() {
+      var input = document.getElementById('regionImportFile');
+      if (input) input.value = '';
+    }
+
+    // ========== CSV解析工具 ==========
+    function parseCSVLine(line) {
+      var cells = [];
+      var current = '';
+      var inQuotes = false;
+      for (var i = 0; i < line.length; i++) {
+        var ch = line[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            if (i + 1 < line.length && line[i + 1] === '"') {
+              current += '"'; i++;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            current += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            cells.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    }
+
+    // ========== 导入CSV数据（自动识别格式） ==========
+    function importRegionCSV(csvText, country) {
+      if (csvText.charCodeAt(0) === 0xFEFF) csvText = csvText.slice(1);
+      var lines = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      var dataLines = [];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line === '' || line.charAt(0) === '#') continue;
+        dataLines.push(line);
+      }
+      if (dataLines.length < 2) return { success: false, error: 'CSV 文件为空或只有表头，没有数据行' };
+
+      var header = parseCSVLine(dataLines[0]);
+      var levelCount = country.levels.length;
+
+      var formatType = 'flat';
+      if (header.length >= levelCount) {
+        var matchHierarchy = true;
+        for (var hi = 0; hi < levelCount; hi++) {
+          if (header[hi] !== country.levels[hi]) { matchHierarchy = false; break; }
+        }
+        if (matchHierarchy) formatType = 'hierarchical';
+      }
+
+      var imported = 0;
+      var skipped = 0;
+
+      if (formatType === 'flat') {
+        var flatRows = [];
+        for (var r = 1; r < dataLines.length; r++) {
+          var cells = parseCSVLine(dataLines[r]);
+          var name = (cells[0] || '').trim();
+          if (!name) { skipped++; continue; }
+          var parentName = (cells.length >= 2 && cells[1]) ? cells[1].trim() : null;
+          var status = 'active';
+          if (cells.length >= 3) {
+            var rawStatus = (cells[2] || '').trim();
+            if (rawStatus && (rawStatus === '停用' || rawStatus === 'disabled' || rawStatus === 'Disable')) {
+              status = 'disabled';
+            }
+          }
+          flatRows.push({ name: name, parentName: parentName, status: status });
+        }
+
+        var nameIndex = {};
+        for (var ei = 0; ei < country.data.length; ei++) {
+          var ed = country.data[ei];
+          if (!nameIndex[ed.name]) nameIndex[ed.name] = [];
+          nameIndex[ed.name].push(ed);
+        }
+
+        var passCount = 0, maxPass = 20;
+        var remaining = flatRows.slice();
+        while (remaining.length > 0 && passCount < maxPass) {
+          passCount++;
+          var nextRemaining = [];
+          for (var ri = 0; ri < remaining.length; ri++) {
+            var row = remaining[ri];
+            var parentId = null;
+            var level = 0;
+
+            if (row.parentName) {
+              var candidates = nameIndex[row.parentName];
+              if (candidates && candidates.length > 0) {
+                var best = null;
+                for (var ci = 0; ci < candidates.length; ci++) {
+                  if (!best || candidates[ci].level > best.level) {
+                    best = candidates[ci];
+                  }
+                }
+                if (best.level + 1 < levelCount) {
+                  parentId = best.id;
+                  level = best.level + 1;
+                } else {
+                  skipped++;
+                  continue;
+                }
+              } else {
+                nextRemaining.push(row);
+                continue;
+              }
+            }
+
+            var dup = false;
+            var existList = nameIndex[row.name];
+            if (existList) {
+              for (var di = 0; di < existList.length; di++) {
+                if (existList[di].parent === parentId) { dup = true; break; }
+              }
+            }
+            if (!dup) {
+              var siblings = country.data.filter(function(d) { return d.parent === parentId && d.level === level; });
+              var maxSort = 0;
+              siblings.forEach(function(s) { if ((s.sort || 0) > maxSort) maxSort = s.sort; });
+              var newId = regionNextId();
+              var newItem = {
+                id: newId, name: row.name,
+                level: level, parent: parentId,
+                status: row.status, sort: maxSort + 1
+              };
+              country.data.push(newItem);
+              if (!nameIndex[row.name]) nameIndex[row.name] = [];
+              nameIndex[row.name].push(newItem);
+              imported++;
+            }
+          }
+          if (nextRemaining.length === remaining.length) {
+            skipped += nextRemaining.length;
+            break;
+          }
+          remaining = nextRemaining;
+        }
+      } else {
+        for (var r2 = 1; r2 < dataLines.length; r2++) {
+          var cells2 = parseCSVLine(dataLines[r2]);
+          var hasContent2 = false;
+          for (var c2 = 0; c2 < cells2.length; c2++) {
+            if (cells2[c2].trim() !== '') { hasContent2 = true; break; }
+          }
+          if (!hasContent2) { skipped++; continue; }
+
+          var status2 = 'active';
+          var statusIdx2 = cells2.length - 1;
+          if (statusIdx2 >= levelCount) {
+            var rawStatus2 = cells2[statusIdx2].trim();
+            if (rawStatus2 && (rawStatus2 === '停用' || rawStatus2 === 'disabled' || rawStatus2 === 'Disable')) {
+              status2 = 'disabled';
+            }
+          }
+
+          var parentId2 = null;
+          for (var lv2 = 0; lv2 < levelCount; lv2++) {
+            var name2 = (cells2[lv2] || '').trim();
+            if (!name2) break;
+            var existing2 = findRegionByNameAndParent(country, lv2, parentId2, name2);
+            if (existing2) {
+              parentId2 = existing2.id;
+            } else {
+              var sib2 = country.data.filter(function(d) { return d.parent === parentId2 && d.level === lv2; });
+              var ms2 = 0;
+              sib2.forEach(function(s) { if ((s.sort || 0) > ms2) ms2 = s.sort; });
+              var newId2 = regionNextId();
+              country.data.push({
+                id: newId2, name: name2,
+                level: lv2, parent: parentId2,
+                status: status2, sort: ms2 + 1
+              });
+              parentId2 = newId2;
+              imported++;
+            }
+          }
+        }
+      }
+
+      return { success: true, imported: imported, skipped: skipped };
+    }
+
+    function findRegionByNameAndParent(country, level, parentId, name) {
+      for (var i = 0; i < country.data.length; i++) {
+        var d = country.data[i];
+        if (d.name === name && d.level === level && d.parent === parentId) {
+          return d;
+        }
+      }
+      if (parentId !== null) {
+        for (var j = 0; j < country.data.length; j++) {
+          var d2 = country.data[j];
+          if (d2.name === name && d2.level === level && d2.parent === null) {
+            return d2;
+          }
+        }
+      }
+      return null;
+    }
+
+    // ========== 下载CSV模板 ==========
+    function downloadRegionFlatTemplate() {
+      if (!currentCountryId) {
+        showToast('warning', '请先选择国家');
+        return;
+      }
+      var country = getCurrentCountry();
+      if (!country) { showToast('error', '未找到当前国家数据'); return; }
+
+      var levels = country.levels;
+      var bom = '\uFEFF';
+      var commentLine = '# ' + country.name + ' 层级体系：' + levels.join(' > ');
+      var headerLine = '名称,上级名称,状态';
+
+      var exampleRows = [];
+      if (levels.length >= 3) {
+        exampleRows.push(levels[0] + 'A,,启用');
+        exampleRows.push(levels[1] + 'A,' + levels[0] + 'A,启用');
+        exampleRows.push(levels[2] + 'A,' + levels[1] + 'A,启用');
+        exampleRows.push(levels[2] + 'B,' + levels[1] + 'A,启用');
+        exampleRows.push(levels[1] + 'B,' + levels[0] + 'A,启用');
+        exampleRows.push(levels[0] + 'B,,启用');
+      } else if (levels.length === 2) {
+        exampleRows.push(levels[0] + 'A,,启用');
+        exampleRows.push(levels[1] + 'A,' + levels[0] + 'A,启用');
+        exampleRows.push(levels[1] + 'B,' + levels[0] + 'A,启用');
+        exampleRows.push(levels[0] + 'B,,启用');
+      }
+
+      var csvContent = bom + commentLine + '\n' + headerLine + '\n' + exampleRows.join('\n');
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = country.name + '_地区导入模板(标准).csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('success', '模板已下载：' + levels.join(' > ') + ' 层级体系，系统自动推断层级');
+    }
+
+    // ========== 自定义列 ==========
+
+    var regionColumnDefs = [
+      { key: 'name', label: '地区名称', defaultShow: true, alwaysShow: true },
+      { key: 'level', label: '层级', defaultShow: true, alwaysShow: false },
+      { key: 'parent', label: '上级地区', defaultShow: true, alwaysShow: false },
+      { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+      { key: 'actions', label: '操作', defaultShow: true, alwaysShow: true }
+    ];
+
+    // 列索引映射 (包括前置列)
+    var regionColIndex = { name: 1, level: 2, parent: 3, status: 4, actions: 5 };
+
+    var regionVisibleCols = {};
+    regionColumnDefs.forEach(function(c) { regionVisibleCols[c.key] = c.defaultShow; });
+
+    function regionBuildCustomColPanel() {
+      var body = document.getElementById('regionCustomColBody');
+      if (!body) return;
+      var html = '';
+      regionColumnDefs.forEach(function(c) {
+        var checked = regionVisibleCols[c.key] ? ' checked' : '';
+        var disabled = c.alwaysShow ? ' disabled' : '';
+        var cls = c.alwaysShow ? ' custom-col-item disabled' : ' custom-col-item';
+        html += '<div class="' + cls + '" onclick="' + (c.alwaysShow ? '' : 'regionToggleCol(\'' + c.key + '\')') + '">';
+        html += '<div class="col-check' + checked + '"></div>';
+        html += '<span>' + c.label + '</span>';
+        html += '</div>';
+      });
+      body.innerHTML = html;
+    }
+
+    window.regionToggleCol = function(key) {
+      var def = regionColumnDefs.find(function(c) { return c.key === key; });
+      if (!def || def.alwaysShow) return;
+      regionVisibleCols[key] = !regionVisibleCols[key];
+      regionApplyColVisibility();
+      regionBuildCustomColPanel();
+    };
+
+    function regionVisibleCount() {
+      var count = 0;
+      regionColumnDefs.forEach(function(c) {
+        if (regionVisibleCols[c.key]) count++;
+      });
+      return count + 2; // +2: 前置列 + 复选框
+    }
+
+    function regionApplyColVisibility() {
+      var ths = document.querySelectorAll('.tree-table th[data-col]');
+      ths.forEach(function(th) {
+        var col = th.getAttribute('data-col');
+        if (regionVisibleCols[col]) {
+          th.classList.remove('col-hidden');
+        } else {
+          th.classList.add('col-hidden');
+        }
+      });
+      var rows = document.querySelectorAll('#regionTableBody tr');
+      rows.forEach(function(tr) {
+        var tds = tr.querySelectorAll('td');
+        if (tds.length <= 1) return;
+        Object.keys(regionColIndex).forEach(function(col) {
+          var idx = regionColIndex[col];
+          if (tds[idx]) {
+            if (regionVisibleCols[col]) {
+              tds[idx].classList.remove('col-hidden');
+            } else {
+              tds[idx].classList.add('col-hidden');
+            }
+          }
+        });
+      });
+    }
+
+    window.regionResetCustomCols = function() {
+      regionColumnDefs.forEach(function(c) {
+        regionVisibleCols[c.key] = c.defaultShow;
+      });
+      regionApplyColVisibility();
+      regionBuildCustomColPanel();
+    };
+
+    window.regionToggleCustomColPanel = function() {
+      var panel = document.getElementById('regionCustomColPanel');
+      var btn = document.querySelector('#regionCustomColWrapper button');
+      if (!panel || !btn) return;
+      if (panel.classList.contains('show')) {
+        panel.classList.remove('show');
+        panel.style.display = 'none';
+      } else {
+        regionBuildCustomColPanel();
+        var rect = btn.getBoundingClientRect();
+        panel.style.top = (rect.bottom + 4) + 'px';
+        panel.style.left = Math.max(8, rect.right - 240) + 'px';
+        panel.classList.add('show');
+        panel.style.display = 'block';
+      }
+    };
+
+    document.addEventListener('click', function(e) {
+      var panel = document.getElementById('regionCustomColPanel');
+      var wrapper = document.getElementById('regionCustomColWrapper');
+      if (panel && wrapper && !wrapper.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove('show');
+        panel.style.display = 'none';
+      }
+    });
+
+    // ========== 更多操作下拉 ==========
+
+    window.regionToggleMoreActions = function() {
+      var dropdown = document.getElementById('regionMoreActionsDropdown');
+      if (!dropdown) return;
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+        return;
+      }
+      var btn = document.getElementById('btnRegionMoreActions');
+      if (!btn) return;
+      var rect = btn.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.left = Math.max(8, rect.right - 160) + 'px';
+      dropdown.style.display = 'block';
+    };
+
+    window.regionDoMoreAction = function(action) {
+      document.getElementById('regionMoreActionsDropdown').style.display = 'none';
+      if (action === 'export') {
+        var ids = regionGetCheckedIds();
+        if (ids.length === 0) {
+          showToast('info', '请先选中要导出的地区');
+          return;
+        }
+        var names = [];
+        ids.forEach(function(id) {
+          var r = findRegion(id);
+          if (r) names.push(r.name);
+        });
+        showToast('success', '已导出 ' + ids.length + ' 条地区：' + names.join('、'));
+      }
+    };
+
+    document.addEventListener('click', function(e) {
+      var dropdown = document.getElementById('regionMoreActionsDropdown');
+      var wrapper = document.getElementById('regionMoreActionsWrapper');
+      if (dropdown && wrapper && !wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    // ========== Toast ==========
+    function showToast(type, msg) {
+      if (window.parent && window.parent.showToast) {
+        window.parent.showToast(type, msg);
+        return;
+      }
+      var el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;z-index:99999;';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(function() { el.remove(); }, 2000);
+    }
+
+    // ========== 外部可调用：通过国家代码选中国家 ==========
+    window.selectCountryByCode = function(code) {
+      currentCountryId = code;
+      document.getElementById('countrySelect').value = code;
+      editingRowId = null;
+      isAddingRow = false;
+      renderDetail();
+      renderCountrySelect();
+    };
+
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCountrySelect();
+
+      var preselectedId = window.parent && window.parent.regionSelectedCountry;
+      if (preselectedId) {
+        window.parent.regionSelectedCountry = null;
+        var found = false;
+        for (var i = 0; i < regionConfig.length; i++) {
+          if (regionConfig[i].id === preselectedId) { found = true; break; }
+        }
+        if (found) {
+          selectCountryByCode(preselectedId);
+          return;
+        }
+      }
+
+      if (regionConfig.length > 0) {
+        currentCountryId = regionConfig[0].id;
+        document.getElementById('countrySelect').value = currentCountryId;
+        renderDetail();
+      }
+      renderCountrySelect();
+    });
+  </script>
+
+</body>
+</html>

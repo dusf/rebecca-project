@@ -1,0 +1,1728 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RebeccaShop - 我的店铺</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <style>
+    /* ==================== 店铺列表专用样式 ==================== */
+    .shop-list-main {
+      padding: 8px 24px 24px;
+    }
+
+    /* Tab 切换 */
+    .shop-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid hsl(var(--border));
+      margin-bottom: 24px;
+    }
+
+    .shop-tab {
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      position: relative;
+      font-family: var(--font-sans);
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    .shop-tab:hover {
+      color: hsl(var(--foreground));
+    }
+
+    .shop-tab.active {
+      color: hsl(var(--primary));
+      border-bottom-color: hsl(var(--primary));
+      font-weight: 600;
+    }
+
+    .shop-tab .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 6px;
+      padding: 0 6px;
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+    }
+
+    .shop-tab.active .tab-count {
+      background: hsl(var(--primary-100));
+      color: hsl(var(--primary));
+    }
+
+    .shop-list-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .shop-list-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+    }
+
+    .shop-list-subtitle {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 4px;
+    }
+
+    /* 店铺卡片网格 */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .shop-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid hsl(var(--border));
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      position: relative;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .shop-card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      border-color: hsl(var(--primary-300));
+    }
+
+    .shop-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .shop-card-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .shop-card-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .shop-status-dot.active {
+      background: hsl(var(--success));
+      box-shadow: 0 0 6px hsl(var(--success) / 0.5);
+    }
+
+    .shop-status-dot.disabled {
+      background: hsl(var(--muted-foreground));
+    }
+
+    .shop-card-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .shop-card-domain {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-card-domain svg {
+      flex-shrink: 0;
+    }
+
+    .shop-card-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 16px;
+    }
+
+    .shop-card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .shop-card-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .shop-card:hover .shop-card-actions {
+      opacity: 1;
+    }
+
+    .shop-card-btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid hsl(var(--border));
+      background: white;
+      color: hsl(var(--foreground));
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-sans);
+    }
+
+    .shop-card-btn:hover {
+      background: hsl(var(--muted));
+    }
+
+    .shop-card-btn.danger {
+      color: hsl(var(--error));
+      border-color: hsl(var(--error) / 0.3);
+    }
+
+    .shop-card-btn.danger:hover {
+      background: hsl(0 84% 95%);
+    }
+
+    .shop-card-btn.primary {
+      background: hsl(var(--primary));
+      color: white;
+      border: none;
+    }
+
+    .shop-card-btn.primary:hover {
+      background: hsl(var(--primary-600));
+    }
+
+    .shop-card-btn.success {
+      background: hsl(var(--success));
+      color: white;
+      border: none;
+    }
+
+    .shop-card-btn.success:hover {
+      background: hsl(142 76% 32%);
+    }
+
+    /* 被邀请店铺卡片特有 */
+    .shop-card-inviter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .shop-card-inviter-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      flex-shrink: 0;
+    }
+
+    .shop-card-inviter-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .shop-card-inviter-name {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .shop-card-inviter-time {
+      font-size: 11px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .shop-card-role-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      background: hsl(var(--primary-100));
+      color: hsl(var(--primary-700));
+      margin-bottom: 14px;
+    }
+
+    /* 空状态 */
+    .empty-shop-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      border: 2px dashed hsl(var(--border));
+    }
+
+    .empty-shop-state-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .empty-shop-state-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .empty-shop-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 8px;
+    }
+
+    .empty-shop-state-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 24px;
+    }
+
+    /* 创建按钮（添加卡片样式） */
+    .shop-card.add-card {
+      display: none;
+    }
+
+    /* 对话框内表单 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: hsl(var(--error));
+      margin-left: 2px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all 0.2s;
+      background: white;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-input.error {
+      border-color: hsl(var(--error));
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    .form-error {
+      font-size: 12px;
+      color: hsl(var(--error));
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .form-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .form-input-group .form-input {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+
+    .form-input-group .form-suffix {
+      height: 40px;
+      padding: 0 14px;
+      background: hsl(var(--muted));
+      border: 1.5px solid hsl(var(--border));
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      font-family: var(--font-sans);
+    }
+
+    /* 创建/编辑对话框 */
+    .shop-dialog {
+      width: 540px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .shop-dialog .dialog-body {
+      padding: 4px 0;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .shop-dialog .dialog-actions {
+      flex-shrink: 0;
+      padding-top: 16px;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    /* Logo上传（对话框内） */
+    .dialog-logo-upload {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dialog-logo-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      cursor: pointer;
+    }
+    .dialog-logo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .dialog-logo-preview:hover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      border-radius: 14px;
+    }
+    .dialog-logo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1.5px dashed hsl(var(--primary));
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--primary));
+      cursor: pointer;
+      background: transparent;
+      font-family: var(--font-sans);
+      transition: all 0.15s;
+    }
+    .dialog-logo-btn:hover {
+      background: hsl(var(--primary-50));
+    }
+    .dialog-logo-hint {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 6px;
+    }
+
+    /* 多选下拉 */
+    .multi-select-wrap {
+      position: relative;
+    }
+    .multi-select-trigger {
+      width: 100%;
+      min-height: 40px;
+      padding: 6px 36px 6px 10px;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      box-sizing: border-box;
+      background: white;
+      font-family: var(--font-sans);
+      transition: all 0.2s;
+      position: relative;
+    }
+    .multi-select-trigger:hover {
+      border-color: hsl(var(--primary-300));
+    }
+    .multi-select-trigger.focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary)/0.1);
+    }
+    .multi-select-trigger .placeholder {
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+    }
+    .multi-select-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: hsl(var(--muted-foreground));
+    }
+    .multi-select-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: hsl(var(--primary-100));
+      color: hsl(var(--primary-700));
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 20px;
+    }
+    .multi-select-tag .tag-remove {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+    .multi-select-tag .tag-remove:hover {
+      opacity: 1;
+    }
+    .multi-select-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1.5px solid hsl(var(--border));
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 10;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .multi-select-dropdown.show {
+      display: block;
+    }
+    .multi-select-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .multi-select-option:hover {
+      background: hsl(var(--muted));
+    }
+    .multi-select-option .ms-checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 2px solid hsl(var(--border));
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .multi-select-option.checked .ms-checkbox {
+      background: hsl(var(--primary));
+      border-color: hsl(var(--primary));
+    }
+    .multi-select-option.checked .ms-checkbox::after {
+      content: '✓';
+      font-size: 10px;
+      color: white;
+      font-weight: 700;
+    }
+
+    /* Toast 动画 (commons.css 中已定义) */
+    .toast-container {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      animation: toastIn 0.3s ease;
+      background: white;
+    }
+
+    .toast.success { border-left: 3px solid hsl(var(--success)); }
+    .toast.error { border-left: 3px solid hsl(var(--error)); }
+    .toast.info { border-left: 3px solid hsl(var(--primary)); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-8px); }
+    }
+
+    /* 确认弹窗 */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+
+    .confirm-dialog {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      width: 400px;
+      max-width: 90vw;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+      animation: dialogIn 0.3s ease;
+    }
+
+    .confirm-dialog-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .confirm-dialog-desc {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .confirm-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes dialogIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <!-- ==================== 主内容区 ==================== -->
+  <main class="shop-list-main">
+    <div class="shop-list-title-row">
+      <h1 class="shop-list-title">店铺管理</h1>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" id="createShopBtn" onclick="openCreateDialog()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          创建店铺
+        </button>
+      </div>
+    </div>
+    <p class="shop-list-subtitle">管理你的所有店铺及受邀店铺</p>
+
+    <!-- Tab 切换 -->
+    <div class="shop-tabs" style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <button class="shop-tab active" data-tab="my" onclick="switchTab('my')">
+          我的店铺<span class="tab-count" id="myTabCount">0</span>
+        </button>
+        <button class="shop-tab" data-tab="invited" onclick="switchTab('invited')">
+          被邀请的<span class="tab-count" id="invitedTabCount">0</span>
+        </button>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前Tab刷新数据" style="margin-right:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+    </div>
+
+    <div class="shop-grid" id="shopGrid">
+      <!-- 由 JS 动态渲染 -->
+    </div>
+  </main>
+
+  <!-- ==================== Toast 容器 ==================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ==================== 店铺数据 ====================
+    let shops = [
+      {
+        id: 1,
+        name: 'QVR品牌站',
+        domain: 'qvr.rebeccashop.com',
+        logo: '',
+        defaultLanguage: 'English',
+        languages: ['English', '中文简体', 'Français'],
+        defaultCurrency: 'USD',
+        currencies: ['USD', 'EUR', 'CNY'],
+        timezone: 'America/Los_Angeles',
+        status: 'active',
+        color: '#D4845A',
+        createdAt: '2026-06-15',
+        productCount: 128
+      },
+      {
+        id: 2,
+        name: 'Fashion Plus',
+        domain: 'fashion.rebeccashop.com',
+        logo: '',
+        defaultLanguage: 'English',
+        languages: ['English', 'Français'],
+        defaultCurrency: 'EUR',
+        currencies: ['EUR', 'GBP'],
+        timezone: 'Europe/Paris',
+        status: 'active',
+        color: '#8B9A7C',
+        createdAt: '2026-06-20',
+        productCount: 56
+      },
+      {
+        id: 3,
+        name: 'Tokyo Select',
+        domain: 'tokyo.rebeccashop.com',
+        logo: '',
+        defaultLanguage: '日本語',
+        languages: ['日本語', 'English', '한국어'],
+        defaultCurrency: 'JPY',
+        currencies: ['JPY', 'USD'],
+        timezone: 'Asia/Tokyo',
+        status: 'disabled',
+        color: '#7C8B9A',
+        createdAt: '2026-07-01',
+        productCount: 0
+      }
+    ];
+
+    let nextId = 4;
+
+    // 被邀请的店铺数据
+    let invitedShops = [
+      {
+        id: 101,
+        name: 'Global Trade Hub',
+        domain: 'globaltrade.rebeccashop.com',
+        logo: '',
+        defaultLanguage: 'English',
+        languages: ['English', 'Español', '中文简体'],
+        defaultCurrency: 'USD',
+        currencies: ['USD', 'EUR', 'JPY'],
+        timezone: 'America/New_York',
+        status: 'active',
+        color: '#4A90D9',
+        createdAt: '2026-03-10',
+        productCount: 345,
+        inviterName: '张伟',
+        inviterRole: 'Owner',
+        invitedAt: '2026-07-03',
+        role: '管理员'
+      },
+      {
+        id: 102,
+        name: 'Artisan Crafts',
+        domain: 'artisan.rebeccashop.com',
+        logo: '',
+        defaultLanguage: 'Français',
+        languages: ['Français', 'English'],
+        defaultCurrency: 'EUR',
+        currencies: ['EUR'],
+        timezone: 'Europe/Paris',
+        status: 'active',
+        color: '#A6C8E0',
+        createdAt: '2026-05-18',
+        productCount: 89,
+        inviterName: '李明',
+        inviterRole: 'Owner',
+        invitedAt: '2026-07-05',
+        role: '编辑者'
+      },
+      {
+        id: 103,
+        name: 'Nordic Living',
+        domain: 'nordic.rebeccashop.com',
+        logo: '',
+        defaultLanguage: 'English',
+        languages: ['English', 'Deutsch', 'Svenska'],
+        defaultCurrency: 'EUR',
+        currencies: ['EUR', 'USD', 'GBP'],
+        timezone: 'Europe/Stockholm',
+        status: 'active',
+        color: '#6B8EAD',
+        createdAt: '2026-04-22',
+        productCount: 203,
+        inviterName: '王芳',
+        inviterRole: 'Owner',
+        invitedAt: '2026-07-08',
+        role: '分析师'
+      }
+    ];
+
+    let currentTab = 'my';
+
+    // ==================== 店铺成员数（从 localStorage 读取） ====================
+    function getShopMemberCount(shopId) {
+      try {
+        var key = 'rebecca_members_' + shopId;
+        var d = localStorage.getItem(key);
+        if (d) return JSON.parse(d).length;
+      } catch(e) {}
+      return 0;
+    }
+
+    // 颜色库
+    const avatarColors = ['#D4845A', '#8B9A7C', '#7C8B9A', '#B4846C', '#9A8B7C', '#6C8B84', '#C4957A', '#8B7C9A'];
+
+    // ==================== Toast ====================
+    function showToast(type, message) {
+      const container = document.getElementById('toastContainer');
+      const icons = {
+        success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+        error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ==================== Tab 切换 ====================
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.shop-tab').forEach(function(t) {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+      var createBtn = document.getElementById('createShopBtn');
+      if (tab === 'invited') {
+        createBtn.style.display = 'none';
+      } else {
+        createBtn.style.display = '';
+      }
+      renderShopGrid();
+    }
+
+    // ==================== 渲染店铺列表 ====================
+    function renderMyShops() {
+      var grid = document.getElementById('shopGrid');
+
+      if (shops.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-shop-state" style="grid-column: 1 / -1;">
+            <div class="empty-shop-state-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="empty-shop-state-title">您还没有任何店铺</div>
+            <div class="empty-shop-state-desc">点击下方按钮创建您的第一家店铺，开始跨境电商之旅</div>
+            <button class="btn btn-primary" onclick="openCreateDialog()">创建店铺</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = shops.map(function(shop) {
+        var avatarLetter = shop.name.charAt(0);
+        var isActive = shop.status === 'active';
+        var statusLabel = isActive ? '启用' : '停用';
+        var statusClass = isActive ? 'badge-success' : 'badge-secondary';
+        var langCount = (shop.languages || []).length;
+        var langExtra = langCount > 1 ? ' +' + (langCount - 1) : '';
+        var curCount = (shop.currencies || []).length;
+        var curExtra = curCount > 1 ? ' +' + (curCount - 1) : '';
+
+        return `
+          <div class="shop-card">
+            <div class="shop-card-header">
+              <div class="shop-card-avatar" style="background: ${shop.color};${shop.logo ? 'background-image:url(' + shop.logo + ');background-size:cover;' : ''}">${shop.logo ? '' : avatarLetter}</div>
+              <div class="shop-card-status">
+                <span class="shop-status-dot ${isActive ? 'active' : 'disabled'}"></span>
+                <span class="badge ${statusClass}">${statusLabel}</span>
+              </div>
+            </div>
+            <div class="shop-card-name">${shop.name}</div>
+            <div class="shop-card-domain">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              ${shop.domain}
+            </div>
+            <div class="shop-card-meta">
+              <div class="shop-card-meta-item" title="${(shop.languages || []).join('、')}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                ${shop.defaultLanguage || shop.language || ''}${langExtra}
+              </div>
+              <div class="shop-card-meta-item" title="${(shop.currencies || []).join('、')}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg>
+                ${shop.defaultCurrency || shop.currency || ''}${curExtra}
+              </div>
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                ${shop.productCount} 件产品
+              </div>
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                ${getShopMemberCount(shop.id)} 名成员
+              </div>
+            </div>
+            <div class="shop-card-meta-item" style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              创建于 ${shop.createdAt}
+            </div>
+            <div class="shop-card-actions" onclick="event.stopPropagation()">
+              <button class="shop-card-btn" onclick="enterShopMembers(${shop.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                成员
+              </button>
+              <button class="shop-card-btn" onclick="openEditDialog(${shop.id})">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                编辑
+              </button>
+              ${isActive ? `
+                <button class="shop-card-btn danger" onclick="confirmToggleShop(${shop.id}, 'disable')">停用</button>
+              ` : `
+                <button class="shop-card-btn primary" onclick="confirmToggleShop(${shop.id}, 'enable')">启用</button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderInvitedShops() {
+      var grid = document.getElementById('shopGrid');
+
+      if (invitedShops.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-shop-state" style="grid-column: 1 / -1;">
+            <div class="empty-shop-state-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="empty-shop-state-title">暂无被邀请的店铺</div>
+            <div class="empty-shop-state-desc">当其他店铺主邀请您加入管理时，将在此处显示</div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = invitedShops.map(function(shop) {
+        var avatarLetter = shop.name.charAt(0);
+        var inviterLetter = shop.inviterName.charAt(0);
+        var langCount = (shop.languages || []).length;
+        var langExtra = langCount > 1 ? ' +' + (langCount - 1) : '';
+        var curCount = (shop.currencies || []).length;
+        var curExtra = curCount > 1 ? ' +' + (curCount - 1) : '';
+
+        return `
+          <div class="shop-card">
+            <div class="shop-card-header">
+              <div class="shop-card-avatar" style="background: ${shop.color};${shop.logo ? 'background-image:url(' + shop.logo + ');background-size:cover;' : ''}">${shop.logo ? '' : avatarLetter}</div>
+              <div class="shop-card-status">
+                <span class="shop-status-dot active"></span>
+                <span class="badge badge-success">启用</span>
+              </div>
+            </div>
+            <div class="shop-card-name">${shop.name}</div>
+            <div class="shop-card-domain">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              ${shop.domain}
+            </div>
+            <div class="shop-card-role-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              ${shop.role}
+            </div>
+            <div class="shop-card-inviter">
+              <div class="shop-card-inviter-avatar">${inviterLetter}</div>
+              <div class="shop-card-inviter-info">
+                <span class="shop-card-inviter-name">${shop.inviterName}</span>
+                <span class="shop-card-inviter-time">${shop.inviterRole} · 邀请于 ${shop.invitedAt}</span>
+              </div>
+            </div>
+            <div class="shop-card-meta">
+              <div class="shop-card-meta-item" title="${(shop.languages || []).join('、')}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                ${shop.defaultLanguage || shop.language || ''}${langExtra}
+              </div>
+              <div class="shop-card-meta-item" title="${(shop.currencies || []).join('、')}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M12 11v6"/><path d="M10 17h4"/></svg>
+                ${shop.defaultCurrency || shop.currency || ''}${curExtra}
+              </div>
+              <div class="shop-card-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                ${shop.productCount} 件产品
+              </div>
+            </div>
+            <div class="shop-card-meta-item" style="font-size: 12px; color: hsl(var(--muted-foreground)); margin-bottom: 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              创建于 ${shop.createdAt}
+            </div>
+            <div class="shop-card-actions" onclick="event.stopPropagation()">
+              <button class="shop-card-btn danger" onclick="rejectInvite(${shop.id})">退出</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderShopGrid() {
+      document.getElementById('myTabCount').textContent = shops.length;
+      document.getElementById('invitedTabCount').textContent = invitedShops.length;
+
+      if (currentTab === 'invited') {
+        renderInvitedShops();
+      } else {
+        renderMyShops();
+      }
+    }
+
+    // ==================== 进入店铺成员页 ====================
+    function enterShopMembers(shopId) {
+      var shop = shops.find(function(s) { return s.id === shopId; }) || invitedShops.find(function(s) { return s.id === shopId; });
+      if (!shop) return;
+      // 同步到全局店铺数据
+      try {
+        var globalShops = JSON.parse(localStorage.getItem('rebecca_shops') || '[]');
+        var matched = globalShops.find(function(s) { return s.name === shop.name; });
+        if (matched) {
+          localStorage.setItem('rebecca_current_shop', matched.id);
+        } else {
+          var newId = 'shop_' + Date.now();
+          globalShops.push({
+            id: newId, name: shop.name, slug: shop.domain.split('.')[0],
+            description: '', logo: shop.logo || '', domain: shop.domain, customDomain: '',
+            domainStatus: 'active', status: 'active', color: shop.color,
+            createdAt: shop.createdAt, productCount: shop.productCount
+          });
+          localStorage.setItem('rebecca_shops', JSON.stringify(globalShops));
+          localStorage.setItem('rebecca_current_shop', newId);
+        }
+      } catch(e) {}
+      // 通过父框架导航，确保面包屑路由正常显示"全局 / 店铺管理 / 成员管理"
+      if (window.self !== window.top && window.parent.handleSidebarNav) {
+        window.parent.handleSidebarNav('shop-members');
+      } else {
+        window.location.href = 'members.html';
+      }
+    }
+
+    // ==================== 退出被邀请店铺 ====================
+    function rejectInvite(shopId) {
+      var shop = invitedShops.find(function(s) { return s.id === shopId; });
+      if (!shop) return;
+
+      var overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.innerHTML = `
+        <div class="confirm-dialog">
+          <div class="confirm-dialog-title">确认退出</div>
+          <div class="confirm-dialog-desc">确定要退出店铺"${shop.name}"吗？退出后你将无法访问该店铺的管理后台。</div>
+          <div class="confirm-dialog-actions">
+            <button class="btn btn-secondary" onclick="this.closest('.confirm-overlay').remove()">取消</button>
+            <button class="btn btn-destructive" id="confirmRejectBtn">确认退出</button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+      });
+      document.body.appendChild(overlay);
+
+      document.getElementById('confirmRejectBtn').addEventListener('click', function() {
+        invitedShops = invitedShops.filter(function(s) { return s.id !== shopId; });
+        overlay.remove();
+        renderShopGrid();
+        showToast('info', '已退出店铺"' + shop.name + '"');
+      });
+    }
+
+    // ==================== 多语言/币种选项数据 ====================
+    const LANG_OPTIONS = [
+      { value: '中文简体', label: '中文简体' },
+      { value: '中文繁體', label: '中文繁體' },
+      { value: 'English', label: 'English' },
+      { value: '日本語', label: '日本語' },
+      { value: '한국어', label: '한국어' },
+      { value: 'Français', label: 'Français' },
+      { value: 'Deutsch', label: 'Deutsch' },
+      { value: 'Español', label: 'Español' },
+      { value: 'Italiano', label: 'Italiano' },
+      { value: 'Português', label: 'Português' },
+      { value: 'Русский', label: 'Русский' },
+      { value: 'العربية', label: 'العربية' },
+      { value: 'Svenska', label: 'Svenska' },
+    ];
+    const CURRENCY_OPTIONS = [
+      { value: 'USD', label: 'USD - 美元' },
+      { value: 'EUR', label: 'EUR - 欧元' },
+      { value: 'GBP', label: 'GBP - 英镑' },
+      { value: 'JPY', label: 'JPY - 日元' },
+      { value: 'CNY', label: 'CNY - 人民币' },
+      { value: 'KRW', label: 'KRW - 韩元' },
+      { value: 'AUD', label: 'AUD - 澳元' },
+      { value: 'CAD', label: 'CAD - 加元' },
+      { value: 'CHF', label: 'CHF - 瑞士法郎' },
+      { value: 'SGD', label: 'SGD - 新加坡元' },
+      { value: 'HKD', label: 'HKD - 港币' },
+      { value: 'MXN', label: 'MXN - 墨西哥比索' },
+      { value: 'BRL', label: 'BRL - 巴西雷亚尔' },
+    ];
+    const TIMEZONE_OPTIONS = [
+      { value: 'America/Los_Angeles', label: '(UTC-8) 洛杉矶' },
+      { value: 'America/New_York', label: '(UTC-5) 纽约' },
+      { value: 'Europe/London', label: '(UTC+0) 伦敦' },
+      { value: 'Europe/Paris', label: '(UTC+1) 巴黎' },
+      { value: 'Asia/Shanghai', label: '(UTC+8) 上海' },
+      { value: 'Asia/Tokyo', label: '(UTC+9) 东京' },
+      { value: 'Asia/Seoul', label: '(UTC+9) 首尔' },
+      { value: 'Australia/Sydney', label: '(UTC+10) 悉尼' },
+      { value: 'Asia/Dubai', label: '(UTC+4) 迪拜' },
+    ];
+
+    // ==================== 多选组件 ====================
+    let activeMultiSelect = null;
+
+    function renderMultiSelectTags(containerId, selectedValues, options) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      if (!selectedValues || selectedValues.length === 0) {
+        container.innerHTML = '<span class="placeholder">选择额外选项（可多选）</span>';
+        return;
+      }
+      container.innerHTML = selectedValues.map(function(v) {
+        var opt = options.find(function(o) { return o.value === v; });
+        return '<span class="multi-select-tag">' + (opt ? opt.label : v) + '<span class="tag-remove" data-value="' + v + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>';
+      }).join('');
+    }
+
+    function toggleMultiSelect(triggerId, dropdownId, options, stateKey) {
+      var dropdown = document.getElementById(dropdownId);
+      var trigger = document.getElementById(triggerId);
+      if (!dropdown || !trigger) return;
+
+      // Close other open dropdowns
+      if (activeMultiSelect && activeMultiSelect !== dropdownId) {
+        var other = document.getElementById(activeMultiSelect);
+        if (other) other.classList.remove('show');
+        var otherTr = document.getElementById(activeMultiSelect.replace('Dropdown','Trigger'));
+        if (otherTr) otherTr.classList.remove('focus');
+      }
+
+      var isOpen = dropdown.classList.contains('show');
+      if (isOpen) {
+        dropdown.classList.remove('show');
+        trigger.classList.remove('focus');
+        activeMultiSelect = null;
+      } else {
+        dropdown.classList.add('show');
+        trigger.classList.add('focus');
+        activeMultiSelect = dropdownId;
+        // Render options
+        var selected = window['_ms_' + stateKey] || [];
+        dropdown.innerHTML = options.map(function(opt) {
+          var checked = selected.indexOf(opt.value) !== -1;
+          return '<div class="multi-select-option' + (checked ? ' checked' : '') + '" data-value="' + opt.value + '">' +
+            '<div class="ms-checkbox"></div>' +
+            '<span>' + opt.label + '</span>' +
+          '</div>';
+        }).join('');
+        // Bind click events
+        dropdown.querySelectorAll('.multi-select-option').forEach(function(opt) {
+          opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var val = this.dataset.value;
+            var arr = window['_ms_' + stateKey] || [];
+            var idx = arr.indexOf(val);
+            if (idx !== -1) { arr.splice(idx, 1); }
+            else { arr.push(val); }
+            window['_ms_' + stateKey] = arr;
+            renderMultiSelectTags(triggerId, arr, options);
+            toggleMultiSelect(triggerId, dropdownId, options, stateKey); // close & reopen to refresh
+            toggleMultiSelect(triggerId, dropdownId, options, stateKey); // reopen
+          });
+        });
+      }
+    }
+
+    function closeAllMultiSelects() {
+      if (activeMultiSelect) {
+        var d = document.getElementById(activeMultiSelect);
+        if (d) d.classList.remove('show');
+        var t = document.getElementById(activeMultiSelect.replace('Dropdown','Trigger'));
+        if (t) t.classList.remove('focus');
+        activeMultiSelect = null;
+      }
+    }
+
+    // ==================== 创建/编辑弹窗 ====================
+    function buildShopFormHTML(title, desc, isEdit, shop) {
+      var defaultLang = shop ? (shop.defaultLanguage || shop.language || '') : '';
+      var defaultCur = shop ? (shop.defaultCurrency || shop.currency || '') : '';
+      var tz = shop ? (shop.timezone || '') : '';
+      var logo = shop ? (shop.logo || '') : '';
+      var avatarLetter = shop ? shop.name.charAt(0) : '';
+      var color = shop ? shop.color : '#D4845A';
+      var domainPrefix = shop ? shop.domain.replace('.rebeccashop.com', '') : '';
+      var name = shop ? shop.name : '';
+
+      var langSelectOptions = LANG_OPTIONS.map(function(o) {
+        var sel = o.value === defaultLang ? ' selected' : '';
+        return '<option value="' + o.value + '"' + sel + '>' + o.label + '</option>';
+      }).join('');
+
+      var curSelectOptions = CURRENCY_OPTIONS.map(function(o) {
+        var sel = o.value === defaultCur ? ' selected' : '';
+        return '<option value="' + o.value + '"' + sel + '>' + o.label + '</option>';
+      }).join('');
+
+      var tzSelectOptions = TIMEZONE_OPTIONS.map(function(o) {
+        var sel = o.value === tz ? ' selected' : '';
+        return '<option value="' + o.value + '"' + sel + '>' + o.label + '</option>';
+      }).join('');
+
+      var domainField = isEdit
+        ? '<div class="form-input-group"><input class="form-input" id="shopDomainInput" value="' + domainPrefix + '" disabled style="background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-radius: 8px 0 0 8px; border-right: none;" /><span class="form-suffix">.rebeccashop.com</span></div><div class="form-hint">域名创建后不可修改</div>'
+        : '<div class="form-input-group"><input class="form-input" id="shopDomainInput" placeholder="输入你的域名前缀" style="border-radius: 8px 0 0 8px; border-right: none;" /><span class="form-suffix">.rebeccashop.com</span></div><div class="form-hint">仅支持字母、数字和连字符，创建后不可修改</div><div class="form-error" id="shopDomainError">该域名已被使用</div>';
+
+      var actionBtn = isEdit
+        ? '<button class="btn btn-primary" onclick="updateShop(' + shop.id + ')">保存修改</button>'
+        : '<button class="btn btn-primary" onclick="createShop()">创建店铺</button>';
+
+      return '<div class="dialog shop-dialog">' +
+        '<div class="dialog-header"><div class="dialog-title">' + title + '</div><button class="dialog-close" onclick="closeDialog()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
+        '<div class="dialog-desc">' + desc + '</div>' +
+        '<div class="dialog-body">' +
+          // Logo上传
+          '<div class="form-group">' +
+            '<label class="form-label">店铺 Logo</label>' +
+            '<div class="dialog-logo-upload">' +
+              '<div class="dialog-logo-preview" id="dialogLogoPreview" style="background:' + color + ';" onclick="triggerDialogLogoUpload()">' +
+                (logo ? '<img src="' + logo + '" alt="logo">' : avatarLetter) +
+              '</div>' +
+              '<div>' +
+                '<button class="dialog-logo-btn" onclick="triggerDialogLogoUpload()">' +
+                  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
+                  '上传图片' +
+                '</button>' +
+                '<div class="dialog-logo-hint">建议 200×200，PNG/JPEG</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          // 店铺名称
+          '<div class="form-group">' +
+            '<label class="form-label">店铺名称 <span class="required">*</span></label>' +
+            '<input class="form-input" id="shopNameInput" placeholder="例如：My Brand Store" maxlength="50" value="' + name + '" />' +
+            '<div class="form-error" id="shopNameError">请输入店铺名称</div>' +
+          '</div>' +
+          // 店铺域名
+          '<div class="form-group">' +
+            '<label class="form-label">店铺域名' + (isEdit ? '' : ' <span class="required">*</span>') + '</label>' +
+            domainField +
+          '</div>' +
+          // 默认语言
+          '<div class="form-group">' +
+            '<label class="form-label">默认语言 <span class="required">*</span></label>' +
+            '<select class="form-input" id="shopLanguageInput">' +
+              '<option value="">请选择语言</option>' +
+              langSelectOptions +
+            '</select>' +
+            '<div class="form-error" id="shopLanguageError">请选择默认语言</div>' +
+          '</div>' +
+          // 更多语言
+          '<div class="form-group">' +
+            '<label class="form-label">其他语言</label>' +
+            '<div class="multi-select-wrap">' +
+              '<div class="multi-select-trigger" id="langMultiTrigger" onclick="toggleMultiSelect(\'langMultiTrigger\',\'langMultiDropdown\',LANG_OPTIONS,\'langs\')">' +
+                '<span class="placeholder">选择额外选项（可多选）</span>' +
+                '<span class="multi-select-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>' +
+              '</div>' +
+              '<div class="multi-select-dropdown" id="langMultiDropdown"></div>' +
+            '</div>' +
+            '<div class="form-hint">添加更多语言，为后续产品国际化做准备</div>' +
+          '</div>' +
+          // 默认币种
+          '<div class="form-group">' +
+            '<label class="form-label">默认币种 <span class="required">*</span></label>' +
+            '<select class="form-input" id="shopCurrencyInput">' +
+              '<option value="">请选择币种</option>' +
+              curSelectOptions +
+            '</select>' +
+            '<div class="form-error" id="shopCurrencyError">请选择默认币种</div>' +
+          '</div>' +
+          // 更多币种
+          '<div class="form-group">' +
+            '<label class="form-label">其他币种</label>' +
+            '<div class="multi-select-wrap">' +
+              '<div class="multi-select-trigger" id="curMultiTrigger" onclick="toggleMultiSelect(\'curMultiTrigger\',\'curMultiDropdown\',CURRENCY_OPTIONS,\'curs\')">' +
+                '<span class="placeholder">选择额外选项（可多选）</span>' +
+                '<span class="multi-select-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>' +
+              '</div>' +
+              '<div class="multi-select-dropdown" id="curMultiDropdown"></div>' +
+            '</div>' +
+            '<div class="form-hint">添加更多币种，支持多币种定价和结算</div>' +
+          '</div>' +
+          // 时区
+          '<div class="form-group">' +
+            '<label class="form-label">时区</label>' +
+            '<select class="form-input" id="shopTimezoneInput">' +
+              '<option value="">自动（根据默认语言推断）</option>' +
+              tzSelectOptions +
+            '</select>' +
+            '<div class="form-hint">用于确定订单时间、促销活动排期和定时任务的基准时区</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dialog-actions">' +
+          '<button class="btn btn-secondary" onclick="closeDialog()">取消</button>' +
+          actionBtn +
+        '</div>' +
+      '</div>';
+    }
+
+    function openCreateDialog() {
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.id = 'shopFormOverlay';
+      overlay.innerHTML = buildShopFormHTML('创建新店铺', '填写店铺基本信息，创建属于你的独立站', false, null);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeDialog();
+      });
+      document.body.appendChild(overlay);
+      afterDialogOpen(false);
+    }
+
+    function openEditDialog(shopId) {
+      var shop = shops.find(function(s) { return s.id === shopId; });
+      if (!shop) return;
+
+      // Init multi-select state from shop data
+      window._ms_langs = (shop.languages || []).filter(function(l) { return l !== (shop.defaultLanguage || shop.language); });
+      window._ms_curs = (shop.currencies || []).filter(function(c) { return c !== (shop.defaultCurrency || shop.currency); });
+
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.id = 'shopFormOverlay';
+      overlay.innerHTML = buildShopFormHTML('编辑店铺信息', '修改店铺基本配置', true, shop);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeDialog();
+      });
+      document.body.appendChild(overlay);
+
+      // Render initial tags
+      renderMultiSelectTags('langMultiTrigger', window._ms_langs, LANG_OPTIONS);
+      renderMultiSelectTags('curMultiTrigger', window._ms_curs, CURRENCY_OPTIONS);
+      afterDialogOpen(true);
+    }
+
+    function afterDialogOpen(isEdit) {
+      window._ms_langs = window._ms_langs || [];
+      window._ms_curs = window._ms_curs || [];
+
+      if (!isEdit) {
+        // Domain validation for create dialog
+        var domainInput = document.getElementById('shopDomainInput');
+        if (domainInput) {
+          domainInput.addEventListener('input', debounce(function() {
+            validateDomain(this.value);
+          }, 300));
+        }
+      }
+
+      // Close multi-selects on outside click
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.multi-select-wrap')) {
+          closeAllMultiSelects();
+        }
+      });
+
+      // Logo file input setup
+      if (!document.getElementById('shopLogoFileInput')) {
+        var fi = document.createElement('input');
+        fi.type = 'file';
+        fi.id = 'shopLogoFileInput';
+        fi.accept = 'image/*';
+        fi.style.display = 'none';
+        fi.addEventListener('change', function(e) {
+          var file = e.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            window._dialogLogoData = ev.target.result;
+            var preview = document.getElementById('dialogLogoPreview');
+            if (preview) {
+              preview.style.background = '';
+              preview.innerHTML = '<img src="' + window._dialogLogoData + '" alt="logo">';
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+        document.body.appendChild(fi);
+      }
+    }
+
+    function triggerDialogLogoUpload() {
+      var fi = document.getElementById('shopLogoFileInput');
+      if (fi) fi.click();
+    }
+
+    window._dialogLogoData = null;
+
+    function closeDialog() {
+      closeAllMultiSelects();
+      var overlay = document.getElementById('shopFormOverlay');
+      if (overlay) overlay.remove();
+      window._dialogLogoData = null;
+      window._ms_langs = [];
+      window._ms_curs = [];
+    }
+
+    // ==================== 域名校验 ====================
+    function validateDomain(domain) {
+      var errorEl = document.getElementById('shopDomainError');
+      var inputEl = document.getElementById('shopDomainInput');
+      if (!errorEl || !inputEl) return;
+      if (!domain.trim()) {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+        return;
+      }
+      var fullDomain = domain.trim().toLowerCase() + '.rebeccashop.com';
+      var exists = shops.some(function(s) { return s.domain === fullDomain; });
+      if (exists) {
+        errorEl.textContent = '该域名已被使用';
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+      } else if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(domain.trim())) {
+        errorEl.textContent = '仅支持字母、数字和连字符，不能以连字符开头或结尾';
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+      } else {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+      }
+    }
+
+    // ==================== 表单验证 ====================
+    function validateShopForm(isEdit) {
+      if (isEdit === undefined) isEdit = false;
+      var valid = true;
+      var nameEl = document.getElementById('shopNameInput');
+      var domainEl = document.getElementById('shopDomainInput');
+      var languageEl = document.getElementById('shopLanguageInput');
+      var currencyEl = document.getElementById('shopCurrencyInput');
+
+      // 店铺名称
+      if (!nameEl.value.trim()) {
+        document.getElementById('shopNameError').classList.add('show');
+        nameEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopNameError').classList.remove('show');
+        nameEl.classList.remove('error');
+      }
+
+      // 域名（仅创建时验证）
+      if (!isEdit) {
+        var domain = domainEl.value.trim().toLowerCase();
+        if (!domain) {
+          document.getElementById('shopDomainError').textContent = '请输入域名';
+          document.getElementById('shopDomainError').classList.add('show');
+          domainEl.classList.add('error');
+          valid = false;
+        } else {
+          var fullDomain = domain + '.rebeccashop.com';
+          var exists = shops.some(function(s) { return s.domain === fullDomain; });
+          if (exists) {
+            document.getElementById('shopDomainError').textContent = '该域名已被使用';
+            document.getElementById('shopDomainError').classList.add('show');
+            domainEl.classList.add('error');
+            valid = false;
+          }
+        }
+      }
+
+      // 默认语言
+      if (!languageEl.value) {
+        document.getElementById('shopLanguageError').classList.add('show');
+        languageEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopLanguageError').classList.remove('show');
+        languageEl.classList.remove('error');
+      }
+
+      // 默认币种
+      if (!currencyEl.value) {
+        document.getElementById('shopCurrencyError').classList.add('show');
+        currencyEl.classList.add('error');
+        valid = false;
+      } else {
+        document.getElementById('shopCurrencyError').classList.remove('show');
+        currencyEl.classList.remove('error');
+      }
+
+      return valid;
+    }
+
+    // ==================== 收集表单数据 ====================
+    function collectShopFormData() {
+      var name = document.getElementById('shopNameInput').value.trim();
+      var domainPrefix = document.getElementById('shopDomainInput').value.trim().toLowerCase();
+      var defaultLang = document.getElementById('shopLanguageInput').value;
+      var defaultCur = document.getElementById('shopCurrencyInput').value;
+      var timezone = document.getElementById('shopTimezoneInput').value;
+      var extraLangs = window._ms_langs || [];
+      var extraCurs = window._ms_curs || [];
+      // Combine default + extra
+      var allLangs = [defaultLang].concat(extraLangs.filter(function(l) { return l !== defaultLang; }));
+      var allCurs = [defaultCur].concat(extraCurs.filter(function(c) { return c !== defaultCur; }));
+      return {
+        name: name,
+        domain: domainPrefix + '.rebeccashop.com',
+        defaultLanguage: defaultLang,
+        languages: allLangs,
+        defaultCurrency: defaultCur,
+        currencies: allCurs,
+        timezone: timezone,
+        logo: window._dialogLogoData || ''
+      };
+    }
+
+    // ==================== 创建店铺 ====================
+    function createShop() {
+      if (!validateShopForm(false)) return;
+      var data = collectShopFormData();
+      var randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      var today = new Date().toISOString().split('T')[0];
+
+      shops.push({
+        id: nextId++,
+        name: data.name,
+        domain: data.domain,
+        logo: data.logo,
+        defaultLanguage: data.defaultLanguage,
+        languages: data.languages,
+        defaultCurrency: data.defaultCurrency,
+        currencies: data.currencies,
+        timezone: data.timezone,
+        status: 'active',
+        color: randomColor,
+        createdAt: today,
+        productCount: 0
+      });
+
+      closeDialog();
+      renderShopGrid();
+      showToast('success', '店铺 "' + data.name + '" 创建成功！');
+    }
+
+    // ==================== 更新店铺 ====================
+    function updateShop(shopId) {
+      if (!validateShopForm(true)) return;
+      var shop = shops.find(function(s) { return s.id === shopId; });
+      if (!shop) return;
+      var data = collectShopFormData();
+
+      shop.name = data.name;
+      shop.defaultLanguage = data.defaultLanguage;
+      shop.languages = data.languages;
+      shop.defaultCurrency = data.defaultCurrency;
+      shop.currencies = data.currencies;
+      shop.timezone = data.timezone;
+      if (data.logo) shop.logo = data.logo;
+
+      closeDialog();
+      renderShopGrid();
+      showToast('success', '店铺 "' + shop.name + '" 已更新');
+    }
+
+    // ==================== 停用/启用确认 ====================
+    function confirmToggleShop(shopId, action) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+
+      const isEnabling = action === 'enable';
+      const title = isEnabling ? '确认启用店铺' : '确认停用店铺';
+      const desc = isEnabling
+        ? `确定要启用店铺"${shop.name}"吗？启用后用户端可正常访问。`
+        : `确定要停用店铺"${shop.name}"吗？停用后用户端将无法访问该店铺。`;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.innerHTML = `
+        <div class="confirm-dialog">
+          <div class="confirm-dialog-title">${title}</div>
+          <div class="confirm-dialog-desc">${desc}</div>
+          <div class="confirm-dialog-actions">
+            <button class="btn btn-secondary" onclick="this.closest('.confirm-overlay').remove()">取消</button>
+            <button class="btn ${isEnabling ? 'btn-primary' : 'btn-destructive'}" id="confirmToggleBtn">
+              ${isEnabling ? '确认启用' : '确认停用'}
+            </button>
+          </div>
+        </div>
+      `;
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+      document.body.appendChild(overlay);
+
+      document.getElementById('confirmToggleBtn').addEventListener('click', () => {
+        toggleShopStatus(shopId);
+        overlay.remove();
+      });
+    }
+
+    function toggleShopStatus(shopId) {
+      const shop = shops.find(s => s.id === shopId);
+      if (!shop) return;
+      shop.status = shop.status === 'active' ? 'disabled' : 'active';
+      renderShopGrid();
+      const msg = shop.status === 'active' ? '已启用' : '已停用';
+      showToast('info', `店铺 "${shop.name}" ${msg}`);
+    }
+
+    // ==================== 工具函数 ====================
+    function debounce(fn, delay) {
+      let timer;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    // ==================== ESC 关闭弹窗 ====================
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDialog();
+        const confirmOverlay = document.querySelector('.confirm-overlay');
+        if (confirmOverlay) confirmOverlay.remove();
+      }
+    });
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      renderShopGrid();
+    });
+
+    function refreshPage() {
+      renderShopGrid();
+      showToast('success', '数据已刷新');
+    }
+  </script>
+</body>
+</html>

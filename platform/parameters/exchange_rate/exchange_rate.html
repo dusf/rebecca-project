@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汇率 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    /* ========== 页面特有样式 ========== */
+    .content { display: flex; flex-direction: column; height: 100%; }
+
+    /* 数据源状态提示条 */
+    .api-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      flex-shrink: 0;
+      font-family: var(--font-sans);
+    }
+    .api-status-bar.ok { background: hsl(142 76% 94%); color: hsl(142 40% 30%); border: 1px solid hsl(142 50% 80%); }
+    .api-status-bar.warn { background: hsl(40 90% 94%); color: hsl(40 50% 30%); border: 1px solid hsl(40 55% 80%); }
+    .api-status-bar.err { background: hsl(0 76% 94%); color: hsl(0 40% 30%); border: 1px solid hsl(0 50% 80%); }
+    .api-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .api-status-bar.ok .api-status-dot { background: hsl(142 60% 40%); }
+    .api-status-bar.warn .api-status-dot { background: hsl(40 80% 40%); }
+    .api-status-bar.err .api-status-dot { background: hsl(0 60% 40%); }
+    .api-status-text { flex: 1; }
+    .api-status-action { cursor: pointer; text-decoration: underline; font-weight: 500; white-space: nowrap; }
+
+    /* 汇率波动标记 */
+    .rate-change-up { color: hsl(142 50% 38%); }
+    .rate-change-down { color: hsl(0 55% 48%); }
+
+    /* 刷新旋转动画 */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin-icon { animation: spin 1s linear infinite; transform-origin: center; }
+
+    /* 行内添加/编辑行 */
+    .inline-add-row { background: hsl(var(--primary) / 0.04); }
+    .inline-edit-row { background: hsl(40 90% 94%); }
+    .inline-form-input {
+      width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: 13px;
+      border: 1px solid hsl(var(--border)); border-radius: 6px; outline: none;
+      background: #fff; font-family: var(--font-sans);
+    }
+    .inline-form-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
+    .inline-form-input.sm { padding: 4px 6px; font-size: 12px; }
+    .inline-form-select {
+      width: 100%; box-sizing: border-box; padding: 6px 8px; font-size: 13px;
+      border: 1px solid hsl(var(--border)); border-radius: 6px; outline: none;
+      background: #fff; font-family: var(--font-sans);
+    }
+    .inline-form-select:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
+    .inline-actions { display: flex; gap: 6px; align-items: center; }
+    .inline-error { font-size: 10px; color: hsl(var(--destructive)); margin-top: 2px; display: none; }
+
+    /* 暂停原因图标 */
+    .pause-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; background: hsl(0 70% 50%); color: #fff;
+      border-radius: 50%; font-size: 10px; font-weight: 700; cursor: pointer;
+      margin-left: 4px; position: relative; flex-shrink: 0; line-height: 1;
+      font-family: var(--font-sans);
+    }
+    .pause-icon:hover .pause-tooltip {
+      display: block;
+    }
+    .pause-tooltip {
+      display: none;
+      position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+      background: hsl(0 10% 15%); color: #fff; font-size: 11px; font-weight: 400;
+      padding: 6px 10px; border-radius: 6px; white-space: nowrap; z-index: 100;
+      pointer-events: none; font-family: var(--font-sans);
+    }
+    .pause-tooltip::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 4px solid transparent; border-top-color: hsl(0 10% 15%);
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div><div class="page-title">汇率<span class="count-badge" id="rateCount"></span></div><div class="page-subtitle">以美元（USD）为基准，管理各币种汇率换算</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary" onclick="window.parent.openERConfigDialog()" title="配置第三方汇率API数据源">数据源配置</button>
+        <button class="btn btn-primary" onclick="toggleInlineAdd()" id="btnInlineAdd">+ 新增币种</button>
+      </div>
+    </div>
+
+    <!-- 数据源状态条 -->
+    <div class="api-status-bar ok" id="apiStatusBar">
+      <span class="api-status-dot"></span>
+      <span class="api-status-text" id="apiStatusText">API 数据源正常，上次刷新：--</span>
+      <span class="api-status-action" id="pausedHint"></span>
+      <span class="api-status-action" onclick="window.parent.openERConfigDialog()">配置</span>
+    </div>
+
+
+    <!-- 搜索/筛选 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索币种代码/名称..." oninput="currentPage=1;renderTable()" id="searchInput">
+        <select class="filter-select" onchange="currentPage=1;renderTable()" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="active">正常</option>
+          <option value="paused">暂停更新</option>
+          <option value="disabled">已禁用</option>
+        </select>
+        <select class="filter-select" onchange="currentPage=1;renderTable()" id="sourceFilter">
+          <option value="">全部来源</option>
+          <option value="api">API拉取</option>
+          <option value="manual">手动维护</option>
+        </select>
+        <span style="color:hsl(var(--muted-foreground));font-size:12px;white-space:nowrap;">提示：已禁用币种不参与汇率变更</span>
+      </div>
+    </div>
+
+    <!-- 批量操作栏 -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量禁用</button>
+        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg> 更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="customColWrapper"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+        <div class="custom-col-wrapper"><button class="btn btn-secondary btn-sm" onclick="manualRefreshAll()" id="btnRefreshAll" title="刷新全部汇率数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></div>
+      </div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th data-col="name">币种名称</th><th data-col="code">币种代码</th><th data-col="rate">当前汇率</th><th data-col="source">数据来源</th><th data-col="status">状态</th><th data-col="time">汇率变更时间</th><th data-col="actions" style="width:140px">操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="ratePagination"></div></div>
+  </div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="puDoMoreAction('changeSource')">批量更换数据来源</div>
+    <div class="more-actions-item" style="color:hsl(var(--destructive));" onclick="puDoMoreAction('delete')">批量删除</div>
+  </div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script>
+    // ========== SVG 图标 ==========
+    var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    var detailIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+    var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+
+    // ========== 数据 ==========
+    var autoId = 8; // 从已有数据最大ID开始
+    // 汇率数据
+    var rateData = [
+      { id: 1, code: 'CNY', name: '人民币', rate: 7.250000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 2, code: 'EUR', name: '欧元', rate: 0.920000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 3, code: 'JPY', name: '日元', rate: 158.500000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 4, code: 'GBP', name: '英镑', rate: 0.790000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 5, code: 'KRW', name: '韩元', rate: 1380.500000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 6, code: 'CAD', name: '加拿大元', rate: 1.365000, status: 'paused', source: 'api', updatedAt: '2026-07-14 08:45', pendingRate: 1.420000, pauseReason: '汇率波动 ±4.0%，超过 3% 阈值，自动暂停更新' },
+      { id: 7, code: 'AUD', name: '澳大利亚元', rate: 1.520000, status: 'active', source: 'api', updatedAt: '2026-07-14 09:30', pendingRate: null, pauseReason: '' },
+      { id: 8, code: 'HKD', name: '港币', rate: 7.810000, status: 'disabled', source: 'manual', updatedAt: '2026-07-13 18:00', pendingRate: null, pauseReason: '' }
+    ];
+
+    // 变更日志
+    var changeLogs = [
+      { id: 1, currencyId: 1, time: '2026-07-14 09:30', type: 'api', beforeRate: 7.240000, afterRate: 7.250000, operator: '系统', remark: '自动刷新' },
+      { id: 2, currencyId: 2, time: '2026-07-14 09:30', type: 'api', beforeRate: 0.915000, afterRate: 0.920000, operator: '系统', remark: '自动刷新' },
+      { id: 3, currencyId: 6, time: '2026-07-14 08:45', type: 'api', beforeRate: 1.360000, afterRate: 1.365000, operator: '系统', remark: '自动刷新' },
+      { id: 4, currencyId: 1, time: '2026-07-13 18:00', type: 'manual', beforeRate: 7.220000, afterRate: 7.240000, operator: 'admin', remark: '手动调整' },
+      { id: 5, currencyId: 3, time: '2026-07-13 12:00', type: 'api', beforeRate: 157.800000, afterRate: 158.200000, operator: '系统', remark: '自动刷新' }
+    ];
+
+    // 数据源配置
+    var dataSourceConfig = {
+      apiUrl: 'https://api.exchangerate-api.com/v4/latest/USD',
+      apiKey: 'demo_key_12345',
+      apiParams: '?base=USD',
+      refreshInterval: 15, // 分钟
+      volatilityThreshold: 3, // ±%
+      lastRefresh: '2026-07-14 09:30',
+      status: 'ok' // ok | warn | err
+    };
+
+    var currentPage = 1;
+    var pageSize = 10;
+    var inlineAddActive = false;
+    var inlineEditingId = null;
+    var refreshTimer = null;
+    var refreshingAll = false;
+
+    // ========== 查找 ==========
+    function findRate(id) {
+      id = parseInt(id, 10);
+      for (var i = 0; i < rateData.length; i++) {
+        if (rateData[i].id === id) return rateData[i];
+      }
+      return null;
+    }
+
+    function getLogs(currencyId, typeFilter) {
+      var logs = changeLogs.filter(function(l) { return l.currencyId === parseInt(currencyId, 10); });
+      if (typeFilter) logs = logs.filter(function(l) { return l.type === typeFilter; });
+      return logs.sort(function(a, b) { return b.id - a.id; }).slice(0, 30);
+    }
+
+    // ========== PU_CONFIG ==========
+    window.PU_CONFIG = {
+      columns: [
+        { key: 'name',   label: '币种名称', defaultShow: true, alwaysShow: true },
+        { key: 'code',   label: '币种代码', defaultShow: true, alwaysShow: false },
+        { key: 'rate',   label: '当前汇率', defaultShow: true, alwaysShow: false },
+        { key: 'source', label: '数据来源', defaultShow: true, alwaysShow: false },
+        { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+        { key: 'time',   label: '汇率变更时间', defaultShow: true, alwaysShow: false },
+        { key: 'actions',label: '操作', defaultShow: true, alwaysShow: true }
+      ],
+      visibleCols: ['name', 'code', 'rate', 'source', 'status', 'time', 'actions'],
+      batchActions: [
+        { name: 'enable',  handler: function(ids) { batchToggleStatus(ids, 'active'); } },
+        { name: 'disable', handler: function(ids) { batchToggleStatus(ids, 'disabled'); } }
+      ],
+      moreActions: [
+        { name: 'changeSource', handler: function() {
+          var ids = puGetCheckedIds('tableBody');
+          if (!ids.length) { showToast('info', '请先选择要操作的数据'); return; }
+          window.parent.openERChangeSourceDialog(ids);
+        }},
+        { name: 'delete', handler: function() {
+          var ids = puGetCheckedIds('tableBody');
+          if (!ids.length) { showToast('info', '请先选择要操作的数据'); return; }
+          batchDelete(ids);
+        }}
+      ],
+      onColumnsChange: function() { renderTable(); }
+    };
+
+    // ========== 渲染表格 ==========
+    function renderTable() {
+      var search = (document.getElementById('searchInput').value || '').toLowerCase();
+      var sVal = document.getElementById('statusFilter').value;
+      var srcVal = document.getElementById('sourceFilter').value;
+
+      var filtered = rateData.filter(function(d) {
+        if (search && d.code.toLowerCase().indexOf(search) === -1 && d.name.toLowerCase().indexOf(search) === -1) return false;
+        if (sVal && d.status !== sVal) return false;
+        if (srcVal && d.source !== srcVal) return false;
+        return true;
+      });
+
+      var pageData = puSlicePage(filtered, currentPage, pageSize);
+      var cols = PU_CONFIG.visibleCols;
+      var tbody = document.getElementById('tableBody');
+      var checkedIds = puSaveCheckedIds('tableBody');
+
+      document.getElementById('rateCount').textContent = '(' + rateData.length + '个)';
+
+      var statusMap = {
+        active: { label: '正常', cls: 'badge-success' },
+        paused: { label: '暂停更新', cls: 'badge-warning' },
+        disabled: { label: '已禁用', cls: 'badge-secondary' }
+      };
+
+      var rows = [];
+
+      // 行内添加行
+      if (inlineAddActive && currentPage === 1) {
+        var availableCurrencies = getAvailableCurrencies();
+        var currencyOptions = availableCurrencies.map(function(c) {
+          return '<option value="' + c.code + '" data-name="' + c.name + '">' + c.code + ' - ' + c.name + '</option>';
+        }).join('');
+
+        var addRow = '<tr class="inline-add-row" data-add="1">';
+        addRow += '<td></td>'; // checkbox 占位
+        cols.forEach(function(k) {
+          if (k === 'name') {
+            addRow += '<td><select class="inline-form-select" id="inlineAddCurrency" onchange="onCurrencySelect();validateInlineAdd()">';
+            addRow += '<option value="">请选择币种</option>';
+            addRow += currencyOptions;
+            addRow += '</select></td>';
+          }
+          else if (k === 'code')   addRow += '<td><span style="color:hsl(var(--muted-foreground));" id="inlineAddCodeDisplay">--</span></td>';
+          else if (k === 'rate')   addRow += '<td><div style="display:flex;flex-direction:column;gap:4px;"><input class="inline-form-input" type="number" id="inlineAddRate" step="0.000001" min="0.000001" placeholder="1 USD = X" oninput="validateInlineAdd()"><div class="inline-error" id="inlineAddError">汇率必须大于0</div></div></td>';
+          else if (k === 'source') addRow += '<td><span class="badge badge-secondary">手动维护</span></td>';
+          else if (k === 'status') addRow += '<td><span class="badge badge-success">正常</span></td>';
+          else if (k === 'time')   addRow += '<td style="color:hsl(var(--muted-foreground));font-size:12px;">--</td>';
+          else if (k === 'actions') {
+            addRow += '<td><div class="inline-actions">';
+            addRow += '<button class="btn btn-primary btn-sm" id="btnSaveInlineAdd" onclick="saveInlineAdd()" disabled>保存</button>';
+            addRow += '<button class="btn btn-secondary btn-sm" onclick="cancelInlineAdd()">取消</button>';
+            addRow += '</div></td>';
+          }
+        });
+        addRow += '</tr>';
+        rows.push(addRow);
+      }
+
+      if (!filtered.length && !inlineAddActive) {
+        tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配数据</div></div></td></tr>';
+        puUpdateBulkBar();
+        document.getElementById('ratePagination').innerHTML = '';
+        return;
+      }
+
+      pageData.forEach(function(d) {
+        var isEditing = d.id === inlineEditingId;
+        var s = statusMap[d.status] || { label: d.status, cls: 'badge-secondary' };
+        var c = '';
+        var menuId = 'rateMore_' + d.id;
+        cols.forEach(function(k) {
+          if (k === 'name')   c += '<td><strong>' + d.name + '</strong></td>';
+          else if (k === 'code')   c += '<td>' + d.code + '</td>';
+          else if (k === 'rate') {
+            if (isEditing) {
+              c += '<td><div style="display:flex;flex-direction:column;gap:4px;">';
+              c += '<input class="inline-form-input" type="number" id="inlineEditRate_' + d.id + '" step="0.000001" min="0.000001" value="' + d.rate + '" oninput="validateInlineEdit(' + d.id + ')">';
+              c += '<div class="inline-error" id="inlineEditError_' + d.id + '">汇率必须大于0</div>';
+              c += '</div></td>';
+            } else {
+              c += '<td>1 USD = ' + d.rate.toFixed(6) + ' ' + d.code + '</td>';
+            }
+          }
+          else if (k === 'source') {
+            if (isEditing) {
+              c += '<td><select class="inline-form-select" id="inlineEditSource_' + d.id + '">';
+              c += '<option value="api"' + (d.source === 'api' ? ' selected' : '') + '>API拉取</option>';
+              c += '<option value="manual"' + (d.source === 'manual' ? ' selected' : '') + '>手动维护</option>';
+              c += '</select></td>';
+            } else {
+              c += '<td><span class="badge ' + (d.source === 'api' ? 'badge-info' : 'badge-secondary') + '">' + (d.source === 'api' ? 'API拉取' : '手动维护') + '</span></td>';
+            }
+          }
+          else if (k === 'status') {
+            c += '<td><span class="badge ' + s.cls + '">' + s.label + '</span>';
+            if (d.status === 'paused' && d.pauseReason) {
+              c += '<span class="pause-icon">!<span class="pause-tooltip">' + d.pauseReason + '</span></span>';
+            }
+            c += '</td>';
+          }
+          else if (k === 'time')   c += '<td style="color:hsl(var(--muted-foreground));font-size:12px;">' + d.updatedAt + '</td>';
+          else if (k === 'actions') {
+            if (isEditing) {
+              c += '<td><div class="inline-actions">';
+              c += '<button class="btn btn-primary btn-sm" id="btnSaveInlineEdit_' + d.id + '" onclick="saveInlineEdit(' + d.id + ')">保存</button>';
+              c += '<button class="btn btn-secondary btn-sm" onclick="cancelInlineEdit()">取消</button>';
+              c += '</div></td>';
+            } else {
+              var actionsHtml = '<td><div class="action-group">';
+              actionsHtml += '<div class="action-btn" title="编辑" onclick="startInlineEdit(' + d.id + ')">' + editIcon + '</div>';
+              actionsHtml += '<div class="action-btn" title="查看详情" onclick="window.parent.openERDetailDialog(' + d.id + ')">' + detailIcon + '</div>';
+              actionsHtml += '<div class="action-more-wrapper">';
+              actionsHtml += '<div class="action-btn" title="更多" onclick="event.stopPropagation();toggleMore(\'' + menuId + '\')">' + moreIcon + '</div>';
+              actionsHtml += '<div class="action-more-menu" id="' + menuId + '" style="display:none;">';
+              actionsHtml += '<div class="action-more-item" onclick="toggleStatus(' + d.id + ')">' + (d.status === 'disabled' ? '启用' : '禁用') + '</div>';
+              actionsHtml += '<div class="action-more-item" style="color:hsl(var(--destructive));" onclick="deleteRate(' + d.id + ')">删除</div>';
+              actionsHtml += '</div></div>';
+              actionsHtml += '</div></td>';
+              c += actionsHtml;
+            }
+          }
+        });
+        rows.push('<tr class="' + (isEditing ? 'inline-edit-row' : '') + '" data-id="' + d.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' + c + '</tr>');
+      });
+
+      tbody.innerHTML = rows.join('');
+
+      puRestoreCheckedIds('tableBody', checkedIds);
+      puSyncTableHead(PU_CONFIG);
+      puBuildCustomColPanel(PU_CONFIG.columns, PU_CONFIG.visibleCols);
+      puRenderPagination({
+        total: filtered.length,
+        pageSize: pageSize,
+        currentPage: currentPage,
+        containerId: 'ratePagination',
+        onPageChange: function(p) { currentPage = p; renderTable(); }
+      });
+      updateApiStatusBar();
+    }
+
+    // ========== 行级更多菜单 ==========
+    function toggleMore(menuId) {
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+      closeAllMore();
+      menu.style.display = 'block';
+    }
+    function closeAllMore() {
+      var menus = document.querySelectorAll('.action-more-menu');
+      for (var i = 0; i < menus.length; i++) menus[i].style.display = 'none';
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.action-more-wrapper')) closeAllMore();
+    });
+
+    function deleteRate(id) {
+      var r = findRate(id);
+      if (!r) return;
+      // 清除相关日志
+      changeLogs = changeLogs.filter(function(l) { return l.currencyId !== id; });
+      var idx = -1;
+      for (var i = 0; i < rateData.length; i++) {
+        if (rateData[i].id === id) { idx = i; break; }
+      }
+      if (idx !== -1) rateData.splice(idx, 1);
+      renderTable();
+      showToast('success', '已删除币种「' + r.code + ' ' + r.name + '」');
+      closeAllMore();
+    }
+
+    // ========== 状态切换 ==========
+    function toggleStatus(id) {
+      var r = findRate(id);
+      if (!r) return;
+      r.status = r.status === 'disabled' ? 'active' : 'disabled';
+      if (r.status === 'disabled') r.pendingRate = null;
+      renderTable();
+      showToast('success', '已' + (r.status === 'active' ? '启用' : '禁用') + '「' + r.code + '」');
+      closeAllMore();
+    }
+
+    function batchToggleStatus(ids, status) {
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      rateData.forEach(function(d) {
+        if (numericIds.indexOf(d.id) !== -1) {
+          d.status = status;
+          if (status === 'disabled') d.pendingRate = null;
+        }
+      });
+      renderTable();
+      showToast('success', '已' + (status === 'active' ? '启用' : '禁用') + ' ' + ids.length + ' 个币种');
+    }
+
+    function batchDelete(ids) {
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      var count = 0;
+      numericIds.forEach(function(id) {
+        var idx = -1;
+        for (var i = 0; i < rateData.length; i++) {
+          if (rateData[i].id === id) { idx = i; break; }
+        }
+        if (idx !== -1) { rateData.splice(idx, 1); count++; }
+      });
+      // 清除相关日志
+      changeLogs = changeLogs.filter(function(l) { return numericIds.indexOf(l.currencyId) === -1; });
+      currentPage = 1;
+      renderTable();
+      showToast('success', '已删除 ' + count + ' 个币种');
+    }
+
+    // ========== 行内编辑汇率 ==========
+    function startInlineEdit(id) {
+      var r = findRate(id);
+      if (!r) return;
+      inlineAddActive = false;
+      inlineEditingId = id;
+      renderTable();
+    }
+
+    function cancelInlineEdit() {
+      inlineEditingId = null;
+      renderTable();
+    }
+
+    function validateInlineEdit(id) {
+      var input = document.getElementById('inlineEditRate_' + id);
+      var errEl = document.getElementById('inlineEditError_' + id);
+      var btn = document.getElementById('btnSaveInlineEdit_' + id);
+      if (!input || !btn) return;
+      var val = parseFloat(input.value);
+      if (isNaN(val) || val <= 0) {
+        if (errEl) errEl.style.display = 'block';
+        btn.disabled = true;
+      } else if (val > 10000 || val < 0.000001) {
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = '汇率超出合理范围，请确认'; }
+        btn.disabled = true;
+      } else {
+        if (errEl) errEl.style.display = 'none';
+        btn.disabled = false;
+      }
+    }
+
+    function saveInlineEdit(id) {
+      var r = findRate(id);
+      if (!r) return;
+      var input = document.getElementById('inlineEditRate_' + id);
+      if (!input) return;
+      var newRate = parseFloat(input.value);
+      if (isNaN(newRate) || newRate <= 0) {
+        showToast('warning', '汇率必须大于0');
+        return;
+      }
+      if (newRate > 10000 || newRate < 0.000001) {
+        showToast('warning', '汇率超出合理范围，请确认');
+        return;
+      }
+      var sourceEl = document.getElementById('inlineEditSource_' + id);
+      var newSource = sourceEl ? sourceEl.value : r.source;
+      var oldRate = r.rate;
+      r.rate = newRate;
+      r.source = newSource;
+      r.updatedAt = formatNow();
+      r.pendingRate = null;
+      r.status = 'active';
+      addLog(r.id, 'manual', oldRate, newRate, 'admin', '手动调整');
+      inlineEditingId = null;
+      renderTable();
+      showToast('success', '「' + r.code + '」汇率更新成功');
+    }
+
+    // ========== 行内添加币种 ==========
+    function toggleInlineAdd() {
+      if (inlineAddActive) {
+        inlineAddActive = false;
+      } else {
+        inlineEditingId = null;
+        inlineAddActive = true;
+        currentPage = 1;
+      }
+      renderTable();
+      if (inlineAddActive) {
+        var btn = document.getElementById('btnInlineAdd');
+        if (btn) btn.textContent = '取消';
+      } else {
+        var btn2 = document.getElementById('btnInlineAdd');
+        if (btn2) btn2.textContent = '+ 新增币种';
+      }
+    }
+
+    function cancelInlineAdd() {
+      inlineAddActive = false;
+      var btn = document.getElementById('btnInlineAdd');
+      if (btn) btn.textContent = '+ 新增币种';
+      renderTable();
+    }
+
+    // ========== 获取可选币种列表 ==========
+    function getAvailableCurrencies() {
+      // 从货币管理页面获取已存在的币种数据
+      var allCurrencies = (window.parent && window.parent.PARAM_CURR_DATA) ? window.parent.PARAM_CURR_DATA : [];
+      // 如果从父页面没有获取到数据，使用内置 fallback 币种列表
+      if (!allCurrencies.length) {
+        allCurrencies = FALLBACK_CURRENCIES;
+      }
+      // 排除已在汇率表中存在的币种
+      var existingCodes = rateData.map(function(d) { return d.code; });
+      return allCurrencies.filter(function(c) {
+        return c.status === 'active' && existingCodes.indexOf(c.code) === -1;
+      });
+    }
+
+    // 内置 fallback 币种列表（当货币管理页面 PARAM_CURR_DATA 不可用时使用）
+    var FALLBACK_CURRENCIES = [
+      { code: 'CNY', name: '人民币', status: 'active' },
+      { code: 'EUR', name: '欧元', status: 'active' },
+      { code: 'JPY', name: '日元', status: 'active' },
+      { code: 'GBP', name: '英镑', status: 'active' },
+      { code: 'KRW', name: '韩元', status: 'active' },
+      { code: 'CAD', name: '加拿大元', status: 'active' },
+      { code: 'AUD', name: '澳大利亚元', status: 'active' },
+      { code: 'HKD', name: '港币', status: 'active' },
+      { code: 'CHF', name: '瑞士法郎', status: 'active' },
+      { code: 'SEK', name: '瑞典克朗', status: 'active' },
+      { code: 'NOK', name: '挪威克朗', status: 'active' },
+      { code: 'DKK', name: '丹麦克朗', status: 'active' },
+      { code: 'NZD', name: '新西兰元', status: 'active' },
+      { code: 'SGD', name: '新加坡元', status: 'active' },
+      { code: 'MYR', name: '马来西亚林吉特', status: 'active' },
+      { code: 'THB', name: '泰铢', status: 'active' },
+      { code: 'INR', name: '印度卢比', status: 'active' },
+      { code: 'PHP', name: '菲律宾比索', status: 'active' },
+      { code: 'IDR', name: '印尼盾', status: 'active' },
+      { code: 'VND', name: '越南盾', status: 'active' },
+      { code: 'AED', name: '阿联酋迪拉姆', status: 'active' },
+      { code: 'BRL', name: '巴西雷亚尔', status: 'active' },
+      { code: 'MXN', name: '墨西哥比索', status: 'active' },
+      { code: 'ZAR', name: '南非兰特', status: 'active' },
+      { code: 'RUB', name: '俄罗斯卢布', status: 'active' },
+      { code: 'TRY', name: '土耳其里拉', status: 'active' },
+      { code: 'SAR', name: '沙特里亚尔', status: 'active' },
+      { code: 'TWD', name: '新台币', status: 'active' },
+      { code: 'PLN', name: '波兰兹罗提', status: 'active' },
+      { code: 'CZK', name: '捷克克朗', status: 'active' }
+    ];
+
+    function onCurrencySelect() {
+      var sel = document.getElementById('inlineAddCurrency');
+      var codeDisplay = document.getElementById('inlineAddCodeDisplay');
+      if (!sel || !codeDisplay) return;
+      var option = sel.selectedOptions[0];
+      if (option && option.value) {
+        codeDisplay.textContent = option.value;
+      } else {
+        codeDisplay.textContent = '--';
+      }
+    }
+
+    function validateInlineAdd() {
+      var selEl = document.getElementById('inlineAddCurrency');
+      var rateEl = document.getElementById('inlineAddRate');
+      var btn = document.getElementById('btnSaveInlineAdd');
+      if (!btn) return;
+      var code = selEl ? selEl.value : '';
+      var rate = rateEl ? parseFloat(rateEl.value) : NaN;
+      var valid = code.length === 3 && !isNaN(rate) && rate > 0;
+      btn.disabled = !valid;
+    }
+
+    function saveInlineAdd() {
+      var selEl = document.getElementById('inlineAddCurrency');
+      var rateEl = document.getElementById('inlineAddRate');
+      if (!selEl || !rateEl) return;
+      var code = selEl.value.trim().toUpperCase();
+      var option = selEl.selectedOptions[0];
+      var name = option && option.dataset.name ? option.dataset.name : code;
+      var rate = parseFloat(rateEl.value);
+      var source = 'manual'; // 新增币种默认为手动维护
+
+      if (!code || !name || isNaN(rate) || rate <= 0) return;
+      if (rateData.some(function(d) { return d.code === code; })) {
+        showToast('warning', '币种代码「' + code + '」已存在');
+        return;
+      }
+
+      autoId++;
+      rateData.push({
+        id: autoId, code: code, name: name, rate: rate, status: 'active',
+        source: source, updatedAt: formatNow(), pendingRate: null, pauseReason: ''
+      });
+      addLog(autoId, 'manual', 0, rate, 'admin', '新增币种');
+      inlineAddActive = false;
+      var btn = document.getElementById('btnInlineAdd');
+      if (btn) btn.textContent = '+ 新增币种';
+      renderTable();
+      showToast('success', '已新增币种「' + code + ' ' + name + '」');
+    }
+
+    // ========== 供 dialog_host.js 调用的数据访问器 ==========
+    window.erFindRate = function(id) { return findRate(id); };
+    window.erGetLogs = function(currencyId, typeFilter) { return getLogs(currencyId, typeFilter); };
+    window.erGetConfig = function() { return dataSourceConfig; };
+    window.erSaveConfig = function(cfg) {
+      dataSourceConfig.apiUrl = cfg.apiUrl;
+      dataSourceConfig.apiKey = cfg.apiKey;
+      dataSourceConfig.apiParams = cfg.apiParams;
+      dataSourceConfig.refreshInterval = cfg.refreshInterval;
+      dataSourceConfig.volatilityThreshold = cfg.volatilityThreshold;
+      restartAutoRefresh();
+    };
+    window.erDoBatchChangeSource = function(ids, newSource) {
+      var sourceLabel = newSource === 'api' ? 'API 拉取' : '手动维护';
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      var changed = 0;
+      var skipped = [];
+      numericIds.forEach(function(id) {
+        var r = findRate(id);
+        if (!r) return;
+        if (r.source === newSource) { skipped.push(r.code); return; }
+        r.source = newSource;
+        r.updatedAt = formatNow();
+        addLog(r.id, 'manual', r.rate, r.rate, 'admin', '批量更换数据来源：→ ' + sourceLabel);
+        changed++;
+      });
+      renderTable();
+      var msg = '已将 ' + changed + ' 个币种数据来源更换为「' + sourceLabel + '」';
+      if (skipped.length > 0) msg += '，' + skipped.join('、') + ' 跳过';
+      showToast(changed > 0 ? 'success' : 'warning', msg);
+    };
+
+    // ========== 统一汇率更新处理 ==========
+    // 返回值: { updated: 1|0, paused: 1|0, autoResolved: 1|0 }
+    function applyRateUpdate(r, newRate, refreshType) {
+      newRate = Math.round(newRate * 1000000) / 1000000;
+      if (newRate <= 0) return { updated: 0, paused: 0, autoResolved: 0 };
+
+      var threshold = dataSourceConfig.volatilityThreshold || 3;
+      var result = { updated: 0, paused: 0, autoResolved: 0 };
+      var now = formatNow();
+
+      // --- 情况1: active 正常币种，检查波动 ---
+      if (r.status === 'active') {
+        var diffPercent = Math.abs((newRate - r.rate) / r.rate * 100);
+        if (diffPercent > threshold) {
+          r.pendingRate = newRate;
+          r.status = 'paused';
+          r.pauseReason = '波动 ±' + diffPercent.toFixed(1) + '% 超过 ' + threshold + '% 阈值，暂停更新。最新拉取值：' + newRate.toFixed(6) + '（当前仍使用 ' + r.rate.toFixed(6) + '）';
+          r.updatedAt = now;
+          addLog(r.id, 'api', r.rate, newRate, '系统', '波动 ±' + diffPercent.toFixed(1) + '% 超阈值，暂停更新');
+          result.paused = 1;
+        } else {
+          var oldRate = r.rate;
+          r.rate = newRate;
+          r.updatedAt = now;
+          addLog(r.id, 'api', oldRate, newRate, '系统', refreshType === 'auto' ? '自动刷新' : '手动刷新');
+          result.updated = 1;
+        }
+      }
+      // --- 情况2: paused 已暂停币种，继续后台拉取，智能判断 ---
+      else if (r.status === 'paused') {
+        var diffVsFrozen = Math.abs((newRate - r.rate) / r.rate * 100);
+        if (diffVsFrozen <= threshold) {
+          // 回到阈值以内，自动采纳最新汇率并恢复
+          var oldFrozen = r.rate;
+          r.rate = newRate;
+          r.pendingRate = null;
+          r.status = 'active';
+          r.pauseReason = '';
+          r.updatedAt = now;
+          addLog(r.id, 'api', oldFrozen, newRate, '系统', '波动回落至 ' + diffVsFrozen.toFixed(1) + '%，自动恢复更新');
+          result.autoResolved = 1;
+        } else {
+          // 仍超出阈值，更新 latest rejected rate（仅用于状态列提示）
+          r.pendingRate = newRate;
+          r.pauseReason = '波动 ±' + diffVsFrozen.toFixed(1) + '% 超过 ' + threshold + '% 阈值，暂停更新。最新拉取值：' + newRate.toFixed(6) + '（当前仍使用 ' + r.rate.toFixed(6) + '）';
+          r.updatedAt = now;
+          addLog(r.id, 'api', r.rate, newRate, '系统', '仍超阈值，继续暂停（最新拉取 ' + newRate.toFixed(6) + '）');
+        }
+      }
+
+      return result;
+    }
+
+    // ========== 手动刷新全部 ==========
+    function manualRefreshAll() {
+      if (refreshingAll) return;
+      refreshingAll = true;
+      var btn = document.getElementById('btnRefreshAll');
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新中…';
+      btn.disabled = true;
+
+      setTimeout(function() {
+        // 非禁用的 API 来源币种（含暂停的，也要拉最新数据）
+        var candidates = rateData.filter(function(d) {
+          return d.status !== 'disabled' && d.source === 'api';
+        });
+
+        var updated = 0, paused = 0, autoResolved = 0;
+
+        candidates.forEach(function(r) {
+          var fluctuation = (Math.random() - 0.5) * 0.04;
+          var newRate = r.rate * (1 + fluctuation);
+          var res = applyRateUpdate(r, newRate, 'manual');
+          updated += res.updated;
+          paused += res.paused;
+          autoResolved += res.autoResolved;
+        });
+
+        dataSourceConfig.lastRefresh = formatNow();
+        dataSourceConfig.status = 'ok';
+        updateApiStatusBar();
+        refreshingAll = false;
+
+        var origHtml = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+
+        var parts = [];
+        if (updated > 0) parts.push(updated + ' 个已更新');
+        if (paused > 0) parts.push(paused + ' 个因波动过大暂停更新');
+        if (autoResolved > 0) parts.push(autoResolved + ' 个波动回落，自动恢复');
+
+        if (parts.length > 0) {
+          showToast(updated > 0 ? 'success' : 'warning', parts.join('；'));
+        } else {
+          showToast('info', '刷新完成，所有币种汇率无变化');
+        }
+
+        renderTable();
+      }, 1200 + Math.random() * 800);
+    }
+
+    // ========== 自动刷新 ==========
+    function startAutoRefresh() {
+      clearInterval(refreshTimer);
+      var intervalMs = (dataSourceConfig.refreshInterval || 15) * 60 * 1000;
+      refreshTimer = setInterval(function() {
+        // 静默自动刷新：API 来源的 active + paused 币种都拉取（paused 的用于判断是否回落）
+        var candidates = rateData.filter(function(d) {
+          return d.status !== 'disabled' && d.source === 'api';
+        });
+        candidates.forEach(function(r) {
+          var fluctuation = (Math.random() - 0.5) * 0.02; // 自动刷新波动较小 ±1%
+          var newRate = r.rate * (1 + fluctuation);
+          applyRateUpdate(r, newRate, 'auto');
+        });
+        dataSourceConfig.lastRefresh = formatNow();
+        updateApiStatusBar();
+        renderTable();
+      }, intervalMs);
+    }
+
+    function restartAutoRefresh() {
+      startAutoRefresh();
+    }
+
+    // ========== API 状态条 ==========
+    function updateApiStatusBar() {
+      var bar = document.getElementById('apiStatusBar');
+      var textEl = document.getElementById('apiStatusText');
+      var hintEl = document.getElementById('pausedHint');
+      bar.className = 'api-status-bar ' + dataSourceConfig.status;
+      var statusText = dataSourceConfig.status === 'ok' ? 'API 数据源正常' : (dataSourceConfig.status === 'warn' ? 'API 响应延迟' : 'API 连接失败');
+      textEl.textContent = statusText + '，上次刷新：' + (dataSourceConfig.lastRefresh || '--');
+      var pausedCount = rateData.filter(function(d) { return d.status === 'paused'; }).length;
+      if (pausedCount > 0) {
+        hintEl.textContent = pausedCount + ' 个币种暂停更新';
+        hintEl.style.color = 'hsl(40 50% 30%)';
+      } else {
+        hintEl.textContent = '';
+      }
+    }
+
+    // ========== 日志 ==========
+    function addLog(currencyId, type, beforeRate, afterRate, operator, remark) {
+      var maxId = 0;
+      changeLogs.forEach(function(l) { if (l.id > maxId) maxId = l.id; });
+      changeLogs.push({
+        id: maxId + 1,
+        currencyId: currencyId,
+        time: formatNow(),
+        type: type,
+        beforeRate: beforeRate,
+        afterRate: afterRate,
+        operator: operator,
+        remark: remark || ''
+      });
+    }
+
+    // ========== 工具 ==========
+    function formatNow() {
+      var d = new Date();
+      var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      updateApiStatusBar();
+      startAutoRefresh();
+      renderTable();
+    });
+  </script>
+</body>
+</html>

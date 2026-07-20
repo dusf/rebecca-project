@@ -1,0 +1,451 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地域 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    /* ========== 行内更多菜单 ========== */
+    .row-more-wrapper {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .row-more-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #FFFFFF;
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      z-index: 99999;
+      min-width: 130px;
+      padding: 4px 0;
+      white-space: nowrap;
+    }
+
+    .row-more-item {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      transition: background 0.1s;
+      white-space: nowrap;
+    }
+
+    .row-more-item:hover {
+      background: hsl(var(--primary-50));
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">地域<span class="count-badge" id="zoneCount"></span></div>
+        <div class="page-subtitle">管理跨境电商业务覆盖的地域，如东南亚、欧洲等</div>
+      </div>
+      <button class="btn btn-primary" onclick="openZoneFormDialog()">+ 添加地域</button>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索地域名称/地域代码..." oninput="currentPage=1;renderTable()" id="searchInput">
+        <select class="filter-select" onchange="currentPage=1;renderTable()" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+        <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg> 更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="customColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列
+          </button>
+        </div>
+        <div class="custom-col-wrapper">
+          <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th>
+              <th data-col="name">地域名称</th>
+              <th data-col="code">地域代码</th>
+              <th data-col="countries">包含国家</th>
+              <th data-col="status">状态</th>
+              <th data-col="actions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar" id="zonePagination"></div>
+    </div>
+  </div>
+
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"></div>
+    <div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div>
+  </div>
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="puDoMoreAction('export')">导出选中地域</div>
+  </div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script>
+    // ========== PU_CONFIG ==========
+    window.PU_CONFIG = {
+      columns: [
+        { key: 'name', label: '地域名称', defaultShow: true, alwaysShow: true },
+        { key: 'code', label: '地域代码', defaultShow: true, alwaysShow: false },
+        { key: 'countries', label: '包含国家', defaultShow: true, alwaysShow: false },
+        { key: 'status', label: '状态', defaultShow: true, alwaysShow: false },
+        { key: 'actions', label: '操作', defaultShow: true, alwaysShow: true }
+      ],
+      visibleCols: ['name', 'code', 'countries', 'status', 'actions'],
+      batchActions: [
+        { name: 'enable', handler: function(ids) { showToast('success', '已启用 ' + ids.length + ' 条'); } },
+        { name: 'disable', handler: function(ids) { showToast('success', '已停用 ' + ids.length + ' 条'); } },
+        { name: 'delete', handler: function(ids) { zoneBatchDelete(ids); } }
+      ],
+      moreActions: [
+        { name: 'export', handler: function() { showToast('info', '导出选中地域'); } }
+      ],
+      onColumnsChange: function() { renderTable(); }
+    };
+
+    // ========== 数据 ==========
+    var currentPage = 1, pageSize = 10;
+
+    var data = [
+      { id: 1, name: '东南亚', code: 'SEA', countries: '中国、日本、韩国、泰国、越南、新加坡等', status: 'active' },
+      { id: 2, name: '欧洲', code: 'EU', countries: '英国、法国、德国、意大利、西班牙等', status: 'active' },
+      { id: 3, name: '北美', code: 'NA', countries: '美国、加拿大、墨西哥', status: 'active' },
+      { id: 4, name: '中东', code: 'ME', countries: '阿联酋、沙特阿拉伯、卡塔尔等', status: 'active' },
+      { id: 5, name: '非洲', code: 'AF', countries: '南非、尼日利亚、肯尼亚等', status: 'disabled' },
+      { id: 6, name: '拉美', code: 'LATAM', countries: '巴西、阿根廷、智利等', status: 'active' },
+      { id: 7, name: '大洋洲', code: 'OC', countries: '澳大利亚、新西兰', status: 'active' }
+    ];
+
+    // 暴露到 window 和 parent，供 dialog_host 中其他国家对话框读取地域数据
+    window.zoneData = data;
+    if (window.parent && window.parent !== window) window.parent.PARAM_ZONE_DATA = data;
+
+    var nextId = 8;
+    var editingZoneId = null;
+
+    // ========== SVG 图标 ==========
+    var iconEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    var iconDelete = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    var iconMore = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+
+    // ========== 渲染表格 ==========
+    function renderTable() {
+      var search = (document.getElementById('searchInput').value || '').toLowerCase();
+      var sVal = document.getElementById('statusFilter').value;
+
+      var filtered = data.filter(function(d) {
+        if (search && d.name.toLowerCase().indexOf(search) === -1 && d.code.toLowerCase().indexOf(search) === -1) return false;
+        if (sVal && d.status !== sVal) return false;
+        return true;
+      });
+
+      // 更新计数
+      var countEl = document.getElementById('zoneCount');
+      if (countEl) countEl.textContent = '(' + filtered.length + '个)';
+
+      var pageData = puSlicePage(filtered, currentPage, pageSize);
+      var cols = window.PU_CONFIG.visibleCols;
+      var tbody = document.getElementById('tableBody');
+      var checkedIds = puSaveCheckedIds('tableBody');
+
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无匹配数据</div></div></td></tr>';
+        puUpdateBulkBar();
+        document.getElementById('zonePagination').innerHTML = '';
+        return;
+      }
+
+      var sm = {
+        active: { label: '启用', cls: 'badge-success' },
+        disabled: { label: '停用', cls: 'badge-secondary' }
+      };
+
+      tbody.innerHTML = pageData.map(function(d) {
+        var s = sm[d.status] || { label: d.status, cls: 'badge-secondary' };
+        var menuId = 'zoneMore_' + d.id;
+        var cells = '';
+
+        cols.forEach(function(k) {
+          if (k === 'name') {
+            cells += '<td><strong>' + d.name + '</strong></td>';
+          } else if (k === 'code') {
+            cells += '<td>' + d.code + '</td>';
+          } else if (k === 'countries') {
+            cells += '<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + d.countries + '">' + d.countries + '</td>';
+          } else if (k === 'status') {
+            cells += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+          } else if (k === 'actions') {
+            cells += '<td>' +
+              '<div class="action-group">' +
+                '<div class="action-btn" title="编辑" onclick="editZone(' + d.id + ')">' + iconEdit + '</div>' +
+                '<div class="action-btn danger" title="删除" onclick="deleteZone(' + d.id + ')">' + iconDelete + '</div>' +
+                '<div class="row-more-wrapper">' +
+                  '<div class="action-btn" title="更多" onclick="toggleZoneMore(event,\'' + menuId + '\')">' + iconMore + '</div>' +
+                  '<div class="row-more-menu" id="' + menuId + '" style="display:none;">' +
+                    '<div class="row-more-item" onclick="addCountryForZone(' + d.id + ')">添加国家</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</td>';
+          }
+        });
+
+        return '<tr data-id="' + d.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' + cells + '</tr>';
+      }).join('');
+
+      puRestoreCheckedIds('tableBody', checkedIds);
+      puSyncTableHead(window.PU_CONFIG);
+      puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
+      puRenderPagination({
+        total: filtered.length,
+        pageSize: pageSize,
+        currentPage: currentPage,
+        containerId: 'zonePagination',
+        onPageChange: function(p) { currentPage = p; renderTable(); }
+      });
+    }
+
+    // ========== 添加地域对话框（委托到父页面 dialogHost，实现全屏遮罩） ==========
+    function openZoneFormDialog() {
+      editingZoneId = null;
+      if (window.parent && window.parent.openZoneFormDialog) {
+        window.parent.openZoneFormDialog('add');
+      }
+    }
+
+    function editZone(id) {
+      editingZoneId = id;
+      if (window.parent && window.parent.openZoneFormDialog) {
+        window.parent.openZoneFormDialog('edit', id);
+      }
+    }
+
+    // 供 dialog_host 回调 — 查找地域
+    window.findZone = function(id) {
+      for (var i = 0; i < data.length; i++) {
+        // 兼容字符串/数字 id
+        if (data[i].id == id) return data[i];
+      }
+      return null;
+    };
+
+    // 供 dialog_host 回调 — 保存地域
+    window.saveZoneFromParent = function(name, code, status) {
+      // 检查代码唯一性
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].code === code && data[i].id !== editingZoneId) {
+          alert('地域代码 "' + code + '" 已存在');
+          return;
+        }
+      }
+
+      if (editingZoneId) {
+        for (var i = 0; i < data.length; i++) {
+          if (data[i].id === editingZoneId) {
+            data[i].name = name;
+            data[i].code = code;
+            data[i].status = status;
+            break;
+          }
+        }
+        showToast('success', '地域已更新');
+      } else {
+        data.push({ id: nextId++, name: name, code: code, countries: '', status: status });
+        showToast('success', '地域已添加');
+      }
+
+      editingZoneId = null;
+      if (window.parent && window.parent.closeZoneFormDialog) {
+        window.parent.closeZoneFormDialog();
+      }
+      renderTable();
+    };
+
+    // ========== 操作：删除（委托给父页面对话框，全屏遮罩） ==========
+    function deleteZone(id) {
+      if (window.parent && window.parent.openZoneDeleteDialog) {
+        window.parent.openZoneDeleteDialog(id);
+      }
+    }
+
+    function zoneBatchDelete(ids) {
+      if (window.parent && window.parent.openZoneBatchDeleteDialog) {
+        window.parent.openZoneBatchDeleteDialog(ids);
+      }
+    }
+
+    // ========== 供父页面调用的桥接函数 ==========
+    window.findZone = function(id) {
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].id === id) return data[i];
+      }
+      return null;
+    };
+
+    window.zoneDeleteSingle = function(id) {
+      data = data.filter(function(d) { return d.id !== id; });
+    };
+
+    window.zoneBatchDeleteItems = function(ids) {
+      data = data.filter(function(d) { return ids.indexOf(d.id) === -1; });
+    };
+
+    window.renderZoneTable = function() {
+      renderTable();
+    };
+
+    // ========== 刷新页面数据 ==========
+    function refreshPage() {
+      currentPage = 1;
+      renderTable();
+      showToast('success', '数据已刷新');
+    }
+
+    // ========== 添加国家（从更多菜单触发） — 打开国家管理对话框 ==========
+    function addCountryForZone(id) {
+      closeAllZoneMore();
+      if (window.parent && window.parent.openZoneCountryDialog) {
+        window.parent.openZoneCountryDialog(id);
+      }
+    }
+
+    // 供 dialog_host 回调 — 获取所有国家列表
+    window.getAllCountries = function() {
+      // 从缓存的 country 页面获取国家数据
+      if (window.parent && window.parent.PLATFORM_IFRAME_CACHE) {
+        var cache = window.parent.PLATFORM_IFRAME_CACHE;
+        var countryUrl = 'parameters/country/country.html';
+        if (cache[countryUrl] && cache[countryUrl].contentWindow && cache[countryUrl].contentWindow.countries) {
+          return cache[countryUrl].contentWindow.countries;
+        }
+      }
+      // 兜底：使用内置国家列表
+      return [
+        { name: '中国', code: 'CN' },
+        { name: '美国', code: 'US' },
+        { name: '日本', code: 'JP' },
+        { name: '英国', code: 'GB' },
+        { name: '法国', code: 'FR' },
+        { name: '德国', code: 'DE' },
+        { name: '韩国', code: 'KR' },
+        { name: '泰国', code: 'TH' },
+        { name: '越南', code: 'VN' },
+        { name: '新加坡', code: 'SG' },
+        { name: '意大利', code: 'IT' },
+        { name: '西班牙', code: 'ES' },
+        { name: '加拿大', code: 'CA' },
+        { name: '墨西哥', code: 'MX' },
+        { name: '阿联酋', code: 'AE' },
+        { name: '沙特阿拉伯', code: 'SA' },
+        { name: '卡塔尔', code: 'QA' },
+        { name: '南非', code: 'ZA' },
+        { name: '尼日利亚', code: 'NG' },
+        { name: '肯尼亚', code: 'KE' },
+        { name: '巴西', code: 'BR' },
+        { name: '阿根廷', code: 'AR' },
+        { name: '智利', code: 'CL' },
+        { name: '澳大利亚', code: 'AU' },
+        { name: '新西兰', code: 'NZ' }
+      ];
+    };
+
+    // 供 dialog_host 回调 — 根据名称获取国家代码
+    window.getCountryCode = function(name) {
+      var all = window.getAllCountries();
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].name === name) return all[i].code;
+      }
+      return null;
+    };
+
+    // 供 dialog_host 回调 — 批量添加国家到地域
+    window.addCountriesToZone = function(zoneId, countryNames) {
+      console.log('[addCountriesToZone] zoneId=', zoneId, 'countryNames=', countryNames);
+      var zone = window.findZone(zoneId);
+      if (!zone) { console.warn('[addCountriesToZone] zone not found'); return null; }
+
+      var existing = zone.countries ? zone.countries.split('、').filter(function(n) { return n.trim(); }) : [];
+      countryNames.forEach(function(name) {
+        if (existing.indexOf(name) === -1) {
+          existing.push(name);
+        }
+      });
+      zone.countries = existing.join('、');
+      console.log('[addCountriesToZone] updated zone.countries=', zone.countries);
+      renderTable();
+      return zone.countries;
+    };
+
+    // 供 dialog_host 回调 — 从地域中移除国家
+    window.removeCountryFromZone = function(zoneId, countryName) {
+      var zone = window.findZone(zoneId);
+      if (!zone) return;
+
+      var existing = zone.countries ? zone.countries.split('、').filter(function(n) { return n.trim(); }) : [];
+      zone.countries = existing.filter(function(n) { return n !== countryName; }).join('、');
+      renderTable();
+    };
+
+    // ========== 行内更多菜单 ==========
+    window.toggleZoneMore = function(e, menuId) {
+      e.stopPropagation();
+      e.preventDefault();
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+
+      closeAllZoneMore();
+      menu.style.display = 'block';
+    };
+
+    window.closeAllZoneMore = function() {
+      var menus = document.querySelectorAll('.row-more-menu');
+      menus.forEach(function(m) { m.style.display = 'none'; });
+    };
+
+    document.addEventListener('click', function(e) {
+      var wrapper = e.target.closest('.row-more-wrapper');
+      if (!wrapper) closeAllZoneMore();
+    });
+
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTable();
+    });
+  </script>
+</body>
+</html>

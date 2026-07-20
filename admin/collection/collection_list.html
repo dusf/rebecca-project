@@ -1,0 +1,692 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店铺商城后台管理系统 - 产品系列</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="css/collection.css">
+  <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+  <script>
+    (function(){
+      try{
+        var beacon=new BeaconAction({
+          appkey:'0WEB06U85YBSLJNL',
+          versionCode:'1.0.0',
+          channelID:'share',
+          delay:1000,
+          sessionDuration:30*60*1000,
+          isOversea:false,
+          needReportRqdEvent:false
+        });
+        beacon.onDirectUserAction('preview_page_view',{
+          'url':location.href,
+          'referrer':document.referrer,
+          'title':document.title,
+          'sandbox_id':'49c44b8548684771af9c8336e0973782'
+        });
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebarContainer"></aside>
+
+    <div class="main-area">
+      <div class="content">
+        <div class="page active" id="page-collections">
+          <!-- 页面头部 -->
+          <div class="page-header">
+            <div>
+              <div class="page-title">产品系列<span class="count-badge" id="totalCount">(0)</span></div>
+              <div class="page-subtitle">管理店铺产品系列，支持条件筛选和手动挑选产品</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <button class="btn btn-secondary" onclick="refreshCollections()" title="刷新数据">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 刷新
+              </button>
+              <button class="btn btn-secondary" id="shopifyPullBtn" onclick="window.parent.ShopifyAuth.open()" title="拉取Shopify系列数据">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-pull-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span class="btn-pull-text">拉取Shopify</span>
+              </button>
+              <button class="btn btn-primary" onclick="navigateToPage('collection_add.html')">创建系列</button>
+            </div>
+          </div>
+
+          <!-- Shopify 同步进度面板 -->
+          <div class="sync-progress-panel" id="syncProgressPanel">
+            <div class="sp-header">
+              <div class="sp-header-left">
+                <div class="sp-header-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <div>
+                  <div class="sp-header-title">Shopify 系列同步</div>
+                  <div class="sp-header-subtitle" id="spSubtitle">准备中...</div>
+                </div>
+              </div>
+              <button class="sp-cancel-btn" id="spCancelBtn" onclick="cancelSync()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                取消任务
+              </button>
+            </div>
+            <div class="sp-bar-track"><div class="sp-bar-fill" id="spBarFill"></div></div>
+            <div class="sp-list" id="spList"></div>
+            <div class="sp-footer"><span id="spFooterText">等待开始...</span></div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="search-input">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(var(--muted-foreground));flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="搜索系列名称..." id="collectionSearch" oninput="filterCollections()" />
+              </div>
+              <select class="filter-select" id="statusFilter" onchange="filterCollections()">
+                <option value="">全部状态</option>
+                <option value="enabled">已启用</option>
+                <option value="disabled">已禁用</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="table-card">
+            <!-- 批量操作栏 -->
+            <div class="bulk-action-bar">
+              <div class="bulk-selected-count">已选择 <span class="count" id="bulkCount">0</span> 个系列</div>
+              <div class="bulk-actions">
+                <button class="btn btn-secondary btn-sm" id="btnBulkEnable" onclick="bulkToggleStatus('enabled')" disabled>批量启用</button>
+                <button class="btn btn-secondary btn-sm" id="btnBulkDisable" onclick="bulkToggleStatus('disabled')" disabled>批量禁用</button>
+                <button class="btn btn-secondary btn-sm" id="btnBulkDelete" style="color:hsl(var(--error));" onclick="bulkDeleteConfirm()" disabled>批量删除</button>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:40px;"><div class="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></div></th>
+                    <th style="width:72px;">封面图</th>
+                    <th>系列名称</th>
+                    <th style="width:100px;">产品数量</th>
+                    <th style="width:100px;">状态</th>
+                    <th style="width:130px;">创建时间</th>
+                    <th style="width:220px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="collectionTableBody">
+                </tbody>
+              </table>
+            </div>
+            <!-- 空状态 -->
+            <div id="collectionEmpty" style="display:none;">
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                </div>
+                <div class="empty-state-title">暂无产品系列</div>
+                <div class="empty-state-desc">创建产品系列，将产品按维度组织展示给客户</div>
+                <button class="btn btn-primary" onclick="navigateToPage('collection_add.html')">创建系列</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认对话框 -->
+  <div class="dialog-overlay" id="deleteConfirmOverlay" style="display:none;">
+    <div class="dialog">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;">
+        <div class="dialog-title">确认删除</div>
+        <span style="cursor:pointer;font-size:20px;color:hsl(var(--muted-foreground))" onclick="closeDeleteConfirm()">×</span>
+      </div>
+      <div class="dialog-desc" id="deleteConfirmMsg"></div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteConfirm()">取消</button>
+        <button class="btn btn-destructive" id="confirmDeleteBtn">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>var CURRENT_PAGE = 'series';</script>
+  <script src="../common/js/commons.js"></script>
+  <script>
+    // ==================== 系列数据 ====================
+    // 从 localStorage 加载，若没有则使用默认数据
+    function loadCollections() {
+      try {
+        var saved = localStorage.getItem('rebecca_collections_' + (getCurrentShopId ? getCurrentShopId() : 'default'));
+        if (saved) return JSON.parse(saved);
+      } catch(e) {}
+      // 默认模拟数据
+      return [
+        { id: 'col-1', name: '夏季促销', cover: '', slug: 'summer-sale', status: 'enabled', productCount: 12, createdAt: '2026-06-15', sortOrder: 1 },
+        { id: 'col-2', name: '新品上市', cover: '', slug: 'new-arrivals', status: 'enabled', productCount: 8, createdAt: '2026-06-20', sortOrder: 2 },
+        { id: 'col-3', name: '热销爆款', cover: '', slug: 'hot-items', status: 'enabled', productCount: 24, createdAt: '2026-07-01', sortOrder: 3 },
+        { id: 'col-4', name: '清仓特卖', cover: '', slug: 'clearance-sale', status: 'disabled', productCount: 15, createdAt: '2026-05-10', sortOrder: 4 },
+        { id: 'col-5', name: '会员专享', cover: '', slug: 'member-exclusive', status: 'enabled', productCount: 6, createdAt: '2026-07-05', sortOrder: 5 }
+      ];
+    }
+
+    function saveCollections(collections) {
+      try {
+        localStorage.setItem('rebecca_collections_' + (getCurrentShopId ? getCurrentShopId() : 'default'), JSON.stringify(collections));
+      } catch(e) {}
+    }
+
+    var collections = loadCollections();
+    var selectedIds = {};
+
+    // ==================== 批量操作 ====================
+    function toggleSelectAll() {
+      var filter = document.getElementById('statusFilter').value;
+      var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
+      var filtered = collections.filter(function(c) {
+        if (filter && c.status !== filter) return false;
+        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      var allSelected = filtered.length > 0 && filtered.every(function(c) { return selectedIds[c.id]; });
+      if (allSelected) {
+        filtered.forEach(function(c) { delete selectedIds[c.id]; });
+      } else {
+        filtered.forEach(function(c) { selectedIds[c.id] = true; });
+      }
+      renderCollections();
+    }
+
+    function toggleRowSelect(id) {
+      if (selectedIds[id]) { delete selectedIds[id]; } else { selectedIds[id] = true; }
+      updateBulkBar();
+      // 更新复选框视觉效果
+      var cb = document.getElementById('cbc-' + id);
+      if (cb) {
+        cb.classList.toggle('checked', !!selectedIds[id]);
+        cb.innerHTML = selectedIds[id] ? '&#10003;' : '';
+      }
+      updateSelectAllCb();
+    }
+
+    function updateSelectAllCb() {
+      var filter = document.getElementById('statusFilter').value;
+      var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
+      var filtered = collections.filter(function(c) {
+        if (filter && c.status !== filter) return false;
+        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      var allSel = filtered.length > 0 && filtered.every(function(c) { return selectedIds[c.id]; });
+      var scb = document.getElementById('selectAllCb');
+      if (scb) {
+        scb.classList.toggle('checked', allSel);
+        scb.innerHTML = allSel ? '&#10003;' : '';
+      }
+    }
+
+    function updateBulkBar() {
+      var cnt = Object.keys(selectedIds).filter(function(k) { return selectedIds[k]; }).length;
+      document.getElementById('bulkCount').textContent = cnt;
+      document.getElementById('btnBulkEnable').disabled = cnt === 0;
+      document.getElementById('btnBulkDisable').disabled = cnt === 0;
+      document.getElementById('btnBulkDelete').disabled = cnt === 0;
+    }
+
+    function bulkToggleStatus(targetStatus) {
+      var ids = Object.keys(selectedIds).filter(function(k) { return selectedIds[k]; });
+      if (ids.length === 0) return;
+      collections.forEach(function(c) {
+        if (selectedIds[c.id]) { c.status = targetStatus; }
+      });
+      saveCollections(collections);
+      selectedIds = {};
+      renderCollections();
+      showToast('success', '已' + (targetStatus === 'enabled' ? '启用' : '禁用') + ' ' + ids.length + ' 个系列');
+    }
+
+    function bulkDeleteConfirm() {
+      var ids = Object.keys(selectedIds).filter(function(k) { return selectedIds[k]; });
+      if (ids.length === 0) return;
+      document.getElementById('deleteConfirmMsg').textContent = '确定删除 ' + ids.length + ' 个系列？删除后这些系列下的产品关联将解除，前端落地页将无法访问。';
+      pendingDeleteId = 'bulk';
+      document.getElementById('deleteConfirmOverlay').style.display = 'flex';
+      document.getElementById('confirmDeleteBtn').onclick = function() {
+        bulkDelete();
+        closeDeleteConfirm();
+      };
+      document.getElementById('deleteConfirmOverlay').onclick = function(e) {
+        if (e.target === document.getElementById('deleteConfirmOverlay')) closeDeleteConfirm();
+      };
+    }
+
+    function bulkDelete() {
+      var ids = Object.keys(selectedIds).filter(function(k) { return selectedIds[k]; });
+      var count = ids.length;
+      collections = collections.filter(function(c) { return !selectedIds[c.id]; });
+      selectedIds = {};
+      saveCollections(collections);
+      renderCollections();
+      showToast('success', '已删除 ' + count + ' 个系列');
+    }
+
+    // ==================== 渲染 ====================
+    function renderCollections() {
+      var filter = document.getElementById('statusFilter').value;
+      var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
+
+      var filtered = collections.filter(function(c) {
+        if (filter && c.status !== filter) return false;
+        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+
+      // 更新总数
+      document.getElementById('totalCount').textContent = '(' + collections.length + ')';
+
+      // 更新表格
+      var tbody = document.getElementById('collectionTableBody');
+      var emptyEl = document.getElementById('collectionEmpty');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      tbody.innerHTML = filtered.map(function(c) {
+        var coverColors = ['#C9A96E', '#6B8F71', '#5B7FBF', '#C06070', '#8B7A9E', '#D4A76A', '#5A9E8F', '#7B9EC7'];
+        var coverColor = coverColors[parseInt(c.id.split('-')[1]) % coverColors.length] || '#C9A96E';
+        var statusText = c.status === 'enabled' ? '启用' : '禁用';
+        var statusClass = c.status === 'enabled' ? 'enabled' : 'disabled';
+        var checked = selectedIds[c.id];
+
+        return '<tr>' +
+          '<td><div class="checkbox' + (checked ? ' checked' : '') + '" id="cbc-' + c.id + '" onclick="toggleRowSelect(\'' + c.id + '\')">' + (checked ? '&#10003;' : '') + '</div></td>' +
+          '<td>' +
+            '<div class="col-cover-cell" style="' + (c.cover ? 'background-image:url(' + c.cover + ');background-size:cover;background-position:center' : 'background:linear-gradient(135deg,' + coverColor + ',' + coverColor + '88)') + '">' +
+              (!c.cover ? '<span class="placeholder" style="color:rgba(255,255,255,0.7);font-size:12px;">' + c.name.charAt(0) + '</span>' : '') +
+            '</div>' +
+          '</td>' +
+          '<td><a class="series-name-link" onclick="editCollection(\'' + c.id + '\')">' + c.name + '</a></td>' +
+          '<td style="text-align:center">' + c.productCount + '</td>' +
+          '<td><span class="status-tag ' + statusClass + '"><span class="dot"></span>' + statusText + '</span></td>' +
+          '<td style="color:hsl(var(--muted-foreground));font-size:13px;">' + c.createdAt + '</td>' +
+          '<td>' +
+            '<div style="display:flex;gap:6px;align-items:center;">' +
+              '<button class="btn btn-secondary btn-sm" onclick="editCollection(\'' + c.id + '\')">编辑</button>' +
+              '<button class="btn btn-secondary btn-sm" title="查看落地页" onclick="viewCollection(\'' + c.id + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>' +
+              (c.status === 'enabled'
+                ? '<button class="btn btn-secondary btn-sm" onclick="toggleCollectionStatus(\'' + c.id + '\')">禁用</button>'
+                : '<button class="btn btn-secondary btn-sm" onclick="toggleCollectionStatus(\'' + c.id + '\')">启用</button>'
+              ) +
+              '<button class="btn btn-secondary btn-sm" style="color:hsl(var(--error));" onclick="confirmDeleteCollection(\'' + c.id + '\')">删除</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+      updateBulkBar();
+      updateSelectAllCb();
+    }
+
+    function filterCollections() {
+      renderCollections();
+    }
+
+    function refreshCollections() {
+      collections = loadCollections();
+      renderCollections();
+      showToast('success', '数据已刷新');
+    }
+
+    // ==================== 查看系列落地页 ====================
+    function viewCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      // 获取店铺域名
+      var shop = getCurrentShop ? getCurrentShop() : null;
+      var domain = shop ? (shop.customDomain || shop.domain || '') : '';
+      if (!domain) { showToast('error', '未配置店铺域名'); return; }
+      if (!/^https?:\/\//i.test(domain)) domain = 'https://' + domain;
+      domain = domain.replace(/\/+$/, '');
+      var url = domain + '/collections/' + encodeURIComponent(collection.slug || '');
+      window.open(url, '_blank');
+    }
+
+    // ==================== 编辑系列 ====================
+    function editCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (collection) {
+        navigateToPage('collection_edit.html?id=' + id);
+      }
+    }
+
+    // ==================== 切换状态 ====================
+    function toggleCollectionStatus(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      collection.status = collection.status === 'enabled' ? 'disabled' : 'enabled';
+      saveCollections(collections);
+      renderCollections();
+      showToast('success', collection.status === 'enabled' ? '已启用' : '已禁用');
+    }
+
+    // ==================== 删除确认 ====================
+    var pendingDeleteId = null;
+    function confirmDeleteCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      if (!collection) return;
+      pendingDeleteId = id;
+      document.getElementById('deleteConfirmMsg').textContent = '确定删除系列「' + collection.name + '」？删除后该系列下的产品关联将解除，前端落地页将无法访问。';
+      document.getElementById('deleteConfirmOverlay').style.display = 'flex';
+      document.getElementById('confirmDeleteBtn').onclick = function() {
+        deleteCollection(pendingDeleteId);
+        closeDeleteConfirm();
+      };
+      document.getElementById('deleteConfirmOverlay').onclick = function(e) {
+        if (e.target === document.getElementById('deleteConfirmOverlay')) closeDeleteConfirm();
+      };
+    }
+
+    function closeDeleteConfirm() {
+      document.getElementById('deleteConfirmOverlay').style.display = 'none';
+      pendingDeleteId = null;
+    }
+
+    function deleteCollection(id) {
+      var collection = collections.find(function(c) { return c.id === id; });
+      collections = collections.filter(function(c) { return c.id !== id; });
+      saveCollections(collections);
+      renderCollections();
+      showToast('success', '系列「' + (collection ? collection.name : '') + '」已删除');
+    }
+
+    // ==================== Shopify 拉取系列（数据 + 钩子） ====================
+    // 父页面 shopify_dialog.js 通过 iframe.contentWindow.ShopifyAuthHooks 读取
+    var shopifyStores = [
+      { id: 'site-1', name: 'QVR品牌站', domain: 'qvr.myshopify.com', productCount: 128 },
+      { id: 'site-2', name: 'Fashion Plus', domain: 'fashion-plus.myshopify.com', productCount: 56 },
+      { id: 'site-3', name: 'Tokyo Select', domain: 'tokyo-select.myshopify.com', productCount: 42 }
+    ];
+
+    var shopifyCollectionsMap = {
+      'site-1': [
+        { id: 'sc-1-1', title: '夏季促销', type: 'smart', productCount: 12 },
+        { id: 'sc-1-2', title: '新品上市', type: 'manual', productCount: 8 },
+        { id: 'sc-1-3', title: '热销爆款', type: 'smart', productCount: 24 },
+        { id: 'sc-1-4', title: '清仓特卖', type: 'smart', productCount: 15 },
+        { id: 'sc-1-5', title: '会员专享', type: 'manual', productCount: 6 },
+        { id: 'sc-1-6', title: '限时折扣', type: 'smart', productCount: 20 }
+      ],
+      'site-2': [
+        { id: 'sc-2-1', title: '欧美潮流', type: 'smart', productCount: 18 },
+        { id: 'sc-2-2', title: '秋季新品', type: 'manual', productCount: 10 },
+        { id: 'sc-2-3', title: '伴手礼', type: 'manual', productCount: 14 }
+      ],
+      'site-3': [
+        { id: 'sc-3-1', title: '日本精选', type: 'smart', productCount: 22 },
+        { id: 'sc-3-2', title: '限定产品', type: 'manual', productCount: 8 }
+      ]
+    };
+
+    window.ShopifyAuthHooks = {
+      stores: shopifyStores,
+      getItems: function(siteId) { return shopifyCollectionsMap[siteId] || []; },
+      step3Label: '同步系列',
+      step3Title: '选择要同步的系列',
+      syncBtnLabel: '同步选中的系列',
+      step1Desc: '授权后可拉取 Shopify 店铺的产品系列数据，包括智能系列和<br/>手动系列，快速同步到当前商城后台。',
+      setStoreDomain: function(domain) {},
+      onSync: function(selectedIds, siteId) {
+        var seriesList = shopifyCollectionsMap[siteId] || [];
+        var selected = seriesList.filter(function(sc) { return selectedIds.indexOf(sc.id) !== -1; });
+        if (selected.length === 0) return;
+
+        // 初始化同步任务
+        syncTaskActive = true;
+        syncTaskCancelled = false;
+        syncTaskList = selected.slice();
+        syncTaskDone = [];
+        syncTaskFailed = [];
+        syncTaskSkipped = [];
+        syncCurrentIdx = 0;
+
+        updatePullBtnState();
+        document.getElementById('spSubtitle').textContent = '正在从 Shopify 拉取 ' + selected.length + ' 个系列...';
+        document.getElementById('spBarFill').className = 'sp-bar-fill';
+        document.getElementById('spCancelBtn').style.display = '';
+        renderSyncList();
+        showSyncProgress();
+        processNextSync();
+      }
+    };
+
+    // ==================== Shopify 同步任务管理 ====================
+    var syncTaskActive = false;
+    var syncTaskCancelled = false;
+    var syncTaskList = [];
+    var syncTaskDone = [];
+    var syncTaskFailed = [];
+    var syncTaskSkipped = [];
+    var syncCurrentIdx = 0;
+    var syncTimer = null;
+
+    function updatePullBtnState() {
+      var btn = document.getElementById('shopifyPullBtn');
+      var icon = btn.querySelector('.btn-pull-icon');
+      var text = btn.querySelector('.btn-pull-text');
+      if (syncTaskActive) {
+        btn.classList.add('btn-syncing');
+        icon.classList.add('btn-spin-icon');
+        text.textContent = '同步中 (' + syncTaskDone.length + '/' + syncTaskList.length + ')';
+      } else {
+        btn.classList.remove('btn-syncing');
+        icon.classList.remove('btn-spin-icon');
+        text.textContent = '拉取Shopify';
+      }
+    }
+
+    function showSyncProgress() {
+      var panel = document.getElementById('syncProgressPanel');
+      panel.style.display = 'block';
+      // 触发回流后加 visible
+      panel.offsetHeight;
+      panel.classList.add('visible');
+    }
+
+    function hideSyncProgress() {
+      var panel = document.getElementById('syncProgressPanel');
+      panel.classList.add('hiding');
+      panel.classList.remove('visible');
+      setTimeout(function() {
+        panel.style.display = 'none';
+        panel.classList.remove('hiding');
+      }, 250);
+    }
+
+    function toggleSyncProgress() {
+      var panel = document.getElementById('syncProgressPanel');
+      if (panel.classList.contains('visible')) {
+        hideSyncProgress();
+      } else {
+        showSyncProgress();
+      }
+    }
+
+    function renderSyncList() {
+      var listEl = document.getElementById('spList');
+      var html = '';
+      for (var i = 0; i < syncTaskList.length; i++) {
+        var sc = syncTaskList[i];
+        var status = 'pending';
+        var statusIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>';
+        var tagHtml = '';
+
+        if (i < syncCurrentIdx) {
+          // 已处理
+          var doneItem = syncTaskDone.filter(function(d) { return d.id === sc.id; })[0];
+          var failedItem = syncTaskFailed.filter(function(f) { return f.id === sc.id; })[0];
+          var skippedItem = syncTaskSkipped.filter(function(s) { return s.id === sc.id; })[0];
+          if (doneItem) {
+            status = 'done';
+            statusIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+            tagHtml = '<span class="sp-item-tag done">已完成</span>';
+          } else if (failedItem) {
+            status = 'failed';
+            statusIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+            tagHtml = '<span class="sp-item-tag failed">失败</span>';
+          } else if (skippedItem) {
+            status = 'skipped';
+            statusIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+            tagHtml = '<span class="sp-item-tag skipped">已跳过</span>';
+          }
+        } else if (i === syncCurrentIdx && syncTaskActive && !syncTaskCancelled) {
+          status = 'syncing';
+          statusIcon = '<div class="sp-spinner"></div>';
+        }
+
+        html += '<div class="sp-item">' +
+          '<span class="sp-item-status ' + status + '">' + statusIcon + '</span>' +
+          '<span class="sp-item-name">' + sc.title + '</span>' +
+          tagHtml +
+        '</div>';
+      }
+      listEl.innerHTML = html;
+
+      // 更新进度条
+      var total = syncTaskList.length;
+      var done = syncTaskDone.length + syncTaskFailed.length + syncTaskSkipped.length;
+      var pct = total > 0 ? Math.round(done / total * 100) : 0;
+      var bar = document.getElementById('spBarFill');
+      bar.style.width = pct + '%';
+    }
+
+    function processNextSync() {
+      if (syncTaskCancelled) {
+        finishSync('cancelled');
+        return;
+      }
+
+      if (syncCurrentIdx >= syncTaskList.length) {
+        // 全部完成
+        saveCollections(collections);
+        renderCollections();
+        finishSync('done');
+        return;
+      }
+
+      var sc = syncTaskList[syncCurrentIdx];
+      renderSyncList();
+
+      // 模拟网络延迟 400~900ms
+      var delay = 400 + Math.random() * 500 | 0;
+      syncTimer = setTimeout(function() {
+        if (syncTaskCancelled) {
+          finishSync('cancelled');
+          return;
+        }
+
+        // 模拟 10% 概率失败
+        if (Math.random() < 0.1) {
+          syncTaskFailed.push({ id: sc.id, title: sc.title });
+        } else {
+          // 检查重复
+          var exists = collections.some(function(c) { return c.name === sc.title; });
+          if (exists) {
+            syncTaskSkipped.push({ id: sc.id, title: sc.title });
+          } else {
+            var today = new Date().toISOString().split('T')[0];
+            var newId = 'col-' + Date.now() + '-' + (Math.random() * 1000 | 0);
+            collections.push({
+              id: newId,
+              name: sc.title,
+              cover: '',
+              slug: sc.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, ''),
+              status: 'enabled',
+              productCount: sc.productCount,
+              createdAt: today,
+              sortOrder: collections.length + 1,
+              sourceShopify: true,
+              shopifySite: shopifySelectedSiteId
+            });
+            syncTaskDone.push({ id: sc.id, title: sc.title });
+          }
+        }
+
+        syncCurrentIdx++;
+        updatePullBtnState();
+        // 每完成一条就持久化一次，确保取消时已完成的不丢失
+        saveCollections(collections);
+        renderCollections();
+        processNextSync();
+      }, delay);
+    }
+
+    function cancelSync() {
+      if (!syncTaskActive || syncTaskCancelled) return;
+      syncTaskCancelled = true;
+      if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
+
+      // 更新面板显示
+      document.getElementById('spSubtitle').textContent = '任务已取消，已同步 ' + syncTaskDone.length + ' 个系列';
+      document.getElementById('spCancelBtn').style.display = 'none';
+      var bar = document.getElementById('spBarFill');
+      bar.classList.add('cancelled');
+
+      renderSyncList();
+      finishSync('cancelled');
+    }
+
+    function finishSync(reason) {
+      syncTaskActive = false;
+      syncTimer = null;
+      updatePullBtnState();
+
+      var done = syncTaskDone.length;
+      var failed = syncTaskFailed.length;
+      var skipped = syncTaskSkipped.length;
+      var total = syncTaskList.length;
+
+      var footerText;
+      if (reason === 'cancelled') {
+        footerText = '<span class="sp-num">已取消</span> — 成功 ' + done + ' 个';
+        if (failed > 0) footerText += '，失败 ' + failed + ' 个';
+        if (skipped > 0) footerText += '，跳过 ' + skipped + ' 个';
+        showToast('info', '同步已取消，成功同步 ' + done + ' 个系列');
+      } else {
+        footerText = '同步完成 — <span class="sp-num">' + done + '</span> 个系列';
+        if (failed > 0) footerText += '，失败 <span class="sp-num">' + failed + '</span> 个';
+        if (skipped > 0) footerText += '，跳过 <span class="sp-num">' + skipped + '</span> 个';
+        var msg = '已同步 ' + done + ' 个系列';
+        if (skipped > 0) msg += '，跳过 ' + skipped + ' 个重复系列';
+        if (failed > 0) msg += '，失败 ' + failed + ' 个';
+        showToast('success', msg);
+      }
+
+      document.getElementById('spFooterText').innerHTML = footerText;
+      document.getElementById('spSubtitle').textContent = reason === 'cancelled' ? '任务已取消' : '全部系列同步完成';
+
+      var bar = document.getElementById('spBarFill');
+      if (reason === 'done') bar.classList.add('done');
+
+      // 2 秒后自动收起面板
+      setTimeout(function() {
+        if (!syncTaskActive) hideSyncProgress();
+      }, 2500);
+
+      var el = document.getElementById('spList');
+      if (el) { el.scrollTop = 0; }
+    }
+
+    // ==================== 初始化 ====================
+    renderCollections();
+  </script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>税率 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <style>
+    .inline-edit-select { height:36px;border:1px solid hsl(var(--border));border-radius:6px;padding:0 8px;font-size:13px;background:hsl(var(--background));color:hsl(var(--foreground));outline:none;min-width:100px; }
+    .inline-edit-select:focus { border-color:hsl(var(--primary));box-shadow:0 0 0 2px hsla(var(--primary),0.15); }
+    .inline-edit-input { height:36px;border:1px solid hsl(var(--border));border-radius:6px;padding:0 8px;font-size:13px;background:hsl(var(--background));color:hsl(var(--foreground));outline:none;width:80px; }
+    .inline-edit-input:focus { border-color:hsl(var(--primary));box-shadow:0 0 0 2px hsla(var(--primary),0.15); }
+    .inline-edit-cell { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
+    .inline-btn-save { height:32px;padding:0 14px;border:none;border-radius:6px;background:hsl(var(--primary));color:#fff;font-size:13px;cursor:pointer;white-space:nowrap; }
+    .inline-btn-save:hover { opacity:0.9; }
+    .inline-btn-cancel { height:32px;padding:0 14px;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--background));color:hsl(var(--foreground));font-size:13px;cursor:pointer;white-space:nowrap; }
+    .inline-btn-cancel:hover { background:hsl(var(--muted)); }
+    .editing-row td { vertical-align:middle;padding:8px 12px; }
+    .editing-row { background:hsla(var(--primary),0.04); }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <!-- ==================== 页面头部 ==================== -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">税率<span class="count-badge" id="taxRateCount"></span></div>
+        <div class="page-subtitle">管理不同国家/地区的税率，每个地区对应一个税率百分比</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" id="btnAddTaxRate" onclick="startAddRow()">+ 添加地区税率</button>
+      </div>
+    </div>
+
+    <!-- ==================== 税率配置 ==================== -->
+    <div style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <select class="filter-select" onchange="currentPage=1;renderTaxRateTableCore()" id="countryFilter">
+            <option value="">全部国家</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTaxRateTableCore()" id="regionTypeFilter">
+            <option value="">全部类型</option>
+            <option value="country">国家</option>
+            <option value="state">省/州</option>
+          </select>
+          <select class="filter-select" onchange="currentPage=1;renderTaxRateTableCore()" id="statusFilter">
+            <option value="">全部状态</option>
+            <option value="active">启用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="bulk-action-bar" id="bulkActionBar">
+        <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+          <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+          <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="customColWrapper"><button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 自定义列</button></div>
+          <div class="custom-col-wrapper"><button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="刷新数据"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button></div>
+        </div>
+      </div>
+      <div class="table-card"><div class="table-wrapper"><table><thead><tr><th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this,'tableBody')"></div></th><th data-col="region">地区</th><th data-col="regionType">地区类型</th><th data-col="rate">税率(%)</th><th data-col="status">状态</th><th data-col="actions">操作</th></tr></thead><tbody id="tableBody"></tbody></table></div><div class="pagination-bar" id="taxRatePagination"></div></div>
+    </div>
+
+  </div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel"><div class="custom-col-header">选择显示列</div><div class="custom-col-body" id="customColBody"></div><div class="custom-col-footer"><button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button></div></div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script>
+    // ========== SVG 图标 ==========
+    var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+
+    var currentPage = 1;
+    var pageSize = 10;
+
+    // ========== 行内编辑状态 ==========
+    var editingId = null; // null | 'new' | number
+
+    // ========== 税率配置数据 ==========
+    // 每个地区只有一条税率，单一税率值 rate
+    var taxRateAutoId = 27;
+    var taxRateData = [
+      { id: 1,  countryCode: 'CN', countryName: '中国',   stateCode: '',    stateName: '',            regionType: 'country', rate: 13.00,    status: 'active' },
+      { id: 2,  countryCode: 'CN', countryName: '中国',   stateCode: 'GD',  stateName: '广东省',       regionType: 'state',   rate: 13.00,    status: 'active' },
+      { id: 3,  countryCode: 'CN', countryName: '中国',   stateCode: 'SH',  stateName: '上海市',       regionType: 'state',   rate: 13.00,    status: 'active' },
+      { id: 4,  countryCode: 'CN', countryName: '中国',   stateCode: 'BJ',  stateName: '北京市',       regionType: 'state',   rate: 13.00,    status: 'disabled' },
+      { id: 5,  countryCode: 'US', countryName: '美国',   stateCode: '',    stateName: '',            regionType: 'country', rate: 8.00,     status: 'active' },
+      { id: 6,  countryCode: 'US', countryName: '美国',   stateCode: 'CA',  stateName: '加利福尼亚州',  regionType: 'state',   rate: 8.50,     status: 'active' },
+      { id: 7,  countryCode: 'US', countryName: '美国',   stateCode: 'NY',  stateName: '纽约州',       regionType: 'state',   rate: 8.875,    status: 'active' },
+      { id: 8,  countryCode: 'US', countryName: '美国',   stateCode: 'TX',  stateName: '德克萨斯州',    regionType: 'state',   rate: 6.25,     status: 'disabled' },
+      { id: 9,  countryCode: 'US', countryName: '美国',   stateCode: 'FL',  stateName: '佛罗里达州',    regionType: 'state',   rate: 7.00,     status: 'active' },
+      { id: 10, countryCode: 'JP', countryName: '日本',   stateCode: '',    stateName: '',            regionType: 'country', rate: 10.00,    status: 'active' },
+      { id: 11, countryCode: 'JP', countryName: '日本',   stateCode: 'TK',  stateName: '东京都',       regionType: 'state',   rate: 10.00,    status: 'active' },
+      { id: 12, countryCode: 'JP', countryName: '日本',   stateCode: 'OS',  stateName: '大阪府',       regionType: 'state',   rate: 10.00,    status: 'active' },
+      { id: 13, countryCode: 'DE', countryName: '德国',   stateCode: '',    stateName: '',            regionType: 'country', rate: 19.00,    status: 'active' },
+      { id: 14, countryCode: 'DE', countryName: '德国',   stateCode: 'BY',  stateName: '巴伐利亚州',    regionType: 'state',   rate: 19.00,    status: 'active' },
+      { id: 15, countryCode: 'DE', countryName: '德国',   stateCode: 'BE',  stateName: '柏林',         regionType: 'state',   rate: 19.00,    status: 'active' },
+      { id: 16, countryCode: 'GB', countryName: '英国',   stateCode: '',    stateName: '',            regionType: 'country', rate: 20.00,    status: 'active' },
+      { id: 17, countryCode: 'GB', countryName: '英国',   stateCode: 'EN',  stateName: '英格兰',       regionType: 'state',   rate: 20.00,    status: 'active' },
+      { id: 18, countryCode: 'GB', countryName: '英国',   stateCode: 'SC',  stateName: '苏格兰',       regionType: 'state',   rate: 20.00,    status: 'active' },
+      { id: 19, countryCode: 'FR', countryName: '法国',   stateCode: '',    stateName: '',            regionType: 'country', rate: 20.00,    status: 'active' },
+      { id: 20, countryCode: 'FR', countryName: '法国',   stateCode: 'IDF', stateName: '法兰西岛',      regionType: 'state',   rate: 21.00,    status: 'active' },
+      { id: 21, countryCode: 'FR', countryName: '法国',   stateCode: 'PACA',stateName: '普罗旺斯',      regionType: 'state',   rate: 20.00,    status: 'active' },
+      { id: 22, countryCode: 'AU', countryName: '澳洲',   stateCode: '',    stateName: '',            regionType: 'country', rate: 10.00,    status: 'active' },
+      { id: 23, countryCode: 'AU', countryName: '澳洲',   stateCode: 'NSW', stateName: '新南威尔士州',  regionType: 'state',   rate: 10.00,    status: 'active' },
+      { id: 24, countryCode: 'AU', countryName: '澳洲',   stateCode: 'VIC', stateName: '维多利亚州',    regionType: 'state',   rate: 10.00,    status: 'active' },
+      { id: 25, countryCode: 'CA', countryName: '加拿大', stateCode: '',    stateName: '',            regionType: 'country', rate: 5.00,     status: 'active' },
+      { id: 26, countryCode: 'CA', countryName: '加拿大', stateCode: 'ON',  stateName: '安大略省',      regionType: 'state',   rate: 13.00,    status: 'active' },
+      { id: 27, countryCode: 'CA', countryName: '加拿大', stateCode: 'QC',  stateName: '魁北克省',      regionType: 'state',   rate: 14.975,   status: 'active' }
+    ];
+
+    function findTaxRate(id) {
+      id = parseInt(id, 10);
+      for (var i = 0; i < taxRateData.length; i++) {
+        if (taxRateData[i].id === id) return taxRateData[i];
+      }
+      return null;
+    }
+
+    function getRegionLabel(d) {
+      if (d.regionType === 'state' && d.stateName) {
+        return d.countryName + '/' + d.stateName;
+      }
+      return d.countryName;
+    }
+
+    // ========== 国家/省数据（用于行内编辑下拉） ==========
+    var countriesForInline = [];
+
+    var COUNTRIES_FALLBACK = [
+      { code: 'CN', name: '中国',   states: ['北京市', '上海市', '广东省', '浙江省'] },
+      { code: 'US', name: '美国',   states: ['加利福尼亚州', '纽约州', '德克萨斯州', '佛罗里达州'] },
+      { code: 'JP', name: '日本',   states: ['东京都', '大阪府'] },
+      { code: 'DE', name: '德国',   states: ['巴伐利亚州', '柏林'] },
+      { code: 'GB', name: '英国',   states: ['英格兰', '苏格兰'] },
+      { code: 'FR', name: '法国',   states: ['法兰西岛', '普罗旺斯'] },
+      { code: 'AU', name: '澳洲',   states: ['新南威尔士州', '维多利亚州'] },
+      { code: 'CA', name: '加拿大', states: ['安大略省', '魁北克省'] }
+    ];
+
+    function initCountriesForInline() {
+      var raw = COUNTRIES_FALLBACK;
+      try {
+        if (window.parent && window.parent !== window && window.parent.PARAM_COUNTRY_DATA && window.parent.PARAM_COUNTRY_DATA.length > 0) {
+          raw = window.parent.PARAM_COUNTRY_DATA;
+        }
+      } catch(e) {}
+      countriesForInline = raw.map(function(c) {
+        return { code: c.code || c.id, name: c.name, states: c.states || [] };
+      });
+    }
+
+    function getCountryByCode(code) {
+      for (var i = 0; i < countriesForInline.length; i++) {
+        if (countriesForInline[i].code === code) return countriesForInline[i];
+      }
+      return null;
+    }
+
+    function getStatesByCountryCode(code) {
+      var c = getCountryByCode(code);
+      return c ? (c.states || []) : [];
+    }
+
+
+    // ========== PU_CONFIG ==========
+    window.PU_CONFIG = {
+      columns: [
+        { key: 'region',     label: '地区',     defaultShow: true,  alwaysShow: true },
+        { key: 'regionType', label: '地区类型', defaultShow: true,  alwaysShow: false },
+        { key: 'rate',       label: '税率(%)',  defaultShow: true,  alwaysShow: false },
+        { key: 'status',     label: '状态',     defaultShow: true,  alwaysShow: false },
+        { key: 'actions',    label: '操作',     defaultShow: true,  alwaysShow: true }
+      ],
+      visibleCols: ['region', 'regionType', 'rate', 'status', 'actions'],
+      batchActions: [
+        { name: 'enable',  handler: function(ids) { taxRateBatchEnable(ids); } },
+        { name: 'disable', handler: function(ids) { taxRateBatchDisable(ids); } },
+        { name: 'delete',  handler: function(ids) { taxRateBatchDelete(ids); } }
+      ],
+      onColumnsChange: function() { renderTaxRateTableCore(); }
+    };
+
+    // ========== 操作：添加/编辑税率（行内编辑） ==========
+    function startAddRow() {
+      editingId = 'new';
+      currentPage = 1;
+      renderTaxRateTableCore();
+    }
+
+    function startEditRow(id) {
+      editingId = id;
+      closeAllMore();
+      renderTaxRateTableCore();
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      renderTaxRateTableCore();
+    }
+
+    function onInlineCountryChange() {
+      var countryCode = document.getElementById('inlineCountry').value;
+      var stateSel = document.getElementById('inlineState');
+      if (!stateSel) return;
+      var states = getStatesByCountryCode(countryCode);
+      var html = '<option value="">不选择（国家级别）</option>';
+      states.forEach(function(s) {
+        html += '<option value="' + s + '">' + s + '</option>';
+      });
+      stateSel.innerHTML = html;
+      updateInlineRegionType();
+    }
+
+    function updateInlineRegionType() {
+      var stateSel = document.getElementById('inlineState');
+      var typeEl = document.getElementById('inlineRegionType');
+      if (!typeEl) return;
+      typeEl.textContent = (stateSel && stateSel.value) ? '省/州' : '国家';
+    }
+
+    function saveEditRow() {
+      var countryCode = document.getElementById('inlineCountry').value;
+      var stateCode = document.getElementById('inlineState').value;
+      var rateStr = document.getElementById('inlineRate').value;
+      var status = document.getElementById('inlineStatus').value;
+      var rate = parseFloat(rateStr);
+
+      if (!countryCode) { showToast('warning', '请选择所属国家'); return; }
+      if (isNaN(rate) || rateStr === '' || rate < 0 || rate > 100) { showToast('warning', '请输入有效的税率值（0-100）'); return; }
+
+      var countrySel = document.getElementById('inlineCountry');
+      var countryName = countrySel.options[countrySel.selectedIndex] ? countrySel.options[countrySel.selectedIndex].text : '';
+      var stateName = stateCode || '';
+
+      // 重复检查
+      if (editingId === 'new') {
+        for (var j = 0; j < taxRateData.length; j++) {
+          if (taxRateData[j].countryCode === countryCode && taxRateData[j].stateCode === (stateCode || '')) {
+            showToast('warning', '该地区已有税率配置，请勿重复添加');
+            return;
+          }
+        }
+        taxRateAutoId++;
+        taxRateData.push({
+          id: taxRateAutoId, countryCode: countryCode, countryName: countryName,
+          stateCode: stateCode || '', stateName: stateName || '',
+          regionType: stateCode ? 'state' : 'country', rate: rate, status: status
+        });
+        showToast('success', '税率配置已添加');
+      } else {
+        for (var k = 0; k < taxRateData.length; k++) {
+          if (taxRateData[k].id !== parseInt(editingId, 10) &&
+              taxRateData[k].countryCode === countryCode &&
+              taxRateData[k].stateCode === (stateCode || '')) {
+            showToast('warning', '该地区已有税率配置，请勿重复添加');
+            return;
+          }
+        }
+        var cur = findTaxRate(editingId);
+        if (!cur) { showToast('error', '税率配置不存在'); return; }
+        cur.countryCode = countryCode; cur.countryName = countryName;
+        cur.stateCode = stateCode || ''; cur.stateName = stateName || '';
+        cur.regionType = stateCode ? 'state' : 'country';
+        cur.rate = rate; cur.status = status;
+        showToast('success', '税率配置已更新');
+      }
+
+      window.taxRateData = taxRateData;
+      if (window.parent && window.parent !== window) { window.parent.PARAM_TAX_RATE_DATA = taxRateData; }
+      editingId = null;
+      renderTaxRateTableCore();
+    }
+
+    function handleDeleteTaxRate(id) {
+      if (window.parent && window.parent.openTaxRateDeleteDialog) {
+        window.parent.openTaxRateDeleteDialog(id);
+      }
+    }
+
+    function handleToggleTaxRateStatus(id) {
+      var cur = findTaxRate(id);
+      if (!cur) return;
+      cur.status = cur.status === 'active' ? 'disabled' : 'active';
+      renderTaxRateTableCore();
+      showToast('success', '已' + (cur.status === 'active' ? '启用' : '停用') + '「' + getRegionLabel(cur) + '」');
+      closeAllMore();
+    }
+
+    // ========== 批量操作 ==========
+    function taxRateBatchEnable(ids) {
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      taxRateData.forEach(function(d) {
+        if (numericIds.indexOf(d.id) !== -1) d.status = 'active';
+      });
+      renderTaxRateTableCore();
+      showToast('success', '已启用 ' + ids.length + ' 条');
+    }
+
+    function taxRateBatchDisable(ids) {
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      taxRateData.forEach(function(d) {
+        if (numericIds.indexOf(d.id) !== -1) d.status = 'disabled';
+      });
+      renderTaxRateTableCore();
+      showToast('success', '已停用 ' + ids.length + ' 条');
+    }
+
+    function taxRateBatchDelete(ids) {
+      if (window.parent && window.parent.openTaxRateBatchDeleteDialog) {
+        window.parent.openTaxRateBatchDeleteDialog(ids);
+      }
+    }
+
+    // ========== 供父页面调用的数据函数 ==========
+    window.taxRateData = taxRateData;
+    window.findTaxRate = findTaxRate;
+
+    if (window.parent && window.parent !== window) {
+      window.parent.PARAM_TAX_RATE_DATA = taxRateData;
+    }
+
+    window.taxRateAddItem = function(countryCode, countryName, stateCode, stateName, rate, status) {
+      taxRateAutoId++;
+      taxRateData.push({
+        id: taxRateAutoId,
+        countryCode: countryCode,
+        countryName: countryName,
+        stateCode: stateCode || '',
+        stateName: stateName || '',
+        regionType: stateCode ? 'state' : 'country',
+        rate: rate,
+        status: status
+      });
+    };
+
+    window.taxRateUpdateItem = function(id, countryCode, countryName, stateCode, stateName, rate, status) {
+      id = parseInt(id, 10);
+      var cur = findTaxRate(id);
+      if (!cur) return;
+      cur.countryCode = countryCode;
+      cur.countryName = countryName;
+      cur.stateCode = stateCode || '';
+      cur.stateName = stateName || '';
+      cur.regionType = stateCode ? 'state' : 'country';
+      cur.rate = rate;
+      cur.status = status;
+    };
+
+    window.taxRateDeleteItem = function(id) {
+      id = parseInt(id, 10);
+      taxRateData = taxRateData.filter(function(d) { return d.id !== id; });
+      window.taxRateData = taxRateData;
+    };
+
+    window.taxRateBatchDeleteItems = function(ids) {
+      var numericIds = ids.map(function(i) { return parseInt(i, 10); });
+      taxRateData = taxRateData.filter(function(d) { return numericIds.indexOf(d.id) === -1; });
+      window.taxRateData = taxRateData;
+    };
+
+    window.renderTaxRateTable = function() {
+      renderTaxRateTableCore();
+    };
+
+    // ========== 行级更多菜单 ==========
+    function toggleMore(menuId) {
+      var menu = document.getElementById(menuId);
+      if (!menu) return;
+      if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+      closeAllMore();
+      menu.style.display = 'block';
+    }
+    function closeAllMore() {
+      var menus = document.querySelectorAll('.action-more-menu');
+      for (var i = 0; i < menus.length; i++) menus[i].style.display = 'none';
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.action-more-wrapper')) closeAllMore();
+    });
+
+    // ========== 填充国家筛选下拉 ==========
+    function populateCountryFilter() {
+      var sel = document.getElementById('countryFilter');
+      if (!sel) return;
+      var list = (countriesForInline && countriesForInline.length) ? countriesForInline : COUNTRIES_FALLBACK;
+      var curVal = sel.value;
+      sel.innerHTML = '';
+      var defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = '全部国家';
+      sel.appendChild(defaultOpt);
+      list.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.code || c.id || '';
+        opt.textContent = c.name || '';
+        if (opt.value === curVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      if (typeof refreshSearchableSelect === 'function') {
+        refreshSearchableSelect('countryFilter');
+      }
+    }
+
+    // ========== 渲染税率配置表格 ==========
+    function renderTaxRateTableCore() {
+      var countryVal = document.getElementById('countryFilter').value;
+      var typeVal = document.getElementById('regionTypeFilter').value;
+      var sVal = document.getElementById('statusFilter').value;
+      var filtered = taxRateData.filter(function(d) {
+        if (countryVal && d.countryCode !== countryVal) return false;
+        if (typeVal && d.regionType !== typeVal) return false;
+        if (sVal && d.status !== sVal) return false;
+        return true;
+      });
+      // 排序：按国家名 → 地区类型（国家在前，省/州在后）
+      filtered.sort(function(a, b) {
+        if (a.countryName !== b.countryName) return a.countryName.localeCompare(b.countryName, 'zh');
+        if (a.regionType === b.regionType) return 0;
+        return a.regionType === 'country' ? -1 : 1;
+      });
+      var pageData = puSlicePage(filtered, currentPage, pageSize);
+      var cols = PU_CONFIG.visibleCols;
+      var tbody = document.getElementById('tableBody');
+      var checkedIds = puSaveCheckedIds('tableBody');
+      document.getElementById('taxRateCount').textContent = '(' + filtered.length + '个)';
+
+      if (!filtered.length && editingId !== 'new') {
+        tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="empty-state-title">暂无税率配置</div><div class="empty-state-desc">点击"添加地区税率"开始配置</div></div></td></tr>';
+        puUpdateBulkBar();
+        document.getElementById('taxRatePagination').innerHTML = '';
+        return;
+      }
+
+      var rowsHtml = '';
+      // 如果正在添加新行，在顶部插入编辑行
+      if (editingId === 'new') {
+        rowsHtml += buildEditRow(null, cols);
+      }
+
+      var sm = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+      var rtLabels = { country: '国家', state: '省/州' };
+      pageData.forEach(function(d) {
+        if (editingId === d.id) {
+          // 该行正在编辑
+          rowsHtml += buildEditRow(d, cols);
+        } else {
+          var s = sm[d.status] || { label: d.status, cls: 'badge-secondary' };
+          var c = '';
+          var menuId = 'trMore_' + d.id;
+          var rateStr = (d.rate != null) ? d.rate.toFixed(d.rate % 1 === 0 ? 0 : 2) + '%' : '0%';
+          cols.forEach(function(k) {
+            if (k === 'region')          c += '<td><strong>' + getRegionLabel(d) + '</strong></td>';
+            else if (k === 'regionType') c += '<td>' + (rtLabels[d.regionType] || d.regionType) + '</td>';
+            else if (k === 'rate')       c += '<td><strong>' + rateStr + '</strong></td>';
+            else if (k === 'status')     c += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+            else if (k === 'actions')    c += '<td><div class="action-group">' +
+              '<div class="action-btn" title="编辑" onclick="startEditRow(' + d.id + ')">' + editIcon + '</div>' +
+              '<div class="action-btn danger" title="删除" onclick="handleDeleteTaxRate(' + d.id + ')">' + deleteIcon + '</div>' +
+              '<div class="action-more-wrapper">' +
+                '<div class="action-btn" title="更多" onclick="event.stopPropagation();toggleMore(\'' + menuId + '\')">' + moreIcon + '</div>' +
+                '<div class="action-more-menu" id="' + menuId + '" style="display:none;">' +
+                  '<div class="action-more-item" onclick="handleToggleTaxRateStatus(' + d.id + ')">' + (d.status === 'active' ? '停用' : '启用') + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div></td>';
+          });
+          rowsHtml += '<tr data-id="' + d.id + '"><td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' + c + '</tr>';
+        }
+      });
+
+      tbody.innerHTML = rowsHtml;
+      puRestoreCheckedIds('tableBody', checkedIds);
+      puSyncTableHead(PU_CONFIG);
+      puBuildCustomColPanel(PU_CONFIG.columns, PU_CONFIG.visibleCols);
+      puRenderPagination({
+        total: filtered.length,
+        pageSize: pageSize,
+        currentPage: currentPage,
+        containerId: 'taxRatePagination',
+        onPageChange: function(p) { currentPage = p; renderTaxRateTableCore(); }
+      });
+    }
+
+    // ========== 构建行内编辑行 HTML ==========
+    function buildEditRow(d, cols) {
+      var countryCode = d ? d.countryCode : 'CN';
+      var stateCode = d ? (d.stateCode || '') : '';
+      var rateVal = d ? (d.rate != null ? d.rate : '') : '';
+      var statusVal = d ? d.status : 'active';
+
+      var countryHtml = '<select class="inline-edit-select" id="inlineCountry" onchange="onInlineCountryChange()">';
+      countriesForInline.forEach(function(c) {
+        countryHtml += '<option value="' + c.code + '"' + (c.code === countryCode ? ' selected' : '') + '>' + c.name + '</option>';
+      });
+      countryHtml += '</select>';
+
+      var stateHtml = '<select class="inline-edit-select" id="inlineState" onchange="updateInlineRegionType()">';
+      stateHtml += '<option value="">不选择（国家级别）</option>';
+      var states = getStatesByCountryCode(countryCode);
+      states.forEach(function(s) {
+        stateHtml += '<option value="' + s + '"' + (s === stateCode ? ' selected' : '') + '>' + s + '</option>';
+      });
+      stateHtml += '</select>';
+
+      var regionTypeLabel = stateCode ? '省/州' : '国家';
+      var cells = '';
+      cols.forEach(function(k) {
+        if (k === 'region') {
+          cells += '<td><div class="inline-edit-cell">' + countryHtml + stateHtml + '</div></td>';
+        } else if (k === 'regionType') {
+          cells += '<td><span id="inlineRegionType">' + regionTypeLabel + '</span></td>';
+        } else if (k === 'rate') {
+          cells += '<td><input class="inline-edit-input" type="number" id="inlineRate" value="' + rateVal + '" placeholder="0" step="0.01" min="0" max="100"></td>';
+        } else if (k === 'status') {
+          cells += '<td><select class="inline-edit-select" id="inlineStatus">' +
+            '<option value="active"' + (statusVal === 'active' ? ' selected' : '') + '>启用</option>' +
+            '<option value="disabled"' + (statusVal === 'disabled' ? ' selected' : '') + '>停用</option>' +
+            '</select></td>';
+        } else if (k === 'actions') {
+          cells += '<td><div class="action-group">' +
+            '<button class="inline-btn-save" onclick="saveEditRow()">保存</button>' +
+            '<button class="inline-btn-cancel" onclick="cancelEdit()">取消</button>' +
+            '</div></td>';
+        }
+      });
+      return '<tr class="editing-row" data-id="' + (d ? d.id : 'new') + '"><td><!-- 无复选框 --></td>' + cells + '</tr>';
+    }
+
+
+    // ========== 刷新页面数据 ==========
+    function refreshPage() {
+      currentPage = 1;
+      renderTaxRateTableCore();
+      showToast('info', '数据已刷新');
+    }
+
+    // ========== 初始化 ==========
+    function initTaxRatePage() {
+      initCountriesForInline();
+      populateCountryFilter();
+      renderTaxRateTableCore();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTaxRatePage);
+    } else {
+      initTaxRatePage();
+    }
+  </script>
+</body>
+</html>

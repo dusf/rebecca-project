@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商城账号 - 中台管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <link rel="stylesheet" href="css/shop_accounts.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">商城账号<span class="count-badge" id="memberCount"></span></div>
+        <div class="page-subtitle">管理所有商城店铺的成员账号</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" onclick="openAddMemberModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          添加成员
+        </button>
+      </div>
+    </div>
+
+    <!-- 筛选行 -->
+    <div class="filter-row">
+      <input class="filter-input" id="searchInput" placeholder="搜索姓名/手机号/邮箱/账号ID..." style="width:260px;" oninput="renderMembers()" />
+      <select class="filter-select" id="storeFilter" onchange="renderMembers()">
+        <option value="">全部店铺</option>
+        <option value="shop_1">瑞贝卡官方旗舰店</option>
+        <option value="shop_2">瑞贝卡数码专营店</option>
+        <option value="shop_3">瑞贝卡家居生活馆</option>
+        <option value="shop_4">瑞贝卡美妆优选</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="renderMembers()">
+        <option value="">全部状态</option>
+        <option value="active">启用</option>
+        <option value="disabled">停用</option>
+      </select>
+      <div class="filter-org-tree" id="orgFilterTreeSelect"></div>
+      <input class="filter-input" type="date" id="dateStart" title="创建时间起" onchange="renderMembers()" style="width:140px;min-width:140px;">
+      <span style="color:hsl(var(--muted-foreground));font-size:13px;flex-shrink:0;">至</span>
+      <input class="filter-input" type="date" id="dateEnd" title="创建时间止" onchange="renderMembers()" style="width:140px;min-width:140px;">
+    </div>
+
+    <!-- 批量操作栏 -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="batchCount">0</span> 人</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="batchEnableMembers()" disabled id="btnBatchEnable">批量启用</button>
+        <button class="btn btn-secondary btn-sm" onclick="batchDisableMembers()" disabled id="btnBatchDisable">批量停用</button>
+        <button class="btn btn-secondary btn-sm" onclick="batchDeleteMembers()" disabled id="btnBatchRemove">批量删除</button>
+        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="customColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="toggleCustomColPanel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            自定义列
+          </button>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 更多操作下拉 -->
+    <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+      <div class="more-actions-item" onclick="document.getElementById('moreActionsDropdown').style.display='none';openBatchAssignStore()">添加店铺</div>
+      <div class="more-actions-item" onclick="document.getElementById('moreActionsDropdown').style.display='none';batchResetPassword()">批量重置密码</div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-cb" style="width:40px"><div class="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></div></th>
+              <th class="col-info" data-key="info">成员信息</th>
+              <th class="col-phone" data-key="phone">手机号</th>
+              <th class="col-email" data-key="email">邮箱</th>
+              <th class="col-org" data-key="org">组织机构</th>
+              <th class="col-stores" data-key="stores" style="width:180px">所在店铺</th>
+              <th class="col-status" data-key="status">状态</th>
+              <th class="sortable sorted col-joinedAt" data-sort="joinedAt" data-key="joinedAt" style="width:150px">创建时间<span class="sort-icon"></span></th>
+              <th class="col-action" data-key="action" style="width:130px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="empty-title">暂无成员</div>
+          <div class="empty-desc">通过添加成员或邀请成员来管理商城账号</div>
+        </div>
+      </div>
+      <div class="pagination-bar">
+        <span class="pagination-info" id="paginationInfo">共 0 条</span>
+        <div class="pagination-buttons" id="paginationButtons"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"></div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="resetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script src="js/shop_accounts.js"></script>
+</body>
+</html>

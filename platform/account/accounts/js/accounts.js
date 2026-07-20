@@ -1,0 +1,453 @@
+// ====== 中台账号页面 ======
+// 手机号作为登录账号，邮箱为非必填项，管理员在中台给他人开设账号
+
+// ====== PU_CONFIG ======
+window.PU_CONFIG = {
+  tbodId: 'accountTableBody',
+  columns: [
+    { key: 'info',      label: '成员信息',  defaultShow: true,  alwaysShow: true  },
+    { key: 'phone',     label: '手机号',   defaultShow: true,  alwaysShow: true  },
+    { key: 'org',       label: '组织',     defaultShow: true,  alwaysShow: false },
+    { key: 'email',     label: '邮箱',     defaultShow: false, alwaysShow: false },
+    { key: 'createdAt', label: '创建时间', defaultShow: true,  alwaysShow: false },
+    { key: 'status',    label: '状态',     defaultShow: true,  alwaysShow: false },
+    { key: 'actions',   label: '操作',     defaultShow: true,  alwaysShow: true  }
+  ],
+  visibleCols: ['info','phone','org','email','createdAt','status','actions'],
+  batchActions: [
+    { name: 'enable',  handler: batchEnable  },
+    { name: 'disable', handler: batchDisable },
+    { name: 'delete',  handler: batchDelete  }
+  ],
+  moreActions: [
+    { name: 'resetPwd', handler: batchResetPwd }
+  ],
+  onColumnsChange: function() { renderTable(); }
+};
+
+// ====== 示例数据 ======
+var accountData = [
+  { id: 1, accountId: 'AC20260700001', phone: '13800138000', name: '系统管理员', org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'admin@example.com', password: '***', status: 'active',   createdAt: '2026-07-01' },
+  { id: 2, accountId: 'AC20260700002', phone: '13800138001', name: '张三',       org: '瑞贝卡集团/瑞贝卡科技/产品设计部', email: '',                      password: '***', status: 'active',   createdAt: '2026-07-03' },
+  { id: 3, accountId: 'AC20260700003', phone: '13800138002', name: '李四',       org: '瑞贝卡集团/瑞贝卡电商/运营部',     email: 'lisi@example.com',    password: '***', status: 'active',   createdAt: '2026-07-05' },
+  { id: 4, accountId: 'AC20260700004', phone: '13800138003', name: '王五',       org: '瑞贝卡集团/瑞贝卡电商/客服部',     email: '',                      password: '***', status: 'disabled', createdAt: '2026-07-06' },
+  { id: 5, accountId: 'AC20260700005', phone: '13800138004', name: '赵六',       org: '瑞贝卡集团/瑞贝卡科技/技术研发部', email: 'zhaoliu@example.com', password: '***', status: 'active',   createdAt: '2026-07-08' }
+];
+
+var sortField = 'createdAt';
+var sortDir = 'desc';
+var currentPage = 1;
+var pageSize = 10;
+var filteredData = [];
+var nextAcctId = 6;
+
+// ====== 排序 ======
+function sortAccounts(data) {
+  return data.slice().sort(function(a, b) {
+    var va = a[sortField] || '', vb = b[sortField] || '';
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function updateSortIcons() {
+  var ths = document.querySelectorAll('th[data-sort]');
+  ths.forEach(function(th) {
+    var key = th.getAttribute('data-sort');
+    var icon = th.querySelector('.sort-icon');
+    th.classList.toggle('sorted', key === sortField);
+    if (icon) icon.textContent = (key === sortField) ? (sortDir === 'asc' ? '▲' : '▼') : '';
+  });
+}
+
+// 可排序的列 key 集合
+var SORTABLE_COLS = { phone: true, createdAt: true };
+
+/** 生成账号ID（格式：AC + 年月 + 5位序号） */
+function generateAccountId() {
+  var now = new Date();
+  var prefix = 'AC' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0');
+  var maxNum = 0;
+  accountData.forEach(function(a) {
+    if (a.accountId && a.accountId.indexOf(prefix) === 0) {
+      var num = parseInt(a.accountId.substring(prefix.length), 10);
+      if (num > maxNum) maxNum = num;
+    }
+  });
+  var s = '' + (maxNum + 1);
+  while (s.length < 5) s = '0' + s;
+  return prefix + s;
+}
+
+/** 动态重建表头，与数据行使用同一顺序，消除自定义列的列头/数据错位问题 */
+function rebuildAccountTableHead() {
+  var theadTr = document.querySelector('.table-card table thead tr');
+  if (!theadTr) return;
+  var config = window.PU_CONFIG;
+  // 按 columns 配置的原始顺序排列可见列
+  var unordered = config.visibleCols;
+  var orderedCols = [];
+  for (var i = 0; i < config.columns.length; i++) {
+    var k = config.columns[i].key;
+    if (unordered.indexOf(k) !== -1) orderedCols.push(k);
+  }
+
+  var html = '<th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, \'accountTableBody\')"></div></th>';
+  orderedCols.forEach(function(key) {
+    var c = config.columns.find(function(col) { return col.key === key; });
+    if (!c) return;
+    if (SORTABLE_COLS[key]) {
+      var sorted = key === sortField ? ' sorted' : '';
+      var icon = key === sortField ? (sortDir === 'asc' ? '▲' : '▼') : '';
+      html += '<th class="sortable' + sorted + '" data-sort="' + key + '">' + c.label + '<span class="sort-icon">' + icon + '</span></th>';
+    } else {
+      html += '<th>' + c.label + '</th>';
+    }
+  });
+  theadTr.innerHTML = html;
+}
+
+// ====== 组织树形选择器 ======
+var orgFilterPicker = null;
+
+function getOrgData() {
+  var fw = window.parent.getFW ? window.parent.getFW() : null;
+  if (fw && fw.orgData) return fw.orgData;
+  var orgUrl = 'account/organization/organization.html';
+  var orgFrame = window.parent.PLATFORM_IFRAME_CACHE && window.parent.PLATFORM_IFRAME_CACHE[orgUrl];
+  var data = (orgFrame && orgFrame.contentWindow && orgFrame.contentWindow.orgData)
+    ? orgFrame.contentWindow.orgData : [];
+  return data;
+}
+
+function initOrgFilterTreeSelect() {
+  var container = document.getElementById('orgFilterTreeSelect');
+  if (!container || typeof OrgTreeSelect === 'undefined') return;
+  var orgData = getOrgData();
+  if (orgFilterPicker) orgFilterPicker.destroy();
+  orgFilterPicker = OrgTreeSelect.create(container, {
+    data: orgData,
+    placeholder: '全部组织',
+    allowEmpty: true,
+    onChange: function() {
+      filterAccounts();
+    }
+  });
+}
+
+// ====== 过滤 ======
+function filterAccounts() {
+  currentPage = 1;
+  renderTable();
+}
+
+// ====== 渲染表格 ======
+function renderTable() {
+  var data = accountData.slice();
+  var search = (document.getElementById('accountSearch') || {}).value || '';
+  var status = (document.getElementById('statusFilter') || {}).value || '';
+  var org = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  var dateStart = (document.getElementById('dateStart') || {}).value || '';
+  var dateEnd = (document.getElementById('dateEnd') || {}).value || '';
+
+  if (search) {
+    var s = search.toLowerCase();
+    data = data.filter(function(a) {
+      return a.phone.toLowerCase().indexOf(s) !== -1 ||
+             a.name.toLowerCase().indexOf(s) !== -1 ||
+             (a.accountId || '').toLowerCase().indexOf(s) !== -1 ||
+             (a.email || '').toLowerCase().indexOf(s) !== -1;
+    });
+  }
+  if (status) {
+    data = data.filter(function(a) { return a.status === status; });
+  }
+  if (org) {
+    data = data.filter(function(a) {
+      return a.org === org || a.org.indexOf(org + '/') === 0;
+    });
+  }
+  if (dateStart) {
+    data = data.filter(function(a) { return a.createdAt >= dateStart; });
+  }
+  if (dateEnd) {
+    data = data.filter(function(a) { return a.createdAt <= dateEnd; });
+  }
+
+  data = sortAccounts(data);
+  updateSortIcons();
+  filteredData = data;
+
+  var countEl = document.getElementById('accountCount');
+  if (countEl) countEl.textContent = '(' + data.length + '个)';
+
+  var pageData = puSlicePage(data, currentPage, pageSize);
+  var tbody = document.getElementById('accountTableBody');
+  var cols = window.PU_CONFIG.visibleCols;
+  var checkedIds = puSaveCheckedIds('accountTableBody');
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '"><div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-state-title">暂无匹配账号</div><div class="empty-state-desc">试试调整搜索条件或筛选器</div></div></td></tr>';
+    puUpdateBulkBar();
+    document.getElementById('accountsPagination').innerHTML = '';
+    return;
+  }
+
+  var editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var deleteIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  var moreIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
+  var statusMap = { active: { label: '启用', cls: 'badge-success' }, disabled: { label: '停用', cls: 'badge-secondary' } };
+
+  tbody.innerHTML = pageData.map(function(a) {
+    var s = statusMap[a.status] || { label: a.status, cls: 'badge-secondary' };
+    var cells = '';
+    cols.forEach(function(key) {
+      if (key === 'info') cells += '<td><div class="member-info-cell"><div class="member-avatar avatar-c' + (a.id % 6) + '">' + (a.name || '?').charAt(0) + '</div><div class="member-info-text"><div class="member-name">' + a.name + '</div><div class="member-account-id">' + (a.accountId || '-') + '</div></div></div></td>';
+      else if (key === 'phone') cells += '<td><strong>' + a.phone + '</strong></td>';
+      else if (key === 'org')  cells += '<td>' + a.org + '</td>';
+      else if (key === 'email') cells += '<td style="color:hsl(var(--muted-foreground))">' + (a.email || '--') + '</td>';
+      else if (key === 'createdAt') cells += '<td style="color:hsl(var(--muted-foreground))">' + a.createdAt + '</td>';
+      else if (key === 'status') cells += '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>';
+      else if (key === 'actions') {
+        var actionMenuId = 'rowMore_' + a.id;
+        cells += '<td><div class="action-group">' +
+          '<div class="action-btn" title="编辑" onclick="handleEdit(' + a.id + ')">' + editIcon + '</div>' +
+          '<div class="action-btn danger" title="删除" onclick="handleDelete(' + a.id + ')">' + deleteIcon + '</div>' +
+          '<div class="action-more-wrapper">' +
+          '<div class="action-btn more" title="更多" onclick="event.stopPropagation();toggleRowMore(\'' + actionMenuId + '\')">' + moreIcon + '</div>' +
+          '<div class="action-more-menu" id="' + actionMenuId + '" style="display:none;">' +
+          '<div class="action-more-item" onclick="handleToggleStatus(' + a.id + ');closeAllRowMore()">' + (a.status === 'active' ? '停用' : '启用') + '</div>' +
+          '<div class="action-more-item" onclick="handleResetPwd(' + a.id + ');closeAllRowMore()">重置密码</div>' +
+          '</div>' +
+          '</div>' +
+          '</div></td>';
+      }
+    });
+    return '<tr data-id="' + a.id + '">' +
+      '<td><div class="checkbox" onclick="puToggleCheckbox(this)"></div></td>' +
+      cells +
+    '</tr>';
+  }).join('');
+
+  puRestoreCheckedIds('accountTableBody', checkedIds);
+  rebuildAccountTableHead();
+  puBuildCustomColPanel(window.PU_CONFIG.columns, window.PU_CONFIG.visibleCols);
+  puRenderPagination({
+    total: data.length,
+    pageSize: pageSize,
+    currentPage: currentPage,
+    containerId: 'accountsPagination',
+    onPageChange: function(page) { currentPage = page; renderTable(); }
+  });
+}
+
+// ====== 打开添加/编辑对话框（委托给父页面） ======
+function handleAdd() {
+  if (window.parent && window.parent.openAcctFormDialog) {
+    window.parent.openAcctFormDialog('add', null);
+  }
+}
+
+function handleEdit(id) {
+  if (window.parent && window.parent.openAcctFormDialog) {
+    window.parent.openAcctFormDialog('edit', id);
+  }
+}
+
+function handleDelete(id) {
+  var acct = findAcct(id);
+  if (!acct) return;
+  if (window.parent && window.parent.openAcctDeleteDialog) {
+    window.parent.openAcctDeleteDialog(id);
+  }
+}
+
+// ====== 供父页面调用的数据处理函数 ======
+
+/** 查找账号（id 参数可能为字符串，统一转为数字比较） */
+function findAcct(id) {
+  var numId = parseInt(id);
+  for (var i = 0; i < accountData.length; i++) {
+    if (accountData[i].id === numId) return accountData[i];
+  }
+  return null;
+}
+
+/** 添加账号（由父页面对话框提交触发） */
+window.acctAddItem = function(phone, name, password, org, email, status) {
+  accountData.push({
+    id: nextAcctId++,
+    accountId: generateAccountId(),
+    phone: phone,
+    name: name,
+    org: org,
+    email: email || '',
+    password: password,
+    status: status,
+    createdAt: new Date().toISOString().slice(0, 10)
+  });
+  var savedOrg = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  initOrgFilterTreeSelect();
+  if (orgFilterPicker && savedOrg) orgFilterPicker.setValue(savedOrg);
+  renderTable();
+  showToast('success', '账号添加成功');
+};
+
+/** 更新账号（由父页面对话框提交触发） */
+window.acctUpdateItem = function(id, phone, name, password, org, email, status) {
+  var acct = findAcct(id);
+  if (!acct) { showToast('error', '账号不存在'); return; }
+  acct.phone = phone;
+  acct.name = name;
+  acct.org = org;
+  acct.email = email || '';
+  if (password) acct.password = password;
+  acct.status = status;
+  var savedOrg = orgFilterPicker ? orgFilterPicker.getValue() : '';
+  initOrgFilterTreeSelect();
+  if (orgFilterPicker && savedOrg) orgFilterPicker.setValue(savedOrg);
+  renderTable();
+  showToast('success', '账号保存成功');
+};
+
+/** 删除单个账号（由父页面删除对话框确认触发） */
+window.acctDeleteItem = function(id) {
+  accountData = accountData.filter(function(a) { return a.id !== id; });
+};
+
+/** 批量删除账号（由父页面删除对话框确认触发） */
+window.acctBatchDeleteItems = function(ids) {
+  var numIds = ids.map(function(id) { return parseInt(id); });
+  accountData = accountData.filter(function(a) { return numIds.indexOf(a.id) === -1; });
+};
+
+// ====== 批量操作 ======
+function batchEnable(ids) {
+  var count = 0;
+  ids.forEach(function(id) { var a = findAcct(id); if (a && a.status !== 'active') { a.status = 'active'; count++; } });
+  renderTable();
+  showToast('success', '已启用 ' + count + ' 个账号');
+}
+
+function batchDisable(ids) {
+  var count = 0;
+  ids.forEach(function(id) { var a = findAcct(id); if (a && a.status !== 'disabled') { a.status = 'disabled'; count++; } });
+  renderTable();
+  showToast('success', '已停用 ' + count + ' 个账号');
+}
+
+function batchDelete(ids) {
+  if (window.parent && window.parent.openAcctBatchDeleteDialog) {
+    window.parent.openAcctBatchDeleteDialog(ids);
+  }
+}
+
+// ====== 更多操作 ======
+
+/** 批量重置密码（打开确认对话框） */
+function batchResetPwd() {
+  var ids = puGetCheckedIds(window.PU_CONFIG.tbodId);
+  if (ids.length === 0) { showToast('info', '请先选择要操作的账号'); return; }
+  if (window.parent && window.parent.openAcctBatchResetPwdDialog) {
+    window.parent.openAcctBatchResetPwdDialog(ids);
+  }
+}
+
+/** 批量重置密码 — 实际执行（由父页面对话框确认触发），返回 { count, newPwd } */
+window.acctBatchResetPwdItems = function(ids) {
+  var newPwd = generateRandomPwd();
+  var count = 0;
+  var numIds = ids.map(function(id) { return parseInt(id); });
+  numIds.forEach(function(numId) {
+    var a = findAcct(numId);
+    if (a) { a.password = newPwd; count++; }
+  });
+  renderTable();
+  return { count: count, newPwd: newPwd };
+};
+
+/** 生成随机密码（8位，含大小写字母和数字） */
+function generateRandomPwd() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var pwd = '';
+  for (var i = 0; i < 8; i++) { pwd += chars[Math.floor(Math.random() * chars.length)]; }
+  return pwd;
+}
+
+// ====== 行级操作 ======
+
+/** 切换单个账号启用/停用状态 */
+function handleToggleStatus(id) {
+  var acct = findAcct(id);
+  if (!acct) return;
+  acct.status = acct.status === 'active' ? 'disabled' : 'active';
+  renderTable();
+  showToast('success', '已' + (acct.status === 'active' ? '启用' : '停用') + '「' + acct.name + '」');
+}
+
+/** 行级重置密码（委托给父页面的批量重置对话框） */
+function handleResetPwd(id) {
+  if (window.parent && window.parent.openAcctBatchResetPwdDialog) {
+    window.parent.openAcctBatchResetPwdDialog([id]);
+  }
+}
+
+// ====== 行级更多菜单 ======
+
+/** 切换行级更多菜单 */
+window.toggleRowMore = function(menuId) {
+  var menu = document.getElementById(menuId);
+  if (!menu) return;
+  if (menu.style.display === 'block') {
+    menu.style.display = 'none';
+    return;
+  }
+  closeAllRowMore();
+  menu.style.display = 'block';
+};
+
+/** 关闭所有行级更多菜单 */
+window.closeAllRowMore = function() {
+  var menus = document.querySelectorAll('.action-more-menu');
+  menus.forEach(function(m) { m.style.display = 'none'; });
+};
+
+/** 点击外部关闭行级更多菜单 */
+document.addEventListener('click', function(e) {
+  var wrapper = e.target.closest('.action-more-wrapper');
+  if (!wrapper) closeAllRowMore();
+});
+
+
+
+
+
+
+
+// ====== 排序点击事件 ======
+document.addEventListener('click', function(e) {
+  var th = e.target.closest('th.sortable');
+  if (!th) return;
+  var key = th.getAttribute('data-sort');
+  if (!key) return;
+  if (sortField === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = key;
+    sortDir = 'desc';
+  }
+  currentPage = 1;
+  renderTable();
+});
+
+// ====== 初始化 ======
+document.addEventListener('DOMContentLoaded', function() {
+  initOrgFilterTreeSelect();
+  renderTable();
+});
+
+function refreshPage() {
+  renderTable();
+  showToast('success', '数据已刷新');
+}

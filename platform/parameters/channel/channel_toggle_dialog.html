@@ -1,0 +1,19 @@
+<!-- 启用/禁用确认对话框 -->
+<div class="dialog-overlay" id="channelToggleDialogOverlay" style="display:none;" onclick="closeChannelToggleDialog()">
+  <div class="dialog" style="width:440px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="channelToggleDialogTitle">确认禁用</span>
+      <button class="dialog-close" onclick="closeChannelToggleDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="channelToggleId" value="">
+      <div class="dialog-desc" id="channelToggleMsg">禁用后商家将无法使用该渠道，是否确认？</div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeChannelToggleDialog()">取消</button>
+      <button class="btn btn-primary" id="channelToggleConfirmBtn" onclick="confirmChannelToggle()">确定禁用</button>
+    </div>
+  </div>
+</div>

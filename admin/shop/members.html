@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成员管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="../common/css/member_dialogs.css">
+  <style>
+    /* ==================== 布局 ==================== */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    .members-container { display: flex; flex-direction: column; height: 100%; padding: 8px 24px 24px; box-sizing: border-box; }
+    .page-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-shrink: 0; }
+    .page-title { font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); }
+    .page-subtitle { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+    .count-badge { font-size: 13px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-weight: 400; }
+    /* ==================== 头像 & 成员信息 ==================== */
+    .member-avatar-cell { display: flex; align-items: center; gap: 10px; }
+    .member-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+    .member-name { font-weight: 600; }
+    .member-account { font-size: 12px; color: hsl(var(--muted-foreground)); }
+    /* ==================== 组织机构 ==================== */
+    .org-cell { font-size: 13px; line-height: 1.5; }
+    .org-dept { color: hsl(var(--foreground)); font-weight: 500; }
+    .org-team { color: hsl(var(--muted-foreground)); font-size: 12px; }
+    .org-team .team-arrow { margin: 0 3px; color: hsl(var(--border)); }
+    /* ==================== 操作按钮 ==================== */
+    .action-btn-sm { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); }
+    .action-btn-sm.remove { background: hsl(0 84% 95%); color: hsl(var(--error)); }
+    .action-btn-sm.remove:hover { background: hsl(0 84% 90%); }
+    /* ==================== 按钮 ==================== */
+    .invite-btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); white-space: nowrap; }
+    .invite-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px hsl(var(--primary) / 0.3); }
+    .invite-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .invite-btn.secondary { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+    .invite-btn.secondary:hover { background: hsl(var(--muted-foreground) / 0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    /* ==================== 空状态 ==================== */
+    .empty-state { text-align: center; padding: 48px 20px; }
+    .empty-icon { width: 56px; height: 56px; border-radius: 50%; background: hsl(var(--muted)); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: hsl(var(--muted-foreground)); }
+    .empty-icon svg { width: 24px; height: 24px; }
+    .empty-title { font-size: 15px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 4px; }
+    .empty-desc { font-size: 13px; color: hsl(var(--muted-foreground)); }
+  </style>
+</head>
+<body>
+  <div class="members-container">
+    <div class="page-toolbar">
+      <div>
+        <div class="page-title">
+          成员管理<span class="count-badge" id="memberCount"></span>
+        </div>
+        <div class="page-subtitle" id="shopContext">店铺成员管理</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="invite-btn" id="inviteBtn" onclick="openInviteMemberModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          邀请成员
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 批量操作栏（始终可见） ==================== -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="batchCount">0</span> 人</div>
+      <div class="bulk-actions">
+        <button class="btn btn-destructive btn-sm" onclick="batchRemoveMembers()" disabled id="btnBatchRemove">批量移除</button>
+        <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ==================== 数据表格 ==================== -->
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><div class="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></div></th>
+              <th>成员信息</th>
+              <th>账号ID</th>
+              <th>手机号</th>
+              <th>邮箱</th>
+              <th>组织机构</th>
+              <th class="sortable sorted" data-sort="joinedAt" style="width:130px">加入时间<span class="sort-icon"></span></th>
+              <th style="width:80px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="empty-title">暂无成员</div>
+          <div class="empty-desc">点击「邀请成员」从已有账号中邀请</div>
+        </div>
+      </div>
+      <!-- ==================== 分页 ==================== -->
+      <div class="pagination-bar">
+        <span class="pagination-info" id="paginationInfo">共 0 条</span>
+        <div class="pagination-buttons" id="paginationButtons">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../common/js/commons.js"></script>
+  <script src="../common/js/member_dialogs.js"></script>
+  <script>
+    // ==================== 成员数据管理 ====================
+    const MEMBER_COLORS = ['#D4845A','#8B9A7C','#7C8B9A','#B4846C','#9A8B7C','#6C8B84','#C4957A','#8B7C9A','#A47C6C','#7C9A8B'];
+
+    function getMembersKey() { return 'rebecca_members_' + (getCurrentShopId() || 'default'); }
+    function loadMembers() { try { var d = localStorage.getItem(getMembersKey()); return d ? JSON.parse(d) : getDefaultMembers(); } catch(e) { return getDefaultMembers(); } }
+    function saveMembers(members) { localStorage.setItem(getMembersKey(), JSON.stringify(members)); }
+
+    function getDefaultMembers() {
+      return [{
+        id: 'member_001', accountId: 'AC20260700001', name: '系统管理员', phone: '13800000001', email: 'admin@rebecca.com',
+        orgDept: '总部/数码事业部', orgTeam: '数码组', orgSubTeam: '', type: 'creator',
+        stores: [{ id: 'shop_001', name: 'QVR品牌站', domain: 'qvr.rebeccashop.com', color: '#D4845A' }],
+        joinedAt: '2026-07-01 09:00'
+      }];
+    }
+
+    function generateMemberId() { return 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6); }
+
+    // ==================== 通知系统辅助 ====================/
+    var NOTIF_KEY = 'rebecca_notifications';
+    function loadNotifications() { try { var d = localStorage.getItem(NOTIF_KEY); return d ? JSON.parse(d) : []; } catch(e) { return []; } }
+    function saveNotifications(arr) { localStorage.setItem(NOTIF_KEY, JSON.stringify(arr)); }
+    function addNotification(type, content, shopId, memberName, shopName) {
+      var notifs = loadNotifications();
+      notifs.unshift({ id: 'notif_' + Date.now(), type: type, content: content, time: new Date().toISOString(), read: false, shopId: shopId, memberName: memberName, shopName: shopName });
+      saveNotifications(notifs);
+    }
+
+    // ==================== 批量选择状态 ====================/
+    var selectedMemberIds = [];
+    var currentPage = 1;
+    var pageSize = 10;
+    var sortField = 'joinedAt';
+    var sortDir = 'desc';
+
+    function updateBatchBar() {
+      var countEl = document.getElementById('batchCount');
+      var removeBtn = document.getElementById('btnBatchRemove');
+      var selectAll = document.getElementById('selectAllCb');
+      var members = loadMembers();
+      var nonCreator = members.filter(function(m) { return m.type !== 'creator'; });
+      var c = selectedMemberIds.length;
+      if (countEl) countEl.textContent = c;
+      if (removeBtn) removeBtn.disabled = c === 0;
+      if (selectAll) {
+        selectAll.classList.toggle('checked', c > 0 && c >= nonCreator.length && nonCreator.length > 0);
+        selectAll.innerHTML = selectAll.classList.contains('checked') ? '\u2713' : '';
+      }
+    }
+
+    window.toggleSelectAll = function() {
+      var members = loadMembers();
+      var nonCreator = members.filter(function(m) { return m.type !== 'creator'; });
+      var nonCreatorIds = nonCreator.map(function(m) { return m.id; });
+      if (selectedMemberIds.length >= nonCreator.length && nonCreator.length > 0) {
+        selectedMemberIds = [];
+      } else {
+        selectedMemberIds = nonCreatorIds.slice();
+      }
+      renderMembers();
+    };
+
+    window.toggleMemberSelect = function(memberId) {
+      var idx = selectedMemberIds.indexOf(memberId);
+      if (idx !== -1) { selectedMemberIds.splice(idx, 1); }
+      else { selectedMemberIds.push(memberId); }
+      updateBatchBar();
+      var cb = document.getElementById('rowCb_' + memberId);
+      if (cb) {
+        cb.classList.toggle('checked', selectedMemberIds.indexOf(memberId) !== -1);
+        cb.innerHTML = cb.classList.contains('checked') ? '\u2713' : '';
+      }
+    };
+
+    // ==================== 排序 ====================
+    function sortMembers(members) {
+      return members.slice().sort(function(a, b) {
+        var va = a[sortField] || '', vb = b[sortField] || '';
+        if (sortField === 'joinedAt') {
+          if (va < vb) return sortDir === 'asc' ? -1 : 1;
+          if (va > vb) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        }
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function updateSortIcons() {
+      var ths = document.querySelectorAll('th[data-sort]');
+      ths.forEach(function(th) {
+        var key = th.getAttribute('data-sort');
+        var icon = th.querySelector('.sort-icon');
+        th.classList.toggle('sorted', key === sortField);
+        if (icon) icon.textContent = (key === sortField) ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : '';
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      var th = e.target.closest('th.sortable');
+      if (!th) return;
+      var key = th.getAttribute('data-sort');
+      if (!key) return;
+      if (sortField === key) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortField = key;
+        sortDir = 'desc';
+      }
+      currentPage = 1;
+      updateSortIcons();
+      renderMembers();
+    });
+
+    // ==================== 渲染 ====================/
+    function renderMembers() {
+      var members = loadMembers();
+      members = sortMembers(members);
+      updateSortIcons();
+      var tbody = document.getElementById('memberTableBody');
+      var empty = document.getElementById('emptyState');
+      var countEl = document.getElementById('memberCount');
+      var isCreator = true;
+
+      countEl.textContent = '(' + members.length + '人)';
+
+      // 显示当前店铺上下文
+      var shopCtx = document.getElementById('shopContext');
+      if (shopCtx) {
+        var shop = getCurrentShop();
+        if (shop) {
+          shopCtx.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:' + (shop.color || '#D4845A') + ';"></span>' + shop.name + ' · ' + shop.domain + '</span>';
+        } else {
+          shopCtx.textContent = '店铺成员管理';
+        }
+      }
+
+      var inviteBtn = document.getElementById('inviteBtn');
+      if (inviteBtn) inviteBtn.style.display = isCreator ? 'inline-flex' : 'none';
+
+      // 分页计算
+      var totalPages = Math.ceil(members.length / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      var start = (currentPage - 1) * pageSize;
+      var pageMembers = members.slice(start, start + pageSize);
+
+      if (members.length === 0) {
+        tbody.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        updateBatchBar();
+        renderPagination(0, 0);
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      tbody.innerHTML = pageMembers.map(function(m, i) {
+        var color = MEMBER_COLORS[(start + i) % MEMBER_COLORS.length];
+        var isCreatorType = m.type === 'creator';
+        var isChecked = selectedMemberIds.indexOf(m.id) !== -1;
+
+        var actionHtml = '';
+        if (!isCreatorType && isCreator) {
+          actionHtml = '<button class="action-btn-sm remove" onclick="confirmRemoveMember(\'' + m.id + '\', \'' + m.name.replace(/'/g, "\\'") + '\')">移除</button>';
+        } else if (isCreatorType) {
+          actionHtml = '<span style="font-size:12px;color:hsl(var(--muted-foreground))">-</span>';
+        }
+
+        var checkboxHtml = isCreatorType
+          ? '<div class="checkbox" style="visibility:hidden"></div>'
+          : '<div class="checkbox' + (isChecked ? ' checked' : '') + '" id="rowCb_' + m.id + '" onclick="event.stopPropagation(); toggleMemberSelect(\'' + m.id + '\')">' + (isChecked ? '\u2713' : '') + '</div>';
+
+        // 组织机构
+        var orgHtml = '';
+        if (m.orgDept || m.orgTeam) {
+          var deptName = (m.orgDept || '').split('/').pop() || m.orgDept;
+          var teamLine = m.orgTeam ? m.orgTeam : '';
+          if (m.orgSubTeam) teamLine += '<span class="team-arrow">&gt;</span>' + m.orgSubTeam;
+          orgHtml = '<div class="org-dept">' + deptName + '</div>' + (teamLine ? '<div class="org-team">' + teamLine + '</div>' : '');
+        } else {
+          orgHtml = '<span style="color:hsl(var(--muted-foreground))">-</span>';
+        }
+
+        return '<tr>' +
+          '<td>' + checkboxHtml + '</td>' +
+          '<td><div class="member-avatar-cell"><div class="member-avatar" style="background:' + color + '">' + m.name.charAt(0) + '</div><div><div class="member-name">' + m.name + '</div></div></div></td>' +
+          '<td><span style="font-family:monospace;font-size:13px;">' + (m.accountId || '-') + '</span></td>' +
+          '<td>' + (m.phone || '-') + '</td>' +
+          '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + (m.email || '-') + '</span></td>' +
+          '<td><div class="org-cell">' + orgHtml + '</div></td>' +
+          '<td><span style="font-size:13px;color:hsl(var(--muted-foreground))">' + m.joinedAt + '</span></td>' +
+          '<td>' + actionHtml + '</td>' +
+          '</tr>';
+      }).join('');
+
+      updateBatchBar();
+      renderPagination(members.length, totalPages);
+    }
+
+    // ==================== 分页 ====================/
+    function renderPagination(total, totalPages) {
+      var infoEl = document.getElementById('paginationInfo');
+      var btnsEl = document.getElementById('paginationButtons');
+      if (!infoEl || !btnsEl) return;
+
+      var end = Math.min(currentPage * pageSize, total);
+      infoEl.textContent = total === 0 ? '共 0 条' : '显示 ' + ((currentPage - 1) * pageSize + 1) + '-' + end + ' 条，共 ' + total + ' 条';
+
+      var html = '';
+      // 上一页
+      html += '<div class="page-btn' + (currentPage <= 1 ? ' disabled' : '') + '" onclick="' + (currentPage > 1 ? 'goToPage(' + (currentPage - 1) + ')' : '') + '">‹</div>';
+
+      for (var p = 1; p <= totalPages; p++) {
+        if (totalPages <= 7 || p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+          html += '<div class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goToPage(' + p + ')">' + p + '</div>';
+        } else if (p === 2 || p === totalPages - 1) {
+          html += '<div class="page-btn disabled">...</div>';
+        }
+      }
+
+      // 下一页
+      html += '<div class="page-btn' + (currentPage >= totalPages ? ' disabled' : '') + '" onclick="' + (currentPage < totalPages ? 'goToPage(' + (currentPage + 1) + ')' : '') + '">›</div>';
+
+      btnsEl.innerHTML = html;
+    }
+
+    window.goToPage = function(page) {
+      currentPage = page;
+      renderMembers();
+    };
+
+    // ==================== 页面回调钩子（设置保存逻辑） ====================
+    // 设置为店铺模式：邀请成员时无需选择店铺，直接加入当前店铺
+    window.MDHooks.inviteMode = 'shop';
+
+    window.MDHooks.onAddMember = function(formData) {
+      // 添加到当前店铺成员列表
+      var now = new Date();
+      var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
+      var newMember = {
+        id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+        accountId: formData.accountId,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || '',
+        orgDept: formData.orgDept,
+        orgTeam: formData.orgTeam,
+        orgSubTeam: formData.orgSubTeam || '',
+        stores: formData.stores,
+        type: 'invited',
+        joinedAt: joinedAt
+      };
+      var members = loadMembers();
+      members.push(newMember);
+      saveMembers(members);
+
+      // 同步到全局账号
+      var allAccounts = mdLoadAllAccounts();
+      if (!allAccounts.some(function(a) { return a.accountId === formData.accountId; })) {
+        allAccounts.push({ accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', createdAt: new Date().toISOString() });
+      }
+      mdSaveAllAccounts(allAccounts);
+
+      // 为每个选中店铺也添加成员
+      formData.stores.forEach(function(store) {
+        var key = 'rebecca_members_' + store.id;
+        var storeMems = []; try { var d = localStorage.getItem(key); if (d) storeMems = JSON.parse(d); } catch(e) {}
+        if (!storeMems.some(function(ex) { return ex.accountId === formData.accountId; })) {
+          storeMems.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: formData.accountId, name: formData.name, phone: formData.phone, email: formData.email || '', orgDept: formData.orgDept, orgTeam: formData.orgTeam, orgSubTeam: formData.orgSubTeam || '', stores: formData.stores, type: 'invited', joinedAt: joinedAt });
+          localStorage.setItem(key, JSON.stringify(storeMems));
+        }
+      });
+
+      currentPage = 1;
+      renderMembers();
+      showToast('success', '已添加成员「' + formData.name + '」');
+    };
+
+    window.MDHooks.onInviteMembers = function(data) {
+      var now = new Date();
+      var joinedAt = now.getFullYear() + '-' + mpad(now.getMonth()+1) + '-' + mpad(now.getDate()) + ' ' + mpad(now.getHours()) + ':' + mpad(now.getMinutes());
+      var members = loadMembers();
+
+      data.selectedMembers.forEach(function(m) {
+        if (members.some(function(ex) { return ex.accountId === m.accountId; })) return;
+        members.push({ id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2,6), accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, stores: data.selectedShops.map(function(s) { return { id: s.id, name: s.name, domain: s.domain, color: s.color }; }), type: 'invited', joinedAt: joinedAt });
+      });
+      saveMembers(members);
+
+      // 同步到全局账号
+      var allAccounts = mdLoadAllAccounts();
+      data.selectedMembers.forEach(function(m) {
+        if (!allAccounts.some(function(a) { return a.accountId === m.accountId; })) {
+          allAccounts.push({ accountId: m.accountId, name: m.name, phone: m.phone, orgDept: m.orgDept, orgTeam: m.orgTeam, orgSubTeam: m.orgSubTeam, createdAt: new Date().toISOString() });
+        }
+      });
+      mdSaveAllAccounts(allAccounts);
+
+      currentPage = 1;
+      renderMembers();
+      showToast('success', '已邀请 ' + data.selectedMembers.length + ' 名成员加入当前店铺');
+    };
+
+    // ==================== 移除成员 ====================/
+    function confirmRemoveMember(memberId, memberName) {
+      // 二次确认弹窗
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML = 
+        '<div class="dialog">' +
+          '<div class="dialog-header"><div class="dialog-title">确认移除成员</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
+          '<div class="dialog-desc">确定移除「' + memberName + '」对当前店铺的访问权限？<br>移除后该成员仍可登录，但将无法访问本店铺。</div>' +
+          '<div class="dialog-actions">' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button>' +
+            '<button class="btn btn-destructive" onclick="doRemoveMember(\'' + memberId + '\', this.closest(\'.dialog-overlay\'))">确认移除</button>' +
+          '</div>' +
+        '</div>';
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+    }
+
+    function doRemoveMember(memberId, overlay) {
+      var members = loadMembers();
+      var member = members.find(function(m) { return m.id === memberId; });
+      if (!member) { showToast('error', '成员不存在'); overlay.remove(); return; }
+      var idx = members.findIndex(function(m) { return m.id === memberId; });
+      if (idx > -1) {
+        members.splice(idx, 1);
+        saveMembers(members);
+        selectedMemberIds = [];
+        currentPage = 1;
+        renderMembers();
+        showToast('success', '已移除 ' + member.name);
+      }
+      overlay.remove();
+    }
+
+    // ==================== 批量移除 ====================/
+    function batchRemoveMembers() {
+      if (selectedMemberIds.length === 0) return;
+      var members = loadMembers();
+      var toRemove = members.filter(function(m) { return selectedMemberIds.indexOf(m.id) !== -1 && m.type !== 'creator'; });
+      if (toRemove.length === 0) { showToast('info', '未选择可移除的成员'); return; }
+
+      // 二次确认
+      var overlay = document.createElement('div');
+      overlay.className = 'dialog-overlay';
+      overlay.innerHTML =
+        '<div class="dialog">' +
+          '<div class="dialog-header"><div class="dialog-title">批量移除成员</div><button class="dialog-close" onclick="this.closest(\'.dialog-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>' +
+          '<div class="dialog-desc">确定移除选中的 <strong>' + toRemove.length + '</strong> 名成员吗？<br>移除后这些成员将无法访问当前店铺。</div>' +
+          '<div class="dialog-actions">' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.dialog-overlay\').remove()">取消</button>' +
+            '<button class="btn btn-destructive" id="confirmBatchRemoveBtn">确认移除</button>' +
+          '</div>' +
+        '</div>';
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+
+      document.getElementById('confirmBatchRemoveBtn').addEventListener('click', function() {
+        var currentMembers = loadMembers();
+        var removed = [];
+        var newMembers = currentMembers.filter(function(m) {
+          if (selectedMemberIds.indexOf(m.id) !== -1 && m.type !== 'creator') { removed.push(m); return false; }
+          return true;
+        });
+        saveMembers(newMembers);
+        selectedMemberIds = [];
+        currentPage = 1;
+        overlay.remove();
+        renderMembers();
+        showToast('success', '已移除 ' + removed.length + ' 名成员');
+      });
+    }
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      renderMembers();
+    });
+
+    function refreshPage() {
+      renderMembers();
+      showToast('success', '数据已刷新');
+    }
+  </script>
+</body>
+</html>

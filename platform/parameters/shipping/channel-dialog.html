@@ -1,0 +1,85 @@
+<!-- 添加/编辑渠道对话框 -->
+<div class="dialog-overlay" id="shippingChannelDialogOverlay" style="display:none;" onclick="closeShippingChannelDialog()">
+  <div class="dialog" style="width:560px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title" id="shippingChannelDialogTitle">添加渠道</span>
+      <button class="dialog-close" onclick="closeShippingChannelDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="shippingChannelMode" value="add">
+      <input type="hidden" id="shippingChannelEditId" value="">
+      <div class="form-group">
+        <label class="form-label">所属物流商</label>
+        <div style="font-size:14px;padding:8px 0;color:hsl(var(--muted-foreground));" id="shippingChannelProviderDisplay">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所属账号<span class="required-star">*</span></label>
+        <select class="form-input" id="shippingChannelAccount">
+          <option value="">请选择授权账号</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">渠道名称<span class="required-star">*</span></label>
+        <input class="form-input" id="shippingChannelName" placeholder="例如：FBA物流专线--美国、ES8美国空派">
+      </div>
+      <div class="form-group">
+        <label class="form-label">渠道代码<span class="required-star">*</span></label>
+        <input class="form-input" id="shippingChannelCode" placeholder="例如：FBA_US（唯一标识）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">服务类型<span class="required-star">*</span></label>
+        <select class="form-input" id="shippingChannelServiceType">
+          <option value="">请选择服务类型</option>
+          <option value="经济">经济</option>
+          <option value="标准">标准</option>
+          <option value="快速">快速</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">绑定国家/地区<span class="required-star">*</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="shippingChannelCountryTags"></div>
+        <button class="btn btn-secondary" type="button" onclick="openCountryPicker()" style="font-size:13px;">选择国家/地区</button>
+        <div class="form-hint">可配送的国家/地区，可多选</div>
+        <input type="hidden" id="shippingChannelCountries" value="[]">
+      </div>
+      <div class="form-group">
+        <label class="form-label">预估时效</label>
+        <input class="form-input" id="shippingChannelEstimatedDays" placeholder="例如：7-12工作日（选填）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <select class="form-input" id="shippingChannelStatus">
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" onclick="closeShippingChannelDialog()">取消</button>
+      <button class="btn btn-primary" onclick="submitShippingChannel()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 选择国家子对话框 -->
+<div class="dialog-overlay" id="countryPickerOverlay" style="display:none;z-index:10000;" onclick="closeCountryPicker()">
+  <div class="dialog" style="width:480px;max-height:500px;" onclick="event.stopPropagation()">
+    <div class="dialog-header">
+      <span class="dialog-title">选择配送国家/地区</span>
+      <button class="dialog-close" onclick="closeCountryPicker()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <input class="search-input" type="text" placeholder="搜索国家..." oninput="filterCountryPicker()" id="countryPickerSearch" style="margin-bottom:12px;width:100%;">
+      <div style="max-height:300px;overflow-y:auto;" id="countryPickerList"></div>
+    </div>
+    <div class="dialog-actions">
+      <span style="flex:1;font-size:13px;color:hsl(var(--muted-foreground));">已选 <strong id="countryPickerCount">0</strong> 个</span>
+      <button class="btn" onclick="closeCountryPicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmCountryPicker()">确定</button>
+    </div>
+  </div>
+</div>

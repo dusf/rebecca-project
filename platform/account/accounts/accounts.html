@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中台账号 - 中台管理</title>
+  <link rel="stylesheet" href="../../common/css/platform.css">
+  <link rel="stylesheet" href="css/accounts.css">
+</head>
+<body>
+  <div class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">中台账号<span class="count-badge" id="accountCount"></span></div>
+        <div class="page-subtitle">管理员为他人开设中台登录账号，使用手机号作为登录凭证</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" onclick="handleAdd()">+ 添加账号</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" type="text" placeholder="搜索姓名/手机号/账号ID/邮箱..." oninput="filterAccounts()" id="accountSearch">
+        <select class="filter-select" onchange="filterAccounts()" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="active">启用</option>
+          <option value="disabled">停用</option>
+        </select>
+        <div style="position:relative;display:inline-flex;flex-shrink:0;" title="所属组织"><div id="orgFilterTreeSelect"></div></div>
+        <input class="search-input" type="date" onchange="filterAccounts()" id="dateStart" title="创建时间起" style="width:150px;min-width:150px;">
+        <span style="color:hsl(var(--muted-foreground));font-size:13px;">至</span>
+        <input class="search-input" type="date" onchange="filterAccounts()" id="dateEnd" title="创建时间止" style="width:150px;min-width:150px;">
+      </div>
+    </div>
+
+    <!-- 批量操作栏（始终可见） -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+      <div class="bulk-selected-count">已选 <span class="count" id="puSelectedCount">0</span> 条</div>
+      <div class="bulk-actions">
+        <button class="btn btn-success btn-sm" onclick="puDoBatchAction('enable')" disabled>批量启用</button>
+        <button class="btn btn-destructive btn-sm" onclick="puDoBatchAction('disable')" disabled>批量停用</button>
+        <button class="btn btn-secondary btn-sm" onclick="puDoBatchAction('delete')" disabled>批量删除</button>
+        <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+          <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="puToggleMoreActions()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            更多操作
+          </button>
+        </div>
+        <div class="custom-col-wrapper" id="customColWrapper">
+          <button class="btn btn-secondary btn-sm" onclick="puToggleCustomColPanel()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            自定义列
+          </button>
+        </div>
+        <div class="custom-col-wrapper">
+          <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><div class="checkbox" onclick="puToggleAllCheckboxes(this, 'accountTableBody')"></div></th>
+              <th>成员信息</th>
+              <th class="sortable" data-sort="phone">手机号<span class="sort-icon"></span></th>
+              <th>组织</th>
+              <th>邮箱</th>
+              <th class="sortable sorted" data-sort="createdAt">创建时间<span class="sort-icon">▼</span></th>
+              <th>状态</th>
+              <th data-col="actions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="accountTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar" id="accountsPagination"></div>
+    </div>
+  </div>
+
+  <!-- 自定义列面板 -->
+  <div class="custom-col-panel" id="customColPanel">
+    <div class="custom-col-header">选择显示列</div>
+    <div class="custom-col-body" id="customColBody"></div>
+    <div class="custom-col-footer">
+      <button class="btn btn-text btn-sm" onclick="puResetCustomCols()">恢复默认</button>
+    </div>
+  </div>
+
+  <!-- 更多操作下拉 -->
+  <div class="more-actions-dropdown" id="moreActionsDropdown" style="display:none;">
+    <div class="more-actions-item" onclick="puDoMoreAction('resetPwd')">批量重置密码</div>
+  </div>
+
+  <script src="../../common/js/page_utils.js"></script>
+  <script src="../../common/js/org_tree_select.js"></script>
+  <script src="js/accounts.js"></script>
+</body>
+</html>

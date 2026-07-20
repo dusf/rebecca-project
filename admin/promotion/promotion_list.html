@@ -318,7 +318,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="15" y1="15" x2="9" y2="15"/></svg>
                 批量创建
               </button>
-              <button class="btn btn-primary btn-sm" onclick="openCreateDialog()">
+              <button class="btn btn-primary btn-sm" onclick="navigateToPage('add_promotion.html')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 创建折扣
               </button>
@@ -606,7 +606,7 @@
             var actions = [];
             if (p.shareUrl) actions.push('<div class="action-btn" title="分享链接" onclick="openShareDialog(' + p.id + ')">' + svgIcon.link + '</div>');
             actions.push('<div class="action-btn" title="查看数据" onclick="openAnalyticsDialog(' + p.id + ')">' + svgIcon.barChart + '</div>');
-            actions.push('<div class="action-btn" title="编辑" onclick="openEditDialog(' + p.id + ')">' + svgIcon.edit + '</div>');
+            actions.push('<div class="action-btn" title="编辑" onclick="sessionStorage.setItem(\'editPromotionId\',\'' + p.id + '\');navigateToPage(\'edit_promotion.html\')">' + svgIcon.edit + '</div>');
             if (p.status === 'active') {
               actions.push('<div class="action-btn" title="禁用" style="color:hsl(var(--warning));" onclick="togglePromoStatus(' + p.id + ', \'disabled\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>');
             } else if (p.status === 'disabled' || p.status === 'expired') {
@@ -956,171 +956,10 @@
       return '<button class="promo-dialog-close" onclick="window.pCloseOverlay()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
     }
 
-    // 暴露到父窗口（对话框 HTML 注入到父页面，onclick 在父窗口上下文中执行）
-    window.parent.pCloseOverlay = pCloseOverlay;
+    // 创建折扣已改为下钻页面 add_promotion.html
+    // 编辑折扣已改为下钻页面 edit_promotion.html
 
-    // ==================== 创建折扣对话框 ====================
-    function openCreateDialog() {
-      var step = 1;
-      var selType = '';
-      var selDistribution = 'manual';
-      var selScope = 'all';
-      var scopeData = { scope: 'all', targets: [], labels: '全站' };
-      var stackable = { with_shipping_discount: true, with_points: true, with_gift_card: true, with_other_discount: false, with_bxgy: false, with_automatic_discount: false };
-      var eligibility = 'all';
-      var codeValue = '';
-
-      // 模拟数据源
-      var seriesList = ['女士全头套', '女士接发', '发饰配件', '护理产品', '定制假发'];
-      var productList = ['奢华全蕾丝发套', '自然波浪接发', '韩式空气刘海发套', '丝绸护理精油', '发网套装', '卷发棒'];
-      var skuList = ['18寸 - 自然黑', '18寸 - 深棕', '20寸 - 自然黑', '20寸 - 深棕', '22寸 - 蜂蜜金'];
-
-      function buildScopeOptions() {
-        return seriesList.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
-      }
-      function buildProductOptions() {
-        return productList.map(function(p) { return '<option value="' + p + '">' + p + '</option>'; }).join('');
-      }
-      function buildSkuOptions() {
-        return skuList.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
-      }
-
-      function buildStep1() {
-        var types = [
-          { key: 'order_amount', title: '满减券', desc: '订单总金额减固定金额', icon: '💵' },
-          { key: 'order_percent', title: '满折券', desc: '订单总金额打 X 折', icon: '🏷️' },
-          { key: 'product_discount', title: '单品券', desc: '指定商品/系列折扣', icon: '🎁' },
-          { key: 'free_shipping', title: '包邮券', desc: '满足门槛后免运费', icon: '🚚' },
-          { key: 'bxgy', title: '买 X 得 Y', desc: '买赠/第2件半价/换购', icon: '🛍️' },
-        ];
-        return types.map(function(t) {
-          return '<div class="type-option-card' + (selType === t.key ? ' selected' : '') + '" onclick="window._pselType(\'' + t.key + '\')"><div class="tc-icon">' + t.icon + '</div><div class="tc-title">' + t.title + '</div><div class="tc-desc">' + t.desc + '</div></div>';
-        }).join('');
-      }
-
-      function buildStep2() {
-        var html = '';
-        if (selType === 'order_amount') {
-          html += '<div class="form-group"><label class="form-label">优惠金额</label><div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--foreground));z-index:1;">$</span><input type="number" class="form-input" id="dcValue" placeholder="输入金额" style="padding-left:28px;" min="1" step="0.01" /></div><div class="form-hint">输入固定减扣金额</div></div>';
-          html += '<div class="form-group"><label class="form-label">最低订单金额门槛（选填）</label><div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--foreground));z-index:1;">$</span><input type="number" class="form-input" id="dcMinAmount" placeholder="不填则无门槛" style="padding-left:28px;" min="0" step="0.01" /></div><div class="form-hint">满足最低金额后才能使用该优惠</div></div>';
-        } else if (selType === 'order_percent') {
-          html += '<div class="form-group"><label class="form-label">折扣百分比</label><div style="position:relative;"><input type="number" class="form-input" id="dcValue" placeholder="输入百分比" min="1" max="99" step="1" /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--muted-foreground));">%</span></div><div class="form-hint">如 10 表示 10% OFF（即 9 折）</div></div>';
-          html += '<div class="form-group"><label class="form-label">最低订单金额门槛（选填）</label><div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--foreground));z-index:1;">$</span><input type="number" class="form-input" id="dcMinAmount" placeholder="不填则无门槛" style="padding-left:28px;" min="0" step="0.01" /></div></div>';
-        } else if (selType === 'product_discount') {
-          html += '<div class="form-group"><label class="form-label">折扣值</label><div style="position:relative;"><input type="number" class="form-input" id="dcValue" placeholder="如 15 表示 85 折" min="1" max="99" step="1" /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--muted-foreground));">% OFF</span></div><div class="form-hint">仅对指定商品/系列生效的折扣率</div></div>';
-        } else if (selType === 'free_shipping') {
-          html += '<div class="form-group"><label class="form-label">免邮门槛</label><div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:hsl(var(--foreground));z-index:1;">满 $</span><input type="number" class="form-input" id="dcMinAmount" placeholder="不填则无门槛" style="padding-left:42px;" min="0" step="0.01" /></div><div class="form-hint">订单金额达到此门槛自动免运费</div></div>';
-        } else if (selType === 'bxgy') {
-          html += '<div class="form-group"><label class="form-label">触发条件</label><div class="form-row"><div style="flex:1;"><label style="font-size:12px;color:hsl(var(--muted-foreground));">买</label><input type="number" class="form-input" id="bxTriggerQty" placeholder="件数" min="1" value="2" /></div><div style="flex:1;"><label style="font-size:12px;color:hsl(var(--muted-foreground));">件</label></div></div></div>';
-          html += '<div class="form-group"><label class="form-label">奖励类型</label><select class="form-select" id="bxRewardType" onchange="window._bxRewardChange()"><option value="free">免费送</option><option value="discount">打折</option><option value="fixed_price">加价换购</option></select></div>';
-          html += '<div class="form-group" id="bxRewardSection"><label class="form-label">送</label><div class="form-row"><div style="flex:1;"><input type="number" class="form-input" id="bxRewardQty" placeholder="件数" min="1" value="1" /></div><div style="flex:1;"><label style="font-size:12px;color:hsl(var(--muted-foreground));">件</label></div></div></div>';
-          html += '<div class="form-group"><label class="form-label">奖励应用对象</label><select class="form-select" id="bxTargetType"><option value="cheapest">最便宜的商品</option><option value="same">同款商品</option><option value="specific">指定商品</option></select></div>';
-        }
-        return html;
-      }
-
-      function buildStep3() {
-        var html = '<div class="form-radio-group" style="margin-bottom:16px;">';
-        html += '<label class="form-inline-label"><input type="radio" name="appScope" value="all" ' + (selScope === 'all' ? 'checked' : '') + ' onchange="window._pScopeChange(\'all\')" /> 全站（所有商品）</label>';
-        html += '<label class="form-inline-label"><input type="radio" name="appScope" value="series" ' + (selScope === 'series' ? 'checked' : '') + ' onchange="window._pScopeChange(\'series\')" /> 指定系列</label>';
-        html += '<label class="form-inline-label"><input type="radio" name="appScope" value="product" ' + (selScope === 'product' ? 'checked' : '') + ' onchange="window._pScopeChange(\'product\')" /> 指定商品</label>';
-        html += '<label class="form-inline-label"><input type="radio" name="appScope" value="sku" ' + (selScope === 'sku' ? 'checked' : '') + ' onchange="window._pScopeChange(\'sku\')" /> 指定 SKU</label>';
-        html += '</div>';
-
-        if (selScope !== 'all') {
-          var label = selScope === 'series' ? '选择系列' : (selScope === 'product' ? '选择商品' : '选择 SKU');
-          var options = selScope === 'series' ? buildScopeOptions() : (selScope === 'product' ? buildProductOptions() : buildSkuOptions());
-          html += '<div class="form-group" id="scopeTargetGroup"><label class="form-label">' + label + '</label><select class="form-select" id="scopeTarget" multiple style="min-height:120px;">' + options + '</select><div class="form-hint">可多选（Ctrl/Cmd + 点击）</div></div>';
-        }
-
-        html += '<div class="exclude-options" style="margin-top:24px;"><div style="font-weight:500;font-size:14px;margin-bottom:8px;">排除项</div>';
-        html += '<label class="exclude-option-disabled"><input type="checkbox" checked disabled /> 排除礼品卡（强制，不可取消）</label>';
-        html += '<label><input type="checkbox" id="dcExcludeDiscounted" /> 排除已折扣商品</label></div>';
-        return html;
-      }
-
-      function buildStep4() {
-        var html = '<div class="form-radio-group" style="margin-bottom:16px;">';
-        html += '<label class="form-inline-label"><input type="radio" name="distType" value="manual" ' + (selDistribution === 'manual' ? 'checked' : '') + ' onchange="window._pDistChange(\'manual\')" /> 折扣码（手动输入）</label>';
-        html += '<label class="form-inline-label"><input type="radio" name="distType" value="automatic" ' + (selDistribution === 'automatic' ? 'checked' : '') + ' onchange="window._pDistChange(\'automatic\')" /> 自动折扣（满足条件自动生效）</label>';
-        html += '</div>';
-        if (selDistribution === 'manual') {
-          html += '<div class="form-group" id="codeInputGroup"><label class="form-label">折扣码</label><input type="text" class="form-input" id="dcCode" placeholder="如 WELCOME10（大写英文，无空格）" style="text-transform:uppercase;" value="' + codeValue + '" /><div class="form-hint">命名规范：大写英文，无空格，避开 0/O、1/I</div></div>';
-        } else {
-          html += '<div style="padding:16px;background:hsl(var(--muted));border-radius:10px;font-size:13px;color:hsl(var(--muted-foreground));">⚠️ 自动折扣和手动折扣码不可同时生效（互斥），结算时只取最优优惠。</div>';
-        }
-        return html;
-      }
-
-      function buildStep5() {
-        var html = '<div class="form-group"><label class="form-label">使用权限</label>';
-        html += '<select class="form-select" id="dcEligibility"><option value="all">全部客户</option><option value="new_customer">新客专属</option><option value="tag">指定客户标签</option><option value="specific">指定客户 ID 列表</option></select></div>';
-        html += '<div class="form-row"><div class="form-group"><label class="form-label">每客户限用次数</label><input type="number" class="form-input" id="dcLimitPerCustomer" value="1" min="0" /><div class="form-hint">0 为不限</div></div><div class="form-group"><label class="form-label">全店总核销上限</label><input type="number" class="form-input" id="dcLimitTotal" value="500" min="0" /><div class="form-hint">0 为不限</div></div></div>';
-        html += '<div class="form-row"><div class="form-group"><label class="form-label">生效时间</label><input type="datetime-local" class="form-input" id="dcStartsAt" value="2026-08-01T00:00" /></div><div class="form-group"><label class="form-label">失效时间</label><input type="datetime-local" class="form-input" id="dcEndsAt" value="2026-08-15T23:59" /></div></div>';
-        html += '<div class="form-hint" style="color:hsl(var(--warning));">⚠️ 时区跟随店铺后台时区，禁止设置永久有效。</div>';
-        return html;
-      }
-
-      function buildStep6() {
-        var items = [
-          { key: 'with_shipping_discount', label: '可与包邮券叠加', desc: '折扣券 + 包邮券' },
-          { key: 'with_points', label: '可与积分抵扣叠加', desc: '折扣券 + 积分抵扣' },
-          { key: 'with_gift_card', label: '可与礼品卡余额叠加', desc: '折扣券 + 礼品卡' },
-          { key: 'with_other_discount', label: '与其他折扣券可叠加', desc: '多张折扣券同时使用' },
-          { key: 'with_bxgy', label: '与买X得Y可叠加', desc: '折扣券 + 买X得Y活动' },
-          { key: 'with_automatic_discount', label: '与自动折扣可叠加', desc: '手动码 + 自动折扣（取最优）' },
-        ];
-        return '<div class="stackable-grid">' + items.map(function(item) {
-          return '<div class="stackable-item" onclick="window._pToggleStackable(\'' + item.key + '\')"><div><div class="si-label">' + item.label + '</div><div class="si-desc">' + item.desc + '</div></div><div class="toggle-switch' + (stackable[item.key] ? ' on' : '') + '" id="st_' + item.key + '"></div></div>';
-        }).join('') + '</div>';
-      }
-
-      function buildDialog() {
-        var steps = ['选择类型', '设置优惠', '应用范围', '发放方式', '使用限制', '叠加规则'];
-        var stepHtml = '<div class="step-indicator">' + steps.map(function(s, i) {
-          var cls = (i + 1) === step ? ' active' : ((i + 1) < step ? ' done' : '');
-          var lineHtml = i < steps.length - 1 ? '<div class="step-line' + ((i + 1) < step ? ' done' : '') + '"></div>' : '';
-          return '<div class="step-item"><div class="step-circle' + cls + '">' + ((i + 1) < step ? '\u2713' : (i + 1)) + '</div><span class="step-label' + cls + '">' + s + '</span>' + lineHtml + '</div>';
-        }).join('') + '</div>';
-
-        var bodyHtml = '';
-        bodyHtml += '<div class="step-content' + (step === 1 ? ' active' : '') + '" id="stepContent1"><div class="type-option-cards">' + buildStep1() + '</div></div>';
-        bodyHtml += '<div class="step-content' + (step === 2 ? ' active' : '') + '" id="stepContent2">' + buildStep2() + '</div>';
-        bodyHtml += '<div class="step-content' + (step === 3 ? ' active' : '') + '" id="stepContent3">' + buildStep3() + '</div>';
-        bodyHtml += '<div class="step-content' + (step === 4 ? ' active' : '') + '" id="stepContent4">' + buildStep4() + '</div>';
-        bodyHtml += '<div class="step-content' + (step === 5 ? ' active' : '') + '" id="stepContent5">' + buildStep5() + '</div>';
-        bodyHtml += '<div class="step-content' + (step === 6 ? ' active' : '') + '" id="stepContent6">' + buildStep6() + '</div>';
-
-        var actionsHtml = '';
-        if (step > 1) actionsHtml += '<button class="btn btn-secondary btn-sm" onclick="window._pPrevStep()">上一步</button>';
-        if (step < 6) actionsHtml += '<button class="btn btn-primary btn-sm" onclick="window._pNextStep()">下一步</button>';
-        else actionsHtml += '<button class="btn btn-primary btn-sm" onclick="window._pSubmitCreate()">创建折扣</button>';
-
-        return '<div class="promo-dialog-overlay" onclick="if(event.target===this)window.pCloseOverlay()"><div class="promo-dialog wide"><div class="promo-dialog-header">' + pCloseBtn() + '<span class="promo-dialog-title">创建折扣</span></div><div class="promo-dialog-body">' + stepHtml + bodyHtml + '</div><div class="promo-dialog-actions">' + actionsHtml + '</div></div></div>';
-      }
-
-      function renderDialog() { pOpenOverlay(buildDialog()); bindStepCalls(); }
-
-      function bindStepCalls() {
-        window.parent._pselType = function(t) { selType = t; step = 2; renderDialog(); };
-        window.parent._pNextStep = function() { step = Math.min(6, step + 1); renderDialog(); };
-        window.parent._pPrevStep = function() { step = Math.max(1, step - 1); renderDialog(); };
-        window.parent._pScopeChange = function(s) { selScope = s; renderDialog(); };
-        window.parent._pDistChange = function(d) { selDistribution = d; renderDialog(); };
-        window.parent._pToggleStackable = function(key) { stackable[key] = !stackable[key]; renderDialog(); };
-        window.parent._bxRewardChange = function() { /* handled on next render */ };
-        window.parent._pSubmitCreate = function() {
-          pCloseOverlay();
-          notify('折扣创建成功！');
-          refreshPage();
-        };
-      }
-
-      bindStepCalls();
-      renderDialog();
-    }
-
-    // ==================== 编辑折扣对话框 ====================
+    // 旧编辑对话框保留配置（如有需要后续移除）
     function openEditDialog(id) {
       var p = promotions.find(function(pr) { return pr.id === id; });
       if (!p) return;

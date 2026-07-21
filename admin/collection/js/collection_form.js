@@ -454,11 +454,11 @@ function saveCollection() {
     saveCollections(collections);
     showToast('success', '系列创建成功');
   }
-  setTimeout(function() { navigateToPage('collection_list.html'); }, 600);
+  setTimeout(function() { navigateToPage('collection/collection_list.html'); }, 600);
 }
 
 function cancelForm() {
-  navigateToPage('collection_list.html');
+  navigateToPage('collection/collection_list.html');
 }
 
 // ==================== 初始化 ====================

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="css/page_list.css?v=3">
+  <link rel="stylesheet" href="css/article_list.css?v=3">
+</head>
+<body>
+
+<div class="content">
+  <div class="page active" id="page-content-articles">
+
+    <!-- 内容管理 Tab 导航 -->
+    <div class="content-tabs">
+      <div class="content-tab" onclick="switchContentTab('pages')">页面</div>
+      <div class="content-tab active" onclick="switchContentTab('articles')">文章</div>
+      <!-- <div class="content-tab" onclick="switchContentTab('faq')">帮助中心</div> -->
+    </div>
+
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-title">文章管理<span class="count-badge" id="articleCount">(0个)</span></div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary" onclick="openCatListDialog()">管理分类</button>
+        <button class="btn btn-primary" onclick="navigateToPage('content/article_edit.html')">+ 新建文章</button>
+      </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrapper">
+          <input type="text" class="search-input" id="articleSearch" placeholder="搜索文章标题...">
+        </div>
+        <select class="filter-select" id="articleStatusFilter">
+          <option value="">全部状态</option>
+          <option value="published">已发布</option>
+          <option value="draft">草稿</option>
+          <option value="scheduled">定时</option>
+        </select>
+        <select class="filter-select" id="articleCategoryFilter">
+          <option value="">全部分类</option>
+        </select>
+        <select class="filter-select" id="articleTagFilter">
+          <option value="">全部标签</option>
+        </select>
+      </div>
+      <div class="toolbar-right"></div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-card">
+      <!-- 批量操作栏 -->
+      <div class="bulk-action-bar" id="aBulkActionBar">
+        <div class="bulk-selected-count">已选 <span class="count" id="aSelectedCount">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-primary btn-sm" id="aBtnBatchPublish" onclick="abatchPublish()" disabled>批量发布</button>
+          <button class="btn btn-secondary btn-sm" id="aBtnBatchDraft" onclick="abatchDraft()" disabled>批量草稿</button>
+          <button class="btn btn-destructive btn-sm" id="aBtnBatchDelete" onclick="abatchDelete()" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="aMoreActionsWrapper" style="position:relative;">
+            <button class="btn btn-secondary btn-sm" id="aBtnMoreActions" onclick="atoggleMoreActions()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              更多操作
+            </button>
+          </div>
+          <div class="custom-col-wrapper">
+            <button class="btn btn-secondary btn-sm" onclick="atoggleColumnPanel()" id="aBtnCustomCols">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              自定义列
+            </button>
+          </div>
+          <div class="custom-col-wrapper">
+            <button class="btn btn-secondary btn-sm" onclick="arefreshPage()" title="刷新">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr id="articleTableHead"></tr></thead>
+          <tbody id="articleTableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="pagination-bar">
+        <span class="pagination-info" id="articlePaginationInfo">显示 0 条，共 0 条</span>
+        <div class="pagination-buttons" id="articlePaginationBtns"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 更多操作下拉 -->
+<div class="more-actions-dropdown" id="aMoreActionsDropdown">
+  <div class="more-actions-item" onclick="abatchPublish()">批量发布</div>
+  <div class="more-actions-item" onclick="abatchDraft()">批量设为草稿</div>
+  <div class="more-actions-item danger" onclick="abatchDelete()">批量删除</div>
+</div>
+
+<!-- 自定义列面板 -->
+<div class="custom-col-panel" id="aCustomColPanel" style="display:none;">
+  <div class="custom-col-panel-header">
+    <span style="font-weight:600;font-size:14px;">自定义列</span>
+    <button class="btn btn-sm btn-ghost" onclick="aresetCustomCols()">恢复默认</button>
+  </div>
+  <div class="custom-col-body" id="aCustomColBody"></div>
+</div>
+
+<!-- 分类列表对话框 -->
+<div class="dialog-overlay" id="catListDialogOverlay" style="display:none;">
+  <div class="dialog" style="width:640px;min-height:360px;max-height:85vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="dialog-header">
+      <div class="dialog-title">文章分类管理</div>
+      <div class="dialog-close" onclick="closeCatListDialog()">&times;</div>
+    </div>
+    <div class="dialog-body" style="display:flex;flex-direction:column;gap:16px;flex:1;">
+      <div>
+        <button class="btn btn-primary" onclick="openCatFormDialog()">+ 新建分类</button>
+      </div>
+      <div class="cat-list" id="catManageList" style="border:1px solid hsl(var(--border));border-radius:8px;overflow:hidden;"></div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" onclick="closeCatListDialog()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加/编辑分类对话框 -->
+<div class="dialog-overlay" id="catFormDialogOverlay" style="display:none;">
+  <div class="dialog" style="width:640px;min-height:500px;max-height:85vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="dialog-header">
+      <div class="dialog-title" id="catFormTitle">添加新分类</div>
+      <div class="dialog-close" onclick="closeCatFormDialog()">&times;</div>
+    </div>
+    <div class="dialog-body" style="display:flex;flex-direction:column;gap:20px;flex:1;">
+      <!-- 封面图 -->
+      <div class="form-group">
+        <label class="form-label">分类封面图</label>
+        <div class="cover-upload-sm">
+          <input type="file" id="catCoverInput" accept="image/*" onchange="handleCatCoverFile(this)" style="display:none;">
+          <img class="cover-thumb-sm" id="catCoverThumb" src="" style="display:none;" alt="">
+          <div class="cover-thumb-sm-placeholder" id="catCoverPlaceholder" onclick="document.getElementById('catCoverInput').click()" title="上传分类封面图">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div style="font-size:11px;color:hsl(var(--muted-foreground));">推荐 400×300px<br>点击缩略图区域上传</div>
+          <button type="button" class="btn btn-sm btn-ghost" id="catCoverRemoveBtn" style="display:none;" onclick="removeCatCover()">移除</button>
+        </div>
+      </div>
+      <!-- 名称与描述（多语言动态生成） -->
+      <div id="catFormFields"></div>
+      <div class="form-actions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn btn-ghost" onclick="closeCatFormDialog()">取消</button>
+        <button class="btn btn-primary" onclick="upsertCategory()" id="catSubmitBtn">添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../common/js/commons.js?v=3"></script>
+<script src="js/article_list.js?v=3"></script>
+
+</body>
+</html>

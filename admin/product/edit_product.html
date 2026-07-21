@@ -1503,7 +1503,7 @@
             <div class="add-product-header">
               <div class="page-title">编辑产品</div>
               <div class="add-product-actions">
-                <button class="btn btn-secondary" onclick="navigateToPage('product_list.html')">取消</button>
+                <button class="btn btn-secondary" onclick="navigateToPage('product/product_list.html')">取消</button>
                 <button class="btn btn-primary" onclick="updateProduct()">保存修改</button>
               </div>
             </div>
@@ -1780,12 +1780,12 @@
                 <div class="sidebar-card">
                   <div class="sidebar-card-title">SEO 配置</div>
                   <div class="form-group">
-                    <label class="form-label">网页标题</label>
-                    <input class="form-input" type="text" id="seoTitle" placeholder="请输入网页标题" />
+                    <label class="form-label"><span>网页标题</span><span class="char-count" id="seoTitleCount">0/70</span></label>
+                    <input class="form-input" type="text" id="seoTitle" placeholder="请输入网页标题" maxlength="70" oninput="updateCharCount(this, 'seoTitleCount', 70)" />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">网页描述</label>
-                    <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" style="min-height: 80px; resize: vertical;"></textarea>
+                    <label class="form-label"><span>网页描述</span><span class="char-count" id="seoDescCount">0/160</span></label>
+                    <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" style="min-height: 80px; resize: vertical;" maxlength="160" oninput="updateCharCount(this, 'seoDescCount', 160)"></textarea>
                   </div>
                   <div class="form-group">
                     <label class="form-label">URL 网址名称</label>
@@ -1905,7 +1905,9 @@
       document.getElementById('productPackWid').value = product.pack_wid || 0;
       document.getElementById('productPackHgt').value = product.pack_hgt || 0;
       document.getElementById('seoTitle').value = product.seoTitle || '';
+      updateCharCount(document.getElementById('seoTitle'), 'seoTitleCount', 70);
       document.getElementById('seoDesc').value = product.seoDesc || '';
+      updateCharCount(document.getElementById('seoDesc'), 'seoDescCount', 160);
       document.getElementById('seoSlug').value = product.seoSlug || '';
       document.getElementById('spuTag').textContent = product.spu || '--';
 
@@ -2003,7 +2005,7 @@
       product.updateDate = new Date().toISOString().split('T')[0];
 
       showToast('success', '产品「' + title + '」已更新！');
-      setTimeout(function() { navigateToPage('product_list.html'); }, 800);
+      setTimeout(function() { navigateToPage('product/product_list.html'); }, 800);
     }
 
     // ==================== 保存草稿 ====================

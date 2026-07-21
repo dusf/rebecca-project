@@ -77,9 +77,9 @@
         if (saved) return JSON.parse(saved);
       } catch (e) { /* ignore */ }
       return [
-        { id: 'shop_qvr', name: 'QVR品牌站', slug: 'qvr', description: '专注于时尚服饰品牌', logo: '', domain: 'qvr.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#D4845A', createdAt: '2026-06-15', productCount: 128 },
-        { id: 'shop_fashion', name: 'Fashion Plus', slug: 'fashion', description: '欧美潮流女装精选', logo: '', domain: 'fashion.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#8B9A7C', createdAt: '2026-06-20', productCount: 56 },
-        { id: 'shop_tokyo', name: 'Tokyo Select', slug: 'tokyo', description: '日本精选好物', logo: '', domain: 'tokyo.rebeccashop.com', customDomain: '', domainStatus: 'disabled', status: 'disabled', color: '#7C8B9A', createdAt: '2026-07-01', productCount: 0 }
+        { id: 'shop_qvr', name: 'QVR品牌站', slug: 'qvr', description: '专注于时尚服饰品牌', logo: '', domain: 'qvr.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#D4845A', createdAt: '2026-06-15', productCount: 128, languages: ['中文简体', 'English'], defaultLanguage: '中文简体' },
+        { id: 'shop_fashion', name: 'Fashion Plus', slug: 'fashion', description: '欧美潮流女装精选', logo: '', domain: 'fashion.rebeccashop.com', customDomain: '', domainStatus: 'active', status: 'active', color: '#8B9A7C', createdAt: '2026-06-20', productCount: 56, languages: ['English', 'Français'], defaultLanguage: 'English' },
+        { id: 'shop_tokyo', name: 'Tokyo Select', slug: 'tokyo', description: '日本精选好物', logo: '', domain: 'tokyo.rebeccashop.com', customDomain: '', domainStatus: 'disabled', status: 'disabled', color: '#7C8B9A', createdAt: '2026-07-01', productCount: 0, languages: ['日本語', 'English'], defaultLanguage: '日本語' }
       ];
     }
 
@@ -112,26 +112,91 @@
       return name.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '') || 'store';
     }
 
+    // ==================== 多语言映射与工具 ====================
+    var LANG_DISPLAY_TO_LOCALE = {
+      '中文简体': { key: 'zh_CN', label: '中文(简体)', flag: '🇨🇳' },
+      '中文繁體': { key: 'zh_TW', label: '中文(繁體)', flag: '🇭🇰' },
+      'English':   { key: 'en_US', label: 'English',   flag: '🇺🇸' },
+      '日本語':    { key: 'ja_JP', label: '日本語',    flag: '🇯🇵' },
+      '한국어':    { key: 'ko_KR', label: '한국어',    flag: '🇰🇷' },
+      'Français':  { key: 'fr_FR', label: 'Français',  flag: '🇫🇷' },
+      'Deutsch':   { key: 'de_DE', label: 'Deutsch',   flag: '🇩🇪' },
+      'Español':   { key: 'es_ES', label: 'Español',   flag: '🇪🇸' },
+      'Italiano':  { key: 'it_IT', label: 'Italiano',  flag: '🇮🇹' },
+      'Português': { key: 'pt_PT', label: 'Português', flag: '🇵🇹' },
+      'Svenska':   { key: 'sv_SE', label: 'Svenska',   flag: '🇸🇪' },
+      'العربية':  { key: 'ar_SA', label: 'العربية',   flag: '🇸🇦' },
+    };
+
+    function getShopSupportedLocales() {
+      var shop = getCurrentShop();
+      if (!shop || !shop.languages || !shop.languages.length) {
+        return [
+          { key: 'zh_CN', label: '中文', flag: '🇨🇳' },
+          { key: 'en_US', label: 'English', flag: '🇺🇸' },
+        ];
+      }
+      return shop.languages.map(function(lang) {
+        var info = LANG_DISPLAY_TO_LOCALE[lang];
+        if (info) return { key: info.key, label: info.label, flag: info.flag };
+        return { key: lang.toLowerCase().replace(/\s+/g, '_'), label: lang, flag: '' };
+      });
+    }
+
+    function getShopLocaleMap() {
+      var locales = getShopSupportedLocales();
+      var map = {};
+      locales.forEach(function(loc) {
+        map[loc.key] = (loc.flag ? loc.flag + ' ' : '') + loc.label;
+      });
+      return map;
+    }
+
+    function getShopDefaultLocale() {
+      var shop = getCurrentShop();
+      if (shop && shop.defaultLanguage) {
+        var info = LANG_DISPLAY_TO_LOCALE[shop.defaultLanguage];
+        if (info) return info.key;
+      }
+      var locales = getShopSupportedLocales();
+      return locales.length > 0 ? locales[0].key : 'zh_CN';
+    }
+
+    function getShopLocaleLabel(localeKey) {
+      var locales = getShopSupportedLocales();
+      for (var i = 0; i < locales.length; i++) {
+        if (locales[i].key === localeKey) {
+          return (locales[i].flag ? locales[i].flag + ' ' : '') + locales[i].label;
+        }
+      }
+      return localeKey;
+    }
+
     // ==================== 路由映射 ====================
     const PAGE_ROUTES = {
       'products':      'product/product_list.html',
       'add-product':   'product/add_product.html',
       'categories':    'category/category_list.html',
       'attributes':    'attribute/attribute_list.html',
-
-      'settings':      'shop/shop_settings.html'
+      'settings':      'shop/shop_settings.html',
+      'content':         'content/page_list.html',
+      'content-pages':     'content/page_list.html',
+      'content-articles':  'content/article_list.html',
+      'content-faq':       'content/faq_list.html',
+      'content-page-edit': 'content/page_edit.html',
+      'content-article-edit': 'content/article_edit.html',
+      'content-faq-edit':  'content/faq_edit.html',
     };
 
     // ==================== iframe 兼容的页面跳转 ====================
-    function navigateToPage(url) {
-      if (window.self !== window.top && window.parent.changeIframeSrc) {
-        var a = document.createElement('a');
-        a.href = url;
-        window.parent.changeIframeSrc(a.pathname + a.search + a.hash);
-      } else {
+function navigateToPage(url) {
+    if (window.self !== window.top && window.parent.changeIframeSrc) {
+        // 直接传递相对 URL，不做 a.href 解析，避免 iframe 内相对路径被重复拼接
+        window.parent.changeIframeSrc(url);
+    } else {
         window.location.href = url;
-      }
     }
+}
 
     // ==================== 侧边栏渲染 ====================
     function renderSidebar(activePage) {
@@ -1131,7 +1196,7 @@
     // ==================== 编辑产品 ====================
     function editProduct(productId) {
       sessionStorage.setItem('editProductId', productId);
-      navigateToPage('edit_product.html');
+      navigateToPage('product/edit_product.html');
     }
 
     function getCollectionViewUrl(collection) {

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑页面</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="css/page_form.css?v=3">
+</head>
+<body>
+
+<div class="edit-container">
+
+  <!-- 页面头部 -->
+  <div class="edit-header">
+    <div class="page-title" id="pageTitle">新建页面</div>
+    <div class="edit-actions">
+      <button class="btn btn-secondary" onclick="goBack()">取消</button>
+      <button class="btn btn-secondary" onclick="saveDraft()">保存草稿</button>
+      <button class="btn btn-primary" onclick="publishPage()">发布</button>
+    </div>
+  </div>
+
+  <!-- 左右两栏布局 -->
+  <div class="edit-layout">
+
+    <!-- 左侧主内容 -->
+    <div class="edit-main">
+
+      <!-- 语言版本选择器 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">语言版本</div><div class="form-section-card-subtitle">选择当前编辑的语言版本</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="locale-selector" id="localeSelector"></div>
+        </div>
+      </div>
+
+      <!-- 基本信息 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">基本信息</div><div class="form-section-card-subtitle">页面标题、URL 别名等核心信息</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="form-group">
+            <label class="form-label"><span class="required">*</span> 页面标题</label>
+            <input type="text" class="form-input" id="contentTitle" placeholder="如: 关于我们" maxlength="100">
+          </div>
+        </div>
+      </div>
+
+      <!-- 正文编辑器 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">正文内容</div><div class="form-section-card-subtitle">支持文字、图片、视频、GIF、商品卡片</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="richtext-toolbar">
+            <button onclick="execCmd('bold')" title="粗体"><b>B</b></button>
+            <button onclick="execCmd('italic')" title="斜体"><i>I</i></button>
+            <button onclick="execCmd('underline')" title="下划线"><u>U</u></button>
+            <span class="toolbar-sep"></span>
+            <select onchange="formatHeading(this.value);this.selectedIndex=0;">
+              <option value="">正文</option>
+              <option value="h1">H1</option>
+              <option value="h2">H2</option>
+              <option value="h3">H3</option>
+            </select>
+            <span class="toolbar-sep"></span>
+            <button onclick="execCmd('insertUnorderedList')" title="无序列表">•</button>
+            <button onclick="execCmd('insertOrderedList')" title="有序列表">1.</button>
+            <button onclick="execCmd('formatBlock', '<blockquote>')" title="引用块">❝</button>
+            <span class="toolbar-sep"></span>
+            <button onclick="insertLink()" title="插入链接">🔗</button>
+            <button onclick="insertImage()" title="插入图片">🖼</button>
+            <button onclick="insertVideo()" title="插入视频">🎬</button>
+            <button onclick="openProductCardDialog()" title="商品卡片">📦</button>
+            <button onclick="insertDivider()" title="分割线">—</button>
+          </div>
+          <div class="richtext-editor" id="richtextEditor" contenteditable="true"></div>
+          <div class="form-hint">支持: 文字 / 图片 / 视频 / GIF / 商品卡片。在编辑器中直接粘贴内容或使用工具栏插入。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右侧边栏：SEO 与发布 -->
+    <div class="edit-sidebar">
+
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">SEO 与发布</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="form-group">
+            <label class="form-label"><span>网页标题</span><span class="char-count" id="seoTitleCount">0/70</span></label>
+            <input type="text" class="form-input" id="seoTitle" placeholder="请输入网页标题" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span>网页描述</span><span class="char-count" id="seoDescCount">0/160</span></label>
+            <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" maxlength="200"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL 网址名称</label>
+            <div class="url-prefix-group">
+              <span class="url-prefix-label">/pages/</span>
+              <input type="text" class="form-input" id="contentHandle" placeholder="page-url-slug">
+            </div>
+            <div class="form-hint" style="margin-top: 6px;">页面落地页URL标识，由标题自动生成可手动修改。</div>
+          </div>
+          <div class="toggle-row" style="border-bottom:none;">
+            <div class="toggle-info"><div class="toggle-label">发布状态</div><div class="toggle-desc">开启后页面立即在前台可见</div></div>
+            <div class="toggle-switch" id="statusToggle" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-label">禁用页面</div><div class="toggle-desc">禁用后前台显示 404</div></div>
+            <div class="toggle-switch" id="disabledToggle" onclick="toggleSwitch(this)"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="pageToast"></div>
+
+<script src="../common/js/commons.js?v=3"></script>
+<script src="js/page_form.js?v=3"></script>
+
+</body>
+</html>

@@ -1,0 +1,409 @@
+/* ==================== 折扣类型徽章 ==================== */
+.promo-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.promo-type-badge.order_amount { background: #eef2ff; color: #4f46e5; }
+.promo-type-badge.product_amount { background: #fef3c7; color: #d97706; }
+.promo-type-badge.xgy { background: #fce7f3; color: #db2777; }
+.promo-type-badge.shipping { background: #d1fae5; color: #059669; }
+
+.promo-type-badge .type-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* 发布方式徽章 */
+.dist-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dist-badge.code { background: #ede9fe; color: #7c3aed; }
+.dist-badge.automatic { background: #dbeafe; color: #2563eb; }
+
+/* 状态徽章 */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.status-badge.active { background: #d1fae5; color: #059669; }
+.status-badge.disabled { background: #f3f4f6; color: #6b7280; }
+.status-badge.expired { background: #fee2e2; color: #dc2626; }
+.status-badge.scheduled { background: #dbeafe; color: #2563eb; }
+
+.status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-badge.active .status-dot { background: #059669; }
+.status-badge.disabled .status-dot { background: #6b7280; }
+.status-badge.expired .status-dot { background: #dc2626; }
+.status-badge.scheduled .status-dot { background: #2563eb; }
+
+/* ==================== 使用次数列 ==================== */
+.usage-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.usage-limit-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.usage-stat-text {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ==================== 促销信息单元格 ==================== */
+.promo-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.promo-info-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.promo-info-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.promo-code-tag {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #f3f4f6;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: #6366f1;
+}
+
+/* ==================== 数值列提示图标 ==================== */
+.col-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: help;
+}
+.col-info-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+tr:hover .col-info-icon {
+  opacity: 1;
+}
+
+/* Tooltip 弹出框 */
+.promo-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: #1f2937;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 280px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.promo-tooltip.visible { opacity: 1; }
+.promo-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+.promo-tooltip-label { color: #9ca3af; }
+.promo-tooltip-value { font-weight: 600; }
+
+/* ==================== 进度条（用量/有效期） ==================== */
+.progress-bar-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 80px;
+}
+.progress-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.progress-bar-fill.usage { background: #6366f1; }
+.progress-bar-fill.validity { background: #10b981; }
+.progress-bar-fill.validity.warning { background: #f59e0b; }
+.progress-bar-fill.validity.danger { background: #ef4444; }
+.progress-bar-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ==================== count-badge 计数徽章 ==================== */
+.promotion-list-page .count-badge {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+/* ==================== 列表页body背景/布局 ==================== */
+.promotion-list-page {
+  background: var(--bg-page);
+  padding: 20px 24px 0 24px;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.promotion-list-page .table-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.promotion-list-page .table-card .table-wrapper {
+  flex: 1;
+  overflow: auto;
+}
+
+/* ==================== 批量操作栏更多操作下拉 ==================== */
+#moreActionsDropdown {
+  position: fixed;
+  z-index: 1000;
+  background: #fff;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
+  min-width: 160px;
+  padding: 6px 0;
+  overflow: hidden;
+}
+#moreActionsDropdown .more-actions-item-danger {
+  color: #dc2626;
+}
+#moreActionsDropdown .more-actions-item-danger:hover {
+  background: #fef2f2;
+}
+
+/* ==================== 行内操作按钮组 ==================== */
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+.row-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.row-action-btn:hover { background: hsl(var(--accent)); color: hsl(var(--primary)); }
+.row-action-btn.danger:hover { background: #fef2f2; color: #dc2626; }
+
+/* 行内"更多"操作按钮 */
+.more-actions-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.more-actions-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.15s;
+}
+.more-actions-btn:hover { background: hsl(var(--accent)); color: hsl(var(--primary)); }
+
+/* 行内更多操作下拉菜单 — 固定定位，匹配产品列表风格 */
+.more-actions-menu {
+  position: fixed;
+  z-index: 1100;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
+  display: none;
+  padding: 6px 0;
+  overflow: hidden;
+}
+.more-actions-menu.show { display: block; }
+.more-actions-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+.more-actions-item:hover { background: hsl(var(--accent)); }
+.more-actions-item.danger { color: #dc2626; }
+.more-actions-item.danger:hover { background: #fef2f2; }
+.more-actions-item .action-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ==================== 表格列宽 ==================== */
+.promotion-list-page .data-table th.col-promo-info { width: 220px; }
+.promotion-list-page .data-table th.col-type { width: 110px; }
+.promotion-list-page .data-table th.col-value-info { width: 160px; }
+.promotion-list-page .data-table th.col-method { width: 90px; }
+.promotion-list-page .data-table th.col-eligibility { width: 100px; }
+.promotion-list-page .data-table th.col-usage { width: 130px; }
+.promotion-list-page .data-table th.col-sales { width: 110px; }
+.promotion-list-page .data-table th.col-discount { width: 110px; }
+.promotion-list-page .data-table th.col-orders { width: 100px; }
+.promotion-list-page .data-table th.col-validity { width: 150px; }
+.promotion-list-page .data-table th.col-status { width: 90px; }
+.promotion-list-page .data-table th.col-actions { width: 120px; }
+
+/* ==================== 第二左固定列（折扣信息）偏移 ==================== */
+.promotion-list-page .data-table .col-fixed-left-left2 {
+  position: sticky;
+  left: 44px;
+  z-index: 2;
+  background: inherit;
+}
+.promotion-list-page .data-table thead .col-fixed-left-left2 {
+  position: sticky;
+  left: 44px;
+  top: 0;
+  background: #F5F0EB;
+  z-index: 3;
+}
+.promotion-list-page .data-table tbody .col-fixed-left-left2 {
+  background: rgba(255, 255, 255, 0.92);
+}
+.promotion-list-page .data-table .col-fixed-left-left2::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to left, transparent, rgba(0,0,0,0.04));
+  pointer-events: none;
+}
+
+/* ==================== 产品范围标签 ==================== */
+.scope-tag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.scope-tag.all { background: #f0fdf4; color: #16a34a; }
+.scope-tag.collection { background: #eff6ff; color: #2563eb; }
+.scope-tag.product { background: #fefce8; color: #ca8a04; }
+
+/* ==================== 日期筛选器 ==================== */
+.filter-date {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1.5px solid hsl(30 15% 88%);
+  border-radius: 10px;
+  height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  outline: none;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  min-width: 140px;
+  cursor: pointer;
+}
+.filter-date:hover {
+  border-color: hsl(30 20% 78%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+.filter-date:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+}
+.filter-date-sep {
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+
+/* ==================== 自定义列面板补充样式 ==================== */
+.custom-col-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid #F6F6F6;
+}
+
+

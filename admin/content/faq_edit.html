@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑帮助条目</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="css/page_form.css?v=3">
+</head>
+<body>
+
+<div class="edit-container">
+
+  <!-- 头部 -->
+  <div class="edit-header">
+    <div class="page-title" id="faqPageTitle">新建帮助条目</div>
+    <div class="edit-actions">
+      <button class="btn btn-secondary" onclick="goBack()">取消</button>
+      <button class="btn btn-secondary" onclick="saveDraft()">保存草稿</button>
+      <button class="btn btn-primary" onclick="publishFaq()">发布</button>
+    </div>
+  </div>
+
+  <!-- 左右两栏布局 -->
+  <div class="edit-layout">
+
+    <!-- 左侧主内容 -->
+    <div class="edit-main">
+
+      <!-- 语言版本选择器 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">语言版本</div><div class="form-section-card-subtitle">选择当前编辑的语言版本</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="locale-selector" id="localeSelector"></div>
+        </div>
+      </div>
+
+      <!-- 基本信息 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">基本信息</div><div class="form-section-card-subtitle">帮助条目的问题与分类</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="form-group">
+            <label class="form-label"><span class="required">*</span> 问题标题</label>
+            <input type="text" class="form-input" id="contentTitle" placeholder="如: 如何正确测量头围？" maxlength="120">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label"><span class="required">*</span> 所属分类</label>
+              <select class="form-select" id="faqGroup">
+                <option value="">请选择分类</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 正文 -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">回答内容</div><div class="form-section-card-subtitle">支持文字、图片、视频、GIF、商品卡片</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="richtext-toolbar">
+            <button onclick="execCmd('bold')" title="粗体"><b>B</b></button>
+            <button onclick="execCmd('italic')" title="斜体"><i>I</i></button>
+            <button onclick="execCmd('underline')" title="下划线"><u>U</u></button>
+            <span class="toolbar-sep"></span>
+            <select onchange="formatHeading(this.value);this.selectedIndex=0;">
+              <option value="">正文</option>
+              <option value="h1">H1</option>
+              <option value="h2">H2</option>
+              <option value="h3">H3</option>
+            </select>
+            <span class="toolbar-sep"></span>
+            <button onclick="execCmd('insertUnorderedList')">•</button>
+            <button onclick="execCmd('insertOrderedList')">1.</button>
+            <button onclick="execCmd('formatBlock', '<blockquote>')">❝</button>
+            <span class="toolbar-sep"></span>
+            <button onclick="insertLink()">🔗</button>
+            <button onclick="insertImage()">🖼</button>
+            <button onclick="insertVideo()">🎬</button>
+            <button onclick="openProductCardDialog()">📦</button>
+            <button onclick="insertDivider()">—</button>
+          </div>
+          <div class="richtext-editor" id="richtextEditor" contenteditable="true"></div>
+          <div class="form-hint">FAQ 正文可插入商品卡片，如尺码指南页面插入相关商品卡片引流</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右侧边栏：SEO 设置 -->
+    <div class="edit-sidebar">
+
+      <!-- SEO -->
+      <div class="form-section-card">
+        <div class="form-section-card-header">
+          <div><div class="form-section-card-title">SEO 配置</div></div>
+        </div>
+        <div class="form-section-card-body">
+          <div class="form-group">
+            <label class="form-label"><span>网页标题</span><span class="char-count" id="seoTitleCount">0/70</span></label>
+            <input type="text" class="form-input" id="seoTitle" placeholder="请输入网页标题" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span>网页描述</span><span class="char-count" id="seoDescCount">0/160</span></label>
+            <textarea class="form-textarea" id="seoDesc" placeholder="用于当前语言搜索结果摘要" maxlength="200"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL 网址名称</label>
+            <div class="url-prefix-group">
+              <span class="url-prefix-label">/help/</span>
+              <input type="text" class="form-input" id="contentHandle" placeholder="help-url-slug">
+            </div>
+            <div class="form-hint" style="margin-top: 6px;">帮助条目落地页URL标识，由标题自动生成可手动修改。</div>
+          </div>
+          <div class="toggle-row" style="border-bottom:none;">
+            <div class="toggle-info"><div class="toggle-label">发布状态</div><div class="toggle-desc">开启后帮助条目在前台可见</div></div>
+            <div class="toggle-switch" id="statusToggle" onclick="toggleSwitch(this)"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" id="faqToast"></div>
+
+<script src="../common/js/commons.js?v=3"></script>
+<script src="js/faq_form.js?v=3"></script>
+
+</body>
+</html>

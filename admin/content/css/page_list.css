@@ -1,0 +1,312 @@
+/* ==================== 内容管理列表页共用样式 ==================== */
+/* 适用于 page_list / article_list / faq_list */
+
+/* 使 body 成为 flex 容器，配合 commons.css 的 flex 布局链让列表内部滚动 */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 计数徽标 */
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--primary-700));
+  background: hsl(var(--primary-100));
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* 内容管理 Tab 导航 */
+.content-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.content-tab {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.content-tab:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.content-tab.active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+  font-weight: 600;
+}
+
+/* 搜索容器 */
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-wrapper > svg {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 更多操作下拉 */
+.more-actions-dropdown {
+  display: none;
+  position: fixed;
+  min-width: 160px;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  overflow: hidden;
+  animation: dropdownIn 0.15s ease;
+}
+
+.more-actions-dropdown.show {
+  display: block;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.more-actions-item {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.more-actions-item:hover {
+  background: hsl(var(--primary-50));
+}
+
+.more-actions-item.danger {
+  color: hsl(var(--error));
+}
+
+.more-actions-item.danger:hover {
+  background: hsl(0 84% 95%);
+}
+
+/* 自定义列面板 */
+.custom-col-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #F6F6F6;
+}
+
+/* 文章列表单元格 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: hsl(var(--muted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 16px;
+}
+
+.empty-state-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 6px;
+}
+
+.empty-state-desc {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* 页面标题单元格 */
+.page-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.page-title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: hsl(var(--primary-100));
+  color: hsl(var(--primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.page-title-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.page-title-info {
+  min-width: 0;
+}
+
+.page-title-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-title-handle {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 语言版本徽标 */
+.locale-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.locale-badge.complete {
+  background: hsl(142 50% 92%);
+  color: hsl(142 76% 30%);
+}
+
+.locale-badge.partial {
+  background: hsl(var(--primary-100));
+  color: hsl(var(--primary-700));
+}
+
+/* 状态标签在单元格内的对齐 */
+td .badge {
+  vertical-align: middle;
+}
+
+/* 操作按钮组（兼容 commons 中的样式） */
+.action-group svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 表格行内图标统一尺寸 */
+td svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 文章列表单元格 */
+.article-cell-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.read-count-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  vertical-align: -2px;
+}
+
+/* FAQ 分组头部图标 */
+.faq-group-arrow svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.faq-group-actions .action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .content-tabs {
+    flex-wrap: wrap;
+  }
+  .toolbar-left {
+    flex-wrap: wrap;
+  }
+  .search-input {
+    width: 100%;
+    min-width: 100%;
+  }
+}

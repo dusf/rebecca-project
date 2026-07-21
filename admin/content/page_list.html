@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="css/page_list.css?v=3">
+</head>
+<body>
+
+<div class="content">
+  <div class="page active" id="page-content-pages">
+
+    <!-- 内容管理 Tab 导航 -->
+    <div class="content-tabs">
+      <div class="content-tab active" onclick="switchContentTab('pages')">页面</div>
+      <div class="content-tab" onclick="switchContentTab('articles')">文章</div>
+      <!-- <div class="content-tab" onclick="switchContentTab('faq')">帮助中心</div> -->
+    </div>
+
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-title">页面管理<span class="count-badge" id="pageCount">(0个)</span></div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" onclick="navigateToPage('content/page_edit.html')">+ 新建页面</button>
+      </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrapper">
+          <input type="text" class="search-input" id="pageSearch" placeholder="搜索页面标题或URL...">
+        </div>
+        <select class="filter-select" id="pageStatusFilter">
+          <option value="">全部状态</option>
+          <option value="published">已发布</option>
+          <option value="draft">草稿</option>
+          <option value="disabled">已禁用</option>
+        </select>
+        <select class="filter-select" id="pageLocaleFilter">
+          <option value="">全部语言</option>
+        </select>
+      </div>
+      <div class="toolbar-right"></div>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-card">
+      <!-- 批量操作栏 -->
+      <div class="bulk-action-bar" id="bulkActionBar">
+        <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
+        <div class="bulk-actions">
+          <button class="btn btn-primary btn-sm" id="btnBatchPublish" onclick="batchPublish()" disabled>批量发布</button>
+          <button class="btn btn-secondary btn-sm" id="btnBatchDraft" onclick="batchDraft()" disabled>批量草稿</button>
+          <button class="btn btn-destructive btn-sm" id="btnBatchDelete" onclick="batchDelete()" disabled>批量删除</button>
+          <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
+            <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              更多操作
+            </button>
+          </div>
+          <div class="custom-col-wrapper">
+            <button class="btn btn-secondary btn-sm" onclick="toggleColumnPanel()" id="btnCustomCols">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              自定义列
+            </button>
+          </div>
+          <div class="custom-col-wrapper">
+            <button class="btn btn-secondary btn-sm" onclick="refreshPage()" title="按当前筛选条件刷新数据">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="pagination-bar">
+        <span class="pagination-info" id="paginationInfo">显示 0 条，共 0 条</span>
+        <div class="pagination-buttons" id="paginationBtns"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 更多操作下拉 -->
+<div class="more-actions-dropdown" id="moreActionsDropdown">
+  <div class="more-actions-item" onclick="batchPublish()">批量发布</div>
+  <div class="more-actions-item" onclick="batchDraft()">批量设为草稿</div>
+  <div class="more-actions-item danger" onclick="batchDelete()">批量删除</div>
+</div>
+
+<!-- 自定义列面板 -->
+<div class="custom-col-panel" id="customColPanel" style="display:none;">
+  <div class="custom-col-panel-header">
+    <span style="font-weight:600;font-size:14px;">自定义列</span>
+    <button class="btn btn-sm btn-ghost" onclick="resetCustomCols()">恢复默认</button>
+  </div>
+  <div class="custom-col-body" id="customColBody"></div>
+</div>
+
+<script src="../common/js/commons.js?v=3"></script>
+<script src="js/page_list.js?v=3"></script>
+
+</body>
+</html>

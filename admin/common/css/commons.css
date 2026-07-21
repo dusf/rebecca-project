@@ -1612,7 +1612,7 @@
     .dialog-title {
       font-size: 18px;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
 
     .dialog-body {
@@ -1636,9 +1636,7 @@
     }
 
     .dialog-close {
-      position: absolute;
-      top: 14px;
-      right: 0px;
+      position: static;
       width: 28px;
       height: 28px;
       border-radius: 50%;
@@ -1650,12 +1648,12 @@
       justify-content: center;
       color: hsl(var(--muted-foreground));
       transition: all 0.15s;
-      z-index: 10;
+      flex-shrink: 0;
     }
     .dialog-close:hover { background: hsl(30 15% 88%); color: hsl(var(--foreground)); }
     .dialog-close svg { width: 14px; height: 14px; }
 
-    .dialog-header { position: relative; padding: 0 40px 0 0; }
+    .dialog-header { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px 0; }
 
     @keyframes fadeIn {
       from { opacity: 0; }
@@ -1806,6 +1804,26 @@
       background: hsl(var(--muted));
       color: hsl(var(--muted-foreground));
       cursor: not-allowed;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      color: hsl(var(--foreground));
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      line-height: 1.5;
+    }
+    .form-textarea::placeholder { color: hsl(var(--muted-foreground) / 0.6); }
+    .form-textarea:hover { border-color: hsl(30 20% 78%); }
+    .form-textarea:focus {
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
     }
 
     @media (max-width: 600px) {

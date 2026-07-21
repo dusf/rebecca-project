@@ -1,0 +1,69 @@
+/* ==================== FAQ 帮助中心列表 ==================== */
+.faq-group-header {
+  cursor: pointer;
+  user-select: none;
+}
+.faq-group-header td {
+  background: hsl(var(--muted));
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.faq-group-header:hover td {
+  background: hsl(var(--border));
+}
+.faq-group-header td > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.faq-group-arrow {
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s; color: hsl(var(--muted-foreground));
+}
+.faq-group-arrow.expanded { transform: rotate(90deg); }
+.faq-group-name { font-size: 14px; font-weight: 600; color: hsl(var(--foreground)); }
+.faq-group-count { font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 8px; }
+.faq-group-actions { margin-left: auto; display: flex; gap: 4px; }
+.faq-group-children { overflow: hidden; }
+.faq-group-children.collapsed { display: none; }
+
+/* 分类管理对话框表格 */
+.faq-cat-table { width: 100%; border-collapse: collapse; }
+.faq-cat-table th {
+  text-align: left; padding: 8px 12px; font-size: 12px;
+  font-weight: 600; color: hsl(var(--muted-foreground));
+  border-bottom: 1px solid hsl(var(--border)); background: transparent;
+}
+.faq-cat-table td {
+  padding: 10px 12px; font-size: 13px; border-bottom: 1px solid hsl(var(--border)/0.5);
+  color: hsl(var(--foreground));
+}
+.faq-cat-table tr:hover td { background: hsl(var(--primary)/0.04); }
+.sort-number {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: hsl(var(--muted)); font-weight: 600; font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+.faq-count-badge {
+  display: inline-flex; align-items: center; padding: 2px 10px;
+  border-radius: 12px; font-size: 12px; font-weight: 500;
+  background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
+}
+
+/* FAQ 问题单元格 */
+.faq-question-cell { font-size: 14px; font-weight: 500; color: hsl(var(--foreground)); }
+.faq-question-cell svg {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: -4px;
+  margin-right: 6px;
+  color: hsl(var(--muted-foreground));
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

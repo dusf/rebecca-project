@@ -562,8 +562,9 @@
   border-radius: 12px;
   width: 900px;
   max-width: 92vw;
-  min-height: 72vh;
-  max-height: 88vh;
+  height: 84vh;
+  min-height: 420px;
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
@@ -621,6 +622,33 @@
   outline: none;
 }
 .pf-dialog-search input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
+.pf-scope-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pf-link-btn { font-size: 12px; color: hsl(var(--primary)); background: transparent; border: none; cursor: pointer; padding: 4px 6px; white-space: nowrap; border-radius: 4px; }
+.pf-link-btn:hover { background: hsl(var(--primary) / .08); text-decoration: underline; }
+.pf-dialog-main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.pf-dialog-aside { width: 240px; flex-shrink: 0; border-right: 1px solid hsl(var(--border)); padding: 16px; overflow-y: auto; background: hsl(var(--muted) / .25); }
+.pf-dialog-content { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.pf-aside-group { margin-bottom: 24px; }
+.pf-aside-group:last-child { margin-bottom: 0; }
+.pf-aside-label { font-size: 12px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 8px; }
+.pf-dialog-aside .pf-filter-select { width: 100%; min-width: 0; }
+/* 分类属性板块中多个下拉菜单之间增加上下间距 */
+.pf-aside-group .pf-filter-select:not(:last-child) { margin-bottom: 10px; }
+.pf-dialog-aside .pf-range { width: 100%; }
+.pf-dialog-aside .pf-range-input { flex: 1; width: auto; min-width: 0; }
+.pf-filter-select, .pf-search-field {
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 12px 12px;
+}
+.pf-filter-select { min-width: 140px; height: 32px; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 0 30px 0 10px; font-size: 13px; background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
+.pf-search-field { min-width: 150px; max-width: 168px; flex-shrink: 0; padding-right: 30px; }
+.pf-range { display: flex; align-items: center; gap: 4px; }
+.pf-range-label { font-size: 13px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.pf-range-input { width: 76px; height: 32px; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 0 8px; font-size: 13px; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+.pf-range-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
+.pf-range-sep { color: hsl(var(--muted-foreground)); }
+.pf-filter-select:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
 .pf-dialog-select-all {
   font-size: 12px;
   color: hsl(var(--primary));
@@ -875,118 +903,426 @@
   color: hsl(var(--foreground));
 }
 
-/* 自定义对话框卡片（范围 / 客户 / 国家选择） */
+/* ============================================================
+   全屏选择对话框（产品/SKU、客户、国家、SKU 编辑）
+   统一设计：企业极简风，间距/圆角/配色全部走设计令牌
+   ============================================================ */
 .pf-dialog {
-  width: 900px;
-  max-width: 92vw;
-  min-height: 72vh;
-  max-height: 88vh;
+  width: 920px;
+  max-width: 94vw;
+  height: 84vh;
+  min-height: 420px;
+  max-height: 92vh;
   background: hsl(var(--card));
   border-radius: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  box-shadow: 0 24px 64px rgba(0,0,0,.28);
 }
+
+/* 头部 */
 .pf-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  padding: 18px 24px;
+  flex-shrink: 0;
+  border-bottom: 1px solid hsl(var(--border));
 }
-.pf-dialog-title { font-size: 16px; font-weight: 700; }
+.pf-dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: hsl(var(--foreground));
+}
 .pf-dialog-close {
   width: 30px; height: 30px;
-  border-radius: 50%;
+  border-radius: 8px;
   border: none;
   background: hsl(var(--muted));
   cursor: pointer;
   font-size: 15px;
+  line-height: 1;
   display: flex; align-items: center; justify-content: center;
   color: hsl(var(--muted-foreground));
   flex-shrink: 0;
+  transition: background .15s, color .15s;
 }
-.pf-dialog-close:hover { background: hsl(var(--muted-foreground) / .2); }
+.pf-dialog-close:hover { background: hsl(var(--muted-foreground) / .18); color: hsl(var(--foreground)); }
+
+/* Tab 切换（客户选择） */
+.pf-dialog-tabs {
+  display: flex;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  flex-shrink: 0;
+}
+.pf-dialog-tab {
+  flex: 1;
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: hsl(var(--muted-foreground));
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.pf-dialog-tab:hover { color: hsl(var(--foreground)); }
+.pf-dialog-tab.active { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+.pf-dialog-tab .tab-badge {
+  display: inline-block;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+.pf-dialog-tab.active .tab-badge { background: hsl(var(--primary) / .15); color: hsl(var(--primary)); }
+
+/* 搜索栏 */
 .pf-dialog-search {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 14px 24px;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  flex-shrink: 0;
+}
+.pf-dialog-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  font-size: 13px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.pf-dialog-search input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / .12);
+}
+.pf-scope-tools { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.pf-link-btn {
+  font-size: 12px;
+  color: hsl(var(--primary));
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  white-space: nowrap;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.pf-link-btn:hover { background: hsl(var(--primary) / .08); }
+
+/* 主区域：左侧筛选 + 右侧内容（左右布局） */
+.pf-dialog-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pf-dialog-aside {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid hsl(var(--border));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  background: hsl(var(--muted) / .35);
+}
+.pf-dialog-aside-head {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  flex-shrink: 0;
   border-bottom: 1px solid hsl(var(--border));
 }
-.pf-dialog-search input { flex: 1; }
-.pf-dialog-select-all { font-size: 12px; color: hsl(var(--primary)); cursor: pointer; white-space: nowrap; }
-.pf-dialog-select-all:hover { text-decoration: underline; }
-.pf-dialog-count { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
-.pf-dialog-body { flex: 1; overflow-y: auto; padding: 8px 0; }
-.pf-dialog-item {
+.pf-dialog-aside-head .pf-dialog-title { margin: 0; }
+.pf-dialog-content-head {
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 24px;
-  cursor: pointer;
+  padding: 0 24px 0 24px;
+  flex-shrink: 0;
+  border-bottom: 1px solid hsl(var(--border));
 }
-.pf-dialog-item:hover { background: hsl(var(--accent) / .5); }
-.pf-dialog-item.selected { background: hsl(var(--primary) / .08); }
-.pf-dialog-item input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; }
-.pf-dialog-item-info { flex: 1; min-width: 0; }
-.pf-dialog-item-name { font-size: 14px; font-weight: 500; }
-.pf-dialog-item-desc { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.pf-dialog-content-head .pf-dialog-title { margin: 0; }
+.pf-dialog-content-head .pf-dialog-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: hsl(var(--muted));
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  color: hsl(var(--muted-foreground));
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.pf-dialog-content-head .pf-dialog-close:hover { background: hsl(var(--muted-foreground) / .18); color: hsl(var(--foreground)); }
+.pf-dialog-filters {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 24px 24px;
+}
+.pf-dialog-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pf-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  min-height: 0;
+}
+
+/* 左侧筛选分组 */
+.pf-aside-group { margin-bottom: 22px; }
+.pf-aside-group:last-child { margin-bottom: 0; }
+.pf-aside-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 8px;
+  letter-spacing: .02em;
+}
+.pf-dialog-aside .pf-filter-select { width: 100%; min-width: 0; }
+.pf-aside-group .pf-filter-select:not(:last-child) { margin-bottom: 10px; }
+.pf-dialog-aside .pf-range { width: 100%; }
+.pf-dialog-aside .pf-range-input { flex: 1; width: auto; min-width: 0; }
+
+/* 可搜索下拉组件 (combobox) */
+.pf-combo { position: relative; width: 100%; }
+.pf-aside-group .pf-combo:not(:last-child) { margin-bottom: 10px; }
+.pf-combo-input {
+  width: 100%; height: 34px; box-sizing: border-box;
+  border: 1px solid hsl(var(--border)); border-radius: 8px;
+  padding: 0 30px 0 10px; font-size: 13px;
+  background-color: hsl(var(--background)); color: hsl(var(--foreground));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 12px 12px;
+}
+.pf-combo-input::placeholder { color: hsl(var(--foreground)); opacity: 1; }
+.pf-combo-input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / .12); outline: none; }
+.pf-combo-clear {
+  display: none;
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: hsl(var(--muted-foreground) / .28); color: hsl(var(--background));
+  align-items: center; justify-content: center;
+  font-size: 9px; line-height: 1; cursor: pointer; user-select: none;
+  transition: background .15s;
+}
+.pf-combo-clear:hover { background: hsl(var(--muted-foreground) / .5); }
+/* 选中且有值时，鼠标悬停组合框：右侧下拉箭头变为关闭图标 */
+.pf-combo[data-value]:not([data-value=""]):hover .pf-combo-input { background-image: none; }
+.pf-combo[data-value]:not([data-value=""]):hover .pf-combo-clear { display: flex; }
+.pf-combo-menu {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  max-height: 240px; overflow-y: auto; z-index: 60;
+  background: hsl(var(--background)); border: 1px solid hsl(var(--border));
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); padding: 4px;
+}
+.pf-combo.open .pf-combo-menu { display: block; }
+.pf-combo-opt {
+  padding: 7px 10px; font-size: 13px; border-radius: 6px; cursor: pointer;
+  color: hsl(var(--foreground)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pf-combo-opt:hover { background: hsl(var(--muted)); }
+.pf-combo-opt.selected { background: hsl(var(--primary) / .12); color: hsl(var(--primary)); font-weight: 600; }
+
+/* 下拉 / 范围输入（统一组件） */
+.pf-filter-select, .pf-search-field {
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+.pf-filter-select {
+  min-width: 140px;
+  height: 34px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 0 30px 0 10px;
+  font-size: 13px;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: border-color .15s, box-shadow .15s;
+}
+.pf-filter-select:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / .12);
+  outline: none;
+}
+.pf-search-field {
+  min-width: 150px;
+  max-width: 168px;
+  flex-shrink: 0;
+  padding-right: 30px;
+}
+.pf-range { display: flex; align-items: center; gap: 6px; }
+.pf-range-label { font-size: 13px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.pf-range-input {
+  width: 76px;
+  height: 34px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 0 8px;
+  font-size: 13px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: border-color .15s, box-shadow .15s;
+}
+.pf-range-input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / .12);
+  outline: none;
+}
+.pf-range-sep { color: hsl(var(--muted-foreground)); }
+
+/* 列表 */
+.pf-dialog-list { padding: 6px 0; }
+.pf-dialog-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  border-bottom: 1px solid hsl(var(--border) / .55);
+  transition: background .12s;
+}
+.pf-dialog-item:last-child { border-bottom: none; }
+.pf-dialog-item:hover { background: hsl(var(--accent)); }
+.pf-dialog-item.selected {
+  background: hsl(var(--primary) / .07);
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+}
+.pf-dialog-item input[type="checkbox"] {
+  width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;
+  accent-color: hsl(var(--primary));
+}
 .pf-dialog-item-cover {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  margin-right: 10px;
   background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border) / .6);
+}
+.pf-dialog-item-info { flex: 1; min-width: 0; }
+.pf-dialog-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-dialog-item-desc {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-dialog-item-stock {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  flex-shrink: 0;
+  min-width: 64px;
+  text-align: right;
 }
 .pf-dialog-item-expand {
-  width: 24px; height: 24px;
-  border: none; background: transparent;
-  cursor: pointer; color: hsl(var(--muted-foreground));
-  font-size: 12px; flex-shrink: 0;
+  width: 26px; height: 26px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s, background .15s, color .15s;
 }
+.pf-dialog-item-expand:hover { background: hsl(var(--muted) / .5); color: hsl(var(--foreground)); }
 .pf-dialog-item-expand.expanded { transform: rotate(180deg); }
+
+/* SKU 子列表 */
+.pf-dialog-sku-list { display: none; }
+.pf-dialog-sku-list.open { display: block; }
 .pf-dialog-sku-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 24px;
+  padding: 9px 24px;
   cursor: pointer;
+  border-bottom: 1px solid hsl(var(--border) / .4);
+  background: hsl(var(--muted) / .12);
+  transition: background .12s;
 }
-.pf-dialog-sku-item:hover { background: hsl(var(--accent) / .5); }
-.pf-dialog-sku-item.selected { background: hsl(var(--primary) / .08); }
-.pf-dialog-sku-item input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; margin-left: 60px; }
-.sku-label { flex: 1; font-size: 13px; }
-.sku-price { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.pf-dialog-sku-item:last-child { border-bottom: none; }
+.pf-dialog-sku-item:hover { background: hsl(var(--accent)); }
+.pf-dialog-sku-item.selected {
+  background: hsl(var(--primary) / .07);
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+}
+.pf-dialog-sku-item input[type="checkbox"] {
+  width: 16px; height: 16px; margin: 0 0 0 90px; cursor: pointer; flex-shrink: 0;
+  accent-color: hsl(var(--primary));
+}
+.sku-label {
+  flex: 1;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sku-code { font-size: 11px; color: hsl(var(--muted-foreground)); margin-left: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity: .75; flex-shrink: 0; }
+.sku-price { font-size: 12px; color: hsl(var(--foreground)); font-weight: 500; }
 .sku-stock { font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 16px; flex-shrink: 0; min-width: 64px; text-align: right; }
-/* 产品行库存（位于展开按钮前，右对齐与 SKU 行一致） */
-.pf-dialog-item-stock { font-size: 12px; color: hsl(var(--muted-foreground)); flex-shrink: 0; margin-right: 0; min-width: 64px; text-align: right; }
-.pf-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 14px 20px;
-  border-top: 1px solid hsl(var(--border));
-}
+
+/* 全选文字按钮（兼容旧结构） */
+.pf-dialog-select-all { font-size: 12px; color: hsl(var(--primary)); cursor: pointer; white-space: nowrap; user-select: none; font-weight: 500; }
+.pf-dialog-select-all:hover { text-decoration: underline; }
+.pf-dialog-count { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 
 /* 弹窗底部：全选（左下） + 操作按钮（右下） */
-.pf-dialog-footer--split {
-  justify-content: space-between;
+.pf-dialog-footer {
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  flex-shrink: 0;
 }
-.pf-dialog-footer--split .dialog-actions {
-  margin-top: 0;
-  padding-top: 0;
-}
-/* 底部左侧：全选 + 已选计数 */
-.pf-dialog-footer-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
+.pf-dialog-footer--split { justify-content: space-between; }
+.pf-dialog-footer--split .dialog-actions { margin: 0; padding: 0; }
+.pf-dialog-footer .btn { min-width: 80px; justify-content: center; }
+.pf-dialog-footer-left { display: inline-flex; align-items: center; gap: 12px; }
 .pf-dialog-select-all-check {
   display: inline-flex;
   align-items: center;
@@ -996,42 +1332,32 @@
   cursor: pointer;
   user-select: none;
 }
+.pf-dialog-select-all-check input[type="checkbox"] {
+  width: 16px; height: 16px; flex-shrink: 0;
+  accent-color: hsl(var(--primary));
+}
+
 /* 对话框空状态 */
 .pf-dialog-empty {
-  padding: 40px 20px;
+  padding: 48px 20px;
   text-align: center;
   font-size: 13px;
   color: hsl(var(--muted-foreground));
 }
-.pf-dialog-select-all-check input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  accent-color: hsl(var(--primary));
-}
 /* 对话框内分组标题（注册用户 / 订阅用户） */
 .pf-dialog-group-title {
-  padding: 8px 20px 4px;
+  padding: 8px 24px 4px;
   font-size: 12px;
   font-weight: 600;
   color: hsl(var(--muted-foreground));
-  background: hsl(var(--muted) / 0.4);
+  background: hsl(var(--muted) / .4);
 }
 
 /* 已选项卡片列表（搜索框 + 卡片） */
-.pf-selected-list {
-  width: 100%;
-  margin-top: 12px;
-}
+.pf-selected-list { width: 100%; margin-top: 12px; }
 .pf-sel-search { margin-bottom: 10px; }
 .pf-sel-search .form-input { width: 100%; }
-.pf-sel-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 260px;
-  overflow-y: auto;
-}
+.pf-sel-cards { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
 .pf-sel-card {
   display: flex;
   align-items: center;
@@ -1042,20 +1368,19 @@
   background: hsl(var(--background));
 }
 .pf-sel-card-cover {
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
   background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border) / .6);
 }
 .pf-sel-card-info { flex: 1; min-width: 0; }
 .pf-sel-card-name { font-size: 13px; font-weight: 500; color: hsl(var(--foreground)); }
 .pf-sel-card-sub { font-size: 11px; color: hsl(var(--muted-foreground)); margin-top: 2px; word-break: break-all; }
 .pf-sel-card-remove {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 24px; height: 24px;
   border: none;
   border-radius: 6px;
   background: hsl(var(--muted));
@@ -1063,9 +1388,9 @@
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all .15s;
 }
-.pf-sel-card-remove:hover { background: hsl(var(--destructive) / 0.12); color: hsl(var(--destructive)); }
+.pf-sel-card-remove:hover { background: hsl(var(--destructive) / .12); color: hsl(var(--destructive)); }
 .pf-sel-card-edit {
   flex-shrink: 0;
   border: 1px solid hsl(var(--border));
@@ -1075,22 +1400,34 @@
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 12px;
-  transition: all 0.15s;
+  transition: all .15s;
 }
 .pf-sel-card-edit:hover { background: hsl(var(--accent)); }
+
 /* SKU 编辑对话框列表项 */
 .pf-sku-edit-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 20px;
+  padding: 10px 24px;
   cursor: pointer;
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border) / .55);
 }
-.pf-sku-edit-item:hover { background: hsl(var(--accent) / .5); }
-.pf-sku-edit-item.selected { background: hsl(var(--primary) / .08); }
-.pf-sku-edit-item input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; }
-.pf-sku-edit-cover { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: hsl(var(--muted)); }
+.pf-sku-edit-item:last-child { border-bottom: none; }
+.pf-sku-edit-item:hover { background: hsl(var(--accent)); }
+.pf-sku-edit-item.selected {
+  background: hsl(var(--primary) / .07);
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+}
+.pf-sku-edit-item input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; accent-color: hsl(var(--primary)); }
+.pf-sku-edit-cover {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border) / .6);
+}
 .pf-sku-edit-info { flex: 1; min-width: 0; }
 .pf-sku-edit-name { font-size: 13px; font-weight: 500; color: hsl(var(--foreground)); }
 .pf-sku-edit-stock { font-size: 12px; color: hsl(var(--muted-foreground)); flex-shrink: 0; min-width: 84px; }

@@ -84,10 +84,10 @@
   // 系列副标题：显示产品数
   function pfCollectionSub(c) { return c.productCount + ' 个产品'; }
   var PF_PRODUCTS = [
-    { id: 'p1', name: '无线蓝牙耳机', desc: '旗舰降噪', price: '$199.00', stock: 320, _expanded: true, image: pfCover('无线蓝牙耳机', 200), skus: [{ id: 'p1s1', label: '黑色', price: '$199.00', stock: 180, image: pfCover('黑色', 200) }, { id: 'p1s2', label: '白色', price: '$199.00', stock: 140, image: pfCover('白色', 210) }] },
-    { id: 'p2', name: '智能手表', desc: '运动健康', price: '$299.00', stock: 86, _expanded: true, image: pfCover('智能手表', 210), skus: [{ id: 'p2s1', label: '46mm 午夜色', price: '$299.00', stock: 86, image: pfCover('46mm', 210) }] },
-    { id: 'p3', name: '便携咖啡机', desc: '桌面胶囊', price: '$89.00', stock: 150, _expanded: true, image: pfCover('便携咖啡机', 25), skus: [{ id: 'p3s1', label: '标准版', price: '$89.00', stock: 150, image: pfCover('标准版', 25) }] },
-    { id: 'p4', name: '瑜伽垫', desc: '防滑加厚', price: '$39.00', stock: 540, _expanded: true, image: pfCover('瑜伽垫', 330), skus: [{ id: 'p4s1', label: '紫色', price: '$39.00', stock: 300, image: pfCover('紫色', 330) }, { id: 'p4s2', label: '灰色', price: '$39.00', stock: 240, image: pfCover('灰色', 340) }] }
+    { id: 'p1', name: '无线蓝牙耳机', desc: '旗舰降噪', price: '$199.00', stock: 320, _expanded: false, categoryId: 1, tags: ['热销', '降噪旗舰'], collectionIds: ['c2'], attrs: { 1: [1], 3: [9], 6: [23] }, image: pfCover('无线蓝牙耳机', 200), skus: [{ id: 'p1s1', label: '黑色', price: '$199.00', stock: 180, image: pfCover('黑色', 200) }, { id: 'p1s2', label: '白色', price: '$199.00', stock: 140, image: pfCover('白色', 210) }] },
+    { id: 'p2', name: '智能手表', desc: '运动健康', price: '$299.00', stock: 86, _expanded: false, categoryId: 1, tags: ['运动', '新品'], collectionIds: ['c2'], attrs: { 1: [2], 3: [11], 6: [24] }, image: pfCover('智能手表', 210), skus: [{ id: 'p2s1', label: '46mm 午夜色', price: '$299.00', stock: 86, image: pfCover('46mm', 210) }] },
+    { id: 'p3', name: '便携咖啡机', desc: '桌面胶囊', price: '$89.00', stock: 150, _expanded: false, categoryId: 2, tags: ['清仓', '桌面'], collectionIds: ['c3'], attrs: { 11: [1], 13: [8], 14: [14] }, image: pfCover('便携咖啡机', 25), skus: [{ id: 'p3s1', label: '标准版', price: '$89.00', stock: 150, image: pfCover('标准版', 25) }] },
+    { id: 'p4', name: '瑜伽垫', desc: '防滑加厚', price: '$39.00', stock: 540, _expanded: false, categoryId: 2, tags: ['健身', '热卖'], collectionIds: ['c3'], attrs: { 11: [3], 13: [9], 14: [15] }, image: pfCover('瑜伽垫', 330), skus: [{ id: 'p4s1', label: '紫色', price: '$39.00', stock: 300, image: pfCover('紫色', 330) }, { id: 'p4s2', label: '灰色', price: '$39.00', stock: 240, image: pfCover('灰色', 340) }] }
   ];
   var PF_CUSTOMERS = [
     { id: 'cu1', name: '张伟', email: 'zhangwei@example.com', type: 'registered' },
@@ -472,8 +472,13 @@
   };
 
   // ==================== 范围（系列/产品）选择对话框 ====================
+  var PF_FILTER = { categoryId: '', attrs: {}, collectionId: '', priceMin: '', priceMax: '', stockMin: '', stockMax: '' };
+  var PF_ALL_EXPANDED = false;
   window.pfOpenScopeDialog = function (target) {
     PF_SCOPE_TARGET = target;
+    var _st = PF_SCOPE_STATE[target];
+    var _mode = _st.type || (target === 'main' ? 'collection' : 'product');
+    PF_FILTER = { categoryId: 'all', attrs: {}, collectionId: '', priceMin: '', priceMax: '', stockMin: '', stockMax: '' };
     var overlay = $('pfScopeOverlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -481,20 +486,31 @@
       overlay.id = 'pfScopeOverlay';
       overlay.innerHTML =
         '<div class="pf-dialog">' +
-        '<div class="pf-dialog-header"><div class="pf-dialog-title" id="pfScopeTitle"></div><button class="pf-dialog-close" onclick="pfCloseScopeDialog()">✕</button></div>' +
-        '<div class="pf-dialog-search"><input type="text" id="pfScopeSearch" placeholder="搜索..." oninput="pfOnScopeSearch()"></div>' +
-        '<div class="pf-dialog-body"><div class="pf-dialog-list" id="pfScopeList"></div></div>' +
-        '<div class="pf-dialog-footer pf-dialog-footer--split">' +
-          '<div class="pf-dialog-footer-left"><label class="pf-dialog-select-all-check"><input type="checkbox" onchange="pfToggleSelectAllScope()"> 全选</label><span class="pf-dialog-count" id="pfScopeCount2"></span></div>' +
-          '<div class="dialog-actions"><button class="btn btn-secondary" onclick="pfCloseScopeDialog()">取消</button><button class="btn btn-primary" onclick="pfConfirmScopeDialog()">确定</button></div>' +
+        '<div class="pf-dialog-main">' +
+          '<aside class="pf-dialog-aside">' +
+            '<div class="pf-dialog-aside-head"><div class="pf-dialog-title" id="pfScopeTitle"></div></div>' +
+            '<div class="pf-dialog-filters" id="pfScopeFilters" style="display:none"></div>' +
+          '</aside>' +
+          '<div class="pf-dialog-content">' +
+            '<div class="pf-dialog-content-head"><div class="pf-dialog-title" id="pfScopeRightTitle">产品列表</div><button class="pf-dialog-close" onclick="pfCloseScopeDialog()">✕</button></div>' +
+            '<div class="pf-dialog-search"><select class="pf-filter-select pf-search-field" id="pfSearchField" onchange="pfOnScopeSearch()"><option value="name">产品名称</option><option value="skuName">SKU名称</option><option value="skuCode">SKU编码</option><option value="tag">产品标记</option></select><input type="text" id="pfScopeSearch" placeholder="搜索..." oninput="pfOnScopeSearch()"><div class="pf-scope-tools" id="pfScopeTools"><button class="pf-link-btn" id="pfExpandToggle" onclick="pfToggleExpandAll()">展开全部</button></div></div>' +
+            '<div class="pf-dialog-body"><div class="pf-dialog-list" id="pfScopeList"></div></div>' +
+            '<div class="pf-dialog-footer pf-dialog-footer--split">' +
+              '<div class="pf-dialog-footer-left"><label class="pf-dialog-select-all-check"><input type="checkbox" onchange="pfToggleSelectAllScope()"> 全选</label><span class="pf-dialog-count" id="pfScopeCount2"></span></div>' +
+              '<div class="dialog-actions"><button class="btn btn-secondary" onclick="pfCloseScopeDialog()">取消</button><button class="btn btn-primary" onclick="pfConfirmScopeDialog()">确定</button></div>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
         '</div></div>';
       document.body.appendChild(overlay);
     }
     PF_SCOPE_TITLE = (target === 'main' ? '选择适用产品范围' : (target === 'xgyBuy' ? '选择购买的商品范围' : '选择赠送的商品范围'));
-    $('pfScopeTitle').textContent = PF_SCOPE_TITLE;
+    $('pfScopeTitle').textContent = '筛选条件';
     overlay.style.display = 'flex';
+    PF_ALL_EXPANDED = PF_PRODUCTS.length > 0 && PF_PRODUCTS.every(function (p) { return p._expanded; });
     pfRenderScopeDialog();
+    var _tgl = $('pfExpandToggle');
+    if (_tgl) _tgl.textContent = PF_ALL_EXPANDED ? '收起全部' : '展开全部';
   };
   window.pfCloseScopeDialog = function () { var o = $('pfScopeOverlay'); if (o) o.style.display = 'none'; };
 
@@ -503,6 +519,13 @@
     var st = PF_SCOPE_STATE[PF_SCOPE_TARGET];
     var mode = st.type || (PF_SCOPE_TARGET === 'main' ? 'collection' : 'product');
     PF_SCOPE_MODE = mode;
+    var tools = $('pfScopeTools');
+    if (tools) tools.style.display = (mode === 'product') ? '' : 'none';
+    var filters = $('pfScopeFilters');
+    if (filters) {
+      if (mode === 'product') { filters.style.display = ''; pfRenderScopeFilters(); }
+      else { filters.style.display = 'none'; }
+    }
     var list = $('pfScopeList');
     var search = ($('pfScopeSearch') ? $('pfScopeSearch').value : '').toLowerCase();
     var html = '';
@@ -514,17 +537,21 @@
       });
     } else {
       PF_PRODUCTS.forEach(function (p) {
-        if (search && (p.name.toLowerCase().indexOf(search) < 0 && p.desc.toLowerCase().indexOf(search) < 0)) return;
+        if (PF_FILTER.categoryId && PF_FILTER.categoryId !== 'all' && String(p.categoryId) !== String(PF_FILTER.categoryId)) return;
+        if (PF_FILTER.collectionId) { var pc = p.collectionIds || []; if (pc.indexOf(PF_FILTER.collectionId) === -1) return; }
+        for (var af in PF_FILTER.attrs) { if (!PF_FILTER.attrs.hasOwnProperty(af)) continue; var av = PF_FILTER.attrs[af]; if (!av) continue; var pav = (p.attrs && p.attrs[af]) || []; if (pav.indexOf(Number(av)) === -1) return; }
+        if ((PF_FILTER.priceMin !== '' || PF_FILTER.priceMax !== '' || PF_FILTER.stockMin !== '' || PF_FILTER.stockMax !== '') && !(p.skus || []).some(function (s) { var pp = parseFloat(String(s.price).replace(/[^0-9.]/g, '')) || 0; var ss = Number(s.stock) || 0; if (PF_FILTER.priceMin !== '' && !(pp >= PF_FILTER.priceMin)) return false; if (PF_FILTER.priceMax !== '' && !(pp <= PF_FILTER.priceMax)) return false; if (PF_FILTER.stockMin !== '' && !(ss >= PF_FILTER.stockMin)) return false; if (PF_FILTER.stockMax !== '' && !(ss <= PF_FILTER.stockMax)) return false; return true; })) return;
+        if (search) { var field = ($('pfSearchField') ? $('pfSearchField').value : ''); var hit = false; if (field === 'name') { hit = p.name.toLowerCase().indexOf(search) >= 0; } else if (field === 'skuName') { hit = (p.skus || []).some(function (s) { return (s.label || '').toLowerCase().indexOf(search) >= 0; }); } else if (field === 'skuCode') { hit = (p.skus || []).some(function (s) { return (s.id || '').toLowerCase().indexOf(search) >= 0; }); } else if (field === 'tag') { hit = (p.tags || []).some(function (t) { return String(t).toLowerCase().indexOf(search) >= 0; }); } else { hit = p.name.toLowerCase().indexOf(search) >= 0 || (p.desc && p.desc.toLowerCase().indexOf(search) >= 0) || (p.tags || []).some(function (t) { return String(t).toLowerCase().indexOf(search) >= 0; }) || (p.skus || []).some(function (s) { return (s.id || '').toLowerCase().indexOf(search) >= 0 || (s.label || '').toLowerCase().indexOf(search) >= 0; }); } if (!hit) return; }
         var sel = st.products.indexOf(p.id) >= 0;
         var selSku = p.skus.filter(function (s) { return st.products.indexOf(p.id + '|' + s.id) >= 0; }).length;
         var skuDesc = '已选 ' + selSku + ' 个 SKU / 共 ' + p.skus.length + ' 个 SKU';
-        html += '<div class="pf-dialog-item' + (sel ? ' selected' : '') + '" onclick="pfToggleScopeProduct(\'' + p.id + '\')"><img class="pf-dialog-item-cover" src="' + p.image + '" alt=""><input type="checkbox" ' + (sel ? 'checked' : '') + ' onchange="pfToggleScopeProduct(\'' + p.id + '\')"><div class="pf-dialog-item-info"><div class="pf-dialog-item-name">' + esc(p.name) + '</div><div class="pf-dialog-item-desc">' + esc(skuDesc) + '</div></div>' +
+        html += '<div class="pf-dialog-item' + (sel ? ' selected' : '') + '" onclick="pfToggleScopeProduct(\'' + p.id + '\')"><input type="checkbox" ' + (sel ? 'checked' : '') + ' onchange="pfToggleScopeProduct(\'' + p.id + '\')"><img class="pf-dialog-item-cover" src="' + p.image + '" alt=""><div class="pf-dialog-item-info"><div class="pf-dialog-item-name">' + esc(p.name) + '</div><div class="pf-dialog-item-desc">' + esc(skuDesc) + '</div></div>' +
           '<button class="pf-dialog-item-expand' + (p._expanded ? ' expanded' : '') + '" onclick="event.stopPropagation();pfToggleSku(\'' + p.id + '\')">▾</button>' +
           '<span class="pf-dialog-item-stock">库存 ' + p.stock + '</span></div>';
         if (p._expanded) {
           p.skus.forEach(function (s) {
             var ssel = (st.products.indexOf(p.id + '|' + s.id) >= 0);
-            html += '<div class="pf-dialog-sku-item' + (ssel ? ' selected' : '') + '" onclick="pfToggleSkuSel(\'' + p.id + '\',\'' + s.id + '\')"><input type="checkbox" ' + (ssel ? 'checked' : '') + '><span class="sku-label">' + esc(s.label) + '</span><span class="sku-price">' + esc(s.price) + '</span><span class="sku-stock">库存 ' + s.stock + '</span></div>';
+            html += '<div class="pf-dialog-sku-item' + (ssel ? ' selected' : '') + '" onclick="pfToggleSkuSel(\'' + p.id + '\',\'' + s.id + '\')"><input type="checkbox" ' + (ssel ? 'checked' : '') + '><span class="sku-label">' + esc(s.label) + '</span><span class="sku-code">' + esc(s.id) + '</span><span class="sku-price">' + esc(s.price) + '</span><span class="sku-stock">库存 ' + s.stock + '</span></div>';
           });
         }
         html += '</div>';
@@ -534,6 +561,129 @@
     pfRefreshScopeCount();
   }
   window.pfOnScopeSearch = function () { pfRenderScopeDialog(); };
+  function pfRenderScopeFilters() {
+    var box = $('pfScopeFilters');
+    if (!box) return;
+    var cats = (window.categories || []).filter(function (c) { return c.status !== 'disabled'; });
+    var html = '';
+    // 产品分类（可搜索下拉，选中后显示清除图标）
+    var catVal = (PF_FILTER.categoryId && PF_FILTER.categoryId !== 'all') ? String(PF_FILTER.categoryId) : '';
+    var catOpts = cats.map(function (c, i) { return { value: String(c.id), label: (i + 1) + '. ' + esc(c.nameZh) }; });
+    html += '<div class="pf-aside-group"><div class="pf-aside-label">产品分类</div>' + pfComboBuild('cat', '', '全部', catOpts, catVal, 'all') + '</div>';
+    if (PF_FILTER.categoryId && PF_FILTER.categoryId !== 'all') {
+      var attrs = (typeof getAttributesByCategory === 'function') ? getAttributesByCategory(Number(PF_FILTER.categoryId)) : [];
+      if (attrs.length) {
+        html += '<div class="pf-aside-group"><div class="pf-aside-label">分类属性</div>';
+        attrs.forEach(function (a) {
+          var cur = PF_FILTER.attrs[a.id] || '';
+          var ao = 0; var aOpts = [];
+          (a.options || []).forEach(function (o) {
+            if (o.status === 'disabled') return;
+            ao++;
+            aOpts.push({ value: String(o.id), label: ao + '. ' + esc(o.labelZh) });
+          });
+          html += pfComboBuild('attr', a.id, esc(a.nameZh), aOpts, String(cur), '');
+        });
+        html += '</div>';
+      }
+    }
+    var colOpts = PF_COLLECTIONS.map(function (c, i) { return { value: String(c.id), label: (i + 1) + '. ' + esc(c.name) }; });
+    html += '<div class="pf-aside-group"><div class="pf-aside-label">产品系列</div>' + pfComboBuild('col', '', '全部', colOpts, String(PF_FILTER.collectionId || ''), '') + '</div>';
+    html += '<div class="pf-aside-group"><div class="pf-aside-label">价格范围</div><div class="pf-range"><input type="number" class="pf-range-input" id="pfPriceMin" placeholder="最低价" value="' + (PF_FILTER.priceMin || '') + '" oninput="pfOnScopeRangeChange()"><span class="pf-range-sep">-</span><input type="number" class="pf-range-input" id="pfPriceMax" placeholder="最高价" value="' + (PF_FILTER.priceMax || '') + '" oninput="pfOnScopeRangeChange()"></div></div>';
+    html += '<div class="pf-aside-group"><div class="pf-aside-label">库存范围</div><div class="pf-range"><input type="number" class="pf-range-input" id="pfStockMin" placeholder="最少" value="' + (PF_FILTER.stockMin || '') + '" oninput="pfOnScopeRangeChange()"><span class="pf-range-sep">-</span><input type="number" class="pf-range-input" id="pfStockMax" placeholder="最多" value="' + (PF_FILTER.stockMax || '') + '" oninput="pfOnScopeRangeChange()"></div></div>';
+    box.innerHTML = html;
+  }
+  // ===== 可搜索下拉组件 (combobox) =====
+  function pfComboBuild(kind, arg, placeholder, options, value, clearVal) {
+    var curLabel = '';
+    var optsHtml = '';
+    options.forEach(function (o) {
+      var isSel = (String(value) === String(o.value));
+      if (isSel) curLabel = o.label;
+      optsHtml += '<div class="pf-combo-opt' + (isSel ? ' selected' : '') + '" data-value="' + esc(String(o.value)) + '" data-label="' + o.label + '" onmousedown="pfComboPick(event, this)">' + o.label + '</div>';
+    });
+    var hasVal = !!curLabel;
+    var argAttr = arg ? (' data-arg="' + esc(String(arg)) + '"') : '';
+    return '<div class="pf-combo" data-kind="' + kind + '"' + argAttr + ' data-value="' + (hasVal ? esc(String(value)) : '') + '" data-clearval="' + esc(String(clearVal)) + '">' +
+      '<input class="pf-combo-input" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + curLabel + '" onfocus="pfComboOpen(this)" onclick="pfComboOpen(this)" oninput="pfComboFilter(this)" onblur="pfComboBlur(this)">' +
+      '<span class="pf-combo-clear" onmousedown="pfComboClear(event, this)">✕</span>' +
+      '<div class="pf-combo-menu">' + optsHtml + '</div>' +
+    '</div>';
+  }
+  function pfComboClose(combo) { combo.classList.remove('open'); }
+  window.pfComboOpen = function (input) {
+    var combo = input.closest('.pf-combo');
+    document.querySelectorAll('.pf-combo.open').forEach(function (c) { if (c !== combo) c.classList.remove('open'); });
+    combo.classList.add('open');
+    combo.querySelectorAll('.pf-combo-opt').forEach(function (o) { o.style.display = ''; });
+    try { input.select(); } catch (e) {}
+  };
+  window.pfComboFilter = function (input) {
+    var combo = input.closest('.pf-combo');
+    combo.classList.add('open');
+    var q = input.value.trim().toLowerCase();
+    combo.querySelectorAll('.pf-combo-opt').forEach(function (o) {
+      var t = (o.getAttribute('data-label') || '').toLowerCase();
+      o.style.display = (!q || t.indexOf(q) >= 0) ? '' : 'none';
+    });
+  };
+  window.pfComboBlur = function (input) {
+    var combo = input.closest('.pf-combo');
+    setTimeout(function () {
+      var val = combo.getAttribute('data-value');
+      var label = '';
+      if (val) {
+        var opt = null;
+        combo.querySelectorAll('.pf-combo-opt').forEach(function (o) { if (o.getAttribute('data-value') === val) opt = o; });
+        label = opt ? opt.getAttribute('data-label') : '';
+      }
+      input.value = label;
+      pfComboClose(combo);
+    }, 160);
+  };
+  window.pfComboPick = function (ev, opt) {
+    ev.preventDefault();
+    var combo = opt.closest('.pf-combo');
+    var input = combo.querySelector('.pf-combo-input');
+    input.value = opt.getAttribute('data-label');
+    combo.setAttribute('data-value', opt.getAttribute('data-value'));
+    combo.querySelectorAll('.pf-combo-opt').forEach(function (o) { o.classList.remove('selected'); });
+    opt.classList.add('selected');
+    pfComboClose(combo);
+    pfComboApply(combo, opt.getAttribute('data-value'));
+  };
+  window.pfComboClear = function (ev, x) {
+    ev.preventDefault(); ev.stopPropagation();
+    var combo = x.closest('.pf-combo');
+    var input = combo.querySelector('.pf-combo-input');
+    input.value = '';
+    combo.setAttribute('data-value', '');
+    combo.querySelectorAll('.pf-combo-opt').forEach(function (o) { o.classList.remove('selected'); });
+    pfComboClose(combo);
+    pfComboApply(combo, combo.getAttribute('data-clearval') || '');
+  };
+  function pfComboApply(combo, value) {
+    var kind = combo.getAttribute('data-kind');
+    if (kind === 'cat') {
+      PF_FILTER.categoryId = value;
+      PF_FILTER.attrs = {};
+      pfRenderScopeFilters();
+      pfRenderScopeDialog();
+    } else if (kind === 'attr') {
+      var aid = combo.getAttribute('data-arg');
+      PF_FILTER.attrs[aid] = value;
+      pfRenderScopeDialog();
+    } else if (kind === 'col') {
+      PF_FILTER.collectionId = value;
+      pfRenderScopeDialog();
+    }
+  }
+  window.pfOnScopeRangeChange = function () {
+    var g = function (suffix) { var el = $('pf' + suffix); return (el && el.value !== '') ? Number(el.value) : ''; };
+    PF_FILTER.priceMin = g('PriceMin'); PF_FILTER.priceMax = g('PriceMax');
+    PF_FILTER.stockMin = g('StockMin'); PF_FILTER.stockMax = g('StockMax');
+    pfRenderScopeDialog();
+  };
   window.pfToggleScopeCol = function (id) {
     var st = PF_SCOPE_STATE[PF_SCOPE_TARGET];
     var idx = st.collections.indexOf(id);
@@ -561,6 +711,14 @@
     var p = PF_PRODUCTS.find(function (x) { return x.id === id; });
     if (p) p._expanded = !p._expanded;
     pfRenderScopeDialog();
+  };
+  window.pfToggleExpandAll = function () {
+    var expand = !PF_ALL_EXPANDED;
+    PF_ALL_EXPANDED = expand;
+    PF_PRODUCTS.forEach(function (p) { p._expanded = expand; });
+    pfRenderScopeDialog();
+    var btn = $('pfExpandToggle');
+    if (btn) btn.textContent = expand ? '收起全部' : '展开全部';
   };
   window.pfToggleSkuSel = function (pid, sid) {
     var st = PF_SCOPE_STATE[PF_SCOPE_TARGET];

@@ -1,0 +1,1236 @@
+/* ============================================================
+   赠品管理模块样式 (admin/gift)
+   复用全局 tokens: --primary / --border / --muted / --radius ...
+   ============================================================ */
+
+/* ====================== Tab 切换 ====================== */
+.gwp-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-top: 0;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.gwp-tab {
+  position: relative;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.gwp-tab:hover { color: hsl(var(--foreground)); }
+.gwp-tab.active {
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
+}
+.gwp-tab .tab-count {
+  font-size: 12px;
+  font-weight: 600;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-radius: 999px;
+  padding: 1px 8px;
+  min-width: 20px;
+  text-align: center;
+}
+.gwp-tab.active .tab-count {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+.gwp-tab-panel { display: none; }
+.gwp-tab-panel.active { display: block; }
+
+/* ====================== 区块标题（对齐「添加产品」页面：16px/600，无下划线） ====================== */
+.gwp-section {
+  margin: 28px 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+/* 卡片内的第一个区块标题：与添加产品页一致，紧贴卡片内边距（不再额外下沉） */
+.gwp-form-card > .gwp-section:first-child { margin-top: 0; }
+.gwp-form .gwp-section { grid-column: 1 / -1; }
+
+/* ====================== 左右布局（对齐「创建折扣」页面：状态置于右侧栏） ====================== */
+.gwp-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+  margin-top: 16px;
+}
+.gwp-main { min-width: 0; }
+.gwp-main > .gwp-form-card:first-child { margin-top: 0; }
+.gwp-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 16px;
+}
+.gwp-side-card {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 20px;
+}
+.gwp-side-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 12px;
+}
+@media (max-width: 768px) {
+  .gwp-layout { grid-template-columns: 1fr; }
+  .gwp-sidebar { position: static; top: auto; }
+}
+
+/* 次级板块标题（含说明性长文案）：14px / 不加粗 */
+.gwp-section-sm { font-size: 14px; font-weight: 400; }
+
+/* 表单字段标签（对齐「添加产品」页面） */
+.gwp-form .form-label,
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  margin-bottom: 6px;
+}
+.gwp-hint {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin: 4px 0 16px;
+  line-height: 1.6;
+}
+
+/* ====================== 可搜索下拉 combobox ====================== */
+.gwp-combo {
+  position: relative;
+  width: 100%;
+  min-width: 140px;
+}
+.gwp-combo-input {
+  width: 100%;
+  padding: 10px 34px 10px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--background));
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: text;
+}
+.gwp-combo-input::placeholder { color: hsl(var(--muted-foreground)); }
+.gwp-combo-input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+}
+.gwp-combo-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(var(--muted-foreground) / 0.25);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.gwp-combo-clear:hover { background: hsl(var(--muted-foreground) / 0.5); }
+/* 选中后悬停：右侧下拉箭头变为关闭图标，点击回到默认项 */
+.gwp-combo.has-value:hover .gwp-combo-arrow { display: none; }
+.gwp-combo.has-value:hover .gwp-combo-clear { display: flex; }
+.gwp-combo-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.gwp-combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px hsl(0 0% 0% / 0.12);
+  z-index: 30;
+  padding: 4px;
+  display: none;
+}
+.gwp-combo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  color: hsl(var(--foreground));
+}
+.gwp-combo-item:hover { background: hsl(var(--muted)); }
+.gwp-combo-item.selected { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); font-weight: 500; }
+.gwp-combo-idx {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  min-width: 18px;
+}
+.gwp-combo-item.selected .gwp-combo-idx { color: hsl(var(--primary)); }
+.gwp-combo-empty { padding: 10px; text-align: center; color: hsl(var(--muted-foreground)); font-size: 13px; }
+
+/* ====================== 数字信息悬浮 ====================== */
+.gwp-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.gwp-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.gwp-info-btn:hover { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+.gwp-pop {
+  position: fixed;
+  z-index: 10000;
+  min-width: 200px;
+  max-width: 320px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  box-shadow: 0 10px 30px hsl(0 0% 0% / 0.25);
+  display: none;
+  pointer-events: none;
+}
+.gwp-pop.show { display: block; }
+.gwp-pop .gwp-pop-row { display: flex; justify-content: space-between; gap: 16px; }
+.gwp-pop .gwp-pop-row span:last-child { font-weight: 600; }
+.gwp-pop-title { font-weight: 700; margin-bottom: 6px; font-size: 13px; }
+
+/* ====================== 缩略图 / 头像 ====================== */
+.gwp-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: hsl(var(--muted));
+  flex-shrink: 0;
+}
+.gwp-cell-product { display: flex; align-items: center; gap: 10px; }
+.gwp-cell-product .gwp-sub { font-size: 12px; color: hsl(var(--muted-foreground)); }
+
+/* ====================== 关联SKU数单元格（参考产品列表“所属系列”） ====================== */
+.gwp-sku-cell { display: inline-flex; align-items: center; gap: 5px; }
+.gwp-sku-count { font-weight: 500; color: hsl(var(--foreground)); }
+.gwp-sku-icon {
+  display: inline-flex;
+  align-items: center;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+  cursor: default;
+  flex-shrink: 0;
+}
+.gwp-sku-icon:hover { opacity: 1; color: hsl(var(--primary)); }
+.gwp-sku-pop {
+  position: fixed;
+  z-index: 10002;
+  min-width: 240px;
+  max-width: 320px;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+}
+.gwp-sku-tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+}
+.gwp-sku-tip + .gwp-sku-tip { border-top: 1px solid hsl(var(--border)); border-radius: 0; }
+.gwp-sku-tip:hover { background: hsl(var(--primary-50)); }
+.gwp-sku-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: hsl(var(--muted));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.gwp-sku-info { min-width: 0; }
+.gwp-sku-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gwp-sku-meta { font-size: 12px; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+
+/* ====================== 档位卡片 ====================== */
+.gwp-tier {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: hsl(var(--background));
+}
+.gwp-tier-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.4);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.gwp-tier-title { font-weight: 600; font-size: 14px; }
+.gwp-tier-body { padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.gwp-tier-foot {
+  padding: 10px 16px;
+  border-top: 1px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gwp-gift-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gwp-gift-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-size: 12px;
+  font-weight: 500;
+}
+.gwp-link-btn {
+  background: none;
+  border: none;
+  color: hsl(var(--primary));
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.gwp-link-btn:hover { background: hsl(var(--primary) / 0.1); }
+
+/* ====================== 分段控件 / 单选 ====================== */
+.gwp-seg {
+  display: inline-flex;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: hsl(var(--muted) / 0.4);
+}
+.gwp-seg-item {
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  border-right: 1px solid hsl(var(--border));
+  user-select: none;
+  white-space: nowrap;
+}
+.gwp-seg-item:last-child { border-right: none; }
+.gwp-seg-item.active { background: hsl(var(--primary)); color: #fff; font-weight: 500; }
+
+.gwp-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.gwp-opt:hover { border-color: hsl(var(--primary) / 0.5); }
+.gwp-opt.active { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.05); }
+.gwp-opt-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid hsl(var(--border));
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+}
+.gwp-opt.active .gwp-opt-radio { border-color: hsl(var(--primary)); }
+.gwp-opt.active .gwp-opt-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+.gwp-opt-body { flex: 1; }
+.gwp-opt-title { font-size: 14px; font-weight: 500; }
+.gwp-opt-desc { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+
+/* ====================== 来源 chips ====================== */
+.gwp-source-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.gwp-source-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: hsl(var(--muted));
+  font-size: 13px;
+}
+.gwp-source-chip .gwp-source-x {
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  font-weight: 700;
+}
+.gwp-source-chip .gwp-source-x:hover { color: hsl(var(--danger, 0 72% 51%)); }
+.gwp-source-tag {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+/* ====================== 统计卡片 ====================== */
+.gwp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.gwp-stat {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  background: hsl(var(--background));
+}
+.gwp-stat-label { font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-stat-value { font-size: 26px; font-weight: 700; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+.gwp-stat-sub { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.gwp-up { color: hsl(142 70% 40%); }
+.gwp-down { color: hsl(0 72% 51%); }
+
+.gwp-report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .gwp-report-grid { grid-template-columns: 1fr; } }
+
+/* ====================== 进度条 ====================== */
+.gwp-progress {
+  height: 8px;
+  background: hsl(var(--muted));
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 120px;
+}
+.gwp-progress-bar { height: 100%; background: hsl(var(--primary)); border-radius: 999px; transition: width 0.3s; }
+
+/* ====================== 全屏遮罩对话框 ====================== */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.dialog-overlay .dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(880px, 94vw);
+  max-height: 90vh;
+  background: hsl(var(--background));
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px hsl(0 0% 0% / 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dialog-overlay .dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid hsl(var(--border));
+  flex-shrink: 0;
+}
+.dialog-overlay .dialog-title { font-size: 17px; font-weight: 600; margin-bottom: 0; display: block; }
+.dialog-overlay .dialog-close {
+  position: static;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.dialog-overlay .dialog-close:hover { background: hsl(var(--muted)); }
+.dialog-overlay .dialog-body { flex: 1; overflow-y: auto; padding: 0; }
+.dialog-overlay .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 0 0 0;
+  border-top: 1px solid hsl(var(--border));
+  flex-shrink: 0;
+}
+.dialog-overlay .dialog-inner { padding: 20px 24px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+
+/* 选择器对话框内表格 */
+.gwp-pick-table { width: 100%; border-collapse: collapse; }
+.gwp-pick-table th, .gwp-pick-table td { padding: 10px 12px; border-bottom: 1px solid hsl(var(--border)); font-size: 13px; text-align: left; }
+.gwp-pick-table th { background: hsl(var(--muted) / 0.4); font-weight: 600; position: sticky; top: 0; }
+.gwp-pick-table tr:hover td { background: hsl(var(--muted) / 0.4); }
+.gwp-pick-table tr.selected td { background: hsl(var(--primary) / 0.08); }
+
+/* ====================== 杂项 ====================== */
+.gwp-empty { text-align: center; padding: 40px; color: hsl(var(--muted-foreground)); }
+.gwp-inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gwp-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.gwp-row > * { flex: 1; min-width: 200px; }
+.gwp-muted { color: hsl(var(--muted-foreground)); font-size: 12px; }
+.gwp-required { color: hsl(0 72% 51%); margin-left: 2px; }
+.gwp-divider { height: 1px; background: hsl(var(--border)); margin: 20px 0; }
+
+/* ====================== 列表辅助（更多菜单 / 分页省略号 / 筛选下拉宽度） ====================== */
+.more-menu {
+  position: fixed;
+  z-index: 10001;
+  min-width: 140px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px hsl(0 0% 0% / 0.15);
+  padding: 4px;
+}
+.more-menu-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+}
+.more-menu-item:hover { background: hsl(var(--muted)); }
+.more-menu-item.danger { color: hsl(0 72% 51%); }
+
+.page-ellipsis { padding: 0 4px; color: hsl(var(--muted-foreground)); }
+
+/* toolbar 内 combobox 宽度统一；菜单层级高于同级 */
+.toolbar .gwp-combo { width: auto; min-width: 160px; }
+.gwp-combo-menu { z-index: 10002; }
+
+/* 搜索框：去除原生样式，统一为商城后台风格（与产品列表一致） */
+.search-input {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 8px;
+  width: 280px;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.search-input:focus-within {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+}
+.search-input input {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  width: 100%;
+  font-family: var(--font-sans);
+}
+.search-input svg { color: hsl(30 10% 50%); flex-shrink: 0; }
+
+/* pill 变体（兜底） */
+.pill-green { background: hsl(142 70% 40% / 0.12); color: hsl(142 70% 35%); }
+.pill-gray { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+.pill-blue { background: hsl(210 90% 50% / 0.12); color: hsl(210 90% 45%); }
+.pill-purple { background: hsl(270 70% 55% / 0.14); color: hsl(270 65% 50%); }
+.pill-orange { background: hsl(28 90% 52% / 0.14); color: hsl(28 85% 45%); }
+
+/* 列表 badge 颜色（与产品列表 badge 调性一致） */
+.badge-purple { background: hsl(270 70% 55% / 0.14); color: hsl(270 65% 50%); }
+.badge-orange { background: hsl(28 90% 52% / 0.14); color: hsl(28 85% 45%); }
+
+/* 更多操作下拉（批量，参考产品列表；定义在下方统一区块，此处不再重复） */
+
+
+.sort-ind { font-size: 11px; }
+.card { border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--background)); }
+
+/* ====================== 布局基础（兜底，确保模块自包含） ====================== */
+/* 高度受控的 flex 链：使列表卡片撑满视口、内部滚动、底部分页器固定，
+   列表底部与浏览器底部保留 24px 间距（对齐产品列表） */
+.admin-page {
+  /* 表单页默认：在 admin iframe 内渲染，body 为 overflow:hidden/height:100vh，
+     故让 .admin-page 自身成为滚动容器（高度锁定视口、内部纵向滚动），
+     避免内容超出浏览器底部却无法查看；列表页用更具体的
+     .admin-page.gwp-list-page 覆盖为 overflow:hidden 走其独立内部滚动 */
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+/* 列表页：高度受控 flex 链，内部滚动、分页器固定底部、与浏览器底部留 24px */
+.admin-page.gwp-list-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.admin-page.gwp-list-page .page-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px 24px 24px;
+  box-sizing: border-box;
+}
+/* 表单页容器：仅内边距与居中宽度（由 .gwp-form-page 控制），自然滚动 */
+.page-container { padding: 16px 24px 24px; box-sizing: border-box; }
+/* 固定头部 / 筛选栏 / 批量栏不挤压，让 table-card 真正撑满剩余高度（仅列表页） */
+.admin-page.gwp-list-page .page-header,
+.admin-page.gwp-list-page .gwp-tabs,
+.admin-page.gwp-list-page .toolbar,
+.admin-page.gwp-list-page .bulk-action-bar,
+.admin-page.gwp-list-page .gwp-side-title { flex-shrink: 0; }
+.admin-page.gwp-list-page #reportBox { flex: 1; min-height: 0; overflow: auto; }
+.count-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+  border-radius: 999px;
+  padding: 1px 10px;
+  margin-left: 10px;
+}
+.btn-danger {
+  background: hsl(0 72% 51%);
+  color: #fff;
+  border: 1px solid hsl(0 72% 51%);
+}
+.btn-danger:hover { background: hsl(0 72% 45%); }
+.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+
+/* ====================== 表单页（添加 / 编辑） ====================== */
+.gwp-form-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--background));
+  padding: 20px;
+  margin-top: 20px;
+}
+.gwp-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+.gwp-form .form-group.full { grid-column: 1 / -1; }
+.gwp-form .form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid hsl(var(--border));
+}
+.gwp-form .form-tip { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+/* 输入框统一高度，对齐「添加产品」页面（约 40px） */
+.gwp-form input.form-input { height: 40px; }
+/* 备注文本域：提升高度、可纵向拉伸，对齐「添加产品」页面 */
+.gwp-form .form-textarea { min-height: 100px; resize: vertical; line-height: 1.5; }
+.gwp-form .dialog-close {
+  position: static;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  border-radius: 8px;
+}
+.gwp-form .dialog-close:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
+/* ====================== 表单页头部：标题左、操作右（对齐「添加产品」页面） ====================== */
+.gwp-form-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+.gwp-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 8px 0;
+  margin-bottom: 16px;
+}
+.gwp-form-header .page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+.gwp-form-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* ====================== 列表：首列（复选框列）居中，确保可点击 ====================== */
+.gwp-tab-panel .table td.col-fixed-left:first-child,
+.gwp-tab-panel .table th.col-fixed-left:first-child {
+  padding-left: 0;
+  padding-right: 0;
+}
+.gwp-tab-panel .table td.col-fixed-left:first-child .checkbox,
+.gwp-tab-panel .table th.col-fixed-left:first-child .checkbox {
+  margin: 0 auto;
+}
+
+/* ====================== 自定义列弹窗：固定列标记（与产品列表一致） ====================== */
+.custom-col-fixed-tag {
+  margin-left: 8px;
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+  border-radius: 4px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+/* ====================== 页眉操作区 ====================== */
+.page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-actions { display: flex; gap: 10px; }
+
+/* ====================== Tab 切换 ====================== */
+.gwp-tabs { display: flex; gap: 4px; border-bottom: 1px solid hsl(var(--border)); margin-top: 0; margin-bottom: 8px; }
+.gwp-tab {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s;
+}
+.gwp-tab:hover { color: hsl(var(--foreground)); }
+.gwp-tab.active { color: hsl(var(--foreground)); border-bottom-color: hsl(var(--primary)); font-weight: 600; }
+.tab-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+  border-radius: 999px;
+  padding: 1px 8px;
+  min-width: 20px;
+  text-align: center;
+}
+.gwp-tab-panel { display: none; padding-top: 8px; }
+.gwp-tab-panel.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ====================== 板块标题补充 ====================== */
+.gwp-section-tip { font-size: 12px; font-weight: 400; color: hsl(var(--muted-foreground)); margin-left: 10px; }
+
+/* ====================== combobox 触发按钮（scope / gift / product） ====================== */
+.gwp-combo-btn {
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gwp-combo-btn:hover { border-color: hsl(var(--primary)); }
+.gwp-combo-scope .gwp-combo-btn,
+.gwp-combo-gift .gwp-combo-btn,
+.gwp-combo-product .gwp-combo-btn { min-height: 40px; }
+.gwp-combo-gift, .gwp-combo-scope, .gwp-combo-product { width: 100%; }
+
+/* ====================== 表单卡片 / 提示（复用创建系列通用样式） ====================== */
+.form-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--background));
+  padding: 20px;
+}
+.form-hint {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+}
+.gwp-muted { color: hsl(var(--muted-foreground)); font-size: 13px; }
+.gwp-variant-empty { padding: 4px 0; }
+.btn-dashed {
+  border: 1px dashed hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+.btn-dashed:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+
+/* ====================== 赠品池：已关联产品模块（样式/布局对齐 collection 创建系列） ====================== */
+.assoc-products-section { margin-top: 8px; }
+.assoc-products-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.assoc-products-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.assoc-products-count { font-size: 12px; color: hsl(var(--muted-foreground)); }
+
+.assoc-product-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+}
+.assoc-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+}
+
+/* 单个关联产品条目 */
+.gwp-prod-block {
+  padding: 14px 16px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.gwp-prod-block:last-child { border-bottom: none; }
+.gwp-prod-main { display: flex; align-items: center; gap: 12px; }
+.product-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: hsl(var(--muted));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.product-info { flex: 1; min-width: 0; }
+.product-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-meta { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+.remove-product {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.remove-product:hover { background: hsl(0 84% 90%); color: hsl(var(--error)); }
+
+/* 每个产品下的多个 SKU，可各自填写可赠送库存 */
+.gwp-sku-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.gwp-sku-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: hsl(var(--muted) / 0.25);
+  border-radius: 8px;
+}
+.gwp-sku-name { flex: 1; min-width: 140px; font-size: 13px; color: hsl(var(--foreground)); }
+.gwp-sku-stock { display: inline-flex; align-items: center; gap: 8px; }
+.gwp-sku-stock label { font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-stock-input { max-width: 120px; }
+.gwp-sku-remove {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.gwp-sku-remove:hover { background: hsl(0 84% 90%); color: hsl(var(--error)); }
+.gwp-add-sku {
+  margin-top: 8px;
+  font-size: 13px;
+  color: hsl(var(--primary));
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.gwp-add-sku:disabled { color: hsl(var(--muted-foreground)); cursor: not-allowed; }
+
+/* ====================== 关联产品对话框（参考「折扣」产品及SKU对话框） ====================== */
+.dialog-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.pf-dialog {
+  background: #fff;
+  border-radius: 12px;
+  width: 900px;
+  max-width: 92vw;
+  height: 84vh;
+  min-height: 420px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.pf-dialog-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; flex-shrink: 0;
+}
+.pf-dialog-title { font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); }
+.pf-dialog-close {
+  background: none; border: none; cursor: pointer;
+  color: hsl(var(--muted-foreground)); padding: 4px;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; font-size: 16px; line-height: 1;
+}
+.pf-dialog-close:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.pf-dialog-body { flex: 1; overflow-y: auto; padding: 0; min-height: 0; }
+.pf-dialog-search {
+  padding: 16px 24px; border-bottom: 1px solid hsl(var(--border));
+  display: flex; gap: 12px; align-items: center; flex-shrink: 0;
+}
+.pf-dialog-search input {
+  flex: 1; padding: 8px 12px; border: 1px solid hsl(var(--border));
+  border-radius: 6px; font-size: 13px; outline: none;
+}
+.pf-dialog-search input:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15); }
+.pf-scope-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pf-link-btn { font-size: 12px; color: hsl(var(--primary)); background: transparent; border: none; cursor: pointer; padding: 4px 6px; white-space: nowrap; border-radius: 4px; }
+.pf-link-btn:hover { background: hsl(var(--primary) / .08); text-decoration: underline; }
+
+.pf-dialog-list { padding: 6px 0; }
+.pf-dialog-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer;
+  border-bottom: 1px solid hsl(var(--border) / .55); transition: background .12s;
+}
+.pf-dialog-item:last-child { border-bottom: none; }
+.pf-dialog-item:hover { background: hsl(var(--accent)); }
+.pf-dialog-item.selected { background: hsl(var(--primary) / .07); box-shadow: inset 3px 0 0 hsl(var(--primary)); }
+.pf-dialog-item input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0; accent-color: hsl(var(--primary)); }
+.pf-dialog-item-cover {
+  width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+  background: hsl(var(--muted)); border: 1px solid hsl(var(--border) / .6);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.pf-dialog-item-info { flex: 1; min-width: 0; }
+.pf-dialog-item-name { font-size: 14px; font-weight: 600; color: hsl(var(--foreground)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-dialog-item-desc { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-dialog-item-expand {
+  width: 26px; height: 26px; border: none; background: transparent; cursor: pointer;
+  color: hsl(var(--muted-foreground)); font-size: 12px; flex-shrink: 0; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; transition: transform .2s, background .15s, color .15s;
+}
+.pf-dialog-item-expand:hover { background: hsl(var(--muted) / .5); color: hsl(var(--foreground)); }
+.pf-dialog-item-expand.expanded { transform: rotate(180deg); }
+
+.pf-dialog-sku-list { display: none; }
+.pf-dialog-sku-list.open { display: block; }
+.pf-dialog-sku-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 24px; cursor: pointer;
+  border-bottom: 1px solid hsl(var(--border) / .4); background: hsl(var(--muted) / .12); transition: background .12s;
+}
+.pf-dialog-sku-item:last-child { border-bottom: none; }
+.pf-dialog-sku-item:hover { background: hsl(var(--accent)); }
+.pf-dialog-sku-item.selected { background: hsl(var(--primary) / .07); box-shadow: inset 3px 0 0 hsl(var(--primary)); }
+.pf-dialog-sku-item input[type="checkbox"] { width: 16px; height: 16px; margin: 0 0 0 90px; cursor: pointer; flex-shrink: 0; accent-color: hsl(var(--primary)); }
+.sku-label { flex: 1; font-size: 13px; color: hsl(var(--foreground)); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sku-price { font-size: 12px; color: hsl(var(--foreground)); font-weight: 500; }
+.sku-stock { font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 16px; flex-shrink: 0; min-width: 64px; text-align: right; }
+
+.pf-dialog-select-all { font-size: 12px; color: hsl(var(--primary)); cursor: pointer; white-space: nowrap; user-select: none; font-weight: 500; }
+.pf-dialog-select-all:hover { text-decoration: underline; }
+.pf-dialog-count { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.pf-dialog-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid hsl(var(--border)); background: hsl(var(--card)); flex-shrink: 0; }
+.pf-dialog-footer--split { justify-content: space-between; }
+.pf-dialog-footer--split .dialog-actions { margin: 0; padding: 0; }
+.pf-dialog-footer .btn { min-width: 80px; justify-content: center; }
+.pf-dialog-footer-left { display: inline-flex; align-items: center; gap: 12px; }
+.pf-dialog-empty { padding: 48px 20px; text-align: center; font-size: 13px; color: hsl(var(--muted-foreground)); }
+
+/* ====================== 规则：赠送条件行 ====================== */
+.gwp-cond-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.25);
+  margin-bottom: 10px;
+}
+.gwp-cond-row .gwp-combo { min-width: 200px; width: 220px; flex-shrink: 0; }
+.gwp-cond-op { font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); }
+.gwp-cond-val { max-width: 160px; }
+.gwp-cond-unit { font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-cond-or { font-size: 12px; color: hsl(var(--muted-foreground)); padding: 0 8px; }
+
+/* ====================== 规则：奖励方式分段控件 ====================== */
+.gwp-seg {
+  display: inline-flex;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+}
+.gwp-seg button {
+  padding: 9px 22px;
+  font-size: 14px;
+  background: hsl(var(--background));
+  border: none;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  border-right: 1px solid hsl(var(--border));
+}
+.gwp-seg button:last-child { border-right: none; }
+.gwp-seg button.active { background: hsl(var(--primary)); color: #fff; font-weight: 600; }
+
+/* ====================== 规则：赠品选择列表 ====================== */
+.gwp-gift-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.gwp-gift-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+}
+.gwp-gift-name { flex: 1; font-size: 14px; font-weight: 500; }
+.gwp-check-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  line-height: 1.6;
+}
+.gwp-check-line .checkbox { margin-top: 2px; flex-shrink: 0; }
+
+/* ====================== 空状态小号 ====================== */
+.gwp-empty-sm { padding: 18px; font-size: 13px; }
+
+/* ====================== 范围 chip（范围对话框内） ====================== */
+.gwp-source-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.gwp-source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-size: 13px;
+}
+.gwp-source-tag { font-size: 11px; opacity: 0.8; }
+.gwp-source-x { cursor: pointer; font-size: 12px; opacity: 0.7; }
+.gwp-source-x:hover { opacity: 1; }
+
+/* ====================== 数据报表 ====================== */
+.gwp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.gwp-stat {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--background));
+  padding: 18px 20px;
+}
+.gwp-stat-label { font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-stat-value { font-size: 28px; font-weight: 700; margin: 6px 0 2px; color: hsl(var(--foreground)); }
+.gwp-stat-sub { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.gwp-report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 880px) { .gwp-report-grid { grid-template-columns: 1fr; } }
+.gwp-progress { height: 8px; background: hsl(var(--muted)); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.gwp-progress-bar { height: 100%; background: hsl(var(--primary)); border-radius: 999px; }
+
+/* ====================== 自定义列弹窗选项 ====================== */
+.gwp-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.gwp-opt.active { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.06); }
+.gwp-opt-radio {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.gwp-opt.active .gwp-opt-radio { background: hsl(var(--primary)); border-color: hsl(var(--primary)); }
+.gwp-opt.active .gwp-opt-radio::after { content: "✓"; color: #fff; font-size: 11px; }
+.gwp-opt-body { display: flex; flex-direction: column; }
+.gwp-opt-title { font-weight: 500; }
+
+/* ====================== 列表对齐产品列表：固定列复选框居中 ====================== */
+.table-card td.col-fixed-left .checkbox,
+.table-card th.col-fixed-left .checkbox { margin: 0 auto; }
+
+/* ====================== 空状态（与产品列表一致） ====================== */
+.empty-state {
+  padding: 56px 16px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+}
+
+/* ====================== 批量「更多操作」与行「更多」下拉菜单（对齐产品列表） ====================== */
+.more-actions-dropdown {
+  display: none;
+  position: fixed;
+  min-width: 160px;
+  background: #FFFFFF;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  padding: 6px;
+}
+.more-actions-item {
+  padding: 9px 16px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.more-actions-item:hover { background: hsl(var(--primary-50)); color: hsl(var(--primary)); }
+
+/* ====================== 列表内联小元素 ====================== */
+.caret { font-size: 10px; opacity: 0.7; margin-left: 2px; }
+.page-ellipsis { padding: 0 6px; color: hsl(var(--muted-foreground)); }
+.gwp-or { color: hsl(var(--primary)); font-weight: 600; }
+.gwp-muted { color: hsl(var(--muted-foreground)); font-size: 13px; }
+
+/* ====================== 报表：进度条行 ====================== */
+.gwp-report-card { padding: 18px 20px; }
+.gwp-report-title { font-size: 15px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 14px; }
+.gwp-progress-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.gwp-progress-label { font-size: 13px; color: hsl(var(--foreground)); }
+.gwp-progress-num { font-size: 13px; color: hsl(var(--muted-foreground)); text-align: right; }

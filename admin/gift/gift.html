@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赠品管理</title>
+  <link rel="stylesheet" href="/admin/common/css/commons.css">
+  <link rel="stylesheet" href="/admin/gift/css/gift.css">
+</head>
+<body>
+  <div class="admin-page gwp-list-page">
+    <div class="page-container">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">赠品管理</div>
+          <div class="page-subtitle">
+            <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              管理赠品池与赠品规则，支持买赠、满赠等营销玩法，并可查看赠品相关的数据报表
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 切换 -->
+      <div class="gwp-tabs" id="gwpTabs">
+        <div class="gwp-tab active" data-tab="pool">赠品池 <span class="tab-count" id="cntPool">0</span></div>
+        <div class="gwp-tab" data-tab="rule">赠品规则 <span class="tab-count" id="cntRule">0</span></div>
+        <div class="gwp-tab" data-tab="report">数据报表</div>
+      </div>
+
+      <!-- ====================== 赠品池 ====================== -->
+      <div class="gwp-tab-panel active" id="panelPool">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" class="search-input" id="poolSearch" placeholder="搜索赠品名称">
+            <div class="gwp-combo" id="poolStatus" data-kind="enum" data-arg="all:全部状态|active:启用|disabled:禁用|draft:草稿" data-value="all" data-default="all" data-placeholder="状态"></div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" id="addPool">+ 新增赠品</button>
+          </div>
+        </div>
+
+        <div class="bulk-action-bar" id="bulkBarPool">
+          <div class="bulk-selected-count">已选 <span class="count" id="selCountPool">0</span> 条</div>
+          <div class="bulk-actions">
+            <button class="btn btn-success btn-sm" data-bulk="enable">批量启用</button>
+            <button class="btn btn-destructive btn-sm" data-bulk="disable">批量禁用</button>
+            <button class="btn btn-destructive btn-sm" data-bulk="delete">批量删除</button>
+            <button class="btn btn-secondary btn-sm" id="moreActionsBtnPool">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              更多操作
+            </button>
+            <button class="btn btn-secondary btn-sm" id="openColsPool">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              自定义列
+            </button>
+            <button class="btn btn-secondary btn-sm" id="refreshPool" title="按当前筛选条件刷新数据">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr id="poolHeadRow"></tr></thead>
+              <tbody id="poolBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination-info" id="poolInfo">共 0 条</div>
+            <div class="pagination-buttons" id="poolPager"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================== 赠品规则 ====================== -->
+      <div class="gwp-tab-panel" id="panelRule">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" class="search-input" id="ruleSearch" placeholder="搜索规则名称">
+            <div class="gwp-combo" id="ruleStatus" data-kind="enum" data-arg="all:全部状态|active:启用|disabled:禁用|draft:草稿" data-value="all" data-default="all" data-placeholder="状态"></div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" id="addRule">+ 新增规则</button>
+          </div>
+        </div>
+
+        <div class="bulk-action-bar" id="bulkBarRule">
+          <div class="bulk-selected-count">已选 <span class="count" id="selCountRule">0</span> 条</div>
+          <div class="bulk-actions">
+            <button class="btn btn-success btn-sm" data-bulk="enable">批量启用</button>
+            <button class="btn btn-destructive btn-sm" data-bulk="disable">批量禁用</button>
+            <button class="btn btn-destructive btn-sm" data-bulk="delete">批量删除</button>
+            <button class="btn btn-secondary btn-sm" id="moreActionsBtnRule">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              更多操作
+            </button>
+            <button class="btn btn-secondary btn-sm" id="openColsRule">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              自定义列
+            </button>
+            <button class="btn btn-secondary btn-sm" id="refreshRule" title="按当前筛选条件刷新数据">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr id="ruleHeadRow"></tr></thead>
+              <tbody id="ruleBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar">
+            <div class="pagination-info" id="ruleInfo">共 0 条</div>
+            <div class="pagination-buttons" id="rulePager"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================== 数据报表 ====================== -->
+      <div class="gwp-tab-panel" id="panelReport">
+        <div class="toolbar">
+          <div class="toolbar-left"></div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary btn-sm" id="refreshReport" title="刷新数据">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="reportBox"></div>
+      </div>
+
+      <!-- ====================== 自定义列弹窗 ====================== -->
+      <div class="custom-col-panel" id="colPanel">
+        <div class="custom-col-header">选择显示列</div>
+        <div class="custom-col-body" id="colBody"></div>
+        <div class="custom-col-footer">
+          <button class="btn btn-secondary btn-sm" id="colReset">恢复默认</button>
+        </div>
+      </div>
+
+      <!-- 批量「更多操作」菜单 -->
+      <div class="more-actions-dropdown" id="moreActionsMenu">
+        <div class="more-actions-item" data-bulk="draft">批量移至草稿</div>
+      </div>
+
+      <!-- 行「更多」菜单（复制） -->
+      <div class="more-actions-dropdown" id="rowMoreMenu">
+        <div class="more-actions-item" data-dup>复制</div>
+      </div>
+
+      <!-- 关联SKU数：hover 图标展示关联SKU详情（封面/名称/编号/可用库存） -->
+      <div class="gwp-sku-pop" id="skuTipPop" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script src="/admin/gift/js/gift_common.js"></script>
+  <script src="/admin/gift/js/gift_list.js"></script>
+</body>
+</html>

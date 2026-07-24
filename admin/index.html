@@ -107,7 +107,11 @@
       'promotions':      'promotion/promotion_list.html',
       'add-promotion':   'promotion/add_promotion.html',
       'edit-promotion':  'promotion/edit_promotion.html',
-      'gifts':        'product/product_list.html',
+      'gifts':        'gift/gift.html',
+      'gift-pool-add':   'gift/gift_pool_form.html',
+      'gift-pool-edit':  'gift/gift_pool_form.html',
+      'gift-rule-add':   'gift/gift_rule_form.html',
+      'gift-rule-edit':  'gift/gift_rule_form.html',
       'coupons':      'product/product_list.html',
       'content':         'content/page_list.html',
       'content-pages':     'content/page_list.html',
@@ -146,6 +150,10 @@
       'add-promotion':   ['营销', {label: '折扣', page: 'promotions'}, '创建折扣'],
       'edit-promotion':  ['营销', {label: '折扣', page: 'promotions'}, '编辑折扣'],
       'gifts':        ['营销', '赠品管理'],
+      'gift-pool-add':   ['营销', {label: '赠品管理', page: 'gifts'}, '添加赠品'],
+      'gift-pool-edit':  ['营销', {label: '赠品管理', page: 'gifts'}, '编辑赠品'],
+      'gift-rule-add':   ['营销', {label: '赠品管理', page: 'gifts'}, '创建赠品规则'],
+      'gift-rule-edit':  ['营销', {label: '赠品管理', page: 'gifts'}, '编辑赠品规则'],
 
       'content':      ['内容', '页面管理'],
       'content-pages':     ['内容', '页面管理'],
@@ -221,6 +229,45 @@
         }
       }
       // 优先精确匹配
+      if (matchedPage) {
+        var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
+        items.forEach(function(item) {
+          item.classList.toggle('active', item.dataset.page === matchedPage);
+        });
+        updateBreadcrumb(matchedPage);
+        currentActivePage = matchedPage;
+      }
+      loadIframe(url);
+    };
+
+    // 被 iframe 中的页面调用：按模块 + 相对 admin 根的路径加载表单/下钻页，并刷新侧边栏选中态与面包屑
+    // 例：loadAdminPage('gift', 'gift/gift_pool_form.html?add=1')
+    //     loadAdminPage('gift', 'gift.html', { tab: 'pool' })
+    window.loadAdminPage = function(module, path, extra) {
+      if (!path) return;
+      var url = path;
+      if (extra && typeof extra === 'object') {
+        var q = [];
+        for (var k in extra) {
+          if (extra.hasOwnProperty(k)) q.push(encodeURIComponent(k) + '=' + encodeURIComponent(extra[k]));
+        }
+        if (q.length) url += (url.indexOf('?') === -1 ? '?' : '&') + q.join('&');
+      }
+      // 反查 PAGE_CONFIG（仅按文件名匹配），用于刷新侧边栏与面包屑
+      var baseUrl = url.split('?')[0];
+      var lastSeg = baseUrl.split('/').pop();
+      var matchedPage = null;
+      for (var key in PAGE_CONFIG) {
+        if (!PAGE_CONFIG.hasOwnProperty(key)) continue;
+        if (PAGE_CONFIG[key].split('/').pop() !== lastSeg) continue;
+        // 同名文件区分新增/编辑（由 query 决定）
+        if (key === 'gift-pool-edit' && url.indexOf('edit=') === -1) continue;
+        if (key === 'gift-pool-add' && url.indexOf('add=') === -1) continue;
+        if (key === 'gift-rule-edit' && url.indexOf('edit=') === -1) continue;
+        if (key === 'gift-rule-add' && url.indexOf('add=') === -1) continue;
+        matchedPage = key;
+        break;
+      }
       if (matchedPage) {
         var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
         items.forEach(function(item) {

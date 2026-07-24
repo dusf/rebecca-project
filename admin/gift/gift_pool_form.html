@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赠品池 - 编辑</title>
+  <link rel="stylesheet" href="/admin/common/css/commons.css">
+  <link rel="stylesheet" href="css/gift.css">
+</head>
+<body>
+  <div class="admin-page">
+    <div class="page-container">
+      <div class="gwp-form-page">
+      <div class="page-header">
+        <div class="page-title" id="formTitle">新增赠品</div>
+        <div class="page-actions">
+          <button class="btn btn-ghost" id="btnCancel">取消</button>
+          <button class="btn btn-primary" id="btnSave">保存赠品</button>
+        </div>
+      </div>
+
+      <div class="gwp-layout">
+        <div class="gwp-main">
+          <div class="gwp-form-card">
+        <!-- 基本信息 -->
+        <div class="gwp-section">基本信息</div>
+        <div class="gwp-form">
+          <div class="form-group full">
+            <label class="form-label">赠品名称 <span class="req">*</span></label>
+            <input type="text" class="form-input" id="displayName" placeholder="如：丝绒迷你化妆包" maxlength="60">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">备注</label>
+            <textarea class="form-textarea" id="remark" rows="4" placeholder="选填，记录赠品说明、投放渠道等"></textarea>
+          </div>
+        </div>
+          </div>
+
+          <!-- 已关联产品（独立板块，对齐系列页已关联产品卡片样式） -->
+          <div class="gwp-form-card">
+            <div class="assoc-products-section">
+              <div class="assoc-products-header">
+                <div>
+                  <div class="assoc-products-title">已关联产品</div>
+                  <div class="form-hint">可添加多个产品，每个产品多个 SKU，并填写各自可赠送库存</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" type="button" id="addProductBtn">关联产品</button>
+              </div>
+              <div id="productBlocks" class="assoc-product-list"></div>
+              <div class="form-hint" style="margin-top:8px;" id="prodCount">已关联 0 个产品</div>
+            </div>
+          </div>
+        </div>
+        <aside class="gwp-sidebar">
+          <div class="gwp-side-card">
+            <div class="gwp-side-title">状态</div>
+            <div class="gwp-combo" id="status" data-kind="enum" data-arg="active:启用|disabled:禁用|draft:草稿" data-value="active" data-default="active" data-placeholder="请选择状态"></div>
+          </div>
+        </aside>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/gift_common.js"></script>
+  <script src="js/gift_pool_form.js"></script>
+</body>
+</html>

@@ -19,7 +19,7 @@
   /* ====================== 列定义 ====================== */
   const COLS = {
     pool: [
-      { key: 'name', label: '赠品名称' },
+      { key: 'name', label: '赠品名称', fixed: 'left', alwaysShow: true, width: '240px' },
       { key: 'skuCount', label: '关联SKU数' },
       { key: 'products', label: '关联产品' },
       { key: 'status', label: '状态' },
@@ -27,7 +27,7 @@
       { key: 'remark', label: '备注', def: false }
     ],
     rule: [
-      { key: 'name', label: '规则名称' },
+      { key: 'name', label: '规则名称', fixed: 'left', alwaysShow: true, width: '240px' },
       { key: 'scope', label: '赠送范围' },
       { key: 'conditions', label: '赠送条件' },
       { key: 'reward', label: '奖励方式' },
@@ -48,14 +48,46 @@
   /* ====================== 自定义列持久化 ====================== */
   function defaultVisible(tab) { return COLS[tab].filter((c) => c.def !== false).map((c) => c.key); }
   function loadVisible(tab) {
+    const validKeys = COLS[tab].map((c) => c.key);
+    const alwaysKeys = COLS[tab].filter((c) => c.alwaysShow).map((c) => c.key);
     try {
       const s = localStorage.getItem('gwp_' + tab + '_cols');
-      if (s) { const a = JSON.parse(s); if (Array.isArray(a) && a.length) return a; }
+      if (s) {
+        const a = JSON.parse(s);
+        if (Array.isArray(a)) {
+          const saved = a.filter((key, index) => validKeys.includes(key) && a.indexOf(key) === index);
+          return alwaysKeys.concat(saved.filter((key) => !alwaysKeys.includes(key)));
+        }
+      }
     } catch (e) {}
     return defaultVisible(tab);
   }
   function saveVisible(tab, arr) { try { localStorage.setItem('gwp_' + tab + '_cols', JSON.stringify(arr)); } catch (e) {} }
-  function visibleCols(tab) { const v = loadVisible(tab); return COLS[tab].filter((c) => v.includes(c.key)); }
+  function defaultOrder(tab) { return COLS[tab].filter((c) => !c.fixed).map((c) => c.key); }
+  function loadOrder(tab) {
+    const defaults = defaultOrder(tab);
+    try {
+      const s = localStorage.getItem('gwp_' + tab + '_col_order');
+      if (s) {
+        const a = JSON.parse(s);
+        if (Array.isArray(a)) {
+          const saved = a.filter((key, index) => defaults.includes(key) && a.indexOf(key) === index);
+          return saved.concat(defaults.filter((key) => !saved.includes(key)));
+        }
+      }
+    } catch (e) {}
+    return defaults;
+  }
+  function saveOrder(tab, arr) { try { localStorage.setItem('gwp_' + tab + '_col_order', JSON.stringify(arr)); } catch (e) {} }
+  function visibleCols(tab) {
+    const visible = loadVisible(tab);
+    const fixed = COLS[tab].filter((c) => c.fixed === 'left' && visible.includes(c.key));
+    const movable = loadOrder(tab)
+      .filter((key) => visible.includes(key))
+      .map((key) => COLS[tab].find((c) => c.key === key))
+      .filter(Boolean);
+    return fixed.concat(movable);
+  }
 
   /* ====================== 数据访问 ====================== */
   function listOf(tab) { return tab === 'pool' ? GWP.pool() : GWP.rules(); }
@@ -129,8 +161,12 @@
     const headRow = document.getElementById(tab === 'pool' ? 'poolHeadRow' : 'ruleHeadRow');
     const vis = visibleCols(tab);
     headRow.innerHTML =
-      `<th class="col-fixed-left" style="width:40px"><div class="checkbox" data-checkall></div></th>` +
-      vis.map((c) => `<th data-key="${c.key}">${c.label}</th>`).join('') +
+      `<th class="col-fixed-left col-fixed-select" style="width:40px"><div class="checkbox" data-checkall></div></th>` +
+      vis.map((c) => {
+        const fixedClass = c.fixed === 'left' ? ' class="col-fixed-left col-fixed-name"' : '';
+        const width = c.width ? ` style="width:${c.width}"` : '';
+        return `<th${fixedClass}${width} data-key="${c.key}">${c.label}</th>`;
+      }).join('') +
       `<th class="col-fixed-right" style="width:120px">操作</th>`;
   }
 
@@ -151,9 +187,13 @@
     } else {
       body.innerHTML = pageRows.map((row) => {
         const checked = s.sel.has(row.id);
-        const cells = vis.map((c) => `<td>${cellHtml(tab, row, c.key)}</td>`).join('');
+        const cells = vis.map((c) => {
+          const fixedClass = c.fixed === 'left' ? ' class="col-fixed-left col-fixed-name"' : '';
+          const width = c.width ? ` style="width:${c.width}"` : '';
+          return `<td${fixedClass}${width}>${cellHtml(tab, row, c.key)}</td>`;
+        }).join('');
         return `<tr data-id="${row.id}">
-          <td class="col-fixed-left" style="width:40px"><div class="checkbox${checked ? ' checked' : ''}" data-row="${row.id}"></div></td>
+          <td class="col-fixed-left col-fixed-select" style="width:40px"><div class="checkbox${checked ? ' checked' : ''}" data-row="${row.id}"></div></td>
           ${cells}
           <td class="col-fixed-right" style="width:120px">
             <div class="action-group">
@@ -217,22 +257,70 @@
 
   function buildColPanel(tab) {
     const vis = loadVisible(tab);
-    colBody.innerHTML = COLS[tab].map((c) => `
-      <div class="custom-col-item ${vis.includes(c.key) ? 'active' : ''}" data-col="${c.key}">
+    const fixedCols = COLS[tab].filter((c) => c.alwaysShow);
+    const orderedCols = loadOrder(tab).map((key) => COLS[tab].find((c) => c.key === key)).filter(Boolean);
+    colBody.innerHTML = fixedCols.concat(orderedCols).map((c) => `
+      <div class="custom-col-item ${vis.includes(c.key) ? 'active' : ''} ${c.alwaysShow ? 'disabled' : ''}"
+        data-col="${c.key}" ${c.alwaysShow ? '' : 'draggable="true"'}>
+        <span class="drag-handle${c.alwaysShow ? ' drag-disabled' : ''}" title="${c.alwaysShow ? '固定列不可拖动' : '拖拽排序'}">⋮⋮</span>
         <span class="col-check">${vis.includes(c.key) ? ICON.check : ''}</span>
         <span class="col-title">${c.label}</span>
+        ${c.alwaysShow ? '<span class="custom-col-fixed-tag">固定</span>' : ''}
       </div>`).join('');
     colBody.querySelectorAll('.custom-col-item').forEach((it) => {
-      it.addEventListener('click', () => {
+      if (it.classList.contains('disabled')) return;
+      it.addEventListener('click', (e) => {
+        e.stopPropagation();
         const key = it.dataset.col;
         const v = loadVisible(tab);
         const idx = v.indexOf(key);
-        if (idx >= 0) { if (v.length > 1) v.splice(idx, 1); } else v.push(key);
+        if (idx >= 0) v.splice(idx, 1);
+        else v.push(key);
         saveVisible(tab, v);
         const on = v.includes(key);
         it.classList.toggle('active', on);
         it.querySelector('.col-check').innerHTML = on ? ICON.check : '';
         renderHead(tab); renderBody(tab);
+      });
+    });
+    initColDrag(tab);
+  }
+
+  function initColDrag(tab) {
+    let dragItem = null;
+    colBody.querySelectorAll('.custom-col-item[draggable="true"]').forEach((item) => {
+      item.addEventListener('dragstart', (e) => {
+        dragItem = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', item.dataset.col);
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        colBody.querySelectorAll('.custom-col-item').forEach((el) => el.classList.remove('drag-over'));
+        dragItem = null;
+      });
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dragItem && item !== dragItem) item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        item.classList.remove('drag-over');
+        if (!dragItem || item === dragItem) return;
+        const order = loadOrder(tab);
+        const fromIndex = order.indexOf(dragItem.dataset.col);
+        const toIndex = order.indexOf(item.dataset.col);
+        if (fromIndex < 0 || toIndex < 0) return;
+        order.splice(fromIndex, 1);
+        order.splice(toIndex, 0, dragItem.dataset.col);
+        saveOrder(tab, order);
+        buildColPanel(tab);
+        renderHead(tab);
+        renderBody(tab);
       });
     });
   }
@@ -526,9 +614,11 @@
     // 自定义列：恢复默认 / 关闭
     document.getElementById('colReset').addEventListener('click', () => {
       saveVisible(colPanelTab, defaultVisible(colPanelTab));
+      saveOrder(colPanelTab, defaultOrder(colPanelTab));
       buildColPanel(colPanelTab);
       renderHead(colPanelTab); renderBody(colPanelTab);
     });
+    colPanel.addEventListener('click', (e) => e.stopPropagation());
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#colPanel') && !e.target.closest('[id^="openCols"]')) closeAllMenus();
     });

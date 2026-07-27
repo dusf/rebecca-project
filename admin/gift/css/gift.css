@@ -753,25 +753,65 @@
 }
 
 /* ====================== 列表：首列（复选框列）居中，确保可点击 ====================== */
-.gwp-tab-panel .table td.col-fixed-left:first-child,
-.gwp-tab-panel .table th.col-fixed-left:first-child {
+.gwp-tab-panel table td.col-fixed-left:first-child,
+.gwp-tab-panel table th.col-fixed-left:first-child {
   padding-left: 0;
   padding-right: 0;
 }
-.gwp-tab-panel .table td.col-fixed-left:first-child .checkbox,
-.gwp-tab-panel .table th.col-fixed-left:first-child .checkbox {
+.gwp-tab-panel table td.col-fixed-left:first-child .checkbox,
+.gwp-tab-panel table th.col-fixed-left:first-child .checkbox {
   margin: 0 auto;
+}
+
+/* 赠品池 / 赠品规则：复选框与名称双固定列 */
+.gwp-tab-panel table .col-fixed-select {
+  left: 0;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+}
+.gwp-tab-panel table .col-fixed-name {
+  left: 40px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+}
+.gwp-tab-panel table .col-fixed-select::after {
+  display: none;
+}
+.gwp-tab-panel table thead .col-fixed-select {
+  z-index: 5;
+}
+.gwp-tab-panel table thead .col-fixed-name {
+  z-index: 4;
+}
+.gwp-tab-panel table tbody .col-fixed-select {
+  z-index: 3;
+}
+.gwp-tab-panel table tbody .col-fixed-name {
+  z-index: 2;
+}
+.gwp-tab-panel table .col-fixed-name > div {
+  min-width: 0;
 }
 
 /* ====================== 自定义列弹窗：固定列标记（与产品列表一致） ====================== */
 .custom-col-fixed-tag {
-  margin-left: 8px;
-  font-size: 11px;
+  margin-left: auto;
+  font-size: 12px;
   color: hsl(var(--muted-foreground));
   background: hsl(var(--muted));
   border-radius: 4px;
   padding: 2px 7px;
   flex-shrink: 0;
+}
+.custom-col-item .col-title {
+  flex: 1;
+  min-width: 0;
+}
+.custom-col-item .drag-handle.drag-disabled {
+  cursor: not-allowed;
+  opacity: 0.25;
 }
 
 /* ====================== 页眉操作区 ====================== */

@@ -1225,6 +1225,44 @@
       font-size: 12px;
     }
 
+    .sku-bulk-menu-wrap {
+      position: relative;
+    }
+
+    .sku-bulk-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 30;
+      width: 148px;
+      padding: 6px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      background: hsl(var(--background));
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    .sku-bulk-menu[hidden] {
+      display: none;
+    }
+
+    .sku-bulk-menu button {
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: hsl(var(--foreground));
+      text-align: left;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sku-bulk-menu button:hover {
+      background: hsl(var(--muted));
+    }
+
     /* 内联批量编辑面板 */
     .bulk-inline-edit {
       display: flex;
@@ -1242,12 +1280,6 @@
 
     .bulk-inline-edit .form-input {
       width: 160px;
-      padding: 6px 10px;
-      font-size: 13px;
-    }
-
-    .bulk-inline-edit .form-select {
-      width: 140px;
       padding: 6px 10px;
       font-size: 13px;
     }
@@ -1274,22 +1306,6 @@
       outline: none;
     }
 
-    .spec-link-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-      font-size: 13px;
-      color: hsl(var(--foreground));
-      cursor: pointer;
-    }
-
-    .spec-link-toggle .checkbox {
-      width: 16px;
-      height: 16px;
-    }
-
-    .spec-link-toggle input[type="checkbox"],
     .sku-inline-checkbox {
       width: 16px;
       height: 16px;
@@ -1540,6 +1556,296 @@
       text-align: center;
       color: hsl(var(--muted-foreground));
       font-size: 13px;
+    }
+
+    .sku-batch-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: flex;
+      justify-content: flex-end;
+      background: rgba(15, 23, 42, 0.24);
+    }
+
+    .sku-batch-drawer-overlay[hidden] {
+      display: none;
+    }
+
+    .sku-batch-drawer {
+      width: min(760px, calc(100vw - 32px));
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: hsl(var(--background));
+      box-shadow: -18px 0 42px rgba(15, 23, 42, 0.16);
+    }
+
+    .sku-batch-drawer-header,
+    .sku-batch-drawer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .sku-batch-drawer-header h3 {
+      margin: 0;
+      font-size: 16px;
+      color: hsl(var(--foreground));
+    }
+
+    .sku-batch-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .sku-batch-summary-pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+    }
+
+    .sku-batch-summary-pill.editable {
+      background: hsl(142 50% 94%);
+      color: hsl(142 50% 30%);
+    }
+
+    .sku-batch-summary-pill.skipped {
+      background: hsl(38 80% 94%);
+      color: hsl(32 60% 36%);
+    }
+
+    .sku-batch-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: hsl(var(--muted-foreground));
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .sku-batch-close:hover {
+      background: hsl(var(--muted));
+    }
+
+    .sku-batch-notice {
+      margin: 14px 20px 0;
+      padding: 10px 12px;
+      border: 1px solid hsl(38 60% 82%);
+      border-radius: 8px;
+      background: hsl(40 80% 97%);
+      color: hsl(32 55% 34%);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sku-batch-drawer-body {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      flex: 1;
+      margin-top: 14px;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .sku-batch-warehouse-panel,
+    .sku-batch-settings-panel {
+      min-width: 0;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .sku-batch-warehouse-panel {
+      border-right: 1px solid hsl(var(--border));
+    }
+
+    .sku-batch-warehouse-panel label,
+    .sku-batch-settings-title {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .sku-batch-warehouse-panel input[type="search"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+      outline: none;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+
+    .sku-batch-warehouse-panel input[type="search"]:focus,
+    .sku-batch-setting-row input:focus {
+      border-color: hsl(var(--primary));
+    }
+
+    .sku-batch-warehouse-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 10px;
+    }
+
+    .sku-batch-warehouse-option {
+      display: flex !important;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      margin: 0 !important;
+      padding: 6px 8px;
+      border-radius: 7px;
+      font-weight: 400 !important;
+      cursor: pointer;
+    }
+
+    .sku-batch-warehouse-option:hover {
+      background: hsl(var(--muted));
+    }
+
+    .sku-batch-warehouse-option input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: hsl(var(--primary));
+    }
+
+    .sku-batch-empty {
+      padding: 20px 8px;
+      color: hsl(var(--muted-foreground));
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .sku-batch-settings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sku-batch-setting-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px 32px;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 8px;
+    }
+
+    .sku-batch-setting-row strong,
+    .sku-batch-setting-row span {
+      display: block;
+    }
+
+    .sku-batch-setting-row strong {
+      color: hsl(var(--foreground));
+      font-size: 13px;
+    }
+
+    .sku-batch-setting-row span {
+      margin-top: 3px;
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+    }
+
+    .sku-batch-setting-row input {
+      width: 100%;
+      padding: 8px 9px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 7px;
+      outline: none;
+      text-align: right;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+
+    .sku-batch-setting-row input.invalid {
+      border-color: hsl(var(--error));
+    }
+
+    .sku-batch-setting-row button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+    }
+
+    .sku-batch-setting-row button:hover {
+      background: hsl(var(--muted));
+    }
+
+    .sku-batch-preview {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+      font-size: 12px;
+    }
+
+    .sku-batch-preview strong {
+      color: hsl(142 50% 32%);
+    }
+
+    .sku-batch-sku-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .sku-batch-sku-chip {
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: hsl(var(--background));
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+    }
+
+    .sku-batch-drawer-footer {
+      border-top: 1px solid hsl(var(--border));
+      border-bottom: none;
+    }
+
+    .sku-batch-drawer-footer > div {
+      display: flex;
+      gap: 8px;
+    }
+
+    #batchInventoryValidation {
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .sku-batch-drawer {
+        width: 100%;
+      }
+
+      .sku-batch-drawer-body {
+        grid-template-columns: 1fr;
+      }
+
+      .sku-batch-warehouse-panel {
+        max-height: 260px;
+        border-right: none;
+        border-bottom: 1px solid hsl(var(--border));
+      }
     }
 
     .sidebar-card {
@@ -1841,10 +2147,6 @@
                   <!-- 筛选与联动 -->
                   <div class="spec-filters" id="specFiltersRow">
                     <!-- JS 动态生成 -->
-                    <label class="spec-link-toggle" for="stockLinkToggle">
-                      <input id="stockLinkToggle" type="checkbox" checked onchange="setAllSkuStockLinked(this.checked)" />
-                      <span>库存联动</span>
-                    </label>
                   </div>
 
                   <!-- SKU 批量操作栏 -->
@@ -1857,13 +2159,21 @@
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuStock()" disabled id="btnBatchStock">批量库存</button>
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuQty()" disabled id="btnBatchQty">批量基数</button>
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuPrice()" disabled id="btnBatchPrice">批量价格</button>
+                      <div class="sku-bulk-menu-wrap">
+                        <button class="btn btn-secondary btn-sm" type="button" id="btnBatchStockLink" disabled onclick="toggleSkuStockLinkMenu(event)">
+                          批量库存联动 <span aria-hidden="true">⌄</span>
+                        </button>
+                        <div class="sku-bulk-menu" id="skuStockLinkMenu" hidden>
+                          <button type="button" onclick="batchSetSkuStockLinked(true)">开启库存联动</button>
+                          <button type="button" onclick="batchSetSkuStockLinked(false)">关闭库存联动</button>
+                        </div>
+                      </div>
                       <button class="btn btn-secondary btn-sm" onclick="batchSetSkuContinueSelling(true)" disabled id="btnBatchContinueSellingOn">批量允许断货销售</button>
                       <button class="btn btn-secondary btn-sm" onclick="batchSetSkuContinueSelling(false)" disabled id="btnBatchContinueSellingOff">批量停止断货销售</button>
                       <input type="file" id="batchImageInput" accept="image/*" style="display:none;" onchange="handleBatchImageUpload(event)" />
                     </div>
                     <div class="bulk-inline-edit" id="skuBulkInlineEdit" style="display: none;">
                       <span class="bulk-edit-label" id="skuBulkEditLabel">批量名称：</span>
-                      <select class="form-select" id="skuBulkWarehouseSelect" aria-label="目标仓库" style="display: none;"></select>
                       <input type="text" class="form-input" id="skuBulkEditInput" placeholder="请输入值" />
                       <button class="btn btn-primary btn-sm" onclick="confirmBulkEdit()">确认</button>
                       <button class="btn btn-secondary btn-sm" onclick="cancelBulkEdit()">取消</button>
@@ -2017,6 +2327,38 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="sku-batch-drawer-overlay" id="batchInventoryOverlay" hidden onclick="handleBatchInventoryOverlayClick(event)">
+    <aside class="sku-batch-drawer" id="batchInventoryDrawer" role="dialog" aria-modal="true" aria-labelledby="batchInventoryTitle">
+      <header class="sku-batch-drawer-header">
+        <div>
+          <h3 id="batchInventoryTitle">批量设置仓库库存</h3>
+          <div class="sku-batch-summary" id="batchInventorySummary"></div>
+        </div>
+        <button type="button" class="sku-batch-close" onclick="requestCloseBatchInventoryDrawer()" aria-label="关闭">×</button>
+      </header>
+      <div class="sku-batch-notice" id="batchInventoryNotice"></div>
+      <div class="sku-batch-drawer-body">
+        <section class="sku-batch-warehouse-panel">
+          <label for="batchInventoryWarehouseSearch">选择目标仓库</label>
+          <input id="batchInventoryWarehouseSearch" type="search" placeholder="搜索仓库名称" oninput="renderBatchInventoryWarehouseList()" />
+          <div class="sku-batch-warehouse-list" id="batchInventoryWarehouseList"></div>
+        </section>
+        <section class="sku-batch-settings-panel">
+          <div class="sku-batch-settings-title">分别设置库存数</div>
+          <div class="sku-batch-settings-list" id="batchInventorySettings"></div>
+          <div id="batchInventoryPreview"></div>
+        </section>
+      </div>
+      <footer class="sku-batch-drawer-footer">
+        <span id="batchInventoryValidation">请选择目标仓库并填写库存数</span>
+        <div>
+          <button type="button" class="btn btn-secondary" onclick="requestCloseBatchInventoryDrawer()">取消</button>
+          <button type="button" class="btn btn-primary" id="confirmBatchInventoryButton" onclick="confirmBatchInventory()" disabled>确认更新</button>
+        </div>
+      </footer>
+    </aside>
   </div>
 
   <!-- Toast 容器 -->
@@ -2358,11 +2700,10 @@
       { id: 'au', name: '澳洲仓' },
     ];
 
-    let stockLinkEnabled = true;
     let skuData = [];
 
     function isSkuStockLinked(item) {
-      return item.stockLinked !== false;
+      return item.stockLinked === true;
     }
 
     function normalizeWarehouseStocks(item) {
@@ -2385,7 +2726,7 @@
         item.continueSellingWhenOutOfStock = false;
       }
       if (typeof item.stockLinked !== 'boolean') {
-        item.stockLinked = stockLinkEnabled;
+        item.stockLinked = false;
       }
       normalizeWarehouseStocks(item);
       if (!hadWarehouseStocks && Number(item.stock) > 0) {
@@ -2432,7 +2773,6 @@
       if (hasEmpty || specsData.length === 0) {
         const skuColumnCount = 9 + skuWarehouses.length;
         tbody.innerHTML = `<tr><td colspan="${skuColumnCount}"><div class="sku-empty">请为所有规格添加选项值后生成 SKU</div></td></tr>`;
-        syncStockLinkMasterState();
         skuUpdateBulkBar();
         return;
       }
@@ -2467,7 +2807,7 @@
           qty: 1,
           price: basePrice,
           continueSellingWhenOutOfStock: false,
-          stockLinked: stockLinkEnabled,
+          stockLinked: false,
           warehouseStocks: Object.fromEntries(
             skuWarehouses.map(warehouse => [warehouse.id, 0])
           ),
@@ -2553,7 +2893,6 @@
         </tr>
       `;
       }).join('');
-      syncStockLinkMasterState();
       skuUpdateBulkBar();
     }
 
@@ -2618,6 +2957,7 @@
       const hasEditableStock = skuData.some(item =>
         selectedKeys.includes(item.key) && !isSkuStockLinked(item)
       );
+      document.getElementById('btnBatchStockLink').disabled = count === 0;
       document.getElementById('btnBatchStock').disabled = count === 0 || !hasEditableStock;
     }
 
@@ -2674,24 +3014,6 @@
     let bulkEditField = null;
 
     function showBulkEdit(field, label, type) {
-      const warehouseSelect = document.getElementById('skuBulkWarehouseSelect');
-      if (field === 'stock') {
-        const keys = getCheckedSkuKeys();
-        if (keys.length === 0) return;
-        const editableCount = skuData.filter(item =>
-          keys.includes(item.key) && !isSkuStockLinked(item)
-        ).length;
-        if (editableCount === 0) {
-          showToast('info', '所选 SKU 均已开启库存联动，不能手动设置仓库库存');
-          return;
-        }
-        warehouseSelect.innerHTML = skuWarehouses
-          .map(warehouse => `<option value="${warehouse.id}">${warehouse.name}</option>`)
-          .join('');
-        warehouseSelect.style.display = 'block';
-      } else {
-        warehouseSelect.style.display = 'none';
-      }
       bulkEditField = field;
       const inputEl = document.getElementById('skuBulkEditInput');
       document.getElementById('skuBulkEditLabel').textContent = label + '：';
@@ -2718,25 +3040,6 @@
       }
       const keys = getCheckedSkuKeys();
       if (keys.length === 0) return;
-      if (bulkEditField === 'stock') {
-        const warehouseId = document.getElementById('skuBulkWarehouseSelect').value;
-        let updatedCount = 0;
-        let skippedCount = 0;
-        skuData.forEach(item => {
-          if (!keys.includes(item.key)) return;
-          if (isSkuStockLinked(item)) {
-            skippedCount++;
-            return;
-          }
-          normalizeWarehouseStocks(item)[warehouseId] = Math.max(0, Number(value) || 0);
-          item.stock = getSkuStockTotal(item);
-          updatedCount++;
-        });
-        renderSkuTable();
-        showToast('success', `已更新 ${updatedCount} 条 SKU；跳过 ${skippedCount} 条库存联动 SKU`);
-        closeBulkEdit();
-        return;
-      }
       keys.forEach(key => updateSkuData(key, bulkEditField, value));
       renderSkuTable();
       showToast('success', `已批量设置 ${keys.length} 条 SKU ${inputEl.placeholder.replace('请输入', '')}`);
@@ -2751,7 +3054,6 @@
       bulkEditField = null;
       document.getElementById('skuBulkInlineEdit').style.display = 'none';
       document.getElementById('skuBulkActions').style.display = 'flex';
-      document.getElementById('skuBulkWarehouseSelect').style.display = 'none';
     }
 
     // ==================== 批量名称 ====================
@@ -2766,7 +3068,7 @@
 
     // ==================== 批量库存 ====================
     function batchSkuStock() {
-      showBulkEdit('stock', '批量库存', 'number');
+      openBatchInventoryDrawer();
     }
 
     // ==================== 批量基数 ====================
@@ -2794,39 +3096,275 @@
       );
     }
 
-    function syncStockLinkMasterState() {
-      const master = document.getElementById('stockLinkToggle');
-      if (!master) return;
-      const linkedCount = skuData.filter(isSkuStockLinked).length;
-      if (skuData.length > 0 && linkedCount === skuData.length) {
-        stockLinkEnabled = true;
-      } else if (skuData.length > 0 && linkedCount === 0) {
-        stockLinkEnabled = false;
-      }
-      master.checked = skuData.length === 0
-        ? stockLinkEnabled
-        : linkedCount === skuData.length;
-      master.indeterminate = linkedCount > 0 && linkedCount < skuData.length;
-      master.setAttribute(
-        'aria-label',
-        master.indeterminate ? '部分 SKU 已开启库存联动' : '批量设置 SKU 库存联动'
+    function toggleSkuStockLinkMenu(event) {
+      event.stopPropagation();
+      const menu = document.getElementById('skuStockLinkMenu');
+      if (!menu) return;
+      menu.hidden = !menu.hidden;
+    }
+
+    function closeSkuStockLinkMenu() {
+      const menu = document.getElementById('skuStockLinkMenu');
+      if (menu) menu.hidden = true;
+    }
+
+    function batchSetSkuStockLinked(checked) {
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      skuData.forEach(item => {
+        if (keys.includes(item.key)) {
+          item.stockLinked = checked;
+        }
+      });
+      closeSkuStockLinkMenu();
+      renderSkuTable();
+      showToast(
+        'success',
+        checked
+          ? `已为 ${keys.length} 个 SKU 开启库存联动`
+          : `已为 ${keys.length} 个 SKU 关闭库存联动`
       );
     }
 
-    function setAllSkuStockLinked(checked) {
-      const scrollContainer = document.querySelector('.sku-table-scroll');
-      const previousScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-      stockLinkEnabled = checked;
-      skuData.forEach(item => {
-        item.stockLinked = checked;
+    document.addEventListener('click', closeSkuStockLinkMenu);
+
+    const batchInventoryState = {
+      selectedSkuKeys: [],
+      editableSkuKeys: [],
+      skippedSkuKeys: [],
+      selectedWarehouseIds: [],
+      warehouseValues: {},
+      dirty: false,
+    };
+
+    function openBatchInventoryDrawer() {
+      const selectedSkuKeys = getCheckedSkuKeys();
+      if (selectedSkuKeys.length === 0) return;
+      const editableSkuKeys = selectedSkuKeys.filter(key => {
+        const item = skuData.find(sku => sku.key === key);
+        return item && !isSkuStockLinked(item);
       });
-      renderSkuTable();
+      const skippedSkuKeys = selectedSkuKeys.filter(key => !editableSkuKeys.includes(key));
+      if (editableSkuKeys.length === 0) {
+        showToast('info', '所选 SKU 均已开启库存联动，不能手动设置仓库库存');
+        return;
+      }
+
+      batchInventoryState.selectedSkuKeys = selectedSkuKeys;
+      batchInventoryState.editableSkuKeys = editableSkuKeys;
+      batchInventoryState.skippedSkuKeys = skippedSkuKeys;
+      batchInventoryState.selectedWarehouseIds = [];
+      batchInventoryState.warehouseValues = {};
+      batchInventoryState.dirty = false;
+
+      document.getElementById('batchInventoryWarehouseSearch').value = '';
+      renderBatchInventorySummary();
+      renderBatchInventoryWarehouseList();
+      renderBatchInventorySettings();
+      document.getElementById('batchInventoryOverlay').hidden = false;
+      document.body.style.overflow = 'hidden';
       requestAnimationFrame(() => {
-        const nextScrollContainer = document.querySelector('.sku-table-scroll');
-        if (nextScrollContainer) nextScrollContainer.scrollLeft = previousScrollLeft;
+        document.getElementById('batchInventoryWarehouseSearch').focus();
       });
-      showToast('info', checked ? '全部 SKU 已开启库存联动' : '全部 SKU 已关闭库存联动');
     }
+
+    function renderBatchInventorySummary() {
+      const selectedCount = batchInventoryState.selectedSkuKeys.length;
+      const editableCount = batchInventoryState.editableSkuKeys.length;
+      const skippedCount = batchInventoryState.skippedSkuKeys.length;
+      document.getElementById('batchInventorySummary').innerHTML = `
+        <span class="sku-batch-summary-pill">已选 ${selectedCount} 个 SKU</span>
+        <span class="sku-batch-summary-pill editable">可修改 ${editableCount} 个</span>
+        <span class="sku-batch-summary-pill skipped">跳过联动 SKU ${skippedCount} 个</span>
+      `;
+      document.getElementById('batchInventoryNotice').textContent = skippedCount > 0
+        ? `本次只修改未开启库存联动的 ${editableCount} 个 SKU。已开启库存联动的 ${skippedCount} 个 SKU 保持只读，不参与本次批量操作。`
+        : `本次将修改 ${editableCount} 个未开启库存联动的 SKU。`;
+    }
+
+    function renderBatchInventoryWarehouseList() {
+      const searchInput = document.getElementById('batchInventoryWarehouseSearch');
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const visibleWarehouses = skuWarehouses.filter(warehouse =>
+        !query || warehouse.name.toLowerCase().includes(query)
+      );
+      const container = document.getElementById('batchInventoryWarehouseList');
+      if (visibleWarehouses.length === 0) {
+        container.innerHTML = '<div class="sku-batch-empty">未找到匹配仓库</div>';
+        return;
+      }
+      container.innerHTML = visibleWarehouses.map(warehouse => `
+        <label class="sku-batch-warehouse-option">
+          <input
+            type="checkbox"
+            ${batchInventoryState.selectedWarehouseIds.includes(warehouse.id) ? 'checked' : ''}
+            onchange="toggleBatchInventoryWarehouse('${warehouse.id}')"
+          />
+          <span>${warehouse.name}</span>
+        </label>
+      `).join('');
+    }
+
+    function toggleBatchInventoryWarehouse(warehouseId) {
+      const selectedIds = batchInventoryState.selectedWarehouseIds;
+      const currentIndex = selectedIds.indexOf(warehouseId);
+      if (currentIndex >= 0) {
+        selectedIds.splice(currentIndex, 1);
+      } else {
+        selectedIds.push(warehouseId);
+        if (!(warehouseId in batchInventoryState.warehouseValues)) {
+          batchInventoryState.warehouseValues[warehouseId] = '';
+        }
+      }
+      batchInventoryState.dirty = true;
+      renderBatchInventoryWarehouseList();
+      renderBatchInventorySettings();
+    }
+
+    function renderBatchInventorySettings() {
+      const container = document.getElementById('batchInventorySettings');
+      if (batchInventoryState.selectedWarehouseIds.length === 0) {
+        container.innerHTML = '<div class="sku-batch-empty">请从左侧选择需要批量设置的仓库</div>';
+      } else {
+        container.innerHTML = batchInventoryState.selectedWarehouseIds.map(warehouseId => {
+          const warehouse = skuWarehouses.find(item => item.id === warehouseId);
+          const value = batchInventoryState.warehouseValues[warehouseId] ?? '';
+          return `
+            <div class="sku-batch-setting-row">
+              <div>
+                <strong>${warehouse.name}</strong>
+                <span>应用到 ${batchInventoryState.editableSkuKeys.length} 个手动库存 SKU</span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value="${value}"
+                data-warehouse-value="${warehouseId}"
+                aria-label="${warehouse.name}库存"
+                oninput="updateBatchInventoryValue('${warehouseId}', this.value)"
+              />
+              <button type="button" onclick="toggleBatchInventoryWarehouse('${warehouseId}')" aria-label="移除${warehouse.name}">×</button>
+            </div>
+          `;
+        }).join('');
+      }
+      updateBatchInventoryFormState();
+    }
+
+    function updateBatchInventoryValue(warehouseId, value) {
+      batchInventoryState.warehouseValues[warehouseId] = value;
+      batchInventoryState.dirty = true;
+      updateBatchInventoryFormState();
+    }
+
+    function getBatchInventoryValidation() {
+      if (batchInventoryState.selectedWarehouseIds.length === 0) {
+        return { valid: false, message: '请选择至少一个目标仓库' };
+      }
+      const invalidWarehouseId = batchInventoryState.selectedWarehouseIds.find(warehouseId => {
+        const value = batchInventoryState.warehouseValues[warehouseId];
+        return value === '' || !Number.isInteger(Number(value)) || Number(value) < 0;
+      });
+      if (invalidWarehouseId) {
+        const warehouse = skuWarehouses.find(item => item.id === invalidWarehouseId);
+        return { valid: false, message: `请为${warehouse.name}输入大于或等于 0 的整数库存` };
+      }
+      return { valid: true, message: '' };
+    }
+
+    function updateBatchInventoryFormState() {
+      const validation = getBatchInventoryValidation();
+      const editableCount = batchInventoryState.editableSkuKeys.length;
+      const warehouseCount = batchInventoryState.selectedWarehouseIds.length;
+      const updateCount = editableCount * warehouseCount;
+      const validationElement = document.getElementById('batchInventoryValidation');
+      const confirmButton = document.getElementById('confirmBatchInventoryButton');
+      const preview = document.getElementById('batchInventoryPreview');
+
+      batchInventoryState.selectedWarehouseIds.forEach(warehouseId => {
+        const input = document.querySelector(`[data-warehouse-value="${warehouseId}"]`);
+        if (!input) return;
+        const value = batchInventoryState.warehouseValues[warehouseId];
+        input.classList.toggle(
+          'invalid',
+          value !== '' && (!Number.isInteger(Number(value)) || Number(value) < 0)
+        );
+      });
+
+      validationElement.textContent = validation.valid
+        ? `${editableCount} 个 SKU × ${warehouseCount} 个仓库`
+        : validation.message;
+      confirmButton.disabled = !validation.valid;
+      confirmButton.textContent = validation.valid ? `确认更新 ${updateCount} 项库存` : '确认更新';
+
+      if (warehouseCount === 0) {
+        preview.innerHTML = '';
+        return;
+      }
+      const skuChips = batchInventoryState.editableSkuKeys.map(key => {
+        const item = skuData.find(sku => sku.key === key);
+        return `<span class="sku-batch-sku-chip">${item ? item.name : key}</span>`;
+      }).join('');
+      preview.innerHTML = `
+        <div class="sku-batch-preview">
+          <div>${editableCount} 个 SKU × ${warehouseCount} 个仓库，<strong>共更新 ${updateCount} 项库存</strong></div>
+          <div class="sku-batch-sku-list">${skuChips}</div>
+        </div>
+      `;
+    }
+
+    function confirmBatchInventory() {
+      const validation = getBatchInventoryValidation();
+      if (!validation.valid) {
+        document.getElementById('batchInventoryValidation').textContent = validation.message;
+        return;
+      }
+      const editableCount = batchInventoryState.editableSkuKeys.length;
+      const warehouseCount = batchInventoryState.selectedWarehouseIds.length;
+      const updateCount = editableCount * warehouseCount;
+      batchInventoryState.editableSkuKeys.forEach(key => {
+        const item = skuData.find(sku => sku.key === key);
+        if (!item || isSkuStockLinked(item)) return;
+        const stocks = normalizeWarehouseStocks(item);
+        batchInventoryState.selectedWarehouseIds.forEach(warehouseId => {
+          stocks[warehouseId] = Number(batchInventoryState.warehouseValues[warehouseId]);
+        });
+        item.stock = getSkuStockTotal(item);
+      });
+      batchInventoryState.dirty = false;
+      closeBatchInventoryDrawer();
+      renderSkuTable();
+      showToast('success', `已更新 ${editableCount} 个 SKU、${warehouseCount} 个仓库，共 ${updateCount} 项库存`);
+    }
+
+    function requestCloseBatchInventoryDrawer() {
+      if (batchInventoryState.dirty) {
+        const confirmed = window.confirm('当前批量库存设置尚未提交，确认关闭吗？');
+        if (!confirmed) return;
+      }
+      closeBatchInventoryDrawer();
+    }
+
+    function closeBatchInventoryDrawer() {
+      document.getElementById('batchInventoryOverlay').hidden = true;
+      document.body.style.overflow = '';
+      batchInventoryState.dirty = false;
+      const trigger = document.getElementById('btnBatchStock');
+      if (trigger) trigger.focus();
+    }
+
+    function handleBatchInventoryOverlayClick(event) {
+      if (event.target === event.currentTarget) {
+        requestCloseBatchInventoryDrawer();
+      }
+    }
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !document.getElementById('batchInventoryOverlay').hidden) {
+        requestCloseBatchInventoryDrawer();
+      }
+    });
 
     // ==================== 媒体上传（支持预览、删除、拖拽排序） ====================
     const mediaData = { carousel: [], detail: [] };

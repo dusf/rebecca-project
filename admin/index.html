@@ -242,7 +242,7 @@
 
     // 被 iframe 中的页面调用：按模块 + 相对 admin 根的路径加载表单/下钻页，并刷新侧边栏选中态与面包屑
     // 例：loadAdminPage('gift', 'gift/gift_pool_form.html?add=1')
-    //     loadAdminPage('gift', 'gift.html', { tab: 'pool' })
+    //     loadAdminPage('gift', 'gift/gift.html', { tab: 'pool' })
     window.loadAdminPage = function(module, path, extra) {
       if (!path) return;
       var url = path;

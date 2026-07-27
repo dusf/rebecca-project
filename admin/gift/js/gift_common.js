@@ -776,8 +776,8 @@
 
   /* ====================== 进入表单页（返回列表） ====================== */
   GWP.back = function (tab) {
-    if (window.loadAdminPage) window.loadAdminPage('gift', 'gift.html', { tab: tab || 'pool' });
-    else if (window.parent && window.parent.loadAdminPage) window.parent.loadAdminPage('gift', 'gift.html', { tab: tab || 'pool' });
-    else window.history.back();
+    if (window.loadAdminPage) window.loadAdminPage('gift', 'gift/gift.html', { tab: tab || 'pool' });
+    else if (window.parent && window.parent.loadAdminPage) window.parent.loadAdminPage('gift', 'gift/gift.html', { tab: tab || 'pool' });
+    else window.location.href = 'gift.html?tab=' + encodeURIComponent(tab || 'pool');
   };
 })();

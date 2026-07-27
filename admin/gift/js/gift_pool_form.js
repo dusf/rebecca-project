@@ -29,7 +29,7 @@
     }
     renderBlocks();
     document.getElementById('addProductBtn').addEventListener('click', openAssocDialog);
-    document.getElementById('btnCancel').addEventListener('click', () => GWP.back('pool'));
+    document.getElementById('btnBack').addEventListener('click', () => GWP.back('pool'));
     document.getElementById('btnSave').addEventListener('click', save);
   }
 

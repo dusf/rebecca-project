@@ -1,6 +1,7 @@
 # ===== IDE / 编辑器工具数据 =====
 .codebuddy/
 .playwright-cli/
+.superpowers/
 
 # ===== Node 依赖（开发调试用，不入版本库） =====
 node_modules/

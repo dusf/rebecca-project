@@ -763,6 +763,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      min-width: 0;
     }
 
     .add-product-sidebar {
@@ -778,6 +779,7 @@
       border: 1px solid hsl(var(--border));
       border-radius: 12px;
       padding: 20px;
+      min-width: 0;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
@@ -1244,6 +1246,12 @@
       font-size: 13px;
     }
 
+    .bulk-inline-edit .form-select {
+      width: 140px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
     .spec-filters {
       display: flex;
       align-items: center;
@@ -1281,9 +1289,42 @@
       height: 16px;
     }
 
-    .sku-table {
+    .spec-link-toggle input[type="checkbox"],
+    .sku-inline-checkbox {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: hsl(var(--primary));
+      cursor: pointer;
+    }
+
+    .sku-table-card {
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
       width: 100%;
-      border-collapse: collapse;
+      max-width: 100%;
+      min-width: 0;
+      flex: none;
+    }
+
+    .sku-table-scroll {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: visible;
+      flex: none;
+      scrollbar-gutter: stable;
+    }
+
+    .sku-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
       font-size: 13px;
     }
 
@@ -1297,10 +1338,19 @@
       white-space: nowrap;
     }
 
+    .sku-table th.sku-group {
+      text-align: center;
+      color: hsl(var(--foreground));
+      background: hsl(var(--muted));
+      border-right: 1px solid hsl(var(--border));
+    }
+
     .sku-table td {
       padding: 10px 12px;
       border-bottom: 1px solid hsl(var(--border));
+      border-right: 1px solid hsl(var(--border));
       vertical-align: middle;
+      background: hsl(var(--background));
     }
 
     .sku-table input {
@@ -1315,6 +1365,148 @@
 
     .sku-table input:focus {
       border-color: hsl(var(--primary));
+    }
+
+    .sku-table .sku-inline-checkbox {
+      display: block;
+      width: 16px;
+      height: 16px;
+      margin: 0 auto;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .sku-col-select {
+      width: 40px;
+      min-width: 40px;
+      max-width: 40px;
+      text-align: center;
+    }
+
+    .sku-col-image {
+      width: 64px;
+      min-width: 64px;
+      max-width: 64px;
+    }
+
+    .sku-col-name {
+      width: 176px;
+      min-width: 176px;
+      max-width: 176px;
+    }
+
+    .sku-col-price {
+      width: 112px;
+      min-width: 112px;
+      max-width: 112px;
+    }
+
+    .sku-col-continue {
+      width: 104px;
+      min-width: 104px;
+      max-width: 104px;
+      text-align: center;
+    }
+
+    .sku-col-code {
+      width: 168px;
+      min-width: 168px;
+      max-width: 168px;
+    }
+
+    .sku-col-linked {
+      width: 88px;
+      min-width: 88px;
+      max-width: 88px;
+      text-align: center;
+    }
+
+    .sku-col-base,
+    .sku-col-total {
+      width: 96px;
+      min-width: 96px;
+      max-width: 96px;
+    }
+
+    .sku-col-warehouse {
+      width: 112px;
+      min-width: 112px;
+      max-width: 112px;
+      text-align: right;
+    }
+
+    .sku-sticky-select {
+      position: sticky;
+      left: 0;
+      z-index: 6;
+    }
+
+    .sku-group-identity {
+      position: sticky;
+      left: 40px;
+      z-index: 6;
+      box-shadow: 8px 0 12px rgba(15, 23, 42, 0.06);
+    }
+
+    .sku-sticky-image {
+      position: sticky;
+      left: 40px;
+      z-index: 5;
+    }
+
+    .sku-sticky-name {
+      position: sticky;
+      left: 104px;
+      z-index: 5;
+      box-shadow: 8px 0 12px rgba(15, 23, 42, 0.06);
+    }
+
+    .sku-table tbody .sku-sticky-select,
+    .sku-table tbody .sku-sticky-image,
+    .sku-table tbody .sku-sticky-name {
+      background: hsl(var(--background));
+    }
+
+    .sku-table thead .sku-sticky-select,
+    .sku-table thead .sku-sticky-image,
+    .sku-table thead .sku-sticky-name,
+    .sku-table thead .sku-group-identity {
+      background: hsl(var(--muted));
+    }
+
+    .sku-stock-readonly {
+      display: inline-flex;
+      width: 100%;
+      min-height: 31px;
+      align-items: center;
+      justify-content: flex-end;
+      color: hsl(var(--foreground));
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sku-stock-total {
+      font-weight: 700;
+      color: hsl(142 50% 32%);
+    }
+
+    .sku-warehouse-stock-input {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sku-table-scroll::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .sku-table-scroll::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.35);
+      border: 2px solid hsl(var(--background));
+      border-radius: 999px;
+    }
+
+    .sku-table-scroll::-webkit-scrollbar-track {
+      background: hsl(var(--muted) / 0.55);
     }
 
     .sku-table .img-upload-cell {
@@ -1649,10 +1841,10 @@
                   <!-- 筛选与联动 -->
                   <div class="spec-filters" id="specFiltersRow">
                     <!-- JS 动态生成 -->
-                    <div class="spec-link-toggle" onclick="toggleStockLink(this)">
-                      <div class="checkbox checked" id="stockLinkToggle">✓</div>
+                    <label class="spec-link-toggle" for="stockLinkToggle">
+                      <input id="stockLinkToggle" type="checkbox" checked onchange="setAllSkuStockLinked(this.checked)" />
                       <span>库存联动</span>
-                    </div>
+                    </label>
                   </div>
 
                   <!-- SKU 批量操作栏 -->
@@ -1665,10 +1857,13 @@
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuStock()" disabled id="btnBatchStock">批量库存</button>
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuQty()" disabled id="btnBatchQty">批量基数</button>
                       <button class="btn btn-secondary btn-sm" onclick="batchSkuPrice()" disabled id="btnBatchPrice">批量价格</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSetSkuContinueSelling(true)" disabled id="btnBatchContinueSellingOn">批量允许断货销售</button>
+                      <button class="btn btn-secondary btn-sm" onclick="batchSetSkuContinueSelling(false)" disabled id="btnBatchContinueSellingOff">批量停止断货销售</button>
                       <input type="file" id="batchImageInput" accept="image/*" style="display:none;" onchange="handleBatchImageUpload(event)" />
                     </div>
                     <div class="bulk-inline-edit" id="skuBulkInlineEdit" style="display: none;">
                       <span class="bulk-edit-label" id="skuBulkEditLabel">批量名称：</span>
+                      <select class="form-select" id="skuBulkWarehouseSelect" aria-label="目标仓库" style="display: none;"></select>
                       <input type="text" class="form-input" id="skuBulkEditInput" placeholder="请输入值" />
                       <button class="btn btn-primary btn-sm" onclick="confirmBulkEdit()">确认</button>
                       <button class="btn btn-secondary btn-sm" onclick="cancelBulkEdit()">取消</button>
@@ -1676,18 +1871,28 @@
                   </div>
 
                   <!-- SKU 表格 -->
-                  <div class="table-card" style="border-top: none; border-radius: 0 0 8px 8px; overflow: hidden;">
-                    <div class="table-wrapper">
+                  <div class="table-card sku-table-card">
+                    <div class="table-wrapper sku-table-scroll">
                       <table class="sku-table">
                         <thead>
-                          <tr>
-                            <th><div class="checkbox" onclick="toggleAllSkuCheckboxes(this)"></div></th>
-                            <th>图片</th>
-                            <th>SKU 名称（英语）</th>
-                            <th>库存SKU编码</th>
-                            <th>库存</th>
-                            <th>购买基数</th>
-                            <th>价格（美元）</th>
+                          <tr class="sku-group-header">
+                            <th class="sku-col-select sku-sticky-select" rowspan="2">
+                              <div class="checkbox" onclick="toggleAllSkuCheckboxes(this)"></div>
+                            </th>
+                            <th class="sku-group sku-group-identity" colspan="2">SKU 识别</th>
+                            <th class="sku-group" colspan="2">销售设置</th>
+                            <th class="sku-group" colspan="4">库存配置</th>
+                            <th class="sku-group" id="skuWarehouseGroupHeader" colspan="6">仓库库存</th>
+                          </tr>
+                          <tr id="skuColumnHeaderRow">
+                            <th class="sku-col-image sku-sticky-image">图片</th>
+                            <th class="sku-col-name sku-sticky-name">SKU 名称（英语）</th>
+                            <th class="sku-col-price">价格（美元）</th>
+                            <th class="sku-col-continue">断货继续销售</th>
+                            <th class="sku-col-code">库存 SKU 编码</th>
+                            <th class="sku-col-linked">库存联动</th>
+                            <th class="sku-col-base">购买基数</th>
+                            <th class="sku-col-total">可售合计</th>
                           </tr>
                         </thead>
                         <tbody id="skuTableBody">
@@ -2144,8 +2349,70 @@
     }
 
     // ==================== SKU 规格生成 ====================
+    const skuWarehouses = [
+      { id: 'us-west', name: '美国西仓' },
+      { id: 'us-east', name: '美国东仓' },
+      { id: 'uk', name: '英国仓' },
+      { id: 'de', name: '德国仓' },
+      { id: 'ca', name: '加拿大仓' },
+      { id: 'au', name: '澳洲仓' },
+    ];
+
+    let stockLinkEnabled = true;
     let skuData = [];
+
+    function isSkuStockLinked(item) {
+      return item.stockLinked !== false;
+    }
+
+    function normalizeWarehouseStocks(item) {
+      const existing = item.warehouseStocks || {};
+      item.warehouseStocks = { ...existing };
+      skuWarehouses.forEach(warehouse => {
+        item.warehouseStocks[warehouse.id] = Number(existing[warehouse.id] ?? 0);
+      });
+      return item.warehouseStocks;
+    }
+
+    function getSkuStockTotal(item) {
+      return Object.values(normalizeWarehouseStocks(item))
+        .reduce((total, value) => total + (Number(value) || 0), 0);
+    }
+
+    function normalizeSkuItem(item) {
+      const hadWarehouseStocks = item.warehouseStocks && Object.keys(item.warehouseStocks).length > 0;
+      if (typeof item.continueSellingWhenOutOfStock !== 'boolean') {
+        item.continueSellingWhenOutOfStock = false;
+      }
+      if (typeof item.stockLinked !== 'boolean') {
+        item.stockLinked = stockLinkEnabled;
+      }
+      normalizeWarehouseStocks(item);
+      if (!hadWarehouseStocks && Number(item.stock) > 0) {
+        item.warehouseStocks[skuWarehouses[0].id] = Number(item.stock);
+      }
+      item.stock = getSkuStockTotal(item);
+      return item;
+    }
+
+    function renderWarehouseHeaders() {
+      const secondRow = document.getElementById('skuColumnHeaderRow');
+      if (!secondRow) return;
+      secondRow.querySelectorAll('[data-warehouse-header]').forEach(cell => cell.remove());
+      skuWarehouses.forEach(warehouse => {
+        const th = document.createElement('th');
+        th.className = 'sku-col-warehouse';
+        th.dataset.warehouseHeader = warehouse.id;
+        th.textContent = warehouse.name;
+        secondRow.appendChild(th);
+      });
+      const groupHeader = document.getElementById('skuWarehouseGroupHeader');
+      if (groupHeader) groupHeader.colSpan = skuWarehouses.length;
+    }
+
     function renderSkuTable() {
+      renderWarehouseHeaders();
+
       // 收集过滤条件
       const filters = {};
       specsData.forEach(spec => {
@@ -2163,7 +2430,10 @@
       const tbody = document.getElementById('skuTableBody');
       const hasEmpty = allValues.some(sv => sv.values.length === 0);
       if (hasEmpty || specsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="sku-empty">请为所有规格添加选项值后生成 SKU</div></td></tr>';
+        const skuColumnCount = 9 + skuWarehouses.length;
+        tbody.innerHTML = `<tr><td colspan="${skuColumnCount}"><div class="sku-empty">请为所有规格添加选项值后生成 SKU</div></td></tr>`;
+        syncStockLinkMasterState();
+        skuUpdateBulkBar();
         return;
       }
 
@@ -2187,44 +2457,138 @@
         const nameParts = specsData.map(s => combo[s.id] ? combo[s.id].value : '').filter(Boolean);
         const name = nameParts.join('*');
         const existing = skuData.find(item => item.key === key);
-        return existing || {
+        const item = existing || {
           key,
           name,
           specs: combo,
           code: `HG-${idx.toString().padStart(2, '0')}-BW22`,
-          stock: '',
+          stock: 0,
           invCode: '',
           qty: 1,
-          price: basePrice
+          price: basePrice,
+          continueSellingWhenOutOfStock: false,
+          stockLinked: stockLinkEnabled,
+          warehouseStocks: Object.fromEntries(
+            skuWarehouses.map(warehouse => [warehouse.id, 0])
+          ),
         };
         idx++;
+        return normalizeSkuItem(item);
       });
 
-      tbody.innerHTML = skuData.map(item => `
+      tbody.innerHTML = skuData.map(item => {
+        const totalStock = getSkuStockTotal(item);
+        item.stock = totalStock;
+        const warehouseCells = skuWarehouses.map(warehouse => {
+          const stockValue = item.warehouseStocks[warehouse.id] || 0;
+          if (isSkuStockLinked(item)) {
+            return `
+              <td class="sku-col-warehouse">
+                <span class="sku-stock-readonly">${stockValue}</span>
+              </td>
+            `;
+          }
+          return `
+            <td class="sku-col-warehouse">
+              <input
+                class="sku-warehouse-stock-input"
+                type="number"
+                min="0"
+                value="${stockValue}"
+                aria-label="${warehouse.name}库存"
+                oninput="updateSkuWarehouseStock('${item.key}', '${warehouse.id}', this.value)"
+              />
+            </td>
+          `;
+        }).join('');
+
+        return `
         <tr data-key="${item.key}">
-          <td><div class="checkbox" onclick="toggleSkuCheckbox(this)"></div></td>
-          <td>
+          <td class="sku-col-select sku-sticky-select">
+            <div class="checkbox sku-row-select" onclick="toggleSkuCheckbox(this)"></div>
+          </td>
+          <td class="sku-col-image sku-sticky-image">
             <div class="img-upload-cell" onclick="showToast('info', '选择 SKU 图片')"
                  style="${item.img ? `background-image:url(${item.img});background-size:cover;background-position:center;` : ''}">${item.img ? '' : '+'}</div>
           </td>
-          <td><input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" /></td>
-          <td><input value="${item.invCode || ''}" onchange="updateSkuData('${item.key}', 'invCode', this.value)" placeholder="库存系统货品编码" /></td>
-          <td><input type="number" value="${item.stock}" placeholder="-" ${stockLinkEnabled ? 'disabled' : ''} style="${stockLinkEnabled ? 'opacity:0.5' : ''}" onchange="updateSkuData('${item.key}', 'stock', this.value)" /></td>
-          <td><input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" /></td>
-          <td>
+          <td class="sku-col-name sku-sticky-name">
+            <input value="${item.name}" onchange="updateSkuData('${item.key}', 'name', this.value)" />
+          </td>
+          <td class="sku-col-price">
             <div class="currency">
               <span>$</span>
               <input type="number" value="${item.price}" onchange="updateSkuData('${item.key}', 'price', this.value)" />
             </div>
           </td>
+          <td class="sku-col-continue">
+            <input
+              class="sku-inline-checkbox"
+              type="checkbox"
+              aria-label="断货时继续销售"
+              title="勾选后库存为 0 时仍允许销售"
+              onchange="setSkuContinueSelling('${item.key}', this.checked)"
+              ${item.continueSellingWhenOutOfStock ? 'checked' : ''}
+            />
+          </td>
+          <td class="sku-col-code">
+            <input value="${item.invCode || ''}" onchange="updateSkuData('${item.key}', 'invCode', this.value)" placeholder="库存系统货品编码" />
+          </td>
+          <td class="sku-col-linked">
+            <input
+              class="sku-inline-checkbox"
+              type="checkbox"
+              aria-label="启用库存联动"
+              title="勾选后该 SKU 的仓库库存由库存系统同步"
+              onchange="setSkuStockLinked('${item.key}', this.checked)"
+              ${isSkuStockLinked(item) ? 'checked' : ''}
+            />
+          </td>
+          <td class="sku-col-base">
+            <input type="number" value="${item.qty || 1}" min="1" onchange="updateSkuData('${item.key}', 'qty', this.value)" />
+          </td>
+          <td class="sku-col-total">
+            <span class="sku-stock-readonly sku-stock-total">${totalStock}</span>
+          </td>
+          ${warehouseCells}
         </tr>
-      `).join('');
+      `;
+      }).join('');
+      syncStockLinkMasterState();
       skuUpdateBulkBar();
     }
 
     function updateSkuData(key, field, value) {
       const item = skuData.find(s => s.key === key);
       if (item) item[field] = value;
+    }
+
+    function setSkuContinueSelling(key, checked) {
+      const item = skuData.find(sku => sku.key === key);
+      if (item) item.continueSellingWhenOutOfStock = checked;
+    }
+
+    function setSkuStockLinked(key, checked) {
+      const item = skuData.find(sku => sku.key === key);
+      if (!item) return;
+      const scrollContainer = document.querySelector('.sku-table-scroll');
+      const previousScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+      item.stockLinked = checked;
+      renderSkuTable();
+      requestAnimationFrame(() => {
+        const nextScrollContainer = document.querySelector('.sku-table-scroll');
+        if (nextScrollContainer) nextScrollContainer.scrollLeft = previousScrollLeft;
+      });
+    }
+
+    function updateSkuWarehouseStock(key, warehouseId, value) {
+      const item = skuData.find(sku => sku.key === key);
+      if (!item || isSkuStockLinked(item)) return;
+      normalizeWarehouseStocks(item)[warehouseId] = Math.max(0, Number(value) || 0);
+      item.stock = getSkuStockTotal(item);
+      const row = Array.from(document.querySelectorAll('#skuTableBody tr[data-key]'))
+        .find(tableRow => tableRow.dataset.key === key);
+      const totalCell = row ? row.querySelector('.sku-stock-total') : null;
+      if (totalCell) totalCell.textContent = item.stock;
     }
 
     function toggleSkuCheckbox(el) {
@@ -2237,7 +2601,7 @@
       const isChecked = !el.classList.contains('checked');
       el.classList.toggle('checked');
       el.innerHTML = isChecked ? '✓' : '';
-      document.querySelectorAll('#skuTableBody .checkbox').forEach(cb => {
+      document.querySelectorAll('#skuTableBody .sku-row-select').forEach(cb => {
         cb.classList.toggle('checked', isChecked);
         cb.innerHTML = isChecked ? '✓' : '';
       });
@@ -2245,19 +2609,20 @@
     }
 
     function skuUpdateBulkBar() {
-      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      const checked = document.querySelectorAll('#skuTableBody .sku-row-select.checked');
       const count = checked.length;
       document.getElementById('skuSelectedCount').textContent = count;
       const buttons = document.querySelectorAll('#skuBulkActionBar .bulk-actions .btn');
       buttons.forEach(b => { b.disabled = count === 0; });
-      // 如果开了库存联动，库存按钮始终 disabled
-      if (stockLinkEnabled) {
-        document.getElementById('btnBatchStock').disabled = true;
-      }
+      const selectedKeys = Array.from(checked).map(cb => cb.closest('tr').dataset.key);
+      const hasEditableStock = skuData.some(item =>
+        selectedKeys.includes(item.key) && !isSkuStockLinked(item)
+      );
+      document.getElementById('btnBatchStock').disabled = count === 0 || !hasEditableStock;
     }
 
     function getCheckedSkuKeys() {
-      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      const checked = document.querySelectorAll('#skuTableBody .sku-row-select.checked');
       if (checked.length === 0) {
         showToast('info', '请先勾选需要操作的 SKU 行');
         return [];
@@ -2298,7 +2663,7 @@
     }
 
     function getCheckedSkuKeysInfo() {
-      const checked = document.querySelectorAll('#skuTableBody .checkbox.checked');
+      const checked = document.querySelectorAll('#skuTableBody .sku-row-select.checked');
       return Array.from(checked).map(cb => ({
         key: cb.closest('tr').dataset.key,
         row: cb.closest('tr')
@@ -2309,9 +2674,23 @@
     let bulkEditField = null;
 
     function showBulkEdit(field, label, type) {
-      if (field === 'stock' && stockLinkEnabled) {
-        showToast('info', '库存联动已开启，请先关闭联动后再手动设置库存');
-        return;
+      const warehouseSelect = document.getElementById('skuBulkWarehouseSelect');
+      if (field === 'stock') {
+        const keys = getCheckedSkuKeys();
+        if (keys.length === 0) return;
+        const editableCount = skuData.filter(item =>
+          keys.includes(item.key) && !isSkuStockLinked(item)
+        ).length;
+        if (editableCount === 0) {
+          showToast('info', '所选 SKU 均已开启库存联动，不能手动设置仓库库存');
+          return;
+        }
+        warehouseSelect.innerHTML = skuWarehouses
+          .map(warehouse => `<option value="${warehouse.id}">${warehouse.name}</option>`)
+          .join('');
+        warehouseSelect.style.display = 'block';
+      } else {
+        warehouseSelect.style.display = 'none';
       }
       bulkEditField = field;
       const inputEl = document.getElementById('skuBulkEditInput');
@@ -2339,9 +2718,26 @@
       }
       const keys = getCheckedSkuKeys();
       if (keys.length === 0) return;
-      keys.forEach(key => {
-        updateSkuData(key, bulkEditField, value);
-      });
+      if (bulkEditField === 'stock') {
+        const warehouseId = document.getElementById('skuBulkWarehouseSelect').value;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        skuData.forEach(item => {
+          if (!keys.includes(item.key)) return;
+          if (isSkuStockLinked(item)) {
+            skippedCount++;
+            return;
+          }
+          normalizeWarehouseStocks(item)[warehouseId] = Math.max(0, Number(value) || 0);
+          item.stock = getSkuStockTotal(item);
+          updatedCount++;
+        });
+        renderSkuTable();
+        showToast('success', `已更新 ${updatedCount} 条 SKU；跳过 ${skippedCount} 条库存联动 SKU`);
+        closeBulkEdit();
+        return;
+      }
+      keys.forEach(key => updateSkuData(key, bulkEditField, value));
       renderSkuTable();
       showToast('success', `已批量设置 ${keys.length} 条 SKU ${inputEl.placeholder.replace('请输入', '')}`);
       closeBulkEdit();
@@ -2355,6 +2751,7 @@
       bulkEditField = null;
       document.getElementById('skuBulkInlineEdit').style.display = 'none';
       document.getElementById('skuBulkActions').style.display = 'flex';
+      document.getElementById('skuBulkWarehouseSelect').style.display = 'none';
     }
 
     // ==================== 批量名称 ====================
@@ -2382,19 +2779,53 @@
       showBulkEdit('price', '批量价格', 'number');
     }
 
-    let stockLinkEnabled = true;
-    function toggleStockLink(el) {
-      const checkbox = el.querySelector('.checkbox');
-      checkbox.classList.toggle('checked');
-      stockLinkEnabled = checkbox.classList.contains('checked');
-      checkbox.innerHTML = stockLinkEnabled ? '✓' : '';
-      // 更新库存输入框的 disabled 状态
-      document.querySelectorAll('#skuTableBody td:nth-child(5) input').forEach(inp => {
-        inp.disabled = stockLinkEnabled;
-        inp.style.opacity = stockLinkEnabled ? '0.5' : '1';
+    function batchSetSkuContinueSelling(checked) {
+      const keys = getCheckedSkuKeys();
+      if (keys.length === 0) return;
+      skuData.forEach(item => {
+        if (keys.includes(item.key)) {
+          item.continueSellingWhenOutOfStock = checked;
+        }
       });
-      skuUpdateBulkBar();
-      showToast('info', stockLinkEnabled ? '库存联动已开启，库存不可手动编辑' : '库存联动已关闭，可手动编辑库存');
+      renderSkuTable();
+      showToast(
+        'success',
+        checked ? '已允许所选 SKU 断货继续销售' : '已设置所选 SKU 断货停止销售'
+      );
+    }
+
+    function syncStockLinkMasterState() {
+      const master = document.getElementById('stockLinkToggle');
+      if (!master) return;
+      const linkedCount = skuData.filter(isSkuStockLinked).length;
+      if (skuData.length > 0 && linkedCount === skuData.length) {
+        stockLinkEnabled = true;
+      } else if (skuData.length > 0 && linkedCount === 0) {
+        stockLinkEnabled = false;
+      }
+      master.checked = skuData.length === 0
+        ? stockLinkEnabled
+        : linkedCount === skuData.length;
+      master.indeterminate = linkedCount > 0 && linkedCount < skuData.length;
+      master.setAttribute(
+        'aria-label',
+        master.indeterminate ? '部分 SKU 已开启库存联动' : '批量设置 SKU 库存联动'
+      );
+    }
+
+    function setAllSkuStockLinked(checked) {
+      const scrollContainer = document.querySelector('.sku-table-scroll');
+      const previousScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+      stockLinkEnabled = checked;
+      skuData.forEach(item => {
+        item.stockLinked = checked;
+      });
+      renderSkuTable();
+      requestAnimationFrame(() => {
+        const nextScrollContainer = document.querySelector('.sku-table-scroll');
+        if (nextScrollContainer) nextScrollContainer.scrollLeft = previousScrollLeft;
+      });
+      showToast('info', checked ? '全部 SKU 已开启库存联动' : '全部 SKU 已关闭库存联动');
     }
 
     // ==================== 媒体上传（支持预览、删除、拖拽排序） ====================

@@ -695,6 +695,75 @@
   padding: 20px;
   margin-top: 20px;
 }
+.gwp-section-head {
+  margin-bottom: 16px;
+}
+.gwp-section-head .gwp-section {
+  margin: 0;
+}
+.gwp-section-desc {
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+.gwp-condition-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.gwp-condition-mode {
+  flex-shrink: 0;
+}
+.gwp-condition-mode button {
+  min-width: 88px;
+  padding: 8px 14px;
+}
+.gwp-helper-text {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+.gwp-scope-trigger {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+}
+.gwp-scope-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.gwp-scope-btn:hover {
+  border-color: hsl(var(--primary) / .55);
+  background: hsl(var(--primary) / .03);
+}
+.gwp-scope-btn span {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.gwp-source-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1;
+}
 .gwp-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -868,6 +937,22 @@
   text-overflow: ellipsis;
 }
 .gwp-combo-btn:hover { border-color: hsl(var(--primary)); }
+.gwp-combo-scope .gwp-combo-btn {
+  position: relative;
+  padding-right: 40px;
+}
+.gwp-combo-scope::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid hsl(var(--muted-foreground));
+  border-bottom: 1.5px solid hsl(var(--muted-foreground));
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
 .gwp-combo-scope .gwp-combo-btn,
 .gwp-combo-gift .gwp-combo-btn,
 .gwp-combo-product .gwp-combo-btn { min-height: 40px; }
@@ -957,14 +1042,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  appearance: none;
   cursor: pointer;
   color: hsl(var(--muted-foreground));
-  font-size: 16px;
   flex-shrink: 0;
-  transition: all 0.15s;
+  line-height: 1;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 .remove-product:hover { background: hsl(0 84% 90%); color: hsl(var(--error)); }
+.remove-product:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
 
 /* 每个产品下的多个 SKU，可各自填写可赠送库存 */
 .gwp-sku-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -982,18 +1075,38 @@
 .gwp-sku-stock label { font-size: 13px; color: hsl(var(--muted-foreground)); }
 .gwp-stock-input { max-width: 120px; }
 .gwp-sku-remove {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  appearance: none;
   cursor: pointer;
   color: hsl(var(--muted-foreground));
-  font-size: 15px;
   flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 .gwp-sku-remove:hover { background: hsl(0 84% 90%); color: hsl(var(--error)); }
+.gwp-sku-remove:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+.remove-product svg,
+.gwp-sku-remove svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
 .gwp-add-sku {
   margin-top: 8px;
   font-size: 13px;
@@ -1067,7 +1180,19 @@
 }
 .pf-dialog-item-info { flex: 1; min-width: 0; }
 .pf-dialog-item-name { font-size: 14px; font-weight: 600; color: hsl(var(--foreground)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pf-dialog-item-desc { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-dialog-item-desc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  margin-top: 2px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-dialog-item-code { flex-shrink: 0; }
 .pf-dialog-item-expand {
   width: 26px; height: 26px; border: none; background: transparent; cursor: pointer;
   color: hsl(var(--muted-foreground)); font-size: 12px; flex-shrink: 0; border-radius: 6px;
@@ -1090,15 +1215,40 @@
 .sku-price { font-size: 12px; color: hsl(var(--foreground)); font-weight: 500; }
 .sku-stock { font-size: 12px; color: hsl(var(--muted-foreground)); margin-left: 16px; flex-shrink: 0; min-width: 64px; text-align: right; }
 
-.pf-dialog-select-all { font-size: 12px; color: hsl(var(--primary)); cursor: pointer; white-space: nowrap; user-select: none; font-weight: 500; }
-.pf-dialog-select-all:hover { text-decoration: underline; }
+.pf-dialog-select-all-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+.pf-dialog-select-all-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: hsl(var(--primary));
+}
 .pf-dialog-count { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 .pf-dialog-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid hsl(var(--border)); background: hsl(var(--card)); flex-shrink: 0; }
 .pf-dialog-footer--split { justify-content: space-between; }
-.pf-dialog-footer--split .dialog-actions { margin: 0; padding: 0; }
+.pf-dialog-footer--split .dialog-actions {
+  margin: 0;
+  padding: 0;
+  border-top: none;
+}
 .pf-dialog-footer .btn { min-width: 80px; justify-content: center; }
 .pf-dialog-footer-left { display: inline-flex; align-items: center; gap: 12px; }
 .pf-dialog-empty { padding: 48px 20px; text-align: center; font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-scope-dialog {
+  width: 820px;
+  height: min(680px, 78vh);
+}
 
 /* ====================== 规则：赠送条件行 ====================== */
 .gwp-cond-row {
@@ -1109,13 +1259,44 @@
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
   background: hsl(var(--muted) / 0.25);
-  margin-bottom: 10px;
+  margin-bottom: 0;
+}
+.gwp-cond-index {
+  min-width: 52px;
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
 }
 .gwp-cond-row .gwp-combo { min-width: 200px; width: 220px; flex-shrink: 0; }
 .gwp-cond-op { font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); }
 .gwp-cond-val { max-width: 160px; }
 .gwp-cond-unit { font-size: 13px; color: hsl(var(--muted-foreground)); }
-.gwp-cond-or { font-size: 12px; color: hsl(var(--muted-foreground)); padding: 0 8px; }
+.gwp-cond-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+.gwp-cond-divider::before,
+.gwp-cond-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: hsl(var(--border));
+}
+.gwp-cond-divider span {
+  padding: 0 10px;
+}
+.gwp-add-condition {
+  margin-top: 12px;
+}
+@media (max-width: 680px) {
+  .gwp-condition-section-head {
+    flex-direction: column;
+  }
+}
 
 /* ====================== 规则：奖励方式分段控件 ====================== */
 .gwp-seg {
@@ -1137,7 +1318,57 @@
 .gwp-seg button.active { background: hsl(var(--primary)); color: #fff; font-weight: 600; }
 
 /* ====================== 规则：赠品选择列表 ====================== */
-.gwp-gift-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.gwp-reward-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px 8px 0 0;
+  background: hsl(var(--muted) / 0.18);
+}
+.gwp-reward-toolbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.gwp-reward-toolbar-desc {
+  margin-top: 3px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.gwp-gift-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid hsl(var(--border));
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+.gwp-reward-empty {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.12);
+  text-align: center;
+}
+.gwp-reward-empty-title {
+  font-size: 14px;
+  color: hsl(var(--foreground));
+}
+.gwp-reward-empty-desc {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
 .gwp-gift-row {
   display: flex;
   align-items: center;
@@ -1158,6 +1389,11 @@
   line-height: 1.6;
 }
 .gwp-check-line .checkbox { margin-top: 2px; flex-shrink: 0; }
+.gwp-pick-one-line {
+  margin-top: 0;
+  padding-top: 14px;
+  border-top: 1px solid hsl(var(--border));
+}
 
 /* ====================== 空状态小号 ====================== */
 .gwp-empty-sm { padding: 18px; font-size: 13px; }

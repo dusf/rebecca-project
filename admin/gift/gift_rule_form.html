@@ -12,10 +12,10 @@
     <div class="page-container">
       <div class="gwp-form-page">
       <div class="page-header">
-        <div class="page-title" id="formTitle">新增规则</div>
+        <div class="page-title" id="formTitle">创建赠品规则</div>
         <div class="page-actions">
-          <button class="btn btn-ghost" id="btnCancel">取消</button>
-          <button class="btn btn-primary" id="btnSave">保存规则</button>
+          <button class="btn btn-secondary" id="btnCancel">返回</button>
+          <button class="btn btn-primary" id="btnSave">保存</button>
         </div>
       </div>
 
@@ -23,41 +23,61 @@
         <div class="gwp-main">
           <!-- 基本信息 -->
           <div class="gwp-form-card">
-            <div class="gwp-section">基本信息</div>
+            <div class="gwp-section-head">
+              <div class="gwp-section">基本信息</div>
+              <div class="gwp-section-desc">设置用于识别和管理的规则名称</div>
+            </div>
             <div class="gwp-form">
               <div class="form-group full">
                 <label class="form-label">规则名称 <span class="req">*</span></label>
-                <input type="text" class="form-input" id="ruleName" placeholder="如：满300元送化妆镜" maxlength="60">
-              </div>
-              <div class="form-group full">
-                <label class="form-label">备注</label>
-                <textarea class="form-textarea" id="remark" rows="4" placeholder="选填"></textarea>
+                <input type="text" class="form-input" id="ruleName" placeholder="如：满 300 元送化妆镜" maxlength="60">
               </div>
             </div>
           </div>
 
           <!-- 赠送范围 -->
           <div class="gwp-form-card">
-            <div class="gwp-section">赠送范围</div>
+            <div class="gwp-section-head">
+              <div class="gwp-section">赠送范围</div>
+              <div class="gwp-section-desc">指定规则适用的产品系列或具体产品及 SKU</div>
+            </div>
             <div class="gwp-form">
               <div class="form-group full">
-                <label class="form-label">可指定「产品系列」或「具体的产品及SKU」</label>
-                <div class="gwp-combo" data-kind="scope" data-label="选择赠送范围"></div>
-                <div class="gwp-hint">命中范围取并集。例如：指定「真丝睡裙」系列，或同时指定「真丝睡裙 + 香薰蜡烛」两个商品。</div>
+                <label class="form-label">适用范围</label>
+                <div class="gwp-combo" id="scopeMode" data-kind="enum" data-arg="collection:产品系列|product:产品" data-value="collection" data-default="collection" data-placeholder="选择适用范围"></div>
+              </div>
+              <div class="form-group full" id="scopePickerGroup">
+                <div class="gwp-scope-trigger">
+                  <button type="button" class="gwp-scope-btn" id="scopePickerBtn">选择产品系列 <span id="scopeSelectedCount"></span></button>
+                  <div class="gwp-source-list" id="scopeSelectedList"></div>
+                </div>
+                <div class="gwp-helper-text" id="scopeHelper">可选择多个产品系列，命中任一系列即可参与赠送。</div>
               </div>
             </div>
           </div>
 
           <!-- 赠送条件 -->
           <div class="gwp-form-card">
-            <div class="gwp-section">赠送条件<span class="gwp-section-tip">满足以下任一条件即可（条件之间为「或」关系）</span></div>
+            <div class="gwp-section-head gwp-condition-section-head">
+              <div>
+                <div class="gwp-section">赠送条件</div>
+                <div class="gwp-section-desc" id="conditionCombineDesc">满足以下任一条件即可，多个条件之间为“或”关系</div>
+              </div>
+              <div class="gwp-seg gwp-condition-mode" id="conditionCombineSeg">
+                <button type="button" class="active" data-combine="or">满足任意</button>
+                <button type="button" data-combine="and">满足全部</button>
+              </div>
+            </div>
             <div id="condList"></div>
-            <button class="btn btn-ghost btn-dashed" id="addCond" style="margin-top:12px">＋ 添加条件</button>
+            <button class="btn btn-secondary gwp-add-condition" id="addCond">＋ 添加条件</button>
           </div>
 
           <!-- 奖励方式 -->
           <div class="gwp-form-card">
-            <div class="gwp-section">奖励方式</div>
+            <div class="gwp-section-head">
+              <div class="gwp-section">奖励方式</div>
+              <div class="gwp-section-desc">设置命中规则后向买家发放的权益</div>
+            </div>
             <div class="gwp-form">
               <div class="form-group full">
                 <div class="gwp-seg" id="rewardSeg">
@@ -68,11 +88,17 @@
             </div>
             <!-- 送赠品 -->
             <div id="giftReward">
-              <button class="btn btn-ghost" id="pickGift">＋ 选择赠品</button>
+              <div class="gwp-reward-toolbar">
+                <div>
+                  <div class="gwp-reward-toolbar-title">赠品列表</div>
+                  <div class="gwp-reward-toolbar-desc">选择规则命中后赠送的赠品，并设置赠送数量</div>
+                </div>
+                <button class="btn btn-secondary" id="pickGift">添加赠品</button>
+              </div>
               <div id="giftList" class="gwp-gift-list"></div>
-              <label class="gwp-check-line" id="pickOneLine" style="margin-top:14px">
+              <label class="gwp-check-line gwp-pick-one-line" id="pickOneLine">
                 <span class="checkbox" id="pickOne"></span>
-                <span>当多个赠品条件同时命中时，由买家在购物车 / 结算页从可用赠品中<b>任选其一</b>（只选一个）</span>
+                <span>当多个赠品同时可用时，允许买家在购物车或结算页<b>任选 1 件</b></span>
               </label>
             </div>
             <!-- 送积分 -->

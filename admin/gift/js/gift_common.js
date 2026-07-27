@@ -12,49 +12,49 @@
   // 真实商品主数据（含多 SKU / 变体），供赠品池“关联产品及SKU”与规则“赠送范围”选择
   // 假发主商品（1-3）+ 假发周边护理配件（4-10，可作为购买假发后的赠品套装成员）
   const PA_PRODUCTS = [
-    { id: '1', title: '女士真人发全头套', image: '👩', baseCount: 42, stock: 260, price: 1299,
+    { id: '1', spu: 'SPU-FW-00001', title: '女士真人发全头套', image: '👩', baseCount: 42, stock: 260, price: 1299,
       variants: [
         { id: 'V101', sku: 'SKU-全头套-自然黑-中长', stock: 90, price: 1299 },
         { id: 'V102', sku: 'SKU-全头套-栗棕-中长', stock: 80, price: 1299 },
         { id: 'V103', sku: 'SKU-全头套-自然黑-长发', stock: 90, price: 1399 }
       ] },
-    { id: '2', title: '蕾丝前额假发', image: '💇‍♀️', baseCount: 36, stock: 180, price: 1599,
+    { id: '2', spu: 'SPU-FW-00002', title: '蕾丝前额假发', image: '💇‍♀️', baseCount: 36, stock: 180, price: 1599,
       variants: [
         { id: 'V201', sku: 'SKU-蕾丝假发-自然黑-16寸', stock: 90, price: 1599 },
         { id: 'V202', sku: 'SKU-蕾丝假发-深棕-18寸', stock: 90, price: 1699 }
       ] },
-    { id: '3', title: '女士接发片', image: '💁‍♀️', baseCount: 58, stock: 320, price: 499,
+    { id: '3', spu: 'SPU-HE-00001', title: '女士接发片', image: '💁‍♀️', baseCount: 58, stock: 320, price: 499,
       variants: [
         { id: 'V301', sku: 'SKU-接发片-自然黑-20寸', stock: 160, price: 499 },
         { id: 'V302', sku: 'SKU-接发片-亚麻棕-20寸', stock: 160, price: 529 }
       ] },
-    { id: '4', title: '假发专用钢丝梳', image: '🪮', baseCount: 210, stock: 980, price: 39,
+    { id: '4', spu: 'SPU-HA-00004', title: '假发专用钢丝梳', image: '🪮', baseCount: 210, stock: 980, price: 39,
       variants: [
         { id: 'V401', sku: 'SKU-钢丝梳-经典款', stock: 980, price: 39 }
       ] },
-    { id: '5', title: '免洗柔顺护理喷雾', image: '🧴', baseCount: 160, stock: 720, price: 69,
+    { id: '5', spu: 'SPU-CP-00003', title: '免洗柔顺护理喷雾', image: '🧴', baseCount: 160, stock: 720, price: 69,
       variants: [
         { id: 'V501', sku: 'SKU-护理喷雾-玫瑰香-100ml', stock: 360, price: 69 },
         { id: 'V502', sku: 'SKU-护理喷雾-无香型-100ml', stock: 360, price: 69 }
       ] },
-    { id: '6', title: '隐形防滑发网', image: '🧢', baseCount: 300, stock: 1500, price: 29,
+    { id: '6', spu: 'SPU-HA-00005', title: '隐形防滑发网', image: '🧢', baseCount: 300, stock: 1500, price: 29,
       variants: [
         { id: 'V601', sku: 'SKU-发网-黑色5只装', stock: 800, price: 29 },
         { id: 'V602', sku: 'SKU-发网-肤色5只装', stock: 700, price: 29 }
       ] },
-    { id: '7', title: '折叠假发支架', image: '🗄️', baseCount: 120, stock: 540, price: 59,
+    { id: '7', spu: 'SPU-HA-00006', title: '折叠假发支架', image: '🗄️', baseCount: 120, stock: 540, price: 59,
       variants: [
         { id: 'V701', sku: 'SKU-支架-折叠款-黑', stock: 540, price: 59 }
       ] },
-    { id: '8', title: '蕾丝专用假发胶', image: '🧪', baseCount: 140, stock: 620, price: 89,
+    { id: '8', spu: 'SPU-CP-00004', title: '蕾丝专用假发胶', image: '🧪', baseCount: 140, stock: 620, price: 89,
       variants: [
         { id: 'V801', sku: 'SKU-假发胶-防水型-30ml', stock: 620, price: 89 }
       ] },
-    { id: '9', title: '假发收纳防尘盒', image: '📦', baseCount: 100, stock: 460, price: 79,
+    { id: '9', spu: 'SPU-HA-00007', title: '假发收纳防尘盒', image: '📦', baseCount: 100, stock: 460, price: 79,
       variants: [
         { id: 'V901', sku: 'SKU-收纳盒-便携款', stock: 460, price: 79 }
       ] },
-    { id: '10', title: '假发洗护发套装', image: '🧼', baseCount: 90, stock: 380, price: 129,
+    { id: '10', spu: 'SPU-CP-00005', title: '假发洗护发套装', image: '🧼', baseCount: 90, stock: 380, price: 129,
       variants: [
         { id: 'V1001', sku: 'SKU-洗护套装-滋养修护型', stock: 380, price: 129 }
       ] }
@@ -315,7 +315,7 @@
       c.innerHTML = `<button type="button" class="gwp-combo-input gwp-combo-btn">${cur ? cur.value : label}</button>`;
       c.classList.add('gwp-combo-' + kind);
       c.querySelector('.gwp-combo-btn').addEventListener('click', () => {
-        if (kind === 'scope') GWP.gwpOpenScopeDialog((sources) => { GWP._applyScope(c, sources); });
+        if (kind === 'scope') GWP.gwpOpenScopeDialog((sources) => { GWP._applyScope(c, sources); }, c._sources || [], c.dataset.mode || '');
         else if (kind === 'gift') GWP.gwpOpenGiftDialog((g) => { GWP._applyGift(c, g); });
         else if (kind === 'product') GWP.gwpOpenProductPicker((p) => { GWP._applyProduct(c, p); });
       });
@@ -405,84 +405,132 @@
     el.classList.toggle('has-value', !!val && val !== def);
   };
 
-  /* ====================== 范围选择对话框（系列 / 具体产品+SKU） ====================== */
-  GWP.gwpOpenScopeDialog = function (cb, initial) {
-    const cur = initial || [];
+  /* ====================== 范围选择对话框（系列 / 产品） ====================== */
+  GWP.gwpOpenScopeDialog = function (cb, initial, lockedType) {
+    const type = lockedType === 'product' ? 'product' : 'collection';
+    const itemLabel = type === 'collection' ? '产品系列' : '产品';
+    const items = type === 'collection' ? GWP.collections : GWP.products;
+    const selected = new Set((initial || []).filter((source) => source.type === type).map((source) => source.id));
     const ov = document.createElement('div');
     ov.className = 'dialog-overlay';
     ov.innerHTML = `
-      <div class="dialog" style="width:min(760px,94vw)">
-        <div class="dialog-inner">
-          <div class="dialog-header">
-            <span class="dialog-title">选择赠送范围</span>
-            <button class="dialog-close" aria-label="关闭">✕</button>
-          </div>
-          <div class="dialog-body" style="padding:16px 0">
-            <div class="gwp-hint">可指定「产品系列」或「具体产品及SKU」。两者可混合添加，命中范围取并集。</div>
-            <div class="gwp-form" style="grid-template-columns:1fr">
-              <div class="form-group full">
-                <label class="form-label">添加范围</label>
-                <div class="gwp-inline">
-                  <div class="gwp-combo" data-kind="enum" data-arg="collection:产品系列|product:具体产品及SKU" data-value="" data-placeholder="选择范围类型" style="min-width:200px" id="scopeType"></div>
-                  <div class="gwp-combo" data-kind="enum" data-arg="" data-value="" data-placeholder="选择具体项" style="min-width:240px;display:none" id="scopeItem"></div>
-                  <button class="btn btn-primary btn-sm" id="scopeAdd">添加</button>
-                </div>
-              </div>
-            </div>
-            <div class="gwp-section">已选范围</div>
-            <div class="gwp-source-list" id="scopeList"></div>
+      <div class="pf-dialog gwp-scope-dialog">
+        <div class="pf-dialog-header">
+          <span class="pf-dialog-title">选择${itemLabel}</span>
+          <button type="button" class="pf-dialog-close" aria-label="关闭">✕</button>
+        </div>
+        <div class="pf-dialog-search">
+          <input type="text" id="scopeSearch" placeholder="搜索${itemLabel}名称/编号">
+          <button type="button" class="btn btn-secondary btn-sm" id="scopeSearchBtn">搜索</button>
+        </div>
+        <div class="pf-dialog-body">
+          <div class="pf-dialog-list" id="scopeList"></div>
+        </div>
+        <div class="pf-dialog-footer pf-dialog-footer--split">
+          <div class="pf-dialog-footer-left">
+            <label class="pf-dialog-select-all-check">
+              <input type="checkbox" id="scopeSelectAll">
+              <span>全选</span>
+            </label>
+            <span class="pf-dialog-count" id="scopeCount"></span>
+            <button type="button" class="pf-link-btn" id="scopeClear">清空</button>
           </div>
           <div class="dialog-actions">
-            <button class="btn btn-ghost" id="scopeCancel">取消</button>
-            <button class="btn btn-primary" id="scopeOk">确定</button>
+            <button type="button" class="btn btn-secondary" id="scopeCancel">取消</button>
+            <button type="button" class="btn btn-primary" id="scopeOk">确定</button>
           </div>
         </div>
       </div>`;
     document.body.appendChild(ov);
-    GWP.gwpCombo(ov);
+    const searchInput = ov.querySelector('#scopeSearch');
+    let keyword = '';
+
+    function filteredItems() {
+      if (!keyword) return items;
+      const normalized = keyword.toLowerCase();
+      return items.filter((item) => {
+        const name = type === 'collection' ? item.name : item.title;
+        const code = type === 'collection' ? item.id : `${item.spu || ''} ${item.id || ''}`;
+        return name.toLowerCase().includes(normalized) || code.toLowerCase().includes(normalized);
+      });
+    }
 
     function renderList() {
       const box = ov.querySelector('#scopeList');
-      if (!cur.length) { box.innerHTML = '<span class="gwp-muted">尚未选择范围</span>'; return; }
-      box.innerHTML = cur.map((s, i) =>
-        `<span class="gwp-source-chip">${s.type === 'collection' ? '<span class="gwp-source-tag">系列</span>' : '<span class="gwp-source-tag">商品</span>'}${GWP.escapeHtml(s.name)}<span class="gwp-source-x" data-i="${i}">✕</span></span>`
-      ).join('');
-      box.querySelectorAll('.gwp-source-x').forEach((x) => x.addEventListener('click', () => { cur.splice(+x.dataset.i, 1); renderList(); }));
+      const visibleItems = filteredItems();
+      box.innerHTML = visibleItems.length ? visibleItems.map((item) => {
+        const name = type === 'collection' ? item.name : item.title;
+        const description = type === 'collection'
+          ? `${item.id} · ${item.desc || '产品系列'}`
+          : `${item.spu || item.id} · ${(item.variants || []).length} 个 SKU`;
+        const cover = type === 'collection' ? '▦' : (item.image || '📦');
+        return `
+          <label class="pf-dialog-item${selected.has(item.id) ? ' selected' : ''}" data-scope-id="${GWP.escapeHtml(item.id)}">
+            <input type="checkbox" ${selected.has(item.id) ? 'checked' : ''}>
+            <span class="pf-dialog-item-cover">${GWP.escapeHtml(cover)}</span>
+            <span class="pf-dialog-item-info">
+              <span class="pf-dialog-item-name">${GWP.escapeHtml(name)}</span>
+              <span class="pf-dialog-item-desc">${GWP.escapeHtml(description)}</span>
+            </span>
+          </label>`;
+      }).join('') : '<div class="pf-dialog-empty">未找到匹配的内容</div>';
+      box.querySelectorAll('[data-scope-id]').forEach((row) => {
+        row.addEventListener('change', () => {
+          const id = row.dataset.scopeId;
+          if (row.querySelector('input').checked) selected.add(id);
+          else selected.delete(id);
+          renderList();
+        });
+      });
+      const allSelected = visibleItems.length > 0 && visibleItems.every((item) => selected.has(item.id));
+      const selectAll = ov.querySelector('#scopeSelectAll');
+      selectAll.checked = allSelected;
+      selectAll.indeterminate = !allSelected && visibleItems.some((item) => selected.has(item.id));
+      ov.querySelector('#scopeCount').textContent = `已选 ${selected.size} 个${itemLabel}`;
     }
     renderList();
 
-    const typeEl = ov.querySelector('#scopeType');
-    const itemEl = ov.querySelector('#scopeItem');
-    typeEl.addEventListener('gwpcombochange', () => {
-      const t = GWP.comboValue(typeEl);
-      const arg = t === 'collection' ? GWP.collections.map((c) => `${c.id}:${c.name}`).join('|')
-        : t === 'product' ? GWP.products.map((p) => `${p.id}:${p.title}`).join('|') : '';
-      itemEl.dataset.arg = arg;
-      itemEl.style.display = arg ? 'inline-block' : 'none';
-      itemEl.dataset.value = '';
-      const inp = itemEl.querySelector('.gwp-combo-input'); if (inp) inp.value = '';
-      GWP.gwpComboBuild(itemEl);
-    });
+    function search() {
+      keyword = searchInput.value.trim();
+      renderList();
+    }
 
-    ov.querySelector('#scopeAdd').addEventListener('click', () => {
-      const t = GWP.comboValue(typeEl);
-      const v = GWP.comboValue(itemEl);
-      if (!t || !v) return;
-      if (cur.some((s) => s.type === t && s.id === v)) { GWP.toast && GWP.toast('该项已添加'); return; }
-      const name = (t === 'collection' ? GWP.getCollection(v) : GWP.getProduct(v))?.title || (t === 'collection' ? GWP.getCollection(v)?.name : v);
-      cur.push({ type: t, id: v, name });
-      GWP.setComboValue(itemEl, '');
+    searchInput.addEventListener('input', search);
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') search();
+    });
+    ov.querySelector('#scopeSearchBtn').addEventListener('click', search);
+    ov.querySelector('#scopeSelectAll').addEventListener('change', (event) => {
+      filteredItems().forEach((item) => {
+        if (event.target.checked) selected.add(item.id);
+        else selected.delete(item.id);
+      });
+      renderList();
+    });
+    ov.querySelector('#scopeClear').addEventListener('click', () => {
+      selected.clear();
       renderList();
     });
 
-    ov.querySelector('.dialog-close').addEventListener('click', () => ov.remove());
+    ov.querySelector('.pf-dialog-close').addEventListener('click', () => ov.remove());
     ov.querySelector('#scopeCancel').addEventListener('click', () => ov.remove());
-    ov.querySelector('#scopeOk').addEventListener('click', () => { cb(cur.slice()); ov.remove(); });
+    ov.querySelector('#scopeOk').addEventListener('click', () => {
+      const sources = items.filter((item) => selected.has(item.id)).map((item) => ({
+        type,
+        id: item.id,
+        name: type === 'collection' ? item.name : item.title
+      }));
+      cb(sources);
+      ov.remove();
+    });
     ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    setTimeout(() => searchInput.focus(), 0);
   };
   GWP._applyScope = function (c, sources) {
     c._sources = sources;
-    const txt = sources.length ? sources.map((s) => s.name).join('、') : '未选择';
+    const txt = sources.length ? sources.map((s) => s.name).join('、')
+      : c.dataset.mode === 'collection' ? '选择产品系列'
+        : c.dataset.mode === 'product' ? '选择产品' : '选择范围';
     const btn = c.querySelector('.gwp-combo-btn');
     if (btn) btn.textContent = txt;
   };
@@ -555,20 +603,24 @@
           <button class="pf-dialog-close" type="button" aria-label="关闭">✕</button>
         </div>
         <div class="pf-dialog-search">
-          <input type="text" placeholder="搜索商品名称 / 编号" id="gwpAssocSearch">
+          <input type="text" placeholder="搜索产品名称/编号" id="gwpAssocSearch">
           <button class="btn btn-secondary btn-sm" type="button" id="gwpAssocSearchBtn">搜索</button>
           <div class="pf-scope-tools" style="margin-left:auto">
-            <span class="pf-dialog-select-all" id="gwpAssocSelectAll">全选</span>
+            <button class="pf-link-btn" type="button" id="gwpAssocExpandAll">展开全部</button>
           </div>
         </div>
         <div class="pf-dialog-body"><div class="pf-dialog-list" id="gwpAssocList"></div></div>
         <div class="pf-dialog-footer pf-dialog-footer--split">
           <div class="pf-dialog-footer-left">
+            <label class="pf-dialog-select-all-check">
+              <input type="checkbox" id="gwpAssocSelectAll">
+              <span>全选</span>
+            </label>
             <span class="pf-dialog-count" id="gwpAssocCount">已选 0 个商品 · 0 个SKU</span>
             <span class="pf-link-btn" id="gwpAssocClear">清空</span>
           </div>
           <div class="dialog-actions">
-            <button class="btn btn-ghost" id="gwpAssocCancel">取消</button>
+            <button class="btn btn-secondary" id="gwpAssocCancel">取消</button>
             <button class="btn btn-primary" id="gwpAssocOk">确定</button>
           </div>
         </div>
@@ -576,6 +628,8 @@
     document.body.appendChild(ov);
     const listEl = ov.querySelector('#gwpAssocList');
     const countEl = ov.querySelector('#gwpAssocCount');
+    const selectAllEl = ov.querySelector('#gwpAssocSelectAll');
+    const expandAllEl = ov.querySelector('#gwpAssocExpandAll');
     let keyword = '';
 
     function list() { return GWP.products || []; }
@@ -583,7 +637,11 @@
       const all = list();
       if (!keyword) return all;
       const k = keyword.toLowerCase();
-      return all.filter((p) => (p.title || '').toLowerCase().includes(k) || (p.id || '').toLowerCase().includes(k));
+      return all.filter((p) =>
+        (p.title || '').toLowerCase().includes(k)
+        || (p.spu || '').toLowerCase().includes(k)
+        || (p.id || '').toLowerCase().includes(k)
+      );
     }
     function hasSku(pid) { return sel[pid] && sel[pid].size > 0; }
     function updateCount() {
@@ -593,7 +651,14 @@
     }
     function render() {
       const ps = filtered();
-      if (!ps.length) { listEl.innerHTML = '<div class="pf-dialog-empty">未找到匹配的商品</div>'; updateCount(); return; }
+      if (!ps.length) {
+        listEl.innerHTML = '<div class="pf-dialog-empty">未找到匹配的商品</div>';
+        selectAllEl.checked = false;
+        selectAllEl.indeterminate = false;
+        expandAllEl.textContent = '展开全部';
+        updateCount();
+        return;
+      }
       listEl.innerHTML = ps.map((p) => {
         const on = hasSku(p.id);
         const open = expanded.has(p.id);
@@ -611,12 +676,19 @@
             <div class="pf-dialog-item-cover">${p.image || '📦'}</div>
             <div class="pf-dialog-item-info">
               <div class="pf-dialog-item-name">${GWP.escapeHtml(p.title)}</div>
-              <div class="pf-dialog-item-desc">${p.id} · ${(p.variants || []).length} 个SKU</div>
+              <div class="pf-dialog-item-desc">
+                <span class="pf-dialog-item-code">${GWP.escapeHtml(p.spu || p.id)}</span>
+                <span>· ${(p.variants || []).length} 个 SKU</span>
+              </div>
             </div>
             <button class="pf-dialog-item-expand ${open ? 'expanded' : ''}" type="button" data-expand="${p.id}">▾</button>
           </div>
           <div class="pf-dialog-sku-list ${open ? 'open' : ''}" data-sku-list="${p.id}">${skus}</div>`;
       }).join('');
+      const selectedCount = ps.filter((p) => hasSku(p.id)).length;
+      selectAllEl.checked = selectedCount === ps.length;
+      selectAllEl.indeterminate = selectedCount > 0 && selectedCount < ps.length;
+      expandAllEl.textContent = ps.every((p) => expanded.has(p.id)) ? '收起全部' : '展开全部';
       bind();
       updateCount();
     }
@@ -635,6 +707,10 @@
           if (sl) sl.classList.toggle('open');
           e.currentTarget.classList.toggle('expanded');
           if (sl && sl.classList.contains('open')) expanded.add(pid); else expanded.delete(pid);
+          const visibleProducts = filtered();
+          expandAllEl.textContent = visibleProducts.length > 0 && visibleProducts.every((p) => expanded.has(p.id))
+            ? '收起全部'
+            : '展开全部';
         });
       });
       listEl.querySelectorAll('.pf-dialog-sku-item').forEach((sitem) => {
@@ -650,6 +726,10 @@
           const pcb = pitem ? pitem.querySelector('input[data-prod-check]') : null;
           if (pcb) pcb.checked = !!sel[pid];
           if (pitem) pitem.classList.toggle('selected', !!sel[pid]);
+          const visibleProducts = filtered();
+          const selectedCount = visibleProducts.filter((p) => hasSku(p.id)).length;
+          selectAllEl.checked = visibleProducts.length > 0 && selectedCount === visibleProducts.length;
+          selectAllEl.indeterminate = selectedCount > 0 && selectedCount < visibleProducts.length;
           updateCount();
         });
       });
@@ -675,9 +755,20 @@
     ov.querySelector('#gwpAssocOk').addEventListener('click', confirm);
     ov.querySelector('#gwpAssocSearchBtn').addEventListener('click', () => { keyword = ov.querySelector('#gwpAssocSearch').value.trim(); render(); });
     ov.querySelector('#gwpAssocSearch').addEventListener('keydown', (e) => { if (e.key === 'Enter') { keyword = e.target.value.trim(); render(); } });
-    ov.querySelector('#gwpAssocSelectAll').addEventListener('click', () => {
-      const allOn = filtered().every((p) => hasSku(p.id));
-      filtered().forEach((p) => { if (allOn) delete sel[p.id]; else sel[p.id] = new Set((p.variants || []).map((v) => v.id)); });
+    selectAllEl.addEventListener('change', () => {
+      filtered().forEach((p) => {
+        if (selectAllEl.checked) sel[p.id] = new Set((p.variants || []).map((v) => v.id));
+        else delete sel[p.id];
+      });
+      render();
+    });
+    expandAllEl.addEventListener('click', () => {
+      const ps = filtered();
+      const allExpanded = ps.length > 0 && ps.every((p) => expanded.has(p.id));
+      ps.forEach((p) => {
+        if (allExpanded) expanded.delete(p.id);
+        else expanded.add(p.id);
+      });
       render();
     });
     ov.querySelector('#gwpAssocClear').addEventListener('click', () => { for (const k in sel) delete sel[k]; render(); });

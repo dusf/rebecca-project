@@ -54,6 +54,7 @@
   function renderBlocks() {
     const wrap = document.getElementById('productBlocks');
     const count = document.getElementById('prodCount');
+    const removeIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>';
     if (count) count.textContent = '已关联 ' + blocks.length + ' 个产品';
     if (!blocks.length) {
       wrap.innerHTML = '<div class="assoc-empty">暂未关联产品，点击「关联产品」开始添加</div>';
@@ -65,10 +66,10 @@
         <div class="gwp-sku-row" data-vi="${vi}">
           <span class="gwp-sku-name">${GWP.escapeHtml(v.sku || v.variantId)}</span>
           <span class="gwp-sku-stock">
-            <label>可赠库存</label>
+            <label>可赠数量</label>
             <input type="number" min="0" class="form-input gwp-stock-input" value="${Number(v.stock) || 0}" data-vi="${vi}">
           </span>
-          <button type="button" class="gwp-sku-remove" data-del-variant="${vi}" title="移除 SKU">&times;</button>
+          <button type="button" class="gwp-sku-remove" data-del-variant="${vi}" title="移除 SKU" aria-label="移除 SKU">${removeIcon}</button>
         </div>`).join('') || '<div class="gwp-muted gwp-variant-empty">请先选择商品并添加 SKU</div>';
       return `
         <div class="gwp-prod-block" data-i="${i}">
@@ -78,7 +79,7 @@
               <div class="product-name">${pickLabel}</div>
               <div class="product-meta">${(b.variants || []).length} 个 SKU</div>
             </div>
-            <span class="remove-product" data-del-block="${i}" title="移除产品">&times;</span>
+            <button type="button" class="remove-product" data-del-block="${i}" title="移除产品" aria-label="移除产品">${removeIcon}</button>
           </div>
           <div class="gwp-sku-list">${variants}</div>
         </div>`;

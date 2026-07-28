@@ -16,20 +16,20 @@
 <div class="content">
   <div class="page active" id="page-content-articles">
 
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-title">内容管理<span class="count-badge" id="articleCount">(0个)</span></div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary" onclick="openCatListDialog()">管理分类</button>
+        <button class="btn btn-primary" onclick="navigateToPage('content/article_edit.html')">+ 新建文章</button>
+      </div>
+    </div>
+
     <!-- 内容管理 Tab 导航 -->
     <div class="content-tabs">
       <div class="content-tab" onclick="switchContentTab('pages')">页面</div>
       <div class="content-tab active" onclick="switchContentTab('articles')">文章</div>
       <!-- <div class="content-tab" onclick="switchContentTab('faq')">帮助中心</div> -->
-    </div>
-
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <div class="page-title">文章管理<span class="count-badge" id="articleCount">(0个)</span></div>
-      <div class="page-header-actions">
-        <button class="btn btn-secondary" onclick="openCatListDialog()">管理分类</button>
-        <button class="btn btn-primary" onclick="navigateToPage('content/article_edit.html')">+ 新建文章</button>
-      </div>
     </div>
 
     <!-- 工具栏 -->

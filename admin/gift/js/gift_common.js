@@ -60,6 +60,73 @@
       ] }
   ];
 
+  const PRODUCT_FILTER_META = {
+    '1': { categoryId: 1, categoryName: '女士全头套', collectionIds: ['C1', 'C4'], attributeValues: { 1: [1], 3: [9, 11] } },
+    '2': { categoryId: 1, categoryName: '女士全头套', collectionIds: ['C1', 'C2', 'C4'], attributeValues: { 1: [1], 3: [9] } },
+    '3': { categoryId: 2, categoryName: '女士接发', collectionIds: ['C3', 'C4'], attributeValues: { 11: [1], 14: [14] } },
+    '4': { categoryId: 3, categoryName: '发饰配件', collectionIds: ['C4'], attributeValues: { 20: [10], 21: [11] } },
+    '5': { categoryId: 4, categoryName: '护理产品', collectionIds: ['C4'], attributeValues: { 24: [2], 28: [24] } },
+    '6': { categoryId: 3, categoryName: '发饰配件', collectionIds: ['C4'], attributeValues: { 20: [8], 21: [11] } },
+    '7': { categoryId: 3, categoryName: '发饰配件', collectionIds: ['C4'], attributeValues: { 20: [10], 21: [11] } },
+    '8': { categoryId: 4, categoryName: '护理产品', collectionIds: ['C4'], attributeValues: { 24: [1], 28: [24] } },
+    '9': { categoryId: 3, categoryName: '发饰配件', collectionIds: ['C4'], attributeValues: { 20: [10], 21: [11] } },
+    '10': { categoryId: 4, categoryName: '护理产品', collectionIds: ['C4'], attributeValues: { 24: [2], 28: [20, 21] } }
+  };
+
+  PA_PRODUCTS.forEach((product) => {
+    const prices = (product.variants || []).map((variant) => Number(variant.price) || 0).filter((price) => price >= 0);
+    const stock = (product.variants || []).reduce((total, variant) => total + Math.max(0, Number(variant.stock) || 0), 0);
+    Object.assign(product, PRODUCT_FILTER_META[product.id] || {}, {
+      priceMin: prices.length ? Math.min.apply(null, prices) : Math.max(0, Number(product.price) || 0),
+      priceMax: prices.length ? Math.max.apply(null, prices) : Math.max(0, Number(product.price) || 0),
+      stock
+    });
+  });
+
+  const PRODUCT_FILTER_CATEGORIES = [
+    { id: 1, nameZh: '女士全头套', status: 'active' },
+    { id: 2, nameZh: '女士接发', status: 'active' },
+    { id: 3, nameZh: '发饰配件', status: 'active' },
+    { id: 4, nameZh: '护理产品', status: 'active' }
+  ];
+
+  const PRODUCT_FILTER_ATTRIBUTES = [
+    { id: 1, categoryId: 1, nameZh: '发丝材质', status: 'active', options: [
+      { id: 1, labelZh: '全真发', status: 'active' },
+      { id: 2, labelZh: '人发混丝', status: 'active' },
+      { id: 3, labelZh: '高温化纤丝', status: 'active' }
+    ] },
+    { id: 3, categoryId: 1, nameZh: '发色', status: 'active', options: [
+      { id: 9, labelZh: '自然黑', status: 'active' },
+      { id: 11, labelZh: '栗棕', status: 'active' }
+    ] },
+    { id: 11, categoryId: 2, nameZh: '发丝材质', status: 'active', options: [
+      { id: 1, labelZh: 'Remy全真发', status: 'active' },
+      { id: 2, labelZh: '非Remy真发', status: 'active' }
+    ] },
+    { id: 14, categoryId: 2, nameZh: '接发方式', status: 'active', options: [
+      { id: 14, labelZh: '卡扣片接', status: 'active' },
+      { id: 15, labelZh: '8D无痕胶接', status: 'active' }
+    ] },
+    { id: 20, categoryId: 3, nameZh: '配件类型', status: 'active', options: [
+      { id: 8, labelZh: '发圈', status: 'active' },
+      { id: 10, labelZh: '发夹/一字夹', status: 'active' }
+    ] },
+    { id: 21, categoryId: 3, nameZh: '颜色', status: 'active', options: [
+      { id: 11, labelZh: '经典黑', status: 'active' },
+      { id: 12, labelZh: '珍珠白', status: 'active' }
+    ] },
+    { id: 24, categoryId: 4, nameZh: '容量规格', status: 'active', options: [
+      { id: 1, labelZh: '旅行装(30ml)', status: 'active' },
+      { id: 2, labelZh: '标准装(100ml)', status: 'active' }
+    ] },
+    { id: 28, categoryId: 4, nameZh: '产品类型', status: 'active', options: [
+      { id: 20, labelZh: '洗发水', status: 'active' },
+      { id: 21, labelZh: '护发素', status: 'active' },
+      { id: 24, labelZh: '免洗喷雾', status: 'active' }
+    ] }
+  ];
+
   const COLLECTIONS = [
     { id: 'C1', name: '全头套系列', desc: '女士全头套 / 真人发全头套' },
     { id: 'C2', name: '蕾丝假发系列', desc: '蕾丝前额 / 头顶补发' },
@@ -72,10 +139,46 @@
   GWP.getProduct = (id) => PA_PRODUCTS.find((p) => p.id === id) || null;
   GWP.getCollection = (id) => COLLECTIONS.find((c) => c.id === id) || null;
 
+  function productFilterHost() {
+    const hosts = [window];
+    try {
+      if (window.parent && window.parent !== window) hosts.push(window.parent);
+    } catch (e) {}
+    return hosts.find((host) => Array.isArray(host.categories) || typeof host.getAttributesByCategory === 'function') || null;
+  }
+
+  function productFilterCategories() {
+    const host = productFilterHost();
+    const categories = host && Array.isArray(host.categories) ? host.categories : PRODUCT_FILTER_CATEGORIES;
+    return categories.filter((category) => category.status !== 'disabled');
+  }
+
+  function productFilterAttributes(categoryId) {
+    const supportedAttributeIds = new Set(
+      PA_PRODUCTS
+        .filter((product) => Number(product.categoryId) === Number(categoryId))
+        .flatMap((product) => Object.keys(product.attributeValues || {}))
+        .map(String)
+    );
+    const host = productFilterHost();
+    if (host && typeof host.getAttributesByCategory === 'function') {
+      try {
+        return (host.getAttributesByCategory(Number(categoryId)) || [])
+          .filter((attribute) => supportedAttributeIds.has(String(attribute.id)));
+      } catch (e) {}
+    }
+    return PRODUCT_FILTER_ATTRIBUTES.filter((attribute) =>
+      Number(attribute.categoryId) === Number(categoryId) &&
+      attribute.status !== 'disabled' &&
+      supportedAttributeIds.has(String(attribute.id))
+    );
+  }
+
   /* ====================== 存储 ====================== */
   const LS_POOL = 'gwp_pool_v3';
   const LS_RULE_LEGACY = 'gwp_rule_v3';
-  const LS_RULE = 'gwp_rule_v4';
+  const LS_RULE_PREVIOUS = 'gwp_rule_v4';
+  const LS_RULE = 'gwp_rule_v5';
 
   function today() {
     const d = new Date();
@@ -173,9 +276,9 @@
     return [
       {
         id: 'R001',
-        name: '全店满599元送假发新手护理套装',
+        name: '全店购买任意1件送假发新手护理套装',
         scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C4', name: '全店' }] },
-        conditions: [{ id: 'c1', type: 'order_amount', value: 599 }],
+        conditions: [{ id: 'c1', type: 'sku_base', value: 1 }],
         combine: 'or',
         reward: { type: 'gift', gifts: [{ id: 'P001', name: '假发新手护理套装', qty: 1 }], points: 0 },
         status: 'active',
@@ -193,10 +296,10 @@
       },
       {
         id: 'R003',
-        name: '全头套系列订单满899且SKU单价满499送双赠品',
+        name: '全头套系列购买2件且SKU单价满499送双赠品',
         scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C1', name: '全头套系列' }] },
         conditions: [
-          { id: 'c1', type: 'order_amount', value: 899 },
+          { id: 'c1', type: 'sku_base', value: 2 },
           { id: 'c2', type: 'sku_price', value: 499 }
         ],
         combine: 'and',
@@ -213,9 +316,9 @@
       },
       {
         id: 'R004',
-        name: '接发系列订单满699送收纳保养套装',
+        name: '接发系列购买2件送收纳保养套装',
         scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C3', name: '接发系列' }] },
-        conditions: [{ id: 'c1', type: 'order_amount', value: 699 }],
+        conditions: [{ id: 'c1', type: 'sku_base', value: 2 }],
         combine: 'or',
         reward: { type: 'gift', gifts: [{ id: 'P003', name: '假发收纳保养套装', qty: 1 }], points: 0 },
         status: 'draft',
@@ -233,6 +336,12 @@
     if (normalized.scope && normalized.scope.mode === 'product_sku') {
       normalized.scope = { ...normalized.scope, mode: 'product' };
     }
+    normalized.conditions = (normalized.conditions || [])
+      .filter((condition) => condition.type === 'sku_base' || condition.type === 'sku_price')
+      .map((condition) => ({ ...condition }));
+    if (!normalized.conditions.length) {
+      normalized.conditions = [{ id: 'c1', type: 'sku_base', value: 1 }];
+    }
     return normalized;
   }
   function loadRules() {
@@ -240,24 +349,16 @@
     if (Array.isArray(current)) return current.map(normalizeGiftRule).filter(Boolean);
 
     const defaults = defaultRules();
-    const legacy = gwpLoad(LS_RULE_LEGACY, null);
+    const previous = gwpLoad(LS_RULE_PREVIOUS, null);
+    const legacy = Array.isArray(previous) ? previous : gwpLoad(LS_RULE_LEGACY, null);
     if (!Array.isArray(legacy)) {
       gwpSave(LS_RULE, defaults);
       return defaults;
     }
 
-    const migrated = legacy.map(normalizeGiftRule).filter(Boolean);
-    const defaultR003 = defaults.find((rule) => rule.id === 'R003');
-    const oldR003Index = migrated.findIndex((rule) => rule.id === 'R003' && /任选其一/.test(rule.name || ''));
-    if (oldR003Index >= 0 && defaultR003) migrated[oldR003Index] = defaultR003;
-
-    const legacyR004 = legacy.find((rule) => rule.id === 'R004');
-    if (legacyR004 && legacyR004.reward && legacyR004.reward.type !== 'gift' && !migrated.some((rule) => rule.id === 'R004')) {
-      const defaultR004 = defaults.find((rule) => rule.id === 'R004');
-      if (defaultR004) migrated.push(defaultR004);
-    }
-
-    const result = migrated.length ? migrated : defaults;
+    const defaultIds = new Set(defaults.map((rule) => rule.id));
+    const customRules = legacy.map(normalizeGiftRule).filter(Boolean).filter((rule) => !defaultIds.has(rule.id));
+    const result = defaults.concat(customRules);
     gwpSave(LS_RULE, result);
     return result;
   }
@@ -318,10 +419,9 @@
 
   GWP.condTypeLabel = (t) => ({
     sku_base: 'SKU购买基数 ≥',
-    sku_price: 'SKU单价 ≥',
-    order_amount: '订单金额 ≥'
+    sku_price: 'SKU单价 ≥'
   }[t] || t);
-  GWP.condTypeUnit = (t) => ({ sku_base: '件', sku_price: '元', order_amount: '元' }[t] || '');
+  GWP.condTypeUnit = (t) => ({ sku_base: '件', sku_price: '元' }[t] || '');
   GWP.rewardLabel = (r) => {
     if (!r) return '-';
     if (r.type === 'points') return `送 ${r.points} 积分`;
@@ -437,8 +537,295 @@
     el.classList.toggle('has-value', !!val && val !== def);
   };
 
+  function scopeFilterCombo(id, placeholder, options, value) {
+    const arg = options.map((option) => `${option.value}:${option.label}`).join('|');
+    return `<div class="gwp-combo gwp-product-filter-combo" id="${id}" data-kind="enum" data-arg="${GWP.escapeHtml(arg)}" data-value="${GWP.escapeHtml(value || '')}" data-default="" data-placeholder="${GWP.escapeHtml(placeholder)}"></div>`;
+  }
+
+  function openProductScopeDialog(cb, initial) {
+    const products = GWP.products || [];
+    const selected = new Set((initial || []).filter((source) => source.type === 'product').map((source) => source.id));
+    const filters = {
+      categoryId: '',
+      attributes: {},
+      collectionId: '',
+      priceMin: '',
+      priceMax: '',
+      stockMin: '',
+      stockMax: ''
+    };
+    let keyword = '';
+    const ov = document.createElement('div');
+    ov.className = 'dialog-overlay';
+    ov.innerHTML = `
+      <div class="pf-dialog gwp-product-scope-dialog">
+        <div class="pf-dialog-header">
+          <span class="pf-dialog-title">选择产品</span>
+          <button type="button" class="pf-dialog-close" aria-label="关闭">✕</button>
+        </div>
+        <div class="pf-dialog-search">
+          <input type="text" id="scopeProductSearch" placeholder="搜索产品名称/SPU 编码">
+          <button type="button" class="btn btn-secondary btn-sm" id="scopeProductSearchBtn">搜索</button>
+        </div>
+        <div class="pf-dialog-body gwp-product-picker-layout">
+          <aside class="gwp-product-filter-panel">
+            <div class="gwp-product-filter-head">
+              <span>筛选条件</span>
+              <button type="button" class="pf-link-btn" id="scopeResetFilters">重置</button>
+            </div>
+            <div id="scopeProductFilters"></div>
+          </aside>
+          <section class="gwp-product-picker-results">
+            <div class="gwp-product-result-head">
+              <span id="scopeProductResultCount">共 0 个产品</span>
+              <span>仅支持选择产品，不支持选择具体 SKU</span>
+            </div>
+            <div class="gwp-product-picker-table-wrap">
+              <div class="gwp-product-picker-table">
+                <div class="gwp-product-picker-row gwp-product-picker-table-head">
+                  <span></span>
+                  <span>产品名称/编号</span>
+                  <span>产品分类</span>
+                  <span>价格区间</span>
+                  <span>总库存</span>
+                  <span>SKU 数</span>
+                </div>
+                <div id="scopeProductList"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="pf-dialog-footer pf-dialog-footer--split">
+          <div class="pf-dialog-footer-left">
+            <label class="pf-dialog-select-all-check">
+              <input type="checkbox" id="scopeProductSelectAll">
+              <span>全选当前结果</span>
+            </label>
+            <span class="pf-dialog-count" id="scopeProductCount"></span>
+            <button type="button" class="pf-link-btn" id="scopeProductClear">清空</button>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn btn-secondary" id="scopeProductCancel">取消</button>
+            <button type="button" class="btn btn-primary" id="scopeProductOk">确定</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+
+    const searchInput = ov.querySelector('#scopeProductSearch');
+    const filterBox = ov.querySelector('#scopeProductFilters');
+    const listBox = ov.querySelector('#scopeProductList');
+    const selectAll = ov.querySelector('#scopeProductSelectAll');
+
+    function productPrices(product) {
+      const prices = (product.variants || []).map((variant) => Number(variant.price) || 0);
+      return prices.length ? prices : [Number(product.price) || 0];
+    }
+
+    function filteredProducts() {
+      const normalizedKeyword = keyword.trim().toLowerCase();
+      return products.filter((product) => {
+        if (normalizedKeyword && !`${product.title || ''} ${product.spu || ''}`.toLowerCase().includes(normalizedKeyword)) return false;
+        if (filters.categoryId && String(product.categoryId) !== String(filters.categoryId)) return false;
+        if (filters.collectionId && !(product.collectionIds || []).includes(filters.collectionId)) return false;
+        const attributeEntries = Object.entries(filters.attributes);
+        if (attributeEntries.some(([attributeId, optionId]) => {
+          if (!optionId) return false;
+          const values = product.attributeValues && (product.attributeValues[attributeId] || product.attributeValues[Number(attributeId)]);
+          return !Array.isArray(values) || !values.map(String).includes(String(optionId));
+        })) return false;
+        const prices = productPrices(product);
+        if ((filters.priceMin !== '' || filters.priceMax !== '') && !prices.some((price) =>
+          (filters.priceMin === '' || price >= Number(filters.priceMin)) &&
+          (filters.priceMax === '' || price <= Number(filters.priceMax))
+        )) return false;
+        const stock = Math.max(0, Number(product.stock) || 0);
+        if (filters.stockMin !== '' && stock < Number(filters.stockMin)) return false;
+        if (filters.stockMax !== '' && stock > Number(filters.stockMax)) return false;
+        return true;
+      });
+    }
+
+    function formatPrice(product) {
+      const min = Math.max(0, Number(product.priceMin) || 0);
+      const max = Math.max(min, Number(product.priceMax) || min);
+      return min === max ? `¥${min}` : `¥${min}–${max}`;
+    }
+
+    function updateSelectionSummary(visibleProducts) {
+      const allSelected = visibleProducts.length > 0 && visibleProducts.every((product) => selected.has(product.id));
+      selectAll.checked = allSelected;
+      selectAll.indeterminate = !allSelected && visibleProducts.some((product) => selected.has(product.id));
+      selectAll.disabled = visibleProducts.length === 0;
+      ov.querySelector('#scopeProductCount').textContent = `已选 ${selected.size} 个产品`;
+    }
+
+    function renderProducts() {
+      const visibleProducts = filteredProducts();
+      ov.querySelector('#scopeProductResultCount').textContent = `共 ${visibleProducts.length} 个产品`;
+      listBox.innerHTML = visibleProducts.length ? visibleProducts.map((product) => `
+        <label class="gwp-product-picker-row gwp-product-picker-item${selected.has(product.id) ? ' selected' : ''}">
+          <span class="gwp-product-picker-check">
+            <input type="checkbox" data-product-id="${GWP.escapeHtml(product.id)}" ${selected.has(product.id) ? 'checked' : ''}>
+          </span>
+          <span class="gwp-product-picker-product">
+            <span class="gwp-product-picker-cover">${GWP.escapeHtml(product.image || '📦')}</span>
+            <span class="gwp-product-picker-product-info">
+              <span class="gwp-product-picker-name">${GWP.escapeHtml(product.title)}</span>
+              <span class="gwp-product-picker-spu">${GWP.escapeHtml(product.spu || product.id)}</span>
+            </span>
+          </span>
+          <span class="gwp-product-picker-meta">${GWP.escapeHtml(product.categoryName || '-')}</span>
+          <span class="gwp-product-picker-meta">${GWP.escapeHtml(formatPrice(product))}</span>
+          <span class="gwp-product-picker-meta">${Math.max(0, Number(product.stock) || 0)}</span>
+          <span class="gwp-product-picker-meta">${(product.variants || []).length}</span>
+        </label>`).join('') : '<div class="pf-dialog-empty">未找到匹配的产品</div>';
+      listBox.querySelectorAll('[data-product-id]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) selected.add(checkbox.dataset.productId);
+          else selected.delete(checkbox.dataset.productId);
+          renderProducts();
+        });
+      });
+      updateSelectionSummary(visibleProducts);
+    }
+
+    function setupCombo(id, onChange) {
+      const combo = ov.querySelector(`#${id}`);
+      GWP.gwpComboBuild(combo);
+      combo.addEventListener('gwpcombochange', () => onChange(GWP.comboValue(combo)));
+    }
+
+    function bindRange(id, key) {
+      const input = ov.querySelector(`#${id}`);
+      input.addEventListener('input', () => {
+        filters[key] = input.value === '' ? '' : Number(input.value);
+        renderProducts();
+      });
+    }
+
+    function renderFilters() {
+      const categories = productFilterCategories().map((category) => ({
+        value: String(category.id),
+        label: category.nameZh || category.nameEn || String(category.id)
+      }));
+      const attributes = filters.categoryId ? productFilterAttributes(filters.categoryId) : [];
+      const attributeFilters = attributes.map((attribute) => {
+        const options = (attribute.options || []).filter((option) => option.status !== 'disabled').map((option) => ({
+          value: String(option.id),
+          label: option.labelZh || option.labelEn || String(option.id)
+        }));
+        return `
+          <div class="gwp-product-filter-group">
+            <div class="gwp-product-filter-label">${GWP.escapeHtml(attribute.nameZh || attribute.nameEn || '分类属性')}</div>
+            ${scopeFilterCombo(`scopeAttribute_${attribute.id}`, `选择${attribute.nameZh || attribute.nameEn || '属性'}`, options, filters.attributes[attribute.id] || '')}
+          </div>`;
+      }).join('');
+      const collections = (GWP.collections || []).map((collection) => ({ value: collection.id, label: collection.name }));
+
+      filterBox.innerHTML = `
+        <div class="gwp-product-filter-group">
+          <div class="gwp-product-filter-label">产品分类</div>
+          ${scopeFilterCombo('scopeCategory', '全部分类', categories, filters.categoryId)}
+        </div>
+        ${attributes.length ? `<div class="gwp-product-filter-attributes">${attributeFilters}</div>` : ''}
+        <div class="gwp-product-filter-group">
+          <div class="gwp-product-filter-label">产品系列</div>
+          ${scopeFilterCombo('scopeCollection', '全部系列', collections, filters.collectionId)}
+        </div>
+        <div class="gwp-product-filter-group">
+          <div class="gwp-product-filter-label">价格范围</div>
+          <div class="gwp-product-filter-range">
+            <input type="number" id="scopePriceMin" min="0" placeholder="最低价" value="${filters.priceMin}">
+            <span>—</span>
+            <input type="number" id="scopePriceMax" min="0" placeholder="最高价" value="${filters.priceMax}">
+          </div>
+        </div>
+        <div class="gwp-product-filter-group">
+          <div class="gwp-product-filter-label">库存范围</div>
+          <div class="gwp-product-filter-range">
+            <input type="number" id="scopeStockMin" min="0" placeholder="最少" value="${filters.stockMin}">
+            <span>—</span>
+            <input type="number" id="scopeStockMax" min="0" placeholder="最多" value="${filters.stockMax}">
+          </div>
+        </div>`;
+
+      setupCombo('scopeCategory', (value) => {
+        filters.categoryId = value;
+        filters.attributes = {};
+        renderFilters();
+        renderProducts();
+      });
+      attributes.forEach((attribute) => {
+        setupCombo(`scopeAttribute_${attribute.id}`, (value) => {
+          filters.attributes[attribute.id] = value;
+          renderProducts();
+        });
+      });
+      setupCombo('scopeCollection', (value) => {
+        filters.collectionId = value;
+        renderProducts();
+      });
+      bindRange('scopePriceMin', 'priceMin');
+      bindRange('scopePriceMax', 'priceMax');
+      bindRange('scopeStockMin', 'stockMin');
+      bindRange('scopeStockMax', 'stockMax');
+    }
+
+    renderFilters();
+    renderProducts();
+
+    function search() {
+      keyword = searchInput.value.trim();
+      renderProducts();
+    }
+
+    searchInput.addEventListener('input', search);
+    searchInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') search(); });
+    ov.querySelector('#scopeProductSearchBtn').addEventListener('click', search);
+    ov.querySelector('#scopeResetFilters').addEventListener('click', () => {
+      filters.categoryId = '';
+      filters.attributes = {};
+      filters.collectionId = '';
+      filters.priceMin = '';
+      filters.priceMax = '';
+      filters.stockMin = '';
+      filters.stockMax = '';
+      renderFilters();
+      renderProducts();
+    });
+    selectAll.addEventListener('change', () => {
+      filteredProducts().forEach((product) => {
+        if (selectAll.checked) selected.add(product.id);
+        else selected.delete(product.id);
+      });
+      renderProducts();
+    });
+    ov.querySelector('#scopeProductClear').addEventListener('click', () => {
+      selected.clear();
+      renderProducts();
+    });
+    ov.querySelector('.pf-dialog-close').addEventListener('click', () => ov.remove());
+    ov.querySelector('#scopeProductCancel').addEventListener('click', () => ov.remove());
+    ov.querySelector('#scopeProductOk').addEventListener('click', () => {
+      cb(products.filter((product) => selected.has(product.id)).map((product) => ({
+        type: 'product',
+        id: product.id,
+        name: product.title,
+        spu: product.spu || product.id
+      })));
+      ov.remove();
+    });
+    ov.addEventListener('click', (event) => { if (event.target === ov) ov.remove(); });
+    setTimeout(() => searchInput.focus(), 0);
+  }
+
   /* ====================== 范围选择对话框（系列 / 产品） ====================== */
   GWP.gwpOpenScopeDialog = function (cb, initial, lockedType) {
+    if (lockedType === 'product') {
+      openProductScopeDialog(cb, initial);
+      return;
+    }
     const type = lockedType === 'product' ? 'product' : 'collection';
     const itemLabel = type === 'collection' ? '产品系列' : '产品';
     const items = type === 'collection' ? GWP.collections : GWP.products;

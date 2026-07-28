@@ -13,12 +13,12 @@
 
   let conditions = []; // { id, type, value }
   let conditionCombine = 'or';
-  let scopeSources = []; // { type, id, name }
+  let scopeSources = []; // { type, id, name, spu? }
   let scopeSearchKeyword = '';
   let gifts = []; // { id, name, qty }
 
-  const COND_ARG = 'sku_base:SKU购买基数|sku_price:SKU单价|order_amount:订单金额';
-  const UNIT = { sku_base: '件', sku_price: '元', order_amount: '元' };
+  const COND_ARG = 'sku_base:SKU购买基数|sku_price:SKU单价';
+  const UNIT = { sku_base: '件', sku_price: '元' };
 
   function init() {
     GWP.gwpCombo(document);
@@ -44,7 +44,7 @@
     }
     GWP.setComboValue(scopeModeEl, scopeMode);
     updateScopeMode(scopeMode, true);
-    if (!conditions.length) conditions = [{ id: GWP.newId('c'), type: 'order_amount', value: 0 }];
+    if (!conditions.length) conditions = [{ id: GWP.newId('c'), type: 'sku_base', value: 0 }];
     setConditionCombine(conditionCombine, false);
     renderConditions();
     renderGiftList();
@@ -158,7 +158,7 @@
       }, true, gifts);
     });
     // 添加条件
-    document.getElementById('addCond').addEventListener('click', () => { conditions.push({ id: GWP.newId('c'), type: 'order_amount', value: 0 }); renderConditions(); });
+    document.getElementById('addCond').addEventListener('click', () => { conditions.push({ id: GWP.newId('c'), type: 'sku_base', value: 0 }); renderConditions(); });
     // 返回/保存
     document.getElementById('btnCancel').addEventListener('click', () => GWP.back('rule'));
     document.getElementById('btnSave').addEventListener('click', save);
@@ -242,7 +242,15 @@
     const obj = {
       id: editId || GWP.newId('R'),
       name,
-      scope: { mode: scopeMode, sources: scopeSources.map((s) => ({ type: s.type, id: s.id, name: s.name })) },
+      scope: {
+        mode: scopeMode,
+        sources: scopeSources.map((source) => ({
+          type: source.type,
+          id: source.id,
+          name: source.name,
+          ...(source.type === 'product' && source.spu ? { spu: source.spu } : {})
+        }))
+      },
       conditions: validCond.map((c) => ({ id: c.id, type: c.type, value: Number(c.value) })),
       combine: conditionCombine,
       reward: { type: 'gift', gifts: gifts.map((g) => ({ id: g.id, name: g.name, qty: Number(g.qty) })), points: 0 },

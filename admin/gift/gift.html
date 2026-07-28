@@ -16,7 +16,7 @@
           <div class="page-subtitle">
             <span style="font-size: 12px; color: hsl(var(--muted-foreground)); display: inline-flex; align-items: center; gap: 3px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              管理赠品池与赠品规则，支持买赠、满赠等营销玩法，并可查看赠品相关的数据报表
+              管理赠品池与赠品规则，支持买赠、满赠等营销玩法
             </span>
           </div>
         </div>
@@ -26,7 +26,6 @@
       <div class="gwp-tabs" id="gwpTabs">
         <div class="gwp-tab active" data-tab="pool">赠品池 <span class="tab-count" id="cntPool">0</span></div>
         <div class="gwp-tab" data-tab="rule">赠品规则 <span class="tab-count" id="cntRule">0</span></div>
-        <div class="gwp-tab" data-tab="report">数据报表</div>
       </div>
 
       <!-- ====================== 赠品池 ====================== -->
@@ -119,19 +118,6 @@
             <div class="pagination-buttons" id="rulePager"></div>
           </div>
         </div>
-      </div>
-
-      <!-- ====================== 数据报表 ====================== -->
-      <div class="gwp-tab-panel" id="panelReport">
-        <div class="toolbar">
-          <div class="toolbar-left"></div>
-          <div class="toolbar-right">
-            <button class="btn btn-secondary btn-sm" id="refreshReport" title="刷新数据">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="reportBox"></div>
       </div>
 
       <!-- ====================== 自定义列弹窗 ====================== -->

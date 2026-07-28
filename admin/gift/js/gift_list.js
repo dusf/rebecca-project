@@ -1,7 +1,7 @@
 /* ============================================================
    赠品管理 - 列表 / Tab / 报表（admin/gift/js/gift_list.js）
    视觉与交互对齐产品列表：toolbar、批量操作栏、自定义列弹窗、
-   左侧固定复选列、右侧固定操作列（编辑/删除/更多图标）、分页、数据报表。
+   左侧固定复选列、右侧固定操作列（编辑/删除/更多图标）、分页。
    ============================================================ */
 (function () {
   'use strict';
@@ -133,7 +133,7 @@
       }
     } else {
       switch (key) {
-        case 'name': return `<div><div>${esc(row.name)}</div><div class="gwp-sub">${esc(row.id)}</div></div>`;
+        case 'name': return `<div><div>${esc(row.name)}</div><div class="gwp-rule-code">${esc(row.id)}</div></div>`;
         case 'scope': return scopeText(row.scope);
         case 'conditions': return conditionsText(row);
         case 'reward': return giftContentText(row);
@@ -413,65 +413,6 @@
     document.getElementById('cntRule').textContent = GWP.rules().length;
     refresh('pool');
     refresh('rule');
-    renderReport();
-  }
-
-  /* ====================== 数据报表 ====================== */
-  function renderReport() {
-    const pool = GWP.pool();
-    const rules = GWP.rules();
-    const activeRules = rules.filter((r) => r.status === 'active').length;
-    const draftRules = rules.filter((r) => r.status === 'draft').length;
-    const disabledRules = rules.filter((r) => r.status === 'disabled').length;
-    const activePool = pool.filter((p) => p.status === 'active').length;
-    const collectionRules = rules.filter((r) => r.scope && r.scope.mode === 'collection').length;
-    const productRules = rules.length - collectionRules;
-
-    const condCount = {};
-    const giftUseCount = {};
-    rules.forEach((r) => (r.conditions || []).forEach((c) => { condCount[c.type] = (condCount[c.type] || 0) + 1; }));
-    rules.forEach((rule) => {
-      const seen = new Set();
-      ((rule.reward && rule.reward.gifts) || []).forEach((gift) => {
-        if (!gift.id || seen.has(gift.id)) return;
-        seen.add(gift.id);
-        giftUseCount[gift.id] = (giftUseCount[gift.id] || 0) + 1;
-      });
-    });
-    const maxCond = Math.max(1, ...Object.values(condCount));
-    const maxGiftUse = Math.max(1, ...Object.values(giftUseCount));
-
-    const condRows = ['sku_base', 'sku_price', 'order_amount'].map((t) => {
-      const n = condCount[t] || 0;
-      return `<div class="gwp-progress-row"><div class="gwp-progress-label">${GWP.condTypeLabel(t)}</div><div class="gwp-progress"><div class="gwp-progress-bar" style="width:${(n / maxCond) * 100}%"></div></div><div class="gwp-progress-num">${n}</div></div>`;
-    }).join('');
-
-    const giftUsageRows = Object.entries(giftUseCount)
-      .sort((a, b) => b[1] - a[1])
-      .map(([id, count]) => {
-        const gift = GWP.getPool(id);
-        const label = gift ? gift.displayName : id;
-        return `<div class="gwp-progress-row"><div class="gwp-progress-label">${esc(label)}</div><div class="gwp-progress"><div class="gwp-progress-bar" style="width:${(count / maxGiftUse) * 100}%"></div></div><div class="gwp-progress-num">${count}</div></div>`;
-      }).join('');
-    const configuredGiftCount = Object.keys(giftUseCount).length;
-
-    document.getElementById('reportBox').innerHTML = `
-      <div class="gwp-stat-grid">
-        <div class="gwp-stat"><div class="gwp-stat-label">赠品池总数</div><div class="gwp-stat-value">${pool.length}</div><div class="gwp-stat-sub">启用 ${activePool} · 非启用 ${pool.length - activePool}</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">规则总数</div><div class="gwp-stat-value">${rules.length}</div><div class="gwp-stat-sub">启用 ${activeRules} · 草稿 ${draftRules} · 禁用 ${disabledRules}</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">适用范围-产品系列</div><div class="gwp-stat-value">${collectionRules}</div><div class="gwp-stat-sub">占规则 ${Math.round((collectionRules / Math.max(1, rules.length)) * 100)}%</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">适用范围-产品</div><div class="gwp-stat-value">${productRules}</div><div class="gwp-stat-sub">已配置赠品 ${configuredGiftCount} 个</div></div>
-      </div>
-      <div class="gwp-report-grid">
-        <div class="card gwp-report-card">
-          <div class="gwp-report-title">触发条件分布</div>
-          ${condRows || '<div class="gwp-muted">暂无数据</div>'}
-        </div>
-        <div class="card gwp-report-card">
-          <div class="gwp-report-title">赠品使用频次</div>
-          ${giftUsageRows || '<div class="gwp-muted">暂无数据</div>'}
-        </div>
-      </div>`;
   }
 
   /* ====================== 打开表单 ====================== */
@@ -492,8 +433,7 @@
       document.querySelectorAll('.gwp-tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === tab));
       document.querySelectorAll('.gwp-tab-panel').forEach((x) => x.classList.toggle('active', x.id === 'panel' + tab.charAt(0).toUpperCase() + tab.slice(1)));
       closeAllMenus();
-      if (tab !== 'report') refresh(tab);
-      else renderReport();
+      refresh(tab);
     });
 
     // 搜索
@@ -511,7 +451,6 @@
     // 刷新
     document.getElementById('refreshPool').addEventListener('click', () => { refresh('pool'); GWP.toast('已刷新'); });
     document.getElementById('refreshRule').addEventListener('click', () => { refresh('rule'); GWP.toast('已刷新'); });
-    document.getElementById('refreshReport').addEventListener('click', () => { renderReport(); GWP.toast('已刷新'); });
 
     // 批量操作
     ['pool', 'rule'].forEach((tab) => {
@@ -649,14 +588,13 @@
     GWP.gwpCombo(document);
     const params = new URLSearchParams(location.search);
     const initTab = params.get('tab');
-    if (initTab === 'rule' || initTab === 'pool' || initTab === 'report') {
+    if (initTab === 'rule' || initTab === 'pool') {
       state.tab = initTab;
       document.querySelectorAll('.gwp-tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === initTab));
       document.querySelectorAll('.gwp-tab-panel').forEach((x) => x.classList.toggle('active', x.id === 'panel' + initTab.charAt(0).toUpperCase() + initTab.slice(1)));
     }
     bindGlobal();
     refreshAll();
-    if (state.tab === 'report') renderReport();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

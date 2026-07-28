@@ -74,7 +74,8 @@
 
   /* ====================== 存储 ====================== */
   const LS_POOL = 'gwp_pool_v3';
-  const LS_RULE = 'gwp_rule_v3';
+  const LS_RULE_LEGACY = 'gwp_rule_v3';
+  const LS_RULE = 'gwp_rule_v4';
 
   function today() {
     const d = new Date();
@@ -177,30 +178,28 @@
         conditions: [{ id: 'c1', type: 'order_amount', value: 599 }],
         combine: 'or',
         reward: { type: 'gift', gifts: [{ id: 'P001', name: '假发新手护理套装', qty: 1 }], points: 0 },
-        pickOne: false,
         status: 'active',
         createdAt: '2026-07-20 11:00'
       },
       {
         id: 'R002',
         name: '蕾丝前额假发买1件送固定套装',
-        scope: { mode: 'product_sku', sources: [{ type: 'product', id: '2', name: '蕾丝前额假发' }] },
+        scope: { mode: 'product', sources: [{ type: 'product', id: '2', name: '蕾丝前额假发' }] },
         conditions: [{ id: 'c1', type: 'sku_base', value: 1 }],
         combine: 'or',
         reward: { type: 'gift', gifts: [{ id: 'P002', name: '蕾丝假发固定套装', qty: 1 }], points: 0 },
-        pickOne: false,
         status: 'active',
         createdAt: '2026-07-19 16:40'
       },
       {
         id: 'R003',
-        name: '全头套系列满899送护理或收纳套装（任选其一）',
+        name: '全头套系列订单满899且SKU单价满499送双赠品',
         scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C1', name: '全头套系列' }] },
         conditions: [
           { id: 'c1', type: 'order_amount', value: 899 },
-          { id: 'c2', type: 'sku_price', value: 1299 }
+          { id: 'c2', type: 'sku_price', value: 499 }
         ],
-        combine: 'or',
+        combine: 'and',
         reward: {
           type: 'gift',
           gifts: [
@@ -209,18 +208,16 @@
           ],
           points: 0
         },
-        pickOne: true,
         status: 'active',
         createdAt: '2026-07-18 10:20'
       },
       {
         id: 'R004',
-        name: '会员全店满2000送1000积分',
-        scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C4', name: '全店' }] },
-        conditions: [{ id: 'c1', type: 'order_amount', value: 2000 }],
+        name: '接发系列订单满699送收纳保养套装',
+        scope: { mode: 'collection', sources: [{ type: 'collection', id: 'C3', name: '接发系列' }] },
+        conditions: [{ id: 'c1', type: 'order_amount', value: 699 }],
         combine: 'or',
-        reward: { type: 'points', gifts: [], points: 1000 },
-        pickOne: false,
+        reward: { type: 'gift', gifts: [{ id: 'P003', name: '假发收纳保养套装', qty: 1 }], points: 0 },
         status: 'draft',
         createdAt: '2026-07-17 09:30'
       }
@@ -229,7 +226,42 @@
 
   /* ====================== 数据访问（含 localStorage 持久化） ====================== */
   GWP.pool = function () { return gwpLoad(LS_POOL, defaultPool()); };
-  GWP.rules = function () { return gwpLoad(LS_RULE, defaultRules()); };
+  function normalizeGiftRule(rule) {
+    if (!rule || !rule.reward || rule.reward.type !== 'gift') return null;
+    const normalized = { ...rule };
+    delete normalized.pickOne;
+    if (normalized.scope && normalized.scope.mode === 'product_sku') {
+      normalized.scope = { ...normalized.scope, mode: 'product' };
+    }
+    return normalized;
+  }
+  function loadRules() {
+    const current = gwpLoad(LS_RULE, null);
+    if (Array.isArray(current)) return current.map(normalizeGiftRule).filter(Boolean);
+
+    const defaults = defaultRules();
+    const legacy = gwpLoad(LS_RULE_LEGACY, null);
+    if (!Array.isArray(legacy)) {
+      gwpSave(LS_RULE, defaults);
+      return defaults;
+    }
+
+    const migrated = legacy.map(normalizeGiftRule).filter(Boolean);
+    const defaultR003 = defaults.find((rule) => rule.id === 'R003');
+    const oldR003Index = migrated.findIndex((rule) => rule.id === 'R003' && /任选其一/.test(rule.name || ''));
+    if (oldR003Index >= 0 && defaultR003) migrated[oldR003Index] = defaultR003;
+
+    const legacyR004 = legacy.find((rule) => rule.id === 'R004');
+    if (legacyR004 && legacyR004.reward && legacyR004.reward.type !== 'gift' && !migrated.some((rule) => rule.id === 'R004')) {
+      const defaultR004 = defaults.find((rule) => rule.id === 'R004');
+      if (defaultR004) migrated.push(defaultR004);
+    }
+
+    const result = migrated.length ? migrated : defaults;
+    gwpSave(LS_RULE, result);
+    return result;
+  }
+  GWP.rules = loadRules;
   GWP.savePool = function (obj) {
     const list = GWP.pool();
     const i = list.findIndex((x) => x.id === obj.id);
@@ -316,7 +348,7 @@
       c.classList.add('gwp-combo-' + kind);
       c.querySelector('.gwp-combo-btn').addEventListener('click', () => {
         if (kind === 'scope') GWP.gwpOpenScopeDialog((sources) => { GWP._applyScope(c, sources); }, c._sources || [], c.dataset.mode || '');
-        else if (kind === 'gift') GWP.gwpOpenGiftDialog((g) => { GWP._applyGift(c, g); });
+        else if (kind === 'gift') GWP.gwpOpenGiftDialog((g) => { GWP._applyGift(c, g); }, true, c._gifts || []);
         else if (kind === 'product') GWP.gwpOpenProductPicker((p) => { GWP._applyProduct(c, p); });
       });
       return;
@@ -535,50 +567,180 @@
     if (btn) btn.textContent = txt;
   };
 
-  /* ====================== 赠品选择对话框（从赠品池选择 + 数量） ====================== */
-  GWP.gwpOpenGiftDialog = function (cb, multi) {
+  /* ====================== 赠品选择对话框（从赠品池选择） ====================== */
+  GWP.gwpOpenGiftDialog = function (cb, multi, initial) {
+    if (Array.isArray(cb)) {
+      initial = cb;
+      cb = multi;
+      multi = true;
+    }
+    if (typeof cb !== 'function') return;
+    multi = multi !== false;
     const pool = GWP.pool();
+    const initialItems = initial || [];
+    const initialQty = {};
+    initialItems.forEach((item) => {
+      const id = typeof item === 'string' ? item : item && item.id;
+      if (id) initialQty[id] = typeof item === 'object' && item.qty ? Number(item.qty) : 1;
+    });
+    const selected = new Set(initialItems.map((item) => typeof item === 'string' ? item : item && item.id).filter((id) => {
+      const gift = pool.find((item) => item.id === id);
+      return gift && gift.status === 'active';
+    }));
     const ov = document.createElement('div');
     ov.className = 'dialog-overlay';
     ov.innerHTML = `
-      <div class="dialog" style="width:min(720px,94vw)">
-        <div class="dialog-inner">
-          <div class="dialog-header">
-            <span class="dialog-title">选择赠品</span>
-            <button class="dialog-close" aria-label="关闭">✕</button>
-          </div>
-          <div class="dialog-body" style="padding:8px 0">
-            ${pool.length ? `<table class="gwp-pick-table"><thead><tr><th style="width:40px"></th><th>赠品名称</th><th>关联SKU数</th><th>状态</th></tr></thead><tbody>${pool.map((p) =>
-              `<tr data-id="${p.id}"><td><span class="checkbox"></span></td><td>${GWP.escapeHtml(p.displayName)}</td><td>${(p.products || []).reduce((a, b) => a + (b.variants || []).length, 0)}</td><td><span class="badge ${GWP.statusClass(p.status)}">${GWP.statusLabel(p.status)}</span></td></tr>`
-            ).join('')}</tbody></table>` : '<div class="gwp-empty">赠品池为空，请先创建赠品</div>'}
+      <div class="pf-dialog gwp-gift-picker-dialog">
+        <div class="pf-dialog-header">
+          <span class="pf-dialog-title">选择赠品</span>
+          <button type="button" class="pf-dialog-close" aria-label="关闭">✕</button>
+        </div>
+        <div class="pf-dialog-search">
+          <input type="text" id="giftPickerSearch" placeholder="搜索赠品名称/编号">
+          <button type="button" class="btn btn-secondary btn-sm" id="giftPickerSearchBtn">搜索</button>
+        </div>
+        <div class="pf-dialog-body gwp-gift-picker-body">
+          <table class="gwp-gift-picker-table">
+            <thead>
+              <tr>
+                <th class="gwp-gift-picker-check"></th>
+                <th>赠品名称/编号</th>
+                <th>关联 SKU 数</th>
+                <th>可赠数量</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="giftPickerRows"></tbody>
+          </table>
+          <div class="pf-dialog-empty" id="giftPickerEmpty" style="display:none"></div>
+        </div>
+        <div class="pf-dialog-footer pf-dialog-footer--split">
+          <div class="pf-dialog-footer-left">
+            <label class="pf-dialog-select-all-check">
+              <input type="checkbox" id="giftPickerSelectAll">
+              <span>全选</span>
+            </label>
+            <span class="pf-dialog-count" id="giftPickerCount"></span>
+            <button type="button" class="pf-link-btn" id="giftPickerClear">清空</button>
           </div>
           <div class="dialog-actions">
-            <button class="btn btn-ghost" id="gCancel">取消</button>
-            <button class="btn btn-primary" id="gOk">确定</button>
+            <button type="button" class="btn btn-secondary" id="gCancel">取消</button>
+            <button type="button" class="btn btn-primary" id="gOk">确定</button>
           </div>
         </div>
       </div>`;
     document.body.appendChild(ov);
-    const selected = [];
-    ov.querySelectorAll('.gwp-pick-table tr').forEach((tr) => {
-      tr.addEventListener('click', () => {
-        const id = tr.dataset.id;
-        const p = pool.find((x) => x.id === id);
-        if (multi) {
-          const i = selected.findIndex((s) => s.id === id);
-          if (i >= 0) { selected.splice(i, 1); tr.classList.remove('selected'); tr.querySelector('.checkbox').classList.remove('checked'); }
-          else { selected.push({ id, name: p.displayName, qty: 1 }); tr.classList.add('selected'); tr.querySelector('.checkbox').classList.add('checked'); }
-        } else {
-          ov.querySelectorAll('tr').forEach((t) => { t.classList.remove('selected'); t.querySelector('.checkbox').classList.remove('checked'); });
-          selected.length = 0; selected.push({ id, name: p.displayName, qty: 1 });
-          tr.classList.add('selected'); tr.querySelector('.checkbox').classList.add('checked');
-        }
+    const rowsEl = ov.querySelector('#giftPickerRows');
+    const emptyEl = ov.querySelector('#giftPickerEmpty');
+    const searchEl = ov.querySelector('#giftPickerSearch');
+    const selectAllEl = ov.querySelector('#giftPickerSelectAll');
+    const countEl = ov.querySelector('#giftPickerCount');
+    const okEl = ov.querySelector('#gOk');
+    let keyword = '';
+
+    function skuCount(gift) {
+      return (gift.products || []).reduce((count, product) => count + (product.variants || []).length, 0);
+    }
+    function availableCount(gift) {
+      const stocks = [];
+      (gift.products || []).forEach((product) => {
+        (product.variants || []).forEach((variant) => stocks.push(Math.max(0, Number(variant.stock) || 0)));
       });
+      return stocks.length ? Math.min.apply(null, stocks) : 0;
+    }
+    function filteredPool() {
+      if (!keyword) return pool;
+      const normalized = keyword.toLowerCase();
+      return pool.filter((gift) =>
+        (gift.displayName || '').toLowerCase().includes(normalized)
+        || (gift.id || '').toLowerCase().includes(normalized)
+      );
+    }
+    function updateFooter(visibleItems) {
+      const selectable = visibleItems.filter((gift) => gift.status === 'active');
+      const selectedVisible = selectable.filter((gift) => selected.has(gift.id)).length;
+      selectAllEl.checked = selectable.length > 0 && selectedVisible === selectable.length;
+      selectAllEl.indeterminate = selectedVisible > 0 && selectedVisible < selectable.length;
+      selectAllEl.disabled = !selectable.length;
+      countEl.textContent = `已选 ${selected.size} 个赠品`;
+      okEl.disabled = selected.size === 0;
+    }
+    function render() {
+      const visibleItems = filteredPool();
+      rowsEl.style.display = visibleItems.length ? '' : 'none';
+      emptyEl.style.display = visibleItems.length ? 'none' : 'block';
+      emptyEl.textContent = pool.length ? '未找到匹配的赠品' : '赠品池为空，请先创建赠品';
+      rowsEl.innerHTML = visibleItems.map((gift) => {
+        const disabled = gift.status !== 'active';
+        const checked = selected.has(gift.id);
+        return `
+          <tr class="${checked ? 'selected ' : ''}${disabled ? 'disabled' : ''}" data-gift-id="${GWP.escapeHtml(gift.id)}" ${disabled ? 'aria-disabled="true" title="仅启用状态的赠品可以添加"' : ''}>
+            <td class="gwp-gift-picker-check"><input type="checkbox" data-gift-check="${GWP.escapeHtml(gift.id)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}></td>
+            <td>
+              <div class="gwp-gift-picker-name">${GWP.escapeHtml(gift.displayName)}</div>
+              <div class="gwp-gift-picker-code">${GWP.escapeHtml(gift.id)}</div>
+            </td>
+            <td>${skuCount(gift)}</td>
+            <td>${availableCount(gift)}</td>
+            <td><span class="badge ${GWP.statusClass(gift.status)}">${GWP.statusLabel(gift.status)}</span></td>
+          </tr>`;
+      }).join('');
+
+      rowsEl.querySelectorAll('[data-gift-id]').forEach((row) => {
+        const checkbox = row.querySelector('[data-gift-check]');
+        if (checkbox.disabled) return;
+        checkbox.addEventListener('change', () => {
+          const id = checkbox.dataset.giftCheck;
+          if (!multi) selected.clear();
+          if (checkbox.checked) selected.add(id);
+          else selected.delete(id);
+          render();
+        });
+        row.addEventListener('click', (event) => {
+          if (event.target === checkbox) return;
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        });
+      });
+      updateFooter(visibleItems);
+    }
+    function search() {
+      keyword = searchEl.value.trim();
+      render();
+    }
+
+    searchEl.addEventListener('input', search);
+    searchEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') search();
     });
-    ov.querySelector('.dialog-close').addEventListener('click', () => ov.remove());
+    ov.querySelector('#giftPickerSearchBtn').addEventListener('click', search);
+    selectAllEl.addEventListener('change', () => {
+      filteredPool().filter((gift) => gift.status === 'active').forEach((gift) => {
+        if (selectAllEl.checked) selected.add(gift.id);
+        else selected.delete(gift.id);
+      });
+      render();
+    });
+    ov.querySelector('#giftPickerClear').addEventListener('click', () => {
+      selected.clear();
+      render();
+    });
+
+    ov.querySelector('.pf-dialog-close').addEventListener('click', () => ov.remove());
     ov.querySelector('#gCancel').addEventListener('click', () => ov.remove());
-    ov.querySelector('#gOk').addEventListener('click', () => { cb(selected.slice()); ov.remove(); });
+    okEl.addEventListener('click', () => {
+      const result = pool.filter((gift) => selected.has(gift.id)).map((gift) => ({
+        id: gift.id,
+        name: gift.displayName,
+        displayName: gift.displayName,
+        qty: initialQty[gift.id] || 1
+      }));
+      cb(result);
+      ov.remove();
+    });
     ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    render();
+    setTimeout(() => searchEl.focus(), 0);
   };
   GWP._applyGift = function (c, gifts) {
     c._gifts = gifts;

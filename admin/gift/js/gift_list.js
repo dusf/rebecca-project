@@ -28,10 +28,9 @@
     ],
     rule: [
       { key: 'name', label: '规则名称', fixed: 'left', alwaysShow: true, width: '240px' },
-      { key: 'scope', label: '赠送范围' },
-      { key: 'conditions', label: '赠送条件' },
-      { key: 'reward', label: '奖励方式' },
-      { key: 'pickOne', label: '任选其一' },
+      { key: 'scope', label: '适用范围' },
+      { key: 'conditions', label: '命中条件' },
+      { key: 'reward', label: '赠品内容', width: '240px' },
       { key: 'status', label: '状态' },
       { key: 'createdAt', label: '创建时间' }
     ]
@@ -98,17 +97,19 @@
   }
   function scopeText(scope) {
     if (!scope || !scope.sources || !scope.sources.length) return '-';
-    return scope.sources.map((s) => (s.type === 'collection' ? '【系列】' : '【商品】') + s.name).join('、');
+    return scope.sources.map((s) => (s.type === 'collection' ? '【系列】' : '【产品】') + s.name).join('、');
   }
   function conditionsText(rule) {
     const arr = (rule.conditions || []).map((c) => `${GWP.condTypeLabel(c.type)} ${c.value}${GWP.condTypeUnit(c.type)}`);
-    return arr.length ? arr.join(' <span class="gwp-or">或</span> ') : '-';
+    const relation = rule.combine === 'and' ? '且' : '或';
+    return arr.length ? arr.join(` <span class="gwp-condition-join">${relation}</span> `) : '-';
   }
-  function rewardText(rule) {
-    if (!rule.reward) return '-';
-    let t = GWP.rewardLabel(rule.reward);
-    if (rule.reward.type === 'gift' && rule.pickOne) t += '（任选其一）';
-    return t;
+  function giftContentText(rule) {
+    const gifts = rule.reward && rule.reward.type === 'gift' ? (rule.reward.gifts || []) : [];
+    if (!gifts.length) return '-';
+    return `<div class="gwp-rule-gifts">${gifts.map((gift) =>
+      `<div class="gwp-rule-gift-item"><span>${esc(gift.name)}</span><span class="gwp-rule-gift-qty">×${Math.max(1, Number(gift.qty) || 1)}</span></div>`
+    ).join('')}</div>`;
   }
 
   /* ====================== 单元格 ====================== */
@@ -135,8 +136,7 @@
         case 'name': return `<div><div>${esc(row.name)}</div><div class="gwp-sub">${esc(row.id)}</div></div>`;
         case 'scope': return scopeText(row.scope);
         case 'conditions': return conditionsText(row);
-        case 'reward': return rewardText(row);
-        case 'pickOne': return (row.reward && row.reward.type === 'gift' && row.pickOne) ? '是' : '否';
+        case 'reward': return giftContentText(row);
         case 'status': return `<span class="badge ${GWP.statusClass(row.status)}">${GWP.statusLabel(row.status)}</span>`;
         case 'createdAt': return row.createdAt || '-';
       }
@@ -150,7 +150,10 @@
     let arr = listOf(tab).slice();
     if (s.search) {
       const q = s.search.toLowerCase();
-      arr = arr.filter((r) => (tab === 'pool' ? (r.displayName || '') : (r.name || '')).toLowerCase().includes(q));
+      arr = arr.filter((r) => {
+        const name = tab === 'pool' ? (r.displayName || '') : (r.name || '');
+        return name.toLowerCase().includes(q) || (r.id || '').toLowerCase().includes(q);
+      });
     }
     if (s.status && s.status !== 'all') arr = arr.filter((r) => r.status === s.status);
     return arr;
@@ -417,32 +420,47 @@
   function renderReport() {
     const pool = GWP.pool();
     const rules = GWP.rules();
-    const giftRewards = rules.filter((r) => r.reward && r.reward.type === 'gift').length;
-    const pointRewards = rules.length - giftRewards;
-    const pickOne = rules.filter((r) => r.reward && r.reward.type === 'gift' && r.pickOne).length;
     const activeRules = rules.filter((r) => r.status === 'active').length;
+    const draftRules = rules.filter((r) => r.status === 'draft').length;
+    const disabledRules = rules.filter((r) => r.status === 'disabled').length;
     const activePool = pool.filter((p) => p.status === 'active').length;
+    const collectionRules = rules.filter((r) => r.scope && r.scope.mode === 'collection').length;
+    const productRules = rules.length - collectionRules;
 
     const condCount = {};
+    const giftUseCount = {};
     rules.forEach((r) => (r.conditions || []).forEach((c) => { condCount[c.type] = (condCount[c.type] || 0) + 1; }));
+    rules.forEach((rule) => {
+      const seen = new Set();
+      ((rule.reward && rule.reward.gifts) || []).forEach((gift) => {
+        if (!gift.id || seen.has(gift.id)) return;
+        seen.add(gift.id);
+        giftUseCount[gift.id] = (giftUseCount[gift.id] || 0) + 1;
+      });
+    });
     const maxCond = Math.max(1, ...Object.values(condCount));
+    const maxGiftUse = Math.max(1, ...Object.values(giftUseCount));
 
     const condRows = ['sku_base', 'sku_price', 'order_amount'].map((t) => {
       const n = condCount[t] || 0;
       return `<div class="gwp-progress-row"><div class="gwp-progress-label">${GWP.condTypeLabel(t)}</div><div class="gwp-progress"><div class="gwp-progress-bar" style="width:${(n / maxCond) * 100}%"></div></div><div class="gwp-progress-num">${n}</div></div>`;
     }).join('');
 
-    const rewardRows = [
-      { label: '送赠品', n: giftRewards },
-      { label: '送积分', n: pointRewards }
-    ].map((x) => `<div class="gwp-progress-row"><div class="gwp-progress-label">${x.label}</div><div class="gwp-progress"><div class="gwp-progress-bar" style="width:${(x.n / Math.max(1, giftRewards + pointRewards)) * 100}%"></div></div><div class="gwp-progress-num">${x.n}</div></div>`).join('');
+    const giftUsageRows = Object.entries(giftUseCount)
+      .sort((a, b) => b[1] - a[1])
+      .map(([id, count]) => {
+        const gift = GWP.getPool(id);
+        const label = gift ? gift.displayName : id;
+        return `<div class="gwp-progress-row"><div class="gwp-progress-label">${esc(label)}</div><div class="gwp-progress"><div class="gwp-progress-bar" style="width:${(count / maxGiftUse) * 100}%"></div></div><div class="gwp-progress-num">${count}</div></div>`;
+      }).join('');
+    const configuredGiftCount = Object.keys(giftUseCount).length;
 
     document.getElementById('reportBox').innerHTML = `
       <div class="gwp-stat-grid">
-        <div class="gwp-stat"><div class="gwp-stat-label">赠品池总数</div><div class="gwp-stat-value">${pool.length}</div><div class="gwp-stat-sub">启用 ${activePool} · 停用 ${pool.length - activePool}</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">规则总数</div><div class="gwp-stat-value">${rules.length}</div><div class="gwp-stat-sub">启用 ${activeRules} · 停用 ${rules.length - activeRules}</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">奖励方式-赠品</div><div class="gwp-stat-value">${giftRewards}</div><div class="gwp-stat-sub">占规则 ${Math.round((giftRewards / Math.max(1, rules.length)) * 100)}%</div></div>
-        <div class="gwp-stat"><div class="gwp-stat-label">奖励方式-积分</div><div class="gwp-stat-value">${pointRewards}</div><div class="gwp-stat-sub">赠品多选其一 ${pickOne} 条</div></div>
+        <div class="gwp-stat"><div class="gwp-stat-label">赠品池总数</div><div class="gwp-stat-value">${pool.length}</div><div class="gwp-stat-sub">启用 ${activePool} · 非启用 ${pool.length - activePool}</div></div>
+        <div class="gwp-stat"><div class="gwp-stat-label">规则总数</div><div class="gwp-stat-value">${rules.length}</div><div class="gwp-stat-sub">启用 ${activeRules} · 草稿 ${draftRules} · 禁用 ${disabledRules}</div></div>
+        <div class="gwp-stat"><div class="gwp-stat-label">适用范围-产品系列</div><div class="gwp-stat-value">${collectionRules}</div><div class="gwp-stat-sub">占规则 ${Math.round((collectionRules / Math.max(1, rules.length)) * 100)}%</div></div>
+        <div class="gwp-stat"><div class="gwp-stat-label">适用范围-产品</div><div class="gwp-stat-value">${productRules}</div><div class="gwp-stat-sub">已配置赠品 ${configuredGiftCount} 个</div></div>
       </div>
       <div class="gwp-report-grid">
         <div class="card gwp-report-card">
@@ -450,8 +468,8 @@
           ${condRows || '<div class="gwp-muted">暂无数据</div>'}
         </div>
         <div class="card gwp-report-card">
-          <div class="gwp-report-title">奖励方式分布</div>
-          ${rewardRows || '<div class="gwp-muted">暂无数据</div>'}
+          <div class="gwp-report-title">赠品使用频次</div>
+          ${giftUsageRows || '<div class="gwp-muted">暂无数据</div>'}
         </div>
       </div>`;
   }

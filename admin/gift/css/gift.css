@@ -730,7 +730,8 @@
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
+  width: 100%;
 }
 .gwp-scope-btn {
   display: inline-flex;
@@ -754,15 +755,106 @@
   font-size: 12px;
   color: hsl(var(--muted-foreground));
 }
-.gwp-source-x {
+.gwp-scope-selected-list {
+  width: 100%;
+  margin-top: 12px;
+}
+.gwp-scope-selected-search {
+  margin-bottom: 10px;
+}
+.gwp-scope-selected-search .form-input {
+  width: 100%;
+  height: 38px;
+}
+.gwp-scope-selected-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  padding-right: 4px;
+  overflow-y: auto;
+}
+.gwp-scope-selected-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 10px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+}
+.gwp-scope-selected-cover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  border: none;
-  background: transparent;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid hsl(var(--border) / .6);
+  border-radius: 8px;
+  background: hsl(var(--muted));
+  font-size: 20px;
+}
+.gwp-scope-selected-cover.is-collection {
+  color: hsl(var(--muted-foreground));
+  font-size: 18px;
+}
+.gwp-scope-selected-info {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+.gwp-scope-selected-name {
+  overflow: hidden;
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gwp-scope-selected-meta {
+  margin-top: 2px;
+  overflow: hidden;
+  color: hsl(var(--muted-foreground));
   font-size: 12px;
-  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gwp-scope-selected-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.gwp-scope-selected-remove svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+.gwp-scope-selected-remove:hover {
+  background: hsl(var(--destructive) / .1);
+  color: hsl(var(--destructive));
+}
+.gwp-scope-selected-empty {
+  display: none;
+  padding: 24px 12px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  text-align: center;
 }
 .gwp-form {
   display: grid;
@@ -1249,6 +1341,79 @@
   width: 820px;
   height: min(680px, 78vh);
 }
+.gwp-gift-picker-dialog {
+  width: 820px;
+  height: auto;
+  min-height: 0;
+  max-height: min(680px, 86vh);
+}
+.gwp-gift-picker-body {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.gwp-gift-picker-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.gwp-gift-picker-table th,
+.gwp-gift-picker-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid hsl(var(--border) / .6);
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+.gwp-gift-picker-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: hsl(var(--muted) / .45);
+  font-weight: 600;
+}
+.gwp-gift-picker-table tbody tr {
+  cursor: pointer;
+  transition: background .12s;
+}
+.gwp-gift-picker-table tbody tr:hover {
+  background: hsl(var(--accent));
+}
+.gwp-gift-picker-table tbody tr.selected {
+  background: hsl(var(--primary) / .07);
+  box-shadow: inset 3px 0 0 hsl(var(--primary));
+}
+.gwp-gift-picker-table tbody tr.disabled {
+  cursor: not-allowed;
+  opacity: .58;
+  background: hsl(var(--muted) / .14);
+}
+.gwp-gift-picker-table tbody tr.disabled:hover {
+  background: hsl(var(--muted) / .14);
+}
+.gwp-gift-picker-table .gwp-gift-picker-check {
+  width: 44px;
+  padding-right: 4px;
+  text-align: center;
+}
+.gwp-gift-picker-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: hsl(var(--primary));
+}
+.gwp-gift-picker-check input:disabled {
+  cursor: not-allowed;
+}
+.gwp-gift-picker-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.gwp-gift-picker-code {
+  margin-top: 2px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
 
 /* ====================== 规则：赠送条件行 ====================== */
 .gwp-cond-row {
@@ -1271,6 +1436,11 @@
 .gwp-cond-op { font-size: 16px; font-weight: 600; color: hsl(var(--foreground)); }
 .gwp-cond-val { max-width: 160px; }
 .gwp-cond-unit { font-size: 13px; color: hsl(var(--muted-foreground)); }
+.gwp-cond-row .gwp-del {
+  min-width: 44px;
+  margin-left: auto;
+  text-align: center;
+}
 .gwp-cond-divider {
   display: flex;
   align-items: center;
@@ -1318,27 +1488,13 @@
 .gwp-seg button.active { background: hsl(var(--primary)); color: #fff; font-weight: 600; }
 
 /* ====================== 规则：赠品选择列表 ====================== */
-.gwp-reward-toolbar {
+.gwp-reward-section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 16px;
-  padding: 14px 16px;
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px 8px 0 0;
-  background: hsl(var(--muted) / 0.18);
 }
-.gwp-reward-toolbar-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-.gwp-reward-toolbar-desc {
-  margin-top: 3px;
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-}
+.gwp-reward-section-head .btn { flex-shrink: 0; }
 .gwp-gift-list {
   display: flex;
   flex-direction: column;
@@ -1346,8 +1502,11 @@
   margin: 0 0 14px;
   padding: 12px;
   border: 1px solid hsl(var(--border));
-  border-top: none;
-  border-radius: 0 0 8px 8px;
+  border-radius: 8px;
+}
+.gwp-gift-list.is-empty {
+  padding: 0;
+  border: none;
 }
 .gwp-reward-empty {
   min-height: 72px;
@@ -1379,22 +1538,6 @@
   background: hsl(var(--background));
 }
 .gwp-gift-name { flex: 1; font-size: 14px; font-weight: 500; }
-.gwp-check-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13px;
-  color: hsl(var(--foreground));
-  cursor: pointer;
-  line-height: 1.6;
-}
-.gwp-check-line .checkbox { margin-top: 2px; flex-shrink: 0; }
-.gwp-pick-one-line {
-  margin-top: 0;
-  padding-top: 14px;
-  border-top: 1px solid hsl(var(--border));
-}
-
 /* ====================== 空状态小号 ====================== */
 .gwp-empty-sm { padding: 18px; font-size: 13px; }
 
@@ -1495,7 +1638,28 @@
 /* ====================== 列表内联小元素 ====================== */
 .caret { font-size: 10px; opacity: 0.7; margin-left: 2px; }
 .page-ellipsis { padding: 0 6px; color: hsl(var(--muted-foreground)); }
-.gwp-or { color: hsl(var(--primary)); font-weight: 600; }
+.gwp-condition-join { color: hsl(var(--primary)); font-weight: 600; }
+.gwp-rule-gifts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gwp-rule-gift-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gwp-rule-gift-item > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gwp-rule-gift-qty {
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
 .gwp-muted { color: hsl(var(--muted-foreground)); font-size: 13px; }
 
 /* ====================== 报表：进度条行 ====================== */

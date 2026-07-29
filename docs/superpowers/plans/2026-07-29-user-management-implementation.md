@@ -111,7 +111,7 @@ window.UserDialogs.close()
 - Create: `admin/user/tests/user_store.test.js`
 
 **Interfaces:**
-- Produces the complete `window.UserStore` interface defined above.
+- Produces the `window.UserStore` interface defined above except `activateByEmail`, which Task 4 adds with its own failing test.
 - Consumes browser `localStorage` when available and an in-memory adapter under Node.
 
 - [ ] **Step 1: Write failing identity and state tests**
@@ -1094,7 +1094,7 @@ If the index is clean because all files were committed in earlier tasks, commit 
 - [ ] **Step 5: Push the active feature branch**
 
 ```powershell
-git push origin agent/sku-table-multi-warehouse
+git push origin agent/user-management-ui
 ```
 
 Expected: the remote branch advances to the final local commit.

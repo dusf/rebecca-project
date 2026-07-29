@@ -2,6 +2,7 @@
 .codebuddy/
 .playwright-cli/
 .superpowers/
+.worktrees/
 
 # ===== Node 依赖（开发调试用，不入版本库） =====
 node_modules/

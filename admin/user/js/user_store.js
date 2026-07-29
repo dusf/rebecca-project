@@ -27,6 +27,15 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function canonicalValue(value) {
+    if (Array.isArray(value)) return value.map(canonicalValue);
+    if (!value || typeof value !== 'object') return value;
+    return Object.keys(value).sort().reduce(function (result, key) {
+      result[key] = canonicalValue(value[key]);
+      return result;
+    }, {});
+  }
+
   function storage() {
     try {
       return root && root.localStorage ? root.localStorage : null;
@@ -392,8 +401,13 @@
   function write(users) {
     memory = ensureUniqueUserIds(users.map(buildUser));
     loaded = true;
-    persist();
-    listeners.forEach(function (listener) { listener(list()); });
+    const persisted = persist();
+    const writtenUsers = clone(memory);
+    listeners.forEach(function (listener) { listener(clone(writtenUsers)); });
+    return {
+      users: writtenUsers,
+      persisted: !storage() || persisted
+    };
   }
 
   function list() {
@@ -426,8 +440,12 @@
       authProviders: [], source: 'admin',
       consentHistory: payload.marketingOptIn ? [Object.assign({ status: 'subscribed' }, consentValidation.consent)] : []
     });
-    write(list().concat(user));
-    return { ok: true, user: clone(user) };
+    const writeResult = write(list().concat(user));
+    const writtenUser = writeResult.users.slice().reverse().find(function (candidate) {
+      return candidate.email === email;
+    });
+    if (!writtenUser) return { ok: false, error: '用户档案写入后无法读取，请重试' };
+    return { ok: true, user: writtenUser };
   }
 
   function update(id, changes) {
@@ -488,6 +506,96 @@
     const remaining = users.filter(function (user) { return !targetIds.has(user.id); });
     write(remaining);
     return { ok: true, removed: users.length - remaining.length };
+  }
+
+  function deletionRiskFingerprint(user) {
+    if (!user || typeof user !== 'object') return '';
+    return JSON.stringify(canonicalValue({
+      id: String(user.id || '').trim(),
+      updatedAt: user.updatedAt || '',
+      orderCount: Number(user.orderCount) || 0,
+      totalSpent: Number(user.totalSpent) || 0,
+      lastOrderAt: user.lastOrderAt || null,
+      stores: Array.isArray(user.stores) ? user.stores : [],
+      externalProfiles: Array.isArray(user.externalProfiles) ? user.externalProfiles : []
+    }));
+  }
+
+  function riskChanged(error) {
+    return {
+      ok: false,
+      code: 'RISK_CHANGED',
+      error: error || '用户订单或 Shopify 关联风险已发生变化，请重新审阅后再删除',
+      removed: 0
+    };
+  }
+
+  function removeUsersIfRiskUnchanged(ids, expectedFingerprints) {
+    const normalizedIds = (Array.isArray(ids) ? ids : []).map(function (id) {
+      return String(id || '').trim();
+    });
+    const targetIds = new Set(normalizedIds);
+    if (!normalizedIds.length || normalizedIds.some(function (id) { return !id; }) ||
+        targetIds.size !== normalizedIds.length ||
+        !expectedFingerprints || typeof expectedFingerprints !== 'object' ||
+        Array.isArray(expectedFingerprints)) {
+      return { ok: false, code: 'RISK_INVALID', error: '删除目标或风险指纹格式错误', removed: 0 };
+    }
+    const fingerprintIds = Object.keys(expectedFingerprints);
+    if (fingerprintIds.length !== normalizedIds.length ||
+        fingerprintIds.some(function (id) {
+          return !targetIds.has(id) || typeof expectedFingerprints[id] !== 'string' || !expectedFingerprints[id];
+        })) {
+      return { ok: false, code: 'RISK_INVALID', error: '删除目标与风险指纹不完整', removed: 0 };
+    }
+
+    list();
+    const store = storage();
+    let reviewedStorageSnapshot = null;
+    if (store) {
+      try {
+        reviewedStorageSnapshot = store.getItem(STORAGE_KEY);
+        if (!Array.isArray(JSON.parse(reviewedStorageSnapshot))) {
+          return { ok: false, code: 'STORAGE_ERROR', error: '最新用户数据格式错误', removed: 0 };
+        }
+        if (reviewedStorageSnapshot !== lastStorageSnapshot) {
+          syncFromStorage();
+        }
+      } catch (error) {
+        return { ok: false, code: 'STORAGE_ERROR', error: '无法读取最新用户数据', removed: 0 };
+      }
+    }
+    const latestUsers = clone(memory);
+    const usersById = new Map(latestUsers.map(function (user) { return [user.id, user]; }));
+    const targets = normalizedIds.map(function (id) { return usersById.get(id); });
+    if (targets.some(function (user) { return !user; })) {
+      return riskChanged('删除目标已发生变化，请重新审阅');
+    }
+    const changed = targets.some(function (user) {
+      return deletionRiskFingerprint(user) !== expectedFingerprints[user.id];
+    });
+    if (changed) return riskChanged();
+
+    if (store) {
+      try {
+        const latestStorageSnapshot = store.getItem(STORAGE_KEY);
+        if (latestStorageSnapshot !== reviewedStorageSnapshot) {
+          syncFromStorage();
+          return riskChanged();
+        }
+      } catch (error) {
+        return { ok: false, code: 'STORAGE_ERROR', error: '无法确认最新用户数据', removed: 0 };
+      }
+    }
+
+    const remaining = latestUsers.filter(function (user) { return !targetIds.has(user.id); });
+    const writeResult = write(remaining);
+    if (!writeResult.persisted) {
+      memory = latestUsers;
+      storageDirty = true;
+      return { ok: false, code: 'STORAGE_ERROR', error: '永久删除未能写入存储，请重试', removed: 0 };
+    }
+    return { ok: true, removed: normalizedIds.length };
   }
 
   function setAccountStatus(ids, status) {
@@ -678,5 +786,20 @@
     }
   }
 
-  return { list: list, get: get, findByEmail: findByEmail, createManual: createManual, update: update, activateByEmail: activateByEmail, remove: remove, setAccountStatus: setAccountStatus, setMarketingStatus: setMarketingStatus, importProfiles: importProfiles, subscribe: subscribe, resetForTests: resetForTests };
+  return {
+    list: list,
+    get: get,
+    findByEmail: findByEmail,
+    createManual: createManual,
+    update: update,
+    activateByEmail: activateByEmail,
+    remove: remove,
+    removeUsersIfRiskUnchanged: removeUsersIfRiskUnchanged,
+    deletionRiskFingerprint: deletionRiskFingerprint,
+    setAccountStatus: setAccountStatus,
+    setMarketingStatus: setMarketingStatus,
+    importProfiles: importProfiles,
+    subscribe: subscribe,
+    resetForTests: resetForTests
+  };
 });

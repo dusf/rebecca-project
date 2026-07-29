@@ -316,6 +316,203 @@ assert.notEqual(collisionUserOne.user.id, collisionUserTwo.user.id);
 const collisionIds = collisionFrameTwo.list().map((user) => user.id);
 assert.equal(new Set(collisionIds).size, collisionIds.length);
 
+const interleavedValues = new Map();
+let injectConcurrentCreate = false;
+let concurrentCreated = null;
+let interleavedFrameA = null;
+const interleavedStorage = {
+  getItem(key) {
+    if (injectConcurrentCreate) {
+      injectConcurrentCreate = false;
+      concurrentCreated = interleavedFrameA.createManual({ email: 'uuid-interleave-a@example.com' });
+    }
+    return interleavedValues.has(key) ? interleavedValues.get(key) : null;
+  },
+  setItem(key, value) {
+    interleavedValues.set(key, String(value));
+  },
+  removeItem(key) {
+    interleavedValues.delete(key);
+  }
+};
+const interleavedCryptoA = {
+  randomUUID() {
+    return '00000000-0000-4000-8000-000000000002';
+  },
+  getRandomValues(values) {
+    values.fill(8);
+    return values;
+  }
+};
+const interleavedCryptoB = {
+  randomUUID() {
+    injectConcurrentCreate = true;
+    return '00000000-0000-4000-8000-000000000002';
+  },
+  getRandomValues(values) {
+    values.fill(9);
+    return values;
+  }
+};
+interleavedFrameA = createBrowserStore(interleavedStorage, { crypto: interleavedCryptoA });
+const interleavedFrameB = createBrowserStore(interleavedStorage, { crypto: interleavedCryptoB });
+interleavedFrameA.list();
+interleavedFrameB.list();
+const interleavedCreatedB = interleavedFrameB.createManual({ email: 'uuid-interleave-b@example.com' });
+assert.equal(concurrentCreated.ok, true);
+assert.equal(interleavedCreatedB.ok, true);
+const persistedInterleavedA = interleavedFrameB.findByEmail('uuid-interleave-a@example.com');
+const persistedInterleavedB = interleavedFrameB.findByEmail('uuid-interleave-b@example.com');
+assert.notEqual(persistedInterleavedA.id, persistedInterleavedB.id);
+assert.equal(
+  interleavedCreatedB.user.id,
+  persistedInterleavedB.id,
+  'createManual must return the final ID after write-time collision reassignment'
+);
+
+let atomicWriteCount = 0;
+let atomicRaw = JSON.stringify([
+  {
+    id: 'atomic-a',
+    email: 'atomic-a@example.com',
+    orderCount: 0,
+    externalProfiles: [],
+    stores: [],
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  },
+  {
+    id: 'atomic-b',
+    email: 'atomic-b@example.com',
+    orderCount: 0,
+    externalProfiles: [],
+    stores: [],
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  },
+  {
+    id: 'atomic-unrelated',
+    email: 'atomic-unrelated@example.com',
+    orderCount: 0,
+    externalProfiles: [],
+    stores: [],
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  }
+]);
+const atomicStorage = {
+  getItem() {
+    return atomicRaw;
+  },
+  setItem(key, value) {
+    atomicWriteCount += 1;
+    atomicRaw = String(value);
+  },
+  removeItem() {
+    atomicRaw = null;
+  }
+};
+const atomicStore = createBrowserStore(atomicStorage);
+const reviewedAtomicUsers = atomicStore.list().filter((user) => ['atomic-a', 'atomic-b'].includes(user.id));
+const expectedAtomicFingerprints = Object.fromEntries(reviewedAtomicUsers.map((user) => [
+  user.id,
+  atomicStore.deletionRiskFingerprint(user)
+]));
+const externallyChanged = JSON.parse(atomicRaw);
+externallyChanged.find((user) => user.id === 'atomic-b').orderCount = 1;
+atomicRaw = JSON.stringify(externallyChanged);
+const blockedAtomicDelete = atomicStore.removeUsersIfRiskUnchanged(
+  ['atomic-a', 'atomic-b'],
+  expectedAtomicFingerprints
+);
+assert.equal(blockedAtomicDelete.ok, false);
+assert.equal(blockedAtomicDelete.code, 'RISK_CHANGED');
+assert.equal(blockedAtomicDelete.removed, 0);
+assert.ok(atomicStore.get('atomic-a'));
+assert.ok(atomicStore.get('atomic-b'));
+assert.ok(atomicStore.get('atomic-unrelated'));
+
+const missingAtomicTarget = atomicStore.removeUsersIfRiskUnchanged(
+  ['atomic-a', 'atomic-missing'],
+  {
+    'atomic-a': atomicStore.deletionRiskFingerprint(atomicStore.get('atomic-a')),
+    'atomic-missing': 'reviewed-but-now-missing'
+  }
+);
+assert.equal(missingAtomicTarget.ok, false);
+assert.equal(missingAtomicTarget.code, 'RISK_CHANGED');
+assert.equal(missingAtomicTarget.removed, 0);
+assert.ok(atomicStore.get('atomic-a'));
+assert.ok(atomicStore.get('atomic-b'));
+
+const refreshedAtomicUsers = atomicStore.list().filter((user) => ['atomic-a', 'atomic-b'].includes(user.id));
+const refreshedAtomicFingerprints = Object.fromEntries(refreshedAtomicUsers.map((user) => [
+  user.id,
+  atomicStore.deletionRiskFingerprint(user)
+]));
+const writesBeforeAtomicSuccess = atomicWriteCount;
+const successfulAtomicDelete = atomicStore.removeUsersIfRiskUnchanged(
+  ['atomic-a', 'atomic-b'],
+  refreshedAtomicFingerprints
+);
+assert.equal(successfulAtomicDelete.ok, true);
+assert.equal(successfulAtomicDelete.removed, 2);
+assert.equal(atomicWriteCount, writesBeforeAtomicSuccess + 1);
+assert.equal(atomicStore.get('atomic-a'), null);
+assert.equal(atomicStore.get('atomic-b'), null);
+assert.ok(atomicStore.get('atomic-unrelated'));
+
+let racingReads = 0;
+let raceArmed = false;
+let racingRaw = JSON.stringify([
+  {
+    id: 'race-target',
+    email: 'race-target@example.com',
+    orderCount: 0,
+    externalProfiles: [],
+    stores: [],
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  },
+  {
+    id: 'race-unrelated',
+    email: 'race-unrelated@example.com',
+    orderCount: 0,
+    externalProfiles: [],
+    stores: [],
+    updatedAt: '2026-07-29T00:00:00.000Z'
+  }
+]);
+const racingStorage = {
+  getItem() {
+    racingReads += 1;
+    if (raceArmed && racingReads === 3) {
+      const changedUsers = JSON.parse(racingRaw);
+      changedUsers.find((user) => user.id === 'race-target').orderCount = 4;
+      racingRaw = JSON.stringify(changedUsers);
+    }
+    return racingRaw;
+  },
+  setItem(key, value) {
+    racingRaw = String(value);
+  },
+  removeItem() {
+    racingRaw = null;
+  }
+};
+const racingStore = createBrowserStore(racingStorage);
+const reviewedRaceTarget = racingStore.get('race-target');
+const expectedRaceFingerprint = {
+  'race-target': racingStore.deletionRiskFingerprint(reviewedRaceTarget)
+};
+racingReads = 0;
+raceArmed = true;
+const rawSnapshotBlocked = racingStore.removeUsersIfRiskUnchanged(
+  ['race-target'],
+  expectedRaceFingerprint
+);
+assert.equal(rawSnapshotBlocked.ok, false);
+assert.equal(rawSnapshotBlocked.code, 'RISK_CHANGED');
+assert.equal(rawSnapshotBlocked.removed, 0);
+assert.ok(racingStore.get('race-target'));
+assert.ok(racingStore.get('race-unrelated'));
+
 let invalidConsentRaw = JSON.stringify([{
   id: 'invalid-consent-cache',
   email: 'invalid-consent-cache@example.com',

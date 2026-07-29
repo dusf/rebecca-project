@@ -72,7 +72,10 @@ assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
 assert.match(dialogJs, /openBatchTag:/);
 assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
 assert.match(dialogJs, /invokeHook\(['"]addTags['"]/);
-assert.match(dialogJs, /revalidateDeletionRisk/);
+assert.doesNotMatch(dialogJs, /revalidateDeletionRisk/);
+assert.match(dialogJs, /invokeHook\(['"]removeUsersIfRiskUnchanged['"]/);
+assert.match(js, /removeUsersIfRiskUnchanged:/);
+assert.match(js, /getUsers:\s*\(ids\)/);
 assert.doesNotMatch(dialogJs, /不完整营销授权会计入跳过|按未订阅导入并计入跳过/);
 assert.match(dialogJs, /授权降级/);
 
@@ -84,6 +87,19 @@ assert.match(css, /\.um-column-row\.is-drag-over/);
 
 const utils = require('../js/users.js');
 const UserStore = require('../js/user_store.js');
+const dialogRuntime = require('../../common/js/user_dialog.js');
+
+UserStore.resetForTests([]);
+UserStore.resetForTests([
+  { id: 'risk-target', email: 'risk-target@example.com', orderCount: 0, externalProfiles: [], stores: [] },
+  { id: 'risk-unrelated', email: 'risk-unrelated@example.com', orderCount: 2, externalProfiles: [], stores: [] }
+]);
+const targetRiskUsers = utils.getUsersForIds(UserStore, ['risk-target']);
+assert.deepEqual(targetRiskUsers.map((user) => user.id), ['risk-target']);
+assert.equal(dialogRuntime.resolveDeletionRiskState(
+  { ok: true, value: targetRiskUsers },
+  ['risk-target']
+).riskStatus, 'ready', 'the real list hook selector must exclude unrelated users');
 
 UserStore.resetForTests([]);
 const marketingUser = UserStore.createManual({ email: 'status-flow@example.com', marketingOptIn: false }).user;

@@ -1006,8 +1006,13 @@
       getUser: function () {
         return state.user ? root.UserStore.get(state.user.id) : null;
       },
-      getUsers: function () {
-        return root.UserStore.list();
+      getUsers: function (ids) {
+        const targetIds = new Set((Array.isArray(ids) ? ids : []).map(function (id) {
+          return String(id || '').trim();
+        }));
+        return root.UserStore.list().filter(function (user) {
+          return targetIds.has(user.id);
+        });
       },
       updateMarketing: function (ids, status, consent) {
         return root.UserStore.setMarketingStatus(ids, status, consent);
@@ -1015,9 +1020,12 @@
       disableUsers: function (ids) {
         return root.UserStore.setAccountStatus(ids, 'disabled');
       },
-      removeUsers: function (ids) {
-        const results = ids.map(function (id) { return root.UserStore.remove(id); });
-        return { ok: results.every(function (item) { return item.ok; }), results: results };
+      removeUsersIfRiskUnchanged: function (ids, reviewedUsers) {
+        const expectedFingerprints = (Array.isArray(reviewedUsers) ? reviewedUsers : []).reduce(function (result, user) {
+          if (user && user.id) result[user.id] = root.UserStore.deletionRiskFingerprint(user);
+          return result;
+        }, {});
+        return root.UserStore.removeUsersIfRiskUnchanged(ids, expectedFingerprints);
       },
       onConsentComplete: function () {
         if (state.mode !== 'edit') return;

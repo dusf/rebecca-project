@@ -743,7 +743,10 @@
       return { ok: false, error: '当前页面未提供“' + method + '”操作，请刷新后重试。', value: null };
     }
     try {
-      return normalizeHookResult(active.hooks[method].apply(active.hooks, args || []), allowVoid);
+      var result = active.hooks[method].apply(active.hooks, args || []);
+      var normalized = normalizeHookResult(result, allowVoid);
+      if (!normalized.ok) normalized.failure = result;
+      return normalized;
     } catch (error) {
       return {
         ok: false,
@@ -1350,7 +1353,7 @@
   function loadDeletionRisk() {
     var outcome;
     if (hooksAvailable('getUsers')) {
-      outcome = invokeHook('getUsers');
+      outcome = invokeHook('getUsers', [state.deletion.ids]);
     } else if (hooksAvailable('getUser')) {
       outcome = invokeHook('getUser');
     } else {
@@ -1368,38 +1371,6 @@
     state.deletion.busy = false;
     renderDelete();
     if (risk.riskStatus === 'error') showParentError(risk.error);
-  }
-
-  function revalidateDeletionRisk() {
-    var reviewedVersion = state.deletion.version;
-    var outcome;
-    if (hooksAvailable('getUsers')) {
-      outcome = invokeHook('getUsers');
-    } else if (hooksAvailable('getUser')) {
-      outcome = invokeHook('getUser');
-    } else {
-      outcome = { ok: false, error: '当前页面未提供用户风险读取接口。', value: null };
-    }
-    var risk = resolveDeletionRiskState(outcome, state.deletion.ids);
-    state.deletion.users = risk.users;
-    state.deletion.riskStatus = risk.riskStatus;
-    state.deletion.version = risk.version || '';
-    if (risk.riskStatus !== 'ready') {
-      state.deletion.busy = false;
-      state.deletion.error = risk.error;
-      renderDelete();
-      showParentError(risk.error);
-      return false;
-    }
-    if (risk.version !== reviewedVersion) {
-      state.deletion.busy = false;
-      state.deletion.error = '用户订单或 Shopify 关联风险已发生变化。请重新查看最新风险后，再次确认永久删除。';
-      renderDelete();
-      showParentError(state.deletion.error);
-      return false;
-    }
-    state.deletion.error = '';
-    return true;
   }
 
   function renderDelete() {
@@ -1834,9 +1805,23 @@
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
-      if (!revalidateDeletionRisk()) return;
-      var removeCall = invokeHook('removeUsers', [state.deletion.ids]);
+      var removeCall = invokeHook('removeUsersIfRiskUnchanged', [
+        state.deletion.ids,
+        state.deletion.users
+      ]);
       if (!removeCall.ok) {
+        if (removeCall.failure && removeCall.failure.code === 'RISK_CHANGED') {
+          var changedMessage = removeCall.failure.error ||
+            '用户订单或 Shopify 关联风险已发生变化。请重新查看最新风险后，再次确认永久删除。';
+          loadDeletionRisk();
+          if (state.deletion.riskStatus === 'ready') {
+            state.deletion.error = changedMessage;
+            state.deletion.busy = false;
+            renderDelete();
+          }
+          showParentError(changedMessage);
+          return;
+        }
         operationFailed(state.deletion, renderDelete, removeCall.error);
         return;
       }

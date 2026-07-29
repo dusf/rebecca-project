@@ -25,28 +25,33 @@
   var controllers = typeof WeakMap === 'function' ? new WeakMap() : null;
   var idSequence = 0;
 
-  function copyOptions(options) {
-    return options.map(function (option) {
-      return {
-        value: String(option.value),
-        label: String(option.label),
-        disabled: Boolean(option.disabled)
-      };
-    });
-  }
-
-  function assertOptions(name, options) {
+  function normalizeOptions(name, options) {
     if (!Array.isArray(options) || options.length === 0) {
       throw new Error('UserComponents: "' + name + '" requires at least one option.');
     }
-    options.forEach(function (option) {
-      if (!option || option.value === undefined || !String(option.label || '').trim()) {
-        throw new Error('UserComponents: every option requires a value and a non-empty label.');
+    var seenValues = new Set();
+    var normalized = options.map(function (option) {
+      var value = option && option.value !== null && option.value !== undefined
+        ? String(option.value).trim()
+        : '';
+      var label = option ? String(option.label || '').trim() : '';
+      if (!value || !label) {
+        throw new Error('UserComponents: every option requires a non-empty value and label.');
       }
+      if (seenValues.has(value)) {
+        throw new Error('UserComponents: duplicate option value "' + value + '".');
+      }
+      seenValues.add(value);
+      return {
+        value: value,
+        label: label,
+        disabled: Boolean(option.disabled)
+      };
     });
-    if (!options.some(function (option) { return !option.disabled; })) {
+    if (!normalized.some(function (option) { return !option.disabled; })) {
       throw new Error('UserComponents: "' + name + '" requires at least one enabled option.');
     }
+    return normalized;
   }
 
   function getDocument(element) {
@@ -95,8 +100,7 @@
 
     var name = element.getAttribute('data-um-combobox') || '';
     var source = suppliedOptions || CONTROL_OPTIONS[name];
-    assertOptions(name, source);
-    var options = copyOptions(source);
+    var options = normalizeOptions(name, source);
     var trigger = element.querySelector('.um-combobox-trigger');
     var popover = element.querySelector('.um-combobox-popover');
     var search = element.querySelector('.um-combobox-search');
@@ -251,6 +255,7 @@
     }
 
     function handleNavigation(event) {
+      if (event.isComposing === true || event.keyCode === 229) return;
       var key = event.key;
       if (key === 'ArrowDown' || key === 'ArrowUp') {
         event.preventDefault();
@@ -318,8 +323,8 @@
         return true;
       },
       refresh: function (nextOptions) {
-        assertOptions(name, nextOptions);
-        options = copyOptions(nextOptions);
+        var previousValue = value;
+        options = normalizeOptions(name, nextOptions);
         if (!options.some(function (option) { return option.value === value && !option.disabled; })) {
           value = options.filter(function (option) { return !option.disabled; })[0].value;
         }
@@ -327,6 +332,10 @@
         activeIndex = 0;
         syncValue();
         renderOptions();
+        if (value !== previousValue) {
+          var option = selectedOption();
+          dispatchChange(element, name, value, option.label);
+        }
       },
       destroy: function () {
         close(false);
@@ -368,7 +377,7 @@
     createCombobox: function (name, value, doc) {
       var targetDocument = doc || (root && root.document);
       if (!targetDocument) return null;
-      assertOptions(name, CONTROL_OPTIONS[name]);
+      normalizeOptions(name, CONTROL_OPTIONS[name]);
       return makeComboboxElement(name, value || CONTROL_OPTIONS[name][0].value, targetDocument);
     },
     getValue: function (target, scope) {

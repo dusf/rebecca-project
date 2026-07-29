@@ -1557,7 +1557,7 @@ textarea.um-text-control {
 
 .um-time-editor .um-text-control {
   width: 48px;
-  min-height: 34px;
+  min-height: 40px;
   padding: 6px 8px;
   text-align: center;
 }
@@ -1661,6 +1661,17 @@ textarea.um-text-control {
 
 .um-summary-row code {
   font-size: 11px;
+}
+
+.um-sidebar-notice {
+  margin-top: 14px;
+  padding: 10px 11px;
+  border: 1px solid hsl(var(--primary) / .25);
+  border-radius: 8px;
+  background: hsl(var(--primary-50));
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .um-readonly-list,

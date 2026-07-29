@@ -23,7 +23,8 @@
     registration: '注册页面',
     checkout: '结账页面',
     footer: '页脚订阅',
-    customer_service: '客服确认',
+    offline_event: '线下活动',
+    customer_service: '客服沟通',
     other: '其他'
   };
   const LANGUAGE_OPTIONS = [
@@ -48,15 +49,16 @@
     { value: 'registration', label: '注册页面' },
     { value: 'checkout', label: '结账页面' },
     { value: 'footer', label: '页脚订阅' },
-    { value: 'customer_service', label: '客服确认' },
+    { value: 'offline_event', label: '线下活动' },
+    { value: 'customer_service', label: '客服沟通' },
     { value: 'newsletter', label: '邮件订阅表单' },
     { value: 'shopify_api', label: 'Shopify API' },
     { value: 'shopify_csv', label: 'Shopify CSV' },
-    { value: 'admin', label: '后台手动记录' },
+    { value: 'admin', label: '后台人工确认' },
     { value: 'other', label: '其他' }
   ];
 
-  const params = new URLSearchParams(root.location.search);
+  const params = new URLSearchParams(root && root.location ? root.location.search : '');
   const state = {
     mode: params.get('mode') === 'edit' ? 'edit' : 'add',
     userId: params.get('id') || '',
@@ -64,6 +66,7 @@
     tags: [],
     marketing: false,
     marketingTouched: false,
+    consentTouched: false,
     saving: false,
     countryCode: '+86',
     phone: ''
@@ -212,6 +215,59 @@
     return null;
   }
 
+  function initializeMarketingState(user) {
+    const current = user || {};
+    const subscribed = current.marketingStatus === 'subscribed';
+    const latestConsent = subscribed ? latestSubscribedConsent(current) : null;
+    return {
+      enabled: subscribed,
+      consent: {
+        source: latestConsent ? latestConsent.source || '' : '',
+        consentedAt: latestConsent ? latestConsent.consentedAt || '' : '',
+        note: latestConsent ? latestConsent.note || '' : ''
+      }
+    };
+  }
+
+  function resolveMarketingTransition(input) {
+    const options = input || {};
+    const originalStatus = MARKETING_LABELS[options.originalStatus]
+      ? options.originalStatus
+      : 'not_subscribed';
+    const finalEnabled = Boolean(options.finalEnabled);
+    const consent = options.consent || {};
+    if (!options.touched && !options.consentChanged) {
+      return { ok: true, changed: false, status: originalStatus };
+    }
+    if (originalStatus === 'subscribed') {
+      if (!finalEnabled) {
+        return { ok: true, changed: true, status: 'unsubscribed' };
+      }
+      if (!options.consentChanged) {
+        return { ok: true, changed: false, status: originalStatus };
+      }
+      if (!consent.source || !consent.consentedAt) {
+        return { ok: false, error: '重新订阅必须填写本次同意来源和同意时间' };
+      }
+      return { ok: true, changed: true, status: 'subscribed', consent: {
+        source: consent.source,
+        consentedAt: consent.consentedAt,
+        note: consent.note || ''
+      } };
+    }
+    if (!finalEnabled) {
+      return { ok: true, changed: false, status: originalStatus };
+    }
+    if (!consent.source || !consent.consentedAt) {
+      return { ok: false, error: '重新订阅必须填写本次同意来源和同意时间' };
+    }
+    return { ok: true, changed: true, status: 'subscribed', consent: {
+      source: consent.source,
+      consentedAt: consent.consentedAt,
+      note: consent.note || ''
+    } };
+  }
+
   function consentOptions(currentSource) {
     const options = CONSENT_OPTIONS.slice();
     if (currentSource && !options.some(function (option) { return option.value === currentSource; })) {
@@ -277,15 +333,16 @@
 
   function marketingCard() {
     const current = state.user || {};
-    const latestConsent = latestSubscribedConsent(current);
-    state.marketing = current.marketingStatus === 'subscribed';
+    const initial = initializeMarketingState(current);
+    state.marketing = initial.enabled;
     state.marketingTouched = false;
-    const consentSource = latestConsent ? latestConsent.source : 'none';
-    const consentedAt = latestConsent ? latestConsent.consentedAt : '';
-    const consentNote = latestConsent ? latestConsent.note : '';
+    state.consentTouched = false;
+    const consentSource = initial.consent.source || 'none';
+    const consentedAt = initial.consent.consentedAt;
+    const consentNote = initial.consent.note;
     const body =
       '<div class="um-switch-row"><div><div class="um-switch-title">接收邮件营销</div>' +
-      '<p>仅在已取得用户明确授权时开启。订阅状态与账号激活状态彼此独立。</p></div>' +
+      '<p>请仅在已经取得用户明确同意后开启。登录验证码、订单通知等服务邮件不受营销订阅状态影响。</p></div>' +
       '<button class="um-switch" id="marketingSwitch" type="button" role="switch" aria-checked="' +
       String(state.marketing) + '" aria-label="接收邮件营销"></button></div>' +
       '<div class="um-consent-fields" id="marketingConsentFields"' + (state.marketing ? '' : ' hidden') + '>' +
@@ -377,6 +434,17 @@
     return '<div class="um-summary-row"><dt>' + escapeHtml(label) + '</dt><dd>' + value + '</dd></div>';
   }
 
+  function accountStatusDescription(user) {
+    if (user.accountStatus === 'registered') {
+      return '该用户已完成可信邮箱或快捷登录验证。后台只能禁用账号，不能修改注册身份。';
+    }
+    if (user.accountStatus === 'disabled') {
+      const restoreLabel = user.previousAccountStatus === 'registered' ? '已注册' : '待激活';
+      return '账号已禁用。恢复后将精确回到禁用前的“' + restoreLabel + '”状态。';
+    }
+    return '该用户尚未完成邮箱或快捷登录验证。后台不能人工激活账号。';
+  }
+
   function renderSidebar() {
     if (state.mode === 'add') {
       elements.sidebar.innerHTML = cardMarkup('账号状态',
@@ -390,13 +458,14 @@
     }
     const user = state.user;
     const statusAction = user.accountStatus === 'disabled' ? 'restore' : 'disabled';
+    const importedFromShopify = ['shopify_api', 'shopify_csv', 'csv'].indexOf(user.source) !== -1;
     elements.sidebar.innerHTML = cardMarkup('状态摘要',
       '<div class="um-sidebar-status">' + statusBadge(user.accountStatus, 'account') +
       '<div>' + statusBadge(user.marketingStatus, 'marketing') + '</div>' +
       '<button class="um-button ' + (statusAction === 'disabled' ? 'um-button-danger um-button-secondary' : 'um-button-secondary') +
       '" id="accountStatusButton" type="button" data-status-action="' + statusAction + '">' +
       (statusAction === 'disabled' ? '禁用账号' : '恢复账号') + '</button>' +
-      '<p>后台只能禁用账号或恢复禁用前状态，不能人工将账号设为已注册。</p></div>') +
+      '<p>' + escapeHtml(accountStatusDescription(user)) + '</p></div>') +
       cardMarkup('用户摘要', '<dl class="um-summary-list">' +
         summaryRow('姓名', escapeHtml(fullName(user))) +
         summaryRow('用户 ID', '<code>' + escapeHtml(user.id) + '</code>') +
@@ -405,7 +474,9 @@
         summaryRow('最近登录', escapeHtml(user.lastLoginAt ? formatDate(user.lastLoginAt) : '从未登录')) +
         summaryRow('订单数', escapeHtml(user.orderCount || 0)) +
         summaryRow('累计消费', escapeHtml(formatMoney(user.totalSpent))) +
-        '</dl>');
+        '</dl>' + (importedFromShopify
+          ? '<div class="um-sidebar-notice">导入不会迁移 Shopify 原密码；用户需在本商城首次验证后激活。</div>'
+          : ''));
   }
 
   function renderGuidance() {
@@ -440,11 +511,22 @@
     mountCombobox('preferredLanguage', LANGUAGE_OPTIONS);
     const latestConsent = latestSubscribedConsent(state.user);
     mountCombobox('consentSource', consentOptions(latestConsent && latestConsent.source));
-    consentDateController = createDateTimeController(root.document.getElementById('consentedAtControl'));
+    const consentSourceElement = root.document.querySelector('[data-um-combobox="consentSource"]');
+    if (consentSourceElement) {
+      consentSourceElement.addEventListener('um:change', function () { state.consentTouched = true; });
+    }
+    const consentNote = root.document.getElementById('consentNote');
+    if (consentNote) {
+      consentNote.addEventListener('input', function () { state.consentTouched = true; });
+    }
+    consentDateController = createDateTimeController(
+      root.document.getElementById('consentedAtControl'),
+      function () { state.consentTouched = true; }
+    );
     syncMarketingVisibility();
   }
 
-  function createDateTimeController(control) {
+  function createDateTimeController(control, onChange) {
     if (!control) return null;
     const trigger = control.querySelector('.um-date-trigger');
     const popover = control.querySelector('.um-date-popover');
@@ -526,6 +608,7 @@
       clearFieldError('consentedAt');
       syncTrigger();
       setOpen(false);
+      if (typeof onChange === 'function') onChange(value);
       trigger.focus();
     }
 
@@ -551,6 +634,7 @@
         value = '';
         syncTrigger();
         setOpen(false);
+        if (typeof onChange === 'function') onChange(value);
         trigger.focus();
       } else if (action === 'confirm') {
         commitSelection();
@@ -582,6 +666,29 @@
   function getConsentSource() {
     const source = getComboboxValue('consentSource');
     return source === 'none' ? '' : source;
+  }
+
+  function currentConsent() {
+    return {
+      source: getConsentSource(),
+      consentedAt: getDateValue(),
+      note: readText('consentNote')
+    };
+  }
+
+  function marketingDecision() {
+    const originalStatus = state.mode === 'edit' && state.user
+      ? state.user.marketingStatus
+      : 'not_subscribed';
+    const consent = currentConsent();
+    return resolveMarketingTransition({
+      originalStatus: originalStatus,
+      finalEnabled: state.marketing,
+      touched: state.mode === 'add' ? state.marketing : state.marketingTouched,
+      consentChanged: state.mode === 'edit' && originalStatus === 'subscribed' &&
+        state.consentTouched && consentChanged(consent),
+      consent: consent
+    });
   }
 
   function syncMarketingVisibility() {
@@ -645,14 +752,18 @@
       setFieldError('userEmail', '请输入有效邮箱地址');
       errors.push('邮箱地址格式不正确');
     }
-    if (state.marketing) {
-      if (!getConsentSource()) {
+    const decision = marketingDecision();
+    if (!decision.ok) {
+      if (!currentConsent().source) {
         setFieldError('consentSource', '请选择同意来源');
         errors.push('请选择邮件营销同意来源');
       }
-      if (!getDateValue()) {
+      if (!currentConsent().consentedAt) {
         setFieldError('consentedAt', '请选择同意时间');
         errors.push('请选择邮件营销同意时间');
+      }
+      if (currentConsent().source && currentConsent().consentedAt) {
+        errors.push(decision.error);
       }
     }
     if (errors.length) showErrorSummary(errors);
@@ -738,23 +849,20 @@
     });
     if (!result.ok) return result;
 
-    const consent = {
-      source: getConsentSource(),
-      consentedAt: getDateValue(),
-      note: readText('consentNote')
-    };
+    const decision = marketingDecision();
     let marketingResult = null;
-    if (state.marketing && (state.user.marketingStatus !== 'subscribed' || consentChanged(consent))) {
-      marketingResult = root.UserStore.setMarketingStatus([state.user.id], 'subscribed', consent);
-    } else if (!state.marketing && state.marketingTouched) {
-      const nextStatus = state.user.marketingStatus === 'subscribed' ? 'unsubscribed' : 'not_subscribed';
-      if (nextStatus !== state.user.marketingStatus) {
-        marketingResult = root.UserStore.setMarketingStatus([state.user.id], nextStatus, {
-          source: 'admin',
-          consentedAt: new Date().toISOString(),
-          note: '后台编辑用户资料'
-        });
-      }
+    if (decision.changed && decision.status === 'subscribed') {
+      marketingResult = root.UserStore.setMarketingStatus(
+        [state.user.id],
+        'subscribed',
+        decision.consent
+      );
+    } else if (decision.changed && decision.status === 'unsubscribed') {
+      marketingResult = root.UserStore.setMarketingStatus([state.user.id], 'unsubscribed', {
+        source: 'admin',
+        consentedAt: new Date().toISOString(),
+        note: '后台编辑用户资料'
+      });
     }
     if (marketingResult && !marketingResult.ok) return marketingResult;
     return { ok: true, user: root.UserStore.get(state.user.id) };
@@ -887,9 +995,17 @@
     elements.form.addEventListener('keydown', handleKeydown);
   }
 
+  if (typeof module === 'object' && module.exports) {
+    module.exports = {
+      initializeMarketingState: initializeMarketingState,
+      resolveMarketingTransition: resolveMarketingTransition
+    };
+  }
+
+  if (!root || !root.document) return;
   if (root.document.readyState === 'loading') {
     root.document.addEventListener('DOMContentLoaded', initialize);
   } else {
     initialize();
   }
-})(window);
+})(typeof window !== 'undefined' ? window : null);

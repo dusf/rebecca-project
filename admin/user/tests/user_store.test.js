@@ -164,4 +164,44 @@ assert.equal(UserStore.get(first.user.id).accountStatus, 'registered');
 assert.equal(UserStore.get(first.user.id).authProviders.includes('google'), true);
 assert.ok(UserStore.get(first.user.id).lastLoginAt);
 
+UserStore.resetForTests([
+  {
+    id: 'activation-disabled',
+    email: 'activation-disabled@example.com',
+    accountStatus: 'disabled',
+    previousAccountStatus: 'pending',
+    authProviders: []
+  },
+  {
+    id: 'activation-pending',
+    email: 'activation-pending@example.com',
+    accountStatus: 'pending',
+    authProviders: []
+  },
+  {
+    id: 'activation-registered',
+    email: 'activation-registered@example.com',
+    accountStatus: 'registered',
+    authProviders: [{ type: 'password' }]
+  }
+]);
+
+const disabledBeforeActivation = UserStore.get('activation-disabled');
+const disabledActivation = UserStore.activateByEmail('activation-disabled@example.com', 'google');
+assert.equal(disabledActivation.ok, false);
+assert.match(disabledActivation.error, /禁用/);
+assert.deepEqual(UserStore.get('activation-disabled'), disabledBeforeActivation);
+
+const pendingActivation = UserStore.activateByEmail('activation-pending@example.com', 'google');
+assert.equal(pendingActivation.ok, true);
+assert.equal(pendingActivation.user.id, 'activation-pending');
+assert.equal(pendingActivation.user.accountStatus, 'registered');
+
+const registeredVerification = UserStore.activateByEmail('activation-registered@example.com', 'google');
+assert.equal(registeredVerification.ok, true);
+assert.equal(registeredVerification.user.id, 'activation-registered');
+assert.equal(registeredVerification.user.accountStatus, 'registered');
+assert.equal(registeredVerification.user.authProviders.includes('google'), true);
+assert.ok(registeredVerification.user.lastLoginAt);
+
 console.log('user_store tests passed');

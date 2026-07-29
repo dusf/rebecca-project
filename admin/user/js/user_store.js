@@ -178,18 +178,21 @@
   function activateByEmail(email, provider) {
     const existing = findByEmail(email);
     if (!existing) return { ok: false, error: '未找到可认领的用户档案' };
+    if (existing.accountStatus === 'disabled') {
+      return { ok: false, error: '该用户账号已禁用，无法完成登录验证' };
+    }
     const authProviders = Array.from(new Set(existing.authProviders.concat(provider || 'email')));
     const users = list();
     const index = users.findIndex(function (user) { return user.id === existing.id; });
     const user = Object.assign({}, users[index], {
-      accountStatus: 'registered',
+      accountStatus: existing.accountStatus === 'pending' ? 'registered' : existing.accountStatus,
       authProviders: authProviders,
       lastLoginAt: new Date().toISOString()
     });
-    delete user.previousAccountStatus;
+    if (existing.accountStatus === 'pending') delete user.previousAccountStatus;
     users[index] = user;
     write(users);
-    return { ok: true, user: clone(user) };
+    return { ok: true, user: get(existing.id) };
   }
 
   function remove(ids) {

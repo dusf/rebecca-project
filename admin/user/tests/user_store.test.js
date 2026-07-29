@@ -322,4 +322,138 @@ assert.equal(afterRecoveryFrame.findByEmail('local-only@example.com').id, localO
 assert.equal(afterRecoveryFrame.get('persisted-old').firstName, 'External latest');
 assert.equal(afterRecoveryFrame.get('local-newer').firstName, 'Local newest');
 
+function identityFixture(id, email, updatedAt, firstName = '') {
+  return {
+    id,
+    email,
+    firstName,
+    accountStatus: 'pending',
+    createdAt: updatedAt,
+    updatedAt
+  };
+}
+
+function runDirtyIdentityMerge(baseline, mutateLocal, external) {
+  let scenarioRaw = JSON.stringify(baseline);
+  let scenarioRejectsWrites = false;
+  const scenarioStorage = {
+    getItem() {
+      return scenarioRaw;
+    },
+    setItem(key, value) {
+      if (scenarioRejectsWrites) throw new Error('storage quota exceeded');
+      scenarioRaw = String(value);
+    },
+    removeItem() {
+      scenarioRaw = null;
+    }
+  };
+  const scenarioStore = createBrowserStore(scenarioStorage);
+  scenarioStore.list();
+  scenarioRejectsWrites = true;
+  mutateLocal(scenarioStore);
+  scenarioRaw = JSON.stringify(external);
+  scenarioRejectsWrites = false;
+  const users = scenarioStore.list();
+  return { users, persisted: JSON.parse(scenarioRaw) };
+}
+
+function identitySummary(users) {
+  return Array.from(users, user => ({ id: user.id, email: user.email, firstName: user.firstName }))
+    .sort((first, second) => (first.id + '\0' + first.email).localeCompare(second.id + '\0' + second.email));
+}
+
+function assertUniqueIdentities(users) {
+  assert.equal(new Set(users.map(user => user.id)).size, users.length);
+  assert.equal(new Set(users.map(user => user.email.trim().toLowerCase())).size, users.length);
+}
+
+const identityBaseline = [
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A')
+];
+const identityExternal = [
+  identityFixture('B', 'b@example.com', '2021-01-01T00:00:00.000Z', 'External B'),
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A')
+];
+function renameLocalIdentity(store) {
+  const result = store.update('A', { email: 'b@example.com', firstName: 'Local renamed' });
+  assert.equal(result.ok, true);
+}
+const crossKeyMerge = runDirtyIdentityMerge(identityBaseline, renameLocalIdentity, identityExternal);
+assert.deepEqual(identitySummary(crossKeyMerge.users), [
+  { id: 'A', email: 'b@example.com', firstName: 'Local renamed' }
+]);
+assertUniqueIdentities(crossKeyMerge.users);
+assertUniqueIdentities(crossKeyMerge.persisted);
+
+const permutedCrossKeyMerge = runDirtyIdentityMerge(
+  identityBaseline,
+  renameLocalIdentity,
+  identityExternal.slice().reverse()
+);
+assert.deepEqual(identitySummary(permutedCrossKeyMerge.users), identitySummary(crossKeyMerge.users));
+assert.deepEqual(identitySummary(permutedCrossKeyMerge.persisted), identitySummary(crossKeyMerge.persisted));
+
+const externalWinsCrossKey = runDirtyIdentityMerge(identityBaseline, renameLocalIdentity, [
+  identityFixture('B', 'b@example.com', '2099-01-01T00:00:00.000Z', 'External newest'),
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A')
+]);
+assert.deepEqual(identitySummary(externalWinsCrossKey.users), [
+  { id: 'B', email: 'b@example.com', firstName: 'External newest' }
+]);
+assertUniqueIdentities(externalWinsCrossKey.persisted);
+
+const transitiveMerge = runDirtyIdentityMerge([
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
+  identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B')
+], store => {
+  const result = store.update('A', { email: 'bridge@example.com', firstName: 'Local bridge' });
+  assert.equal(result.ok, true);
+}, [
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
+  identityFixture('X', 'bridge@example.com', '2021-01-01T00:00:00.000Z', 'Bridge by email'),
+  identityFixture('X', 'b@example.com', '2021-01-01T00:00:00.000Z', 'Bridge by id'),
+  identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B'),
+  identityFixture('U', 'unrelated@example.com', '2021-01-01T00:00:00.000Z', 'Unrelated')
+]);
+assert.deepEqual(identitySummary(transitiveMerge.users), [
+  { id: 'A', email: 'bridge@example.com', firstName: 'Local bridge' },
+  { id: 'U', email: 'unrelated@example.com', firstName: 'Unrelated' }
+]);
+assertUniqueIdentities(transitiveMerge.users);
+assertUniqueIdentities(transitiveMerge.persisted);
+
+const deletionBaseline = [
+  identityFixture('D', 'delete@example.com', '2020-01-01T00:00:00.000Z', 'Delete me'),
+  identityFixture('K', 'keep@example.com', '2020-01-01T00:00:00.000Z', 'Keep me')
+];
+function deleteLocalIdentity(store) {
+  const result = store.remove(['D']);
+  assert.equal(result.ok, true);
+  assert.equal(result.removed, 1);
+}
+const unchangedExternalDeletion = runDirtyIdentityMerge(
+  deletionBaseline,
+  deleteLocalIdentity,
+  deletionBaseline
+);
+assert.deepEqual(identitySummary(unchangedExternalDeletion.users), [
+  { id: 'K', email: 'keep@example.com', firstName: 'Keep me' }
+]);
+assertUniqueIdentities(unchangedExternalDeletion.persisted);
+
+const updatedExternalSurvivesDeletion = runDirtyIdentityMerge(
+  deletionBaseline,
+  deleteLocalIdentity,
+  [
+    identityFixture('D', 'delete@example.com', '2099-01-01T00:00:00.000Z', 'External update'),
+    deletionBaseline[1]
+  ]
+);
+assert.deepEqual(identitySummary(updatedExternalSurvivesDeletion.users), [
+  { id: 'D', email: 'delete@example.com', firstName: 'External update' },
+  { id: 'K', email: 'keep@example.com', firstName: 'Keep me' }
+]);
+assertUniqueIdentities(updatedExternalSurvivesDeletion.persisted);
+
 console.log('user_store tests passed');

@@ -130,48 +130,83 @@
     return JSON.stringify(first) === JSON.stringify(second);
   }
 
-  function findMatchingIndex(users, user) {
-    const email = normalizeEmail(user && user.email);
-    return users.findIndex(function (candidate) {
-      return candidate.id === user.id || (email && normalizeEmail(candidate.email) === email);
-    });
+  function candidateTime(candidate) {
+    return Date.parse(candidate.user.updatedAt || candidate.user.createdAt || '') || 0;
   }
 
-  function latestRecord(localRecord, externalRecord) {
-    const localTime = Date.parse(localRecord.updatedAt || localRecord.createdAt || '') || 0;
-    const externalTime = Date.parse(externalRecord.updatedAt || externalRecord.createdAt || '') || 0;
-    return externalTime > localTime ? externalRecord : localRecord;
+  function candidateKey(candidate) {
+    return [
+      candidate.user.id,
+      normalizeEmail(candidate.user.email),
+      JSON.stringify(candidate.user)
+    ].join('\0');
+  }
+
+  function preferredCandidate(first, second) {
+    const firstTime = candidateTime(first);
+    const secondTime = candidateTime(second);
+    if (firstTime !== secondTime) return firstTime > secondTime ? first : second;
+    if (first.local !== second.local) return first.local ? first : second;
+    return candidateKey(first).localeCompare(candidateKey(second)) <= 0 ? first : second;
   }
 
   function mergeDirtySnapshots(baseline, localUsers, externalUsers) {
-    const merged = externalUsers.map(buildUser);
+    let candidates = externalUsers.map(function (user) {
+      return { user: buildUser(user), local: false };
+    });
     const localIds = new Set(localUsers.map(function (user) { return user.id; }));
 
     baseline.forEach(function (baseUser) {
       if (localIds.has(baseUser.id)) return;
-      const externalIndex = findMatchingIndex(merged, baseUser);
-      if (externalIndex >= 0 && sameRecord(merged[externalIndex], baseUser)) {
-        merged.splice(externalIndex, 1);
-      }
+      candidates = candidates.filter(function (candidate) {
+        return !sameRecord(candidate.user, baseUser);
+      });
     });
 
     localUsers.forEach(function (localUser) {
       const baseUser = baseline.find(function (candidate) { return candidate.id === localUser.id; });
       if (baseUser && sameRecord(localUser, baseUser)) return;
-      const externalIndex = findMatchingIndex(merged, localUser);
-      if (externalIndex < 0) {
-        merged.push(buildUser(localUser));
-        return;
-      }
-      const externalUser = merged[externalIndex];
-      merged[externalIndex] = buildUser(
-        baseUser && sameRecord(externalUser, baseUser)
-          ? localUser
-          : latestRecord(localUser, externalUser)
-      );
+      candidates.push({ user: buildUser(localUser), local: true });
     });
 
-    return merged;
+    const parents = candidates.map(function (_, index) { return index; });
+    function findRoot(index) {
+      while (parents[index] !== index) {
+        parents[index] = parents[parents[index]];
+        index = parents[index];
+      }
+      return index;
+    }
+    function connect(first, second) {
+      const firstRoot = findRoot(first);
+      const secondRoot = findRoot(second);
+      if (firstRoot !== secondRoot) parents[secondRoot] = firstRoot;
+    }
+
+    const idOwners = new Map();
+    const emailOwners = new Map();
+    candidates.forEach(function (candidate, index) {
+      const id = String(candidate.user.id || '');
+      const email = normalizeEmail(candidate.user.email);
+      if (idOwners.has(id)) connect(index, idOwners.get(id));
+      else idOwners.set(id, index);
+      if (emailOwners.has(email)) connect(index, emailOwners.get(email));
+      else emailOwners.set(email, index);
+    });
+
+    const winners = new Map();
+    candidates.forEach(function (candidate, index) {
+      const rootIndex = findRoot(index);
+      const current = winners.get(rootIndex);
+      winners.set(rootIndex, current ? preferredCandidate(current, candidate) : candidate);
+    });
+
+    return Array.from(winners.values())
+      .map(function (candidate) { return buildUser(candidate.user); })
+      .sort(function (first, second) {
+        return (first.id + '\0' + normalizeEmail(first.email))
+          .localeCompare(second.id + '\0' + normalizeEmail(second.email));
+      });
   }
 
   function syncFromStorage() {

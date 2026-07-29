@@ -220,6 +220,20 @@
     return Boolean(consent && consent.source && consent.consentedAt);
   }
 
+  function importStatusTime(profile) {
+    return profile.marketingStatusAt || profile.marketingStatusUpdatedAt || profile.statusUpdatedAt || profile.updatedAt || new Date().toISOString();
+  }
+
+  function appendImportedStatus(user, status, profile, source, consent) {
+    user.consentHistory = Array.isArray(user.consentHistory) ? user.consentHistory : [];
+    user.consentHistory.push({
+      status: status,
+      source: source || 'import',
+      consentedAt: consent && consent.consentedAt ? consent.consentedAt : importStatusTime(profile),
+      note: consent && consent.note ? consent.note : ''
+    });
+  }
+
   function addUniqueStore(user, store) {
     if (!store || !store.id) return;
     user.stores = Array.isArray(user.stores) ? user.stores : [];
@@ -241,12 +255,12 @@
         counts.merged += 1;
         user.firstName = String(profile.firstName || user.firstName || '').trim();
         user.lastName = String(profile.lastName || user.lastName || '').trim();
-        if (canImportSubscribed) {
+        if (canImportSubscribed && user.marketingStatus !== 'subscribed') {
           user.marketingStatus = 'subscribed';
-          user.consentHistory = Array.isArray(user.consentHistory) ? user.consentHistory : [];
-          user.consentHistory.push({ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note });
-        } else if (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed) {
+          appendImportedStatus(user, 'subscribed', profile, source, consent);
+        } else if (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed && user.marketingStatus !== profile.marketingStatus) {
           user.marketingStatus = profile.marketingStatus;
+          appendImportedStatus(user, profile.marketingStatus, profile, source);
         }
         user.externalProfiles = Array.isArray(user.externalProfiles) ? user.externalProfiles : [];
         if (externalId && !user.externalProfiles.some(function (item) { return item.externalId === externalId; })) user.externalProfiles.push(profileRecord(profile, source));

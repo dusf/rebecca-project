@@ -58,6 +58,14 @@ const imported = UserStore.importProfiles([
 assert.deepEqual(imported.counts, { created: 1, merged: 1, skipped: 0, failed: 0 });
 assert.equal(UserStore.list().length, 2);
 assert.equal(UserStore.findByEmail('new@example.com').accountStatus, 'pending');
+const mergedUnsubscribed = UserStore.get(created.user.id);
+assert.equal(mergedUnsubscribed.marketingStatus, 'unsubscribed');
+assert.deepEqual(mergedUnsubscribed.consentHistory[0], {
+  status: 'subscribed', source: 'customer_service', consentedAt: '2026-07-29T09:30:00+08:00', note: '电话确认'
+});
+assert.equal(mergedUnsubscribed.consentHistory[1].status, 'unsubscribed');
+assert.equal(mergedUnsubscribed.consentHistory[1].source, 'shopify_api');
+assert.ok(mergedUnsubscribed.consentHistory[1].consentedAt);
 
 const bypassedUpdate = UserStore.update(created.user.id, {
   marketingStatus: 'subscribed',

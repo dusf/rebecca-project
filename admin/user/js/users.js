@@ -49,18 +49,24 @@
     invalid: '无效邮箱'
   };
   const SOURCE_LABELS = {
-    storefront: '店铺注册',
-    newsletter: '邮件订阅',
+    storefront: '买家注册',
+    newsletter_footer: '页脚订阅',
+    newsletter_registration: '注册页订阅',
+    newsletter_checkout: '结账页订阅',
+    newsletter: '邮件订阅（历史）',
     shopify_api: 'Shopify API',
     shopify_csv: 'Shopify CSV',
-    csv: 'CSV 导入',
+    csv: 'Shopify CSV',
     admin: '后台添加',
     import: '其他导入'
   };
   const PROVIDER_LABELS = {
-    password: '邮箱密码',
+    password: '邮箱',
     google: 'Google',
     facebook: 'Facebook',
+    tiktok: 'TikTok',
+    instagram: 'Instagram',
+    x: 'X',
     shop: 'Shop'
   };
   const VIEW_DEFINITIONS = [
@@ -77,6 +83,8 @@
   let errorMessage = '';
   let filterControlsReady = false;
   let pageSizeController = null;
+  let columnDragKey = '';
+  const dateControllers = {};
 
   const elements = {};
 
@@ -237,15 +245,19 @@
   }
 
   function openDeleteDialog(ids) {
-    const dialogs = parentWindow().UserDialogs;
-    const method = dialogs && (
-      dialogs.openDeleteUsers ||
-      dialogs.openDelete ||
-      dialogs.openRemoveUsers
-    );
-    if (typeof method === 'function') {
-      method.call(dialogs, ids.slice());
-      return true;
+    const options = {
+      ids: ids.slice(),
+      title: ids.length > 1 ? '删除所选用户' : '删除用户',
+      message: '删除后用户档案及其授权历史将无法恢复，请谨慎操作。'
+    };
+    try {
+      if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openDeleteConfirm === 'function') {
+        window.parent.UserDialogs.openDeleteConfirm(options);
+        return true;
+      }
+    } catch (error) {
+      showToast('无法访问父页面的删除确认功能。', 'error');
+      return false;
     }
     showToast('删除确认功能暂未加载，请稍后再试。', 'error');
     return false;
@@ -281,16 +293,6 @@
     return { value: String(value), label: String(label) };
   }
 
-  function uniqueOptions(values, labels, allLabel) {
-    const output = [option('all', allLabel)];
-    Array.from(new Set(values.filter(Boolean))).sort(function (a, b) {
-      return String(labels[a] || a).localeCompare(String(labels[b] || b), 'zh-CN');
-    }).forEach(function (value) {
-      output.push(option(value, labels[value] || value));
-    });
-    return output;
-  }
-
   function comboboxMarkup(name, value) {
     return '<div class="um-combobox" data-um-combobox="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(value) + '">' +
@@ -311,14 +313,172 @@
     return controller;
   }
 
+  function datePickerMarkup(name, value, label) {
+    return '<div class="um-date-control" data-um-date="' + escapeHtml(name) + '">' +
+      '<input class="um-date-native" type="date" id="' + escapeHtml(name) + 'Input" value="' + escapeHtml(value) + '" tabindex="-1">' +
+      '<button class="um-control um-date-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="' +
+      escapeHtml(label) + '"></button>' +
+      '<div class="um-date-popover" role="dialog" aria-label="' + escapeHtml(label) + '" hidden>' +
+      '<div class="um-date-header"><button type="button" data-date-nav="prev" aria-label="上个月">‹</button>' +
+      '<strong data-date-month></strong><button type="button" data-date-nav="next" aria-label="下个月">›</button></div>' +
+      '<div class="um-date-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>' +
+      '<div class="um-date-grid"></div>' +
+      '<div class="um-date-footer"><button type="button" data-date-action="clear">清除</button>' +
+      '<button type="button" data-date-action="today">今天</button></div></div></div>';
+  }
+
+  function localDateValue(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+  }
+
+  function validDateValue(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+  }
+
+  function mountDatePicker(host, name, value, label, onChange) {
+    host.innerHTML = datePickerMarkup(name, value, label);
+    const element = host.firstElementChild;
+    const input = element.querySelector('.um-date-native');
+    const trigger = element.querySelector('.um-date-trigger');
+    const popover = element.querySelector('.um-date-popover');
+    const grid = element.querySelector('.um-date-grid');
+    const monthLabel = element.querySelector('[data-date-month]');
+    let selectedValue = validDateValue(value) ? value : '';
+    let cursor = selectedValue ? new Date(selectedValue + 'T00:00:00') : new Date();
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+
+    function syncValue() {
+      input.value = selectedValue;
+      trigger.textContent = selectedValue || '选择日期';
+      trigger.classList.toggle('is-placeholder', !selectedValue);
+    }
+
+    function renderCalendar() {
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      monthLabel.textContent = year + '年' + (month + 1) + '月';
+      const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+      const days = new Date(year, month + 1, 0).getDate();
+      let cells = '';
+      for (let blank = 0; blank < firstWeekday; blank += 1) {
+        cells += '<span class="um-date-cell-empty" aria-hidden="true"></span>';
+      }
+      for (let day = 1; day <= days; day += 1) {
+        const dayValue = localDateValue(new Date(year, month, day));
+        cells += '<button class="um-date-cell" type="button" data-date-value="' + dayValue +
+          '" aria-selected="' + (dayValue === selectedValue ? 'true' : 'false') + '">' + day + '</button>';
+      }
+      grid.innerHTML = cells;
+    }
+
+    function open() {
+      Object.keys(dateControllers).forEach(function (key) {
+        if (dateControllers[key] && dateControllers[key] !== controller) dateControllers[key].close();
+      });
+      popover.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      element.classList.add('is-open');
+      renderCalendar();
+      const selected = grid.querySelector('[aria-selected="true"]') || grid.querySelector('.um-date-cell');
+      if (selected) selected.focus();
+    }
+
+    function close(restoreFocus) {
+      popover.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      element.classList.remove('is-open');
+      if (restoreFocus) trigger.focus();
+    }
+
+    function setValue(nextValue, emit) {
+      const normalized = validDateValue(nextValue) ? String(nextValue) : '';
+      selectedValue = normalized;
+      if (normalized) {
+        const date = new Date(normalized + 'T00:00:00');
+        cursor = new Date(date.getFullYear(), date.getMonth(), 1);
+      }
+      syncValue();
+      renderCalendar();
+      if (emit) onChange(selectedValue);
+    }
+
+    trigger.addEventListener('click', function () {
+      if (popover.hidden) open();
+      else close(false);
+    });
+    element.addEventListener('click', function (event) {
+      const nav = event.target.closest('[data-date-nav]');
+      if (nav) {
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + (nav.getAttribute('data-date-nav') === 'prev' ? -1 : 1), 1);
+        renderCalendar();
+        return;
+      }
+      const cell = event.target.closest('[data-date-value]');
+      if (cell) {
+        setValue(cell.getAttribute('data-date-value'), true);
+        close(true);
+        return;
+      }
+      const action = event.target.closest('[data-date-action]');
+      if (action) {
+        setValue(action.getAttribute('data-date-action') === 'today' ? localDateValue(new Date()) : '', true);
+        close(true);
+      }
+    });
+    element.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !popover.hidden) {
+        event.preventDefault();
+        close(true);
+      }
+    });
+    input.addEventListener('change', function () {
+      setValue(input.value, true);
+    });
+    root.document.addEventListener('pointerdown', function (event) {
+      if (!popover.hidden && !element.contains(event.target)) close(false);
+    });
+
+    const controller = {
+      getValue: function () { return selectedValue; },
+      setValue: setValue,
+      close: close
+    };
+    syncValue();
+    renderCalendar();
+    return controller;
+  }
+
+  function setupDateControls() {
+    dateControllers.createdFrom = mountDatePicker(
+      elements.createdFrom,
+      'userCreatedFrom',
+      state.filters.createdFrom,
+      '创建日期从',
+      function (value) {
+        state.filters.createdFrom = value;
+        state.page = 1;
+        render();
+      }
+    );
+    dateControllers.createdTo = mountDatePicker(
+      elements.createdTo,
+      'userCreatedTo',
+      state.filters.createdTo,
+      '创建日期至',
+      function (value) {
+        state.filters.createdTo = value;
+        state.page = 1;
+        render();
+      }
+    );
+  }
+
   function filterOptions() {
-    const sources = allUsers.map(function (user) { return user.source; });
-    const providers = [];
     const stores = {};
     allUsers.forEach(function (user) {
-      (user.authProviders || []).forEach(function (provider) {
-        if (provider && provider.type) providers.push(provider.type);
-      });
       (user.stores || []).forEach(function (store) {
         if (store && store.id) stores[store.id] = store.name || store.domain || store.id;
       });
@@ -339,10 +499,29 @@
         option('all', '全部营销状态'),
         option('subscribed', '已订阅'),
         option('not_subscribed', '未订阅'),
-        option('unsubscribed', '已退订')
+        option('unsubscribed', '已退订'),
+        option('pending', '待确认'),
+        option('invalid', '无效邮箱')
       ],
-      source: uniqueOptions(sources, SOURCE_LABELS, '全部用户来源'),
-      authProvider: uniqueOptions(providers, PROVIDER_LABELS, '全部登录方式'),
+      source: [
+        option('all', '全部用户来源'),
+        option('storefront', '买家注册'),
+        option('newsletter_footer', '页脚订阅'),
+        option('newsletter_registration', '注册页订阅'),
+        option('newsletter_checkout', '结账页订阅'),
+        option('admin', '后台添加'),
+        option('shopify_api', 'Shopify API'),
+        option('shopify_csv', 'Shopify CSV')
+      ],
+      authProvider: [
+        option('all', '全部登录方式'),
+        option('password', '邮箱'),
+        option('google', 'Google'),
+        option('facebook', 'Facebook'),
+        option('tiktok', 'TikTok'),
+        option('instagram', 'Instagram'),
+        option('x', 'X')
+      ],
       storeId: storeOptions
     };
   }
@@ -402,9 +581,10 @@
     return true;
   }
 
-  function matchesSearch(user) {
-    if (!state.search) return true;
+  function matchesSearchQuery(user, query) {
+    if (!query) return true;
     const haystack = [
+      user.id,
       fullName(user),
       user.email,
       user.phone,
@@ -413,14 +593,30 @@
         return [store.name, store.domain].filter(Boolean).join(' ');
       }).join(' ')
     ].join(' ').toLocaleLowerCase();
-    return haystack.indexOf(state.search.toLocaleLowerCase()) !== -1;
+    return haystack.indexOf(String(query).toLocaleLowerCase()) !== -1;
+  }
+
+  function matchesSearch(user) {
+    return matchesSearchQuery(user, state.search);
+  }
+
+  function matchesSource(user, source) {
+    if (source === 'shopify_csv') return user.source === 'shopify_csv' || user.source === 'csv';
+    if (source.indexOf('newsletter_') === 0) {
+      const consentSource = source.replace('newsletter_', '');
+      return user.source === source || (
+        user.source === 'newsletter' &&
+        (user.consentHistory || []).some(function (event) { return event.source === consentSource; })
+      );
+    }
+    return user.source === source;
   }
 
   function matchesFilters(user) {
     const filters = state.filters;
     if (filters.accountStatus !== 'all' && user.accountStatus !== filters.accountStatus) return false;
     if (filters.marketingStatus !== 'all' && user.marketingStatus !== filters.marketingStatus) return false;
-    if (filters.source !== 'all' && user.source !== filters.source) return false;
+    if (filters.source !== 'all' && !matchesSource(user, filters.source)) return false;
     if (filters.authProvider !== 'all' && !(user.authProviders || []).some(function (provider) {
       return provider.type === filters.authProvider;
     })) return false;
@@ -442,17 +638,21 @@
     return String(user[key] || '').toLocaleLowerCase();
   }
 
+  function compareUsers(left, right, sort) {
+    const direction = sort.direction === 'asc' ? 1 : -1;
+    const a = sortableValue(left, sort.key);
+    const b = sortableValue(right, sort.key);
+    if (a < b) return -1 * direction;
+    if (a > b) return 1 * direction;
+    return String(left.id).localeCompare(String(right.id));
+  }
+
   function filteredUsers() {
     const users = allUsers.filter(function (user) {
       return matchesView(user) && matchesSearch(user) && matchesFilters(user);
     });
-    const direction = state.sort.direction === 'asc' ? 1 : -1;
     users.sort(function (left, right) {
-      const a = sortableValue(left, state.sort.key);
-      const b = sortableValue(right, state.sort.key);
-      if (a < b) return -1 * direction;
-      if (a > b) return 1 * direction;
-      return String(left.id).localeCompare(String(right.id)) * direction;
+      return compareUsers(left, right, state.sort);
     });
     return users;
   }
@@ -482,13 +682,17 @@
 
   function renderColumnPanel() {
     elements.columnPanel.innerHTML =
-      '<div class="um-column-title">自定义列</div>' +
-      '<p class="um-column-hint">选择要展示的字段，并用箭头调整列顺序。用户信息始终固定在左侧。</p>' +
+      '<div class="um-column-heading"><div class="um-column-title">自定义列</div>' +
+      '<button type="button" class="um-column-reset" data-column-reset>恢复默认</button></div>' +
+      '<p class="um-column-hint">拖拽字段或使用箭头调整列顺序。用户信息始终固定在左侧。</p>' +
       columnOrder.map(function (key, index) {
         const column = COLUMNS.find(function (item) { return item.key === key; });
         if (!column) return '';
         const checked = column.alwaysShow || visibleKeys.has(key);
-        return '<div class="um-column-row" data-column="' + escapeHtml(key) + '">' +
+        return '<div class="um-column-row" data-column="' + escapeHtml(key) + '"' +
+          (column.alwaysShow ? '' : ' draggable="true"') + '>' +
+          '<span class="um-column-drag' + (column.alwaysShow ? ' is-disabled' : '') +
+          '" aria-hidden="true" title="' + (column.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>' +
           '<label class="um-checkbox">' +
           '<input class="um-checkbox-input" type="checkbox" data-column-visible="' + escapeHtml(key) +
           '" ' + (checked ? 'checked' : '') + (column.alwaysShow ? ' disabled' : '') + '>' +
@@ -503,8 +707,8 @@
 
   function renderBulkBar() {
     const count = state.selected.size;
-    elements.bulkBar.hidden = count === 0;
-    if (!count) {
+    elements.bulkBar.hidden = count === 0 || state.status !== 'ready';
+    if (!count || state.status !== 'ready') {
       elements.bulkBar.innerHTML = '';
       return;
     }
@@ -514,9 +718,8 @@
       '<button class="um-button um-button-secondary" type="button" data-bulk="tag">添加标签</button>' +
       '<button class="um-button um-button-secondary" type="button" data-bulk="marketing">邮件营销</button>' +
       '<details class="um-menu"><summary class="um-button um-button-secondary">账号状态</summary>' +
-      '<div class="um-menu-panel"><button type="button" data-account-status="registered">设为已注册</button>' +
-      '<button type="button" data-account-status="pending">设为待激活</button>' +
-      '<button type="button" data-account-status="disabled">设为已禁用</button></div></details>' +
+      '<div class="um-menu-panel"><button type="button" data-account-action="disabled">禁用所选账号</button>' +
+      '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
       '<button class="um-button um-button-secondary" type="button" data-bulk="export">导出所选</button>' +
       '<button class="um-button um-button-secondary" type="button" data-bulk="columns">自定义列</button>' +
       '<button class="um-icon-button" type="button" data-bulk="refresh" aria-label="刷新列表" title="刷新列表">↻</button>' +
@@ -559,7 +762,7 @@
         escapeHtml(initials(user)) + '</span><div class="um-user-copy">' +
         '<div class="um-user-name">' + escapeHtml(fullName(user)) + '</div>' +
         '<div class="um-user-email" title="' + escapeHtml(user.email) + '">' + escapeHtml(user.email) +
-        '</div></div></div>';
+        '</div><div class="um-user-id">编号：' + escapeHtml(user.id) + '</div></div></div>';
     }
     if (key === 'accountStatus') {
       const tone = user.accountStatus === 'registered' ? 'success' :
@@ -587,13 +790,15 @@
   }
 
   function renderHead(columns, pageUsers) {
+    const selectionDisabled = state.status !== 'ready';
     const allSelected = pageUsers.length > 0 && pageUsers.every(function (user) {
       return state.selected.has(user.id);
     });
     elements.tableHead.innerHTML = '<tr>' +
       '<th class="um-select-cell um-frozen-left" scope="col">' +
       '<label class="um-checkbox" aria-label="选择当前页全部用户">' +
-      '<input class="um-checkbox-input" type="checkbox" id="userSelectPage" ' + (allSelected ? 'checked' : '') + '>' +
+      '<input class="um-checkbox-input" type="checkbox" id="userSelectPage" ' +
+      (allSelected ? 'checked' : '') + (selectionDisabled ? ' disabled' : '') + '>' +
       '<span class="um-checkbox-box" aria-hidden="true"></span></label></th>' +
       columns.map(function (column) {
         const classes = column.key === 'user' ? 'um-user-cell um-frozen-left' : '';
@@ -633,10 +838,11 @@
         escapeHtml(user.id) + '">编辑</button>' +
         '<details class="um-menu um-row-menu"><summary class="um-row-action" aria-label="更多用户操作">•••</summary>' +
         '<div class="um-menu-panel um-menu-panel-right">' +
+        '<button type="button" data-row-action="copy-email" data-user-id="' + escapeHtml(user.id) + '">复制邮箱</button>' +
         '<button type="button" data-row-action="marketing" data-user-id="' + escapeHtml(user.id) + '">邮件营销</button>' +
-        '<button type="button" data-row-action="account" data-account-status="' +
-        (user.accountStatus === 'disabled' ? 'registered' : 'disabled') + '" data-user-id="' +
-        escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '启用账号' : '禁用账号') + '</button>' +
+        '<button type="button" data-row-action="account" data-account-action="' +
+        (user.accountStatus === 'disabled' ? 'restore' : 'disabled') + '" data-user-id="' +
+        escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '恢复禁用前状态' : '禁用账号') + '</button>' +
         '<button class="um-button-danger" type="button" data-row-action="delete" data-user-id="' +
         escapeHtml(user.id) + '">删除用户</button></div></details></div></td></tr>';
     }).join('');
@@ -758,8 +964,8 @@
     };
     state.page = 1;
     elements.searchInput.value = '';
-    elements.createdFrom.value = '';
-    elements.createdTo.value = '';
+    if (dateControllers.createdFrom) dateControllers.createdFrom.setValue('', false);
+    if (dateControllers.createdTo) dateControllers.createdTo.setValue('', false);
     [
       [elements.accountFilter, 'all'],
       [elements.marketingFilter, 'all'],
@@ -774,6 +980,7 @@
   }
 
   function refreshUsers(showSuccess) {
+    state.selected.clear();
     state.status = 'loading';
     render();
     root.setTimeout(function () {
@@ -781,7 +988,7 @@
         allUsers = root.UserStore.list();
         errorMessage = '';
         setupFilterControls(true);
-        state.status = showSuccess ? 'success' : 'ready';
+        state.status = 'ready';
         render();
         if (showSuccess) showToast('用户列表已刷新。', 'success');
       } catch (error) {
@@ -797,6 +1004,7 @@
   }
 
   function setSelected(ids, selected) {
+    if (state.status !== 'ready') return;
     ids.forEach(function (id) {
       if (selected) state.selected.add(id);
       else state.selected.delete(id);
@@ -805,6 +1013,7 @@
   }
 
   function updateSelectedAccountStatus(status, ids) {
+    if (state.status !== 'ready') return;
     const targetIds = ids && ids.length ? ids : selectedIds();
     const result = root.UserStore.setAccountStatus(targetIds, status);
     if (!result.ok) {
@@ -818,6 +1027,7 @@
   }
 
   function addTagToSelected() {
+    if (state.status !== 'ready') return;
     const value = root.prompt('输入要添加的标签');
     const tag = String(value || '').trim();
     if (!tag) return;
@@ -837,11 +1047,18 @@
     showToast(changed ? '已为 ' + changed + ' 位用户添加标签。' : '所选用户已包含该标签。', 'success');
   }
 
-  function csvCell(value) {
-    return '"' + String(value === null || value === undefined ? '' : value).replace(/"/g, '""') + '"';
+  function neutralizeCsvFormula(value) {
+    const text = String(value === null || value === undefined ? '' : value);
+    return /^\s*[=+\-@]/.test(text) ? "'" + text : text;
+  }
+
+  function csvCell(value, isText) {
+    const normalized = isText ? neutralizeCsvFormula(value) : String(value === null || value === undefined ? '' : value);
+    return '"' + normalized.replace(/"/g, '""') + '"';
   }
 
   function exportUsers(ids) {
+    if (state.status !== 'ready') return;
     const idSet = ids && ids.length ? new Set(ids) : null;
     const users = idSet ? allUsers.filter(function (user) { return idSet.has(user.id); }) : filteredUsers();
     if (!users.length) {
@@ -865,7 +1082,11 @@
         ];
       })
     ];
-    const csv = '\uFEFF' + rows.map(function (row) { return row.map(csvCell).join(','); }).join('\r\n');
+    const csv = '\uFEFF' + rows.map(function (row, rowIndex) {
+      return row.map(function (value, columnIndex) {
+        return csvCell(value, rowIndex === 0 || (columnIndex !== 7 && columnIndex !== 8));
+      }).join(',');
+    }).join('\r\n');
     const url = root.URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const link = root.document.createElement('a');
     link.href = url;
@@ -889,7 +1110,46 @@
     if (event.target.closest('#userExportButton')) exportUsers();
   }
 
+  function fallbackCopyText(text) {
+    const textarea = root.document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    root.document.body.appendChild(textarea);
+    textarea.select();
+    let copied = false;
+    try {
+      copied = root.document.execCommand('copy');
+    } catch (error) {
+      copied = false;
+    }
+    textarea.remove();
+    return copied;
+  }
+
+  function copyUserEmail(userId) {
+    const user = allUsers.find(function (item) { return item.id === userId; });
+    if (!user || !user.email) {
+      showToast('该用户没有可复制的邮箱。', 'error');
+      return;
+    }
+    function report(copied) {
+      showToast(copied ? '邮箱已复制。' : '复制失败，请手动选择邮箱。', copied ? 'success' : 'error');
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(user.email).then(function () {
+        report(true);
+      }).catch(function () {
+        report(fallbackCopyText(user.email));
+      });
+      return;
+    }
+    report(fallbackCopyText(user.email));
+  }
+
   function handleTableClick(event) {
+    if (state.status !== 'ready') return;
     const sortButton = event.target.closest('[data-sort]');
     if (sortButton) {
       const key = sortButton.getAttribute('data-sort');
@@ -904,13 +1164,15 @@
       const id = rowAction.getAttribute('data-user-id');
       const action = rowAction.getAttribute('data-row-action');
       if (action === 'edit') navigateToEdit(id);
+      else if (action === 'copy-email') copyUserEmail(id);
       else if (action === 'marketing') openMarketingDialog([id]);
-      else if (action === 'account') updateSelectedAccountStatus(rowAction.getAttribute('data-account-status'), [id]);
+      else if (action === 'account') updateSelectedAccountStatus(rowAction.getAttribute('data-account-action'), [id]);
       else if (action === 'delete') openDeleteDialog([id]);
     }
   }
 
   function handleTableChange(event) {
+    if (state.status !== 'ready') return;
     if (event.target.id === 'userSelectPage') {
       const pageUsers = filteredUsers().slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
       setSelected(pageUsers.map(function (user) { return user.id; }), event.target.checked);
@@ -922,9 +1184,10 @@
   }
 
   function handleBulkClick(event) {
-    const account = event.target.closest('[data-account-status]');
+    if (state.status !== 'ready') return;
+    const account = event.target.closest('[data-account-action]');
     if (account) {
-      updateSelectedAccountStatus(account.getAttribute('data-account-status'));
+      updateSelectedAccountStatus(account.getAttribute('data-account-action'));
       return;
     }
     const button = event.target.closest('[data-bulk]');
@@ -958,6 +1221,17 @@
   }
 
   function handleColumnClick(event) {
+    const reset = event.target.closest('[data-column-reset]');
+    if (reset) {
+      event.stopPropagation();
+      visibleKeys = new Set(COLUMNS.map(function (column) { return column.key; }));
+      columnOrder = COLUMNS.map(function (column) { return column.key; });
+      writeStorage(VISIBLE_KEY, Array.from(visibleKeys));
+      writeStorage(ORDER_KEY, columnOrder);
+      render();
+      elements.columnMenu.open = true;
+      return;
+    }
     const button = event.target.closest('[data-column-move]');
     if (!button) return;
     event.stopPropagation();
@@ -976,7 +1250,60 @@
     elements.columnMenu.open = true;
   }
 
+  function moveColumn(sourceKey, targetKey) {
+    if (!sourceKey || sourceKey === 'user' || targetKey === 'user' || sourceKey === targetKey) return false;
+    const sourceIndex = columnOrder.indexOf(sourceKey);
+    const targetIndex = columnOrder.indexOf(targetKey);
+    if (sourceIndex < 1 || targetIndex < 1) return false;
+    const next = columnOrder.slice();
+    next.splice(sourceIndex, 1);
+    next.splice(targetIndex, 0, sourceKey);
+    columnOrder = next;
+    writeStorage(ORDER_KEY, columnOrder);
+    return true;
+  }
+
+  function clearColumnDragState() {
+    columnDragKey = '';
+    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.um-column-row'), function (row) {
+      row.classList.remove('is-dragging', 'is-drag-over');
+    });
+  }
+
+  function handleColumnDragStart(event) {
+    const row = event.target.closest('.um-column-row[draggable="true"]');
+    if (!row) return;
+    columnDragKey = row.getAttribute('data-column');
+    row.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', columnDragKey);
+  }
+
+  function handleColumnDragOver(event) {
+    const row = event.target.closest('.um-column-row[draggable="true"]');
+    if (!row || !columnDragKey || row.getAttribute('data-column') === columnDragKey) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.um-column-row'), function (item) {
+      item.classList.toggle('is-drag-over', item === row);
+    });
+  }
+
+  function handleColumnDrop(event) {
+    const row = event.target.closest('.um-column-row[draggable="true"]');
+    if (!row || !columnDragKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const moved = moveColumn(columnDragKey, row.getAttribute('data-column'));
+    clearColumnDragState();
+    if (moved) {
+      render();
+      elements.columnMenu.open = true;
+    }
+  }
+
   function handlePaginationClick(event) {
+    if (state.status !== 'ready') return;
     const button = event.target.closest('[data-page]');
     if (!button || button.disabled) return;
     const pageCount = Math.max(1, Math.ceil(filteredUsers().length / state.pageSize));
@@ -1025,16 +1352,6 @@
       state.page = 1;
       render();
     });
-    elements.createdFrom.addEventListener('change', function () {
-      state.filters.createdFrom = elements.createdFrom.value;
-      state.page = 1;
-      render();
-    });
-    elements.createdTo.addEventListener('change', function () {
-      state.filters.createdTo = elements.createdTo.value;
-      state.page = 1;
-      render();
-    });
     root.document.getElementById('userClearFilters').addEventListener('click', clearFilters);
     root.document.getElementById('userRefreshButton').addEventListener('click', function () {
       refreshUsers(true);
@@ -1044,6 +1361,10 @@
     elements.bulkBar.addEventListener('click', handleBulkClick);
     elements.columnPanel.addEventListener('change', handleColumnChange);
     elements.columnPanel.addEventListener('click', handleColumnClick);
+    elements.columnPanel.addEventListener('dragstart', handleColumnDragStart);
+    elements.columnPanel.addEventListener('dragover', handleColumnDragOver);
+    elements.columnPanel.addEventListener('drop', handleColumnDrop);
+    elements.columnPanel.addEventListener('dragend', clearColumnDragState);
     elements.pagination.addEventListener('click', handlePaginationClick);
     elements.tableState.addEventListener('click', function (event) {
       const action = event.target.closest('[data-state-action]');
@@ -1073,6 +1394,7 @@
         state.selected.clear();
         allUsers = root.UserStore.list();
         setupFilterControls(true);
+        state.status = 'ready';
         render();
       }
     };
@@ -1080,6 +1402,7 @@
 
   function initialize() {
     cacheElements();
+    setupDateControls();
     bindEvents();
     exposeHooks();
     state.status = 'loading';
@@ -1087,9 +1410,18 @@
     refreshUsers(false);
   }
 
+  const userListUtils = {
+    neutralizeCsvFormula: neutralizeCsvFormula,
+    compareUsers: compareUsers,
+    matchesSearchQuery: matchesSearchQuery
+  };
+  if (typeof module === 'object' && module.exports) module.exports = userListUtils;
+  root.UserListUtils = userListUtils;
+
+  if (!root.document) return;
   if (root.document.readyState === 'loading') {
     root.document.addEventListener('DOMContentLoaded', initialize);
   } else {
     initialize();
   }
-})(window);
+})(typeof window !== 'undefined' ? window : globalThis);

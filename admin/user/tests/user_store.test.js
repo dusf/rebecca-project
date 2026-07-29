@@ -116,4 +116,25 @@ assert.deepEqual(consentUser.consentHistory, [{
   status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent'
 }]);
 
+UserStore.resetForTests([
+  { id: 'registered-user', email: 'registered@example.com', accountStatus: 'registered' },
+  { id: 'pending-user', email: 'pending@example.com', accountStatus: 'pending' },
+  { id: 'legacy-disabled', email: 'legacy-disabled@example.com', accountStatus: 'disabled' },
+  { id: 'disabled-registered', email: 'disabled-registered@example.com', accountStatus: 'disabled', previousAccountStatus: 'registered' }
+]);
+assert.equal(UserStore.setAccountStatus(['pending-user'], 'registered').ok, false);
+assert.equal(UserStore.update('pending-user', { accountStatus: 'registered' }).ok, false);
+assert.deepEqual(UserStore.setAccountStatus(['registered-user', 'pending-user'], 'disabled'), { ok: true, changed: 2 });
+assert.equal(UserStore.get('registered-user').previousAccountStatus, 'registered');
+assert.equal(UserStore.get('pending-user').previousAccountStatus, 'pending');
+assert.deepEqual(UserStore.setAccountStatus(['registered-user', 'pending-user'], 'restore'), { ok: true, changed: 2 });
+assert.equal(UserStore.get('registered-user').accountStatus, 'registered');
+assert.equal(UserStore.get('pending-user').accountStatus, 'pending');
+assert.equal(UserStore.get('registered-user').previousAccountStatus, null);
+assert.deepEqual(UserStore.setAccountStatus(['legacy-disabled'], 'restore'), { ok: true, changed: 1 });
+assert.equal(UserStore.get('legacy-disabled').accountStatus, 'pending');
+assert.deepEqual(UserStore.setAccountStatus(['disabled-registered'], 'disabled'), { ok: true, changed: 0 });
+assert.deepEqual(UserStore.setAccountStatus(['disabled-registered'], 'restore'), { ok: true, changed: 1 });
+assert.equal(UserStore.get('disabled-registered').accountStatus, 'registered');
+
 console.log('user_store tests passed');

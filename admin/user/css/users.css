@@ -448,6 +448,59 @@ textarea.um-text-control {
   box-shadow: 0 14px 34px hsl(var(--shadow-color) / .14);
 }
 
+.um-date-header,
+.um-date-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.um-date-header {
+  margin-bottom: 10px;
+}
+
+.um-date-header button,
+.um-date-footer button {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+}
+
+.um-date-header button:hover,
+.um-date-header button:focus-visible,
+.um-date-footer button:hover,
+.um-date-footer button:focus-visible {
+  background: hsl(var(--accent));
+  outline: 2px solid hsl(var(--ring) / .18);
+}
+
+.um-date-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(32px, 1fr));
+  margin-bottom: 4px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  text-align: center;
+}
+
+.um-date-footer {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.um-date-footer button {
+  color: hsl(var(--primary-700));
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .um-date-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(32px, 1fr));
@@ -472,6 +525,11 @@ textarea.um-text-control {
 .um-date-cell[aria-selected="true"] {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
+}
+
+.um-date-cell-empty {
+  width: 36px;
+  height: 36px;
 }
 
 .um-tag-list {
@@ -869,9 +927,16 @@ textarea.um-text-control {
   font-size: 12px;
 }
 
-.um-date-filter .um-text-control {
+.um-date-filter .um-date-control {
   width: 142px;
+}
+
+.um-date-filter .um-date-trigger {
   min-height: 40px;
+}
+
+.um-date-trigger.is-placeholder {
+  color: hsl(var(--muted-foreground));
 }
 
 .um-table-tools {
@@ -892,10 +957,26 @@ textarea.um-text-control {
   padding: 10px;
 }
 
+.um-column-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .um-column-title {
   margin: 2px 4px 8px;
   font-size: 13px;
   font-weight: 650;
+}
+
+.um-column-reset {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: hsl(var(--primary-700));
+  font: 600 12px/1.4 var(--font-sans);
+  cursor: pointer;
 }
 
 .um-column-hint {
@@ -907,12 +988,37 @@ textarea.um-text-control {
 
 .um-column-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px 30px;
+  grid-template-columns: 22px minmax(0, 1fr) 30px 30px;
   align-items: center;
   gap: 4px;
   min-height: 42px;
   padding: 3px 4px;
   border-radius: 7px;
+}
+
+.um-column-row[draggable="true"] {
+  cursor: grab;
+}
+
+.um-column-row.is-dragging {
+  opacity: .48;
+  cursor: grabbing;
+}
+
+.um-column-row.is-drag-over {
+  box-shadow: inset 0 2px hsl(var(--primary));
+  background: hsl(var(--primary-50));
+}
+
+.um-column-drag {
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  letter-spacing: -3px;
+  user-select: none;
+}
+
+.um-column-drag.is-disabled {
+  opacity: .3;
 }
 
 .um-column-row:hover {
@@ -1022,6 +1128,15 @@ textarea.um-text-control {
 .um-user-name,
 .um-user-email {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.um-user-id {
+  margin-top: 2px;
+  overflow: hidden;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1375,9 +1490,13 @@ textarea.um-text-control {
     width: 100%;
   }
 
-  .um-date-filter .um-text-control {
+  .um-date-filter .um-date-control {
+    width: 100%;
+  }
+
+  .um-date-filter > div {
+    min-width: 0;
     flex: 1;
-    width: auto;
   }
 
   .um-combobox {

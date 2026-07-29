@@ -34,7 +34,7 @@
       <section class="um-toolbar" id="userToolbar" aria-label="用户筛选">
         <div class="um-toolbar-search">
           <label class="um-visually-hidden" for="userSearchInput">搜索用户</label>
-          <input class="um-text-control um-search-input" type="search" id="userSearchInput" placeholder="搜索姓名、邮箱、手机号或标签">
+          <input class="um-text-control um-search-input" type="search" id="userSearchInput" placeholder="搜索编号、姓名、邮箱、手机号或标签">
         </div>
         <div class="um-filter-grid">
           <div id="userAccountFilter"></div>
@@ -42,14 +42,14 @@
           <div id="userSourceFilter"></div>
           <div id="userProviderFilter"></div>
           <div id="userStoreFilter"></div>
-          <label class="um-date-filter">
+          <div class="um-date-filter">
             <span>创建日期从</span>
-            <input class="um-text-control" type="date" id="userCreatedFrom">
-          </label>
-          <label class="um-date-filter">
+            <div id="userCreatedFrom"></div>
+          </div>
+          <div class="um-date-filter">
             <span>至</span>
-            <input class="um-text-control" type="date" id="userCreatedTo">
-          </label>
+            <div id="userCreatedTo"></div>
+          </div>
           <button class="um-button um-button-ghost" type="button" id="userClearFilters">清除筛选</button>
         </div>
       </section>

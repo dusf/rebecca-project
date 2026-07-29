@@ -46,6 +46,9 @@
       tags: Array.isArray(input.tags) ? input.tags.slice() : [],
       note: input.note || '',
       accountStatus: ACCOUNT_STATUSES.has(input.accountStatus) ? input.accountStatus : 'pending',
+      previousAccountStatus: input.previousAccountStatus === 'registered' || input.previousAccountStatus === 'pending'
+        ? input.previousAccountStatus
+        : null,
       marketingStatus: MARKETING_STATUSES.has(input.marketingStatus) ? input.marketingStatus : 'not_subscribed',
       authProviders: Array.isArray(input.authProviders) ? clone(input.authProviders) : [],
       source: input.source || 'admin',
@@ -149,6 +152,9 @@
 
   function update(id, changes) {
     changes = changes || {};
+    if (Object.prototype.hasOwnProperty.call(changes, 'accountStatus') || Object.prototype.hasOwnProperty.call(changes, 'previousAccountStatus')) {
+      return { ok: false, error: '请通过账号禁用或恢复操作更新账号状态' };
+    }
     if (Object.prototype.hasOwnProperty.call(changes, 'marketingStatus') || Object.prototype.hasOwnProperty.call(changes, 'consentHistory')) {
       return { ok: false, error: '请通过邮件营销状态操作更新订阅状态和授权记录' };
     }
@@ -177,12 +183,25 @@
   }
 
   function setAccountStatus(ids, status) {
-    if (!ACCOUNT_STATUSES.has(status)) return { ok: false, error: '无效的账户状态' };
+    if (status !== 'disabled' && status !== 'restore') {
+      return { ok: false, error: '后台只能禁用账号或恢复禁用前状态' };
+    }
     const targetIds = new Set(Array.isArray(ids) ? ids : [ids]);
     const users = list();
     let changed = 0;
     users.forEach(function (user) {
-      if (targetIds.has(user.id)) { user.accountStatus = status; user.updatedAt = new Date().toISOString(); changed += 1; }
+      if (!targetIds.has(user.id)) return;
+      if (status === 'disabled' && user.accountStatus !== 'disabled') {
+        user.previousAccountStatus = user.accountStatus === 'registered' ? 'registered' : 'pending';
+        user.accountStatus = 'disabled';
+        user.updatedAt = new Date().toISOString();
+        changed += 1;
+      } else if (status === 'restore' && user.accountStatus === 'disabled') {
+        user.accountStatus = user.previousAccountStatus === 'registered' ? 'registered' : 'pending';
+        user.previousAccountStatus = null;
+        user.updatedAt = new Date().toISOString();
+        changed += 1;
+      }
     });
     write(users);
     return { ok: true, changed: changed };

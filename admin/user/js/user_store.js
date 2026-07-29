@@ -150,58 +150,65 @@
     return candidateKey(first).localeCompare(candidateKey(second)) <= 0 ? first : second;
   }
 
+  function candidatesById(users, local) {
+    const result = new Map();
+    users.forEach(function (user) {
+      const candidate = { user: buildUser(user), local: local };
+      const id = String(candidate.user.id);
+      const current = result.get(id);
+      result.set(id, current ? preferredCandidate(current, candidate) : candidate);
+    });
+    return result;
+  }
+
+  function changedFromBaseline(baselineCandidate, currentCandidate) {
+    if (!baselineCandidate) return Boolean(currentCandidate);
+    if (!currentCandidate) return true;
+    return !sameRecord(baselineCandidate.user, currentCandidate.user);
+  }
+
+  function resolveIdCandidate(baselineCandidate, localCandidate, externalCandidate) {
+    const localChanged = changedFromBaseline(baselineCandidate, localCandidate);
+    const externalChanged = changedFromBaseline(baselineCandidate, externalCandidate);
+
+    if (!localChanged && !externalChanged) {
+      return externalCandidate || localCandidate || baselineCandidate || null;
+    }
+    if (localChanged && !externalChanged) return localCandidate || null;
+    if (!localChanged && externalChanged) return externalCandidate || null;
+    if (!localCandidate && !externalCandidate) return null;
+    if (!localCandidate) return externalCandidate;
+    if (!externalCandidate) return localCandidate;
+    return preferredCandidate(localCandidate, externalCandidate);
+  }
+
   function mergeDirtySnapshots(baseline, localUsers, externalUsers) {
-    let candidates = externalUsers.map(function (user) {
-      return { user: buildUser(user), local: false };
+    const baselineById = candidatesById(baseline, false);
+    const localById = candidatesById(localUsers, true);
+    const externalById = candidatesById(externalUsers, false);
+    const ids = new Set(
+      Array.from(baselineById.keys())
+        .concat(Array.from(localById.keys()), Array.from(externalById.keys()))
+    );
+
+    const mergedById = new Map();
+    ids.forEach(function (id) {
+      const candidate = resolveIdCandidate(
+        baselineById.get(id),
+        localById.get(id),
+        externalById.get(id)
+      );
+      if (candidate) mergedById.set(id, candidate);
     });
-    const localIds = new Set(localUsers.map(function (user) { return user.id; }));
 
-    baseline.forEach(function (baseUser) {
-      if (localIds.has(baseUser.id)) return;
-      candidates = candidates.filter(function (candidate) {
-        return !sameRecord(candidate.user, baseUser);
-      });
-    });
-
-    localUsers.forEach(function (localUser) {
-      const baseUser = baseline.find(function (candidate) { return candidate.id === localUser.id; });
-      if (baseUser && sameRecord(localUser, baseUser)) return;
-      candidates.push({ user: buildUser(localUser), local: true });
-    });
-
-    const parents = candidates.map(function (_, index) { return index; });
-    function findRoot(index) {
-      while (parents[index] !== index) {
-        parents[index] = parents[parents[index]];
-        index = parents[index];
-      }
-      return index;
-    }
-    function connect(first, second) {
-      const firstRoot = findRoot(first);
-      const secondRoot = findRoot(second);
-      if (firstRoot !== secondRoot) parents[secondRoot] = firstRoot;
-    }
-
-    const idOwners = new Map();
-    const emailOwners = new Map();
-    candidates.forEach(function (candidate, index) {
-      const id = String(candidate.user.id || '');
+    const winnersByEmail = new Map();
+    mergedById.forEach(function (candidate) {
       const email = normalizeEmail(candidate.user.email);
-      if (idOwners.has(id)) connect(index, idOwners.get(id));
-      else idOwners.set(id, index);
-      if (emailOwners.has(email)) connect(index, emailOwners.get(email));
-      else emailOwners.set(email, index);
+      const current = winnersByEmail.get(email);
+      winnersByEmail.set(email, current ? preferredCandidate(current, candidate) : candidate);
     });
 
-    const winners = new Map();
-    candidates.forEach(function (candidate, index) {
-      const rootIndex = findRoot(index);
-      const current = winners.get(rootIndex);
-      winners.set(rootIndex, current ? preferredCandidate(current, candidate) : candidate);
-    });
-
-    return Array.from(winners.values())
+    return Array.from(winnersByEmail.values())
       .map(function (candidate) { return buildUser(candidate.user); })
       .sort(function (first, second) {
         return (first.id + '\0' + normalizeEmail(first.email))

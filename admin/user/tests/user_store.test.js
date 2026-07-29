@@ -403,25 +403,49 @@ assert.deepEqual(identitySummary(externalWinsCrossKey.users), [
 ]);
 assertUniqueIdentities(externalWinsCrossKey.persisted);
 
-const transitiveMerge = runDirtyIdentityMerge([
+const swappedEmails = runDirtyIdentityMerge([
   identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
   identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B')
 ], store => {
-  const result = store.update('A', { email: 'bridge@example.com', firstName: 'Local bridge' });
-  assert.equal(result.ok, true);
+  assert.equal(store.update('A', { email: 'temp@example.com' }).ok, true);
+  assert.equal(store.update('B', { email: 'a@example.com', firstName: 'Local B' }).ok, true);
+  assert.equal(store.update('A', { email: 'b@example.com', firstName: 'Local A' }).ok, true);
 }, [
   identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
-  identityFixture('X', 'bridge@example.com', '2021-01-01T00:00:00.000Z', 'Bridge by email'),
-  identityFixture('X', 'b@example.com', '2021-01-01T00:00:00.000Z', 'Bridge by id'),
   identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B'),
-  identityFixture('U', 'unrelated@example.com', '2021-01-01T00:00:00.000Z', 'Unrelated')
+  identityFixture('C', 'c@example.com', '2021-01-01T00:00:00.000Z', 'External C')
 ]);
-assert.deepEqual(identitySummary(transitiveMerge.users), [
-  { id: 'A', email: 'bridge@example.com', firstName: 'Local bridge' },
-  { id: 'U', email: 'unrelated@example.com', firstName: 'Unrelated' }
+assert.deepEqual(identitySummary(swappedEmails.users), [
+  { id: 'A', email: 'b@example.com', firstName: 'Local A' },
+  { id: 'B', email: 'a@example.com', firstName: 'Local B' },
+  { id: 'C', email: 'c@example.com', firstName: 'External C' }
 ]);
-assertUniqueIdentities(transitiveMerge.users);
-assertUniqueIdentities(transitiveMerge.persisted);
+assertUniqueIdentities(swappedEmails.users);
+assertUniqueIdentities(swappedEmails.persisted);
+
+const rotatedEmails = runDirtyIdentityMerge([
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
+  identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B'),
+  identityFixture('C', 'c@example.com', '2020-01-01T00:00:00.000Z', 'Base C')
+], store => {
+  assert.equal(store.update('A', { email: 'temp@example.com' }).ok, true);
+  assert.equal(store.update('B', { email: 'a@example.com', firstName: 'Rotated B' }).ok, true);
+  assert.equal(store.update('C', { email: 'b@example.com', firstName: 'Rotated C' }).ok, true);
+  assert.equal(store.update('A', { email: 'c@example.com', firstName: 'Rotated A' }).ok, true);
+}, [
+  identityFixture('A', 'a@example.com', '2020-01-01T00:00:00.000Z', 'Base A'),
+  identityFixture('B', 'b@example.com', '2020-01-01T00:00:00.000Z', 'Base B'),
+  identityFixture('C', 'c@example.com', '2020-01-01T00:00:00.000Z', 'Base C'),
+  identityFixture('D', 'd@example.com', '2021-01-01T00:00:00.000Z', 'External D')
+]);
+assert.deepEqual(identitySummary(rotatedEmails.users), [
+  { id: 'A', email: 'c@example.com', firstName: 'Rotated A' },
+  { id: 'B', email: 'a@example.com', firstName: 'Rotated B' },
+  { id: 'C', email: 'b@example.com', firstName: 'Rotated C' },
+  { id: 'D', email: 'd@example.com', firstName: 'External D' }
+]);
+assertUniqueIdentities(rotatedEmails.users);
+assertUniqueIdentities(rotatedEmails.persisted);
 
 const deletionBaseline = [
   identityFixture('D', 'delete@example.com', '2020-01-01T00:00:00.000Z', 'Delete me'),

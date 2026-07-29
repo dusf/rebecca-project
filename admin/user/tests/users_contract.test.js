@@ -94,6 +94,7 @@ assert.match(js, /navigator\.clipboard/);
 
 assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
+assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
 
 const utils = require('../js/users.js');
 const UserStore = require('../js/user_store.js');

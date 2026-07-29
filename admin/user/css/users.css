@@ -12,6 +12,13 @@
   padding: 24px 28px 48px;
 }
 
+.um-list-page .um-page-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px 24px;
+}
+
 .um-page-header,
 .um-form-header {
   display: flex;
@@ -1774,6 +1781,10 @@ textarea.um-text-control {
 
 @media (max-width: 860px) {
   .um-page-container {
+    padding: 18px 16px 36px;
+  }
+
+  .um-list-page .um-page-container {
     padding: 18px 16px 36px;
   }
 

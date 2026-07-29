@@ -95,6 +95,10 @@ assert.match(js, /navigator\.clipboard/);
 assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
 assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
+assert.match(html, /id="userTotalCount">\(0位用户\)<\/span>/);
+assert.match(css, /\.um-list-page \.um-page-title\s*\{[\s\S]*font-size:\s*18px;[\s\S]*font-weight:\s*700;/);
+assert.match(css, /\.um-title-count\s*\{[\s\S]*margin-left:\s*8px;[\s\S]*font-size:\s*13px;[\s\S]*font-weight:\s*400;/);
+assert.match(js, /totalCount\.textContent = '\(' \+ allUsers\.length \+ '位用户\)'/);
 
 const utils = require('../js/users.js');
 const UserStore = require('../js/user_store.js');

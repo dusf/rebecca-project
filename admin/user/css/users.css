@@ -35,6 +35,12 @@
   line-height: 1.4;
 }
 
+.um-list-page .um-page-title {
+  color: hsl(var(--foreground));
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .um-page-subtitle,
 .um-field-help {
   margin-top: 4px;
@@ -735,18 +741,10 @@ textarea.um-text-control {
 }
 
 .um-title-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 24px;
-  margin-left: 5px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: hsl(var(--muted));
+  margin-left: 8px;
   color: hsl(var(--muted-foreground));
-  font-size: 12px;
-  vertical-align: 2px;
+  font-size: 13px;
+  font-weight: 400;
 }
 
 .um-header-actions,

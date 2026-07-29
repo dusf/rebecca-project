@@ -957,7 +957,7 @@
   }
 
   function render() {
-    elements.totalCount.textContent = allUsers.length;
+    elements.totalCount.textContent = '(' + allUsers.length + '位用户)';
     const validIds = new Set(allUsers.map(function (user) { return user.id; }));
     Array.from(state.selected).forEach(function (id) {
       if (!validIds.has(id)) state.selected.delete(id);

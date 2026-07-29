@@ -7,7 +7,7 @@
 
   const STORAGE_KEY = 'rebecca_users_v1';
   const ACCOUNT_STATUSES = new Set(['registered', 'pending', 'disabled']);
-  const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed']);
+  const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed', 'pending', 'invalid']);
   let memory = [];
   let loaded = false;
   let idSequence = 0;
@@ -287,11 +287,25 @@
         user.updatedAt = new Date().toISOString();
         return;
       }
+      const initialMarketingStatus = canImportSubscribed
+        ? 'subscribed'
+        : (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed ? profile.marketingStatus : 'not_subscribed');
+      let initialConsentHistory = [];
+      if (initialMarketingStatus === 'subscribed') {
+        initialConsentHistory = [{ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note }];
+      } else if (initialMarketingStatus !== 'not_subscribed' && MARKETING_STATUSES.has(initialMarketingStatus)) {
+        initialConsentHistory = [{
+          status: initialMarketingStatus,
+          source: source || 'import',
+          consentedAt: importStatusTime(profile),
+          note: ''
+        }];
+      }
       user = buildUser({
         email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
-        accountStatus: 'pending', marketingStatus: canImportSubscribed ? 'subscribed' : (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed ? profile.marketingStatus : 'not_subscribed'),
+        accountStatus: 'pending', marketingStatus: initialMarketingStatus,
         source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
-        consentHistory: canImportSubscribed ? [{ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note }] : []
+        consentHistory: initialConsentHistory
       });
       users.push(user);
       counts.created += 1;

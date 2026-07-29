@@ -60,6 +60,57 @@ assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
 
 const utils = require('../js/users.js');
+const UserStore = require('../js/user_store.js');
+
+UserStore.resetForTests([]);
+const marketingUser = UserStore.createManual({ email: 'status-flow@example.com', marketingOptIn: false }).user;
+assert.equal(UserStore.setMarketingStatus([marketingUser.id], 'pending', { source: 'double_opt_in' }).ok, true);
+assert.equal(UserStore.get(marketingUser.id).marketingStatus, 'pending');
+assert.equal(UserStore.setMarketingStatus([marketingUser.id], 'invalid', { source: 'delivery_check' }).ok, true);
+const invalidMarketingUser = UserStore.get(marketingUser.id);
+assert.equal(invalidMarketingUser.marketingStatus, 'invalid');
+assert.deepEqual(invalidMarketingUser.consentHistory.map((entry) => entry.status), ['pending', 'invalid']);
+assert.equal(invalidMarketingUser.consentHistory[0].source, 'double_opt_in');
+assert.ok(invalidMarketingUser.consentHistory[0].consentedAt);
+assert.equal(invalidMarketingUser.consentHistory[1].source, 'delivery_check');
+assert.ok(invalidMarketingUser.consentHistory[1].consentedAt);
+
+assert.equal(UserStore.importProfiles([
+  { email: 'import-pending@example.com', marketingStatus: 'pending' },
+  { email: 'import-invalid@example.com', marketingStatus: 'invalid' }
+], 'shopify_csv').ok, true);
+assert.equal(UserStore.findByEmail('import-pending@example.com').marketingStatus, 'pending');
+assert.equal(UserStore.findByEmail('import-invalid@example.com').marketingStatus, 'invalid');
+assert.equal(UserStore.findByEmail('import-pending@example.com').consentHistory.at(-1).status, 'pending');
+assert.equal(UserStore.findByEmail('import-invalid@example.com').consentHistory.at(-1).status, 'invalid');
+assert.equal(UserStore.findByEmail('import-pending@example.com').consentHistory.at(-1).source, 'shopify_csv');
+assert.ok(UserStore.findByEmail('import-invalid@example.com').consentHistory.at(-1).consentedAt);
+UserStore.resetForTests(UserStore.list());
+assert.equal(UserStore.findByEmail('import-pending@example.com').marketingStatus, 'pending');
+assert.equal(UserStore.findByEmail('import-invalid@example.com').marketingStatus, 'invalid');
+assert.equal(UserStore.importProfiles([
+  { email: 'import-pending@example.com', marketingStatus: 'invalid' }
+], 'shopify_csv').ok, true);
+const importedStatusUpdate = UserStore.findByEmail('import-pending@example.com');
+assert.equal(importedStatusUpdate.marketingStatus, 'invalid');
+assert.deepEqual(importedStatusUpdate.consentHistory.map((entry) => entry.status), ['pending', 'invalid']);
+
+const baseFilters = {
+  accountStatus: 'all',
+  source: 'all',
+  authProvider: 'all',
+  storeId: 'all',
+  createdFrom: '',
+  createdTo: ''
+};
+assert.equal(utils.matchesUserFilters({ marketingStatus: 'pending' }, { ...baseFilters, marketingStatus: 'pending' }), true);
+assert.equal(utils.matchesUserFilters({ marketingStatus: 'invalid' }, { ...baseFilters, marketingStatus: 'invalid' }), true);
+assert.equal(utils.matchesUserFilters({ marketingStatus: 'invalid' }, { ...baseFilters, marketingStatus: 'pending' }), false);
+
+assert.deepEqual(utils.reorderColumns(['A', 'B', 'C'], 'A', 'C', 'user'), ['B', 'A', 'C']);
+assert.deepEqual(utils.reorderColumns(['A', 'B', 'C'], 'C', 'A', 'user'), ['C', 'A', 'B']);
+assert.deepEqual(utils.reorderColumns(['user', 'A', 'B'], 'user', 'B', 'user'), ['user', 'A', 'B']);
+
 assert.equal(utils.neutralizeCsvFormula(' =2+2'), "' =2+2");
 assert.equal(utils.neutralizeCsvFormula('+SUM(A1:A2)'), "'+SUM(A1:A2)");
 assert.equal(utils.neutralizeCsvFormula('\t-10'), "'\t-10");

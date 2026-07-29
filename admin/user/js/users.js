@@ -612,21 +612,30 @@
     return user.source === source;
   }
 
-  function matchesFilters(user) {
-    const filters = state.filters;
-    if (filters.accountStatus !== 'all' && user.accountStatus !== filters.accountStatus) return false;
-    if (filters.marketingStatus !== 'all' && user.marketingStatus !== filters.marketingStatus) return false;
-    if (filters.source !== 'all' && !matchesSource(user, filters.source)) return false;
-    if (filters.authProvider !== 'all' && !(user.authProviders || []).some(function (provider) {
-      return provider.type === filters.authProvider;
+  function matchesUserFilters(user, filters) {
+    filters = filters || {};
+    const accountStatus = filters.accountStatus || 'all';
+    const marketingStatus = filters.marketingStatus || 'all';
+    const source = filters.source || 'all';
+    const authProvider = filters.authProvider || 'all';
+    const storeId = filters.storeId || 'all';
+    if (accountStatus !== 'all' && user.accountStatus !== accountStatus) return false;
+    if (marketingStatus !== 'all' && user.marketingStatus !== marketingStatus) return false;
+    if (source !== 'all' && !matchesSource(user, source)) return false;
+    if (authProvider !== 'all' && !(user.authProviders || []).some(function (provider) {
+      return provider.type === authProvider;
     })) return false;
-    if (filters.storeId !== 'all' && !(user.stores || []).some(function (store) {
-      return store.id === filters.storeId;
+    if (storeId !== 'all' && !(user.stores || []).some(function (store) {
+      return store.id === storeId;
     })) return false;
     const created = user.createdAt ? String(user.createdAt).slice(0, 10) : '';
     if (filters.createdFrom && (!created || created < filters.createdFrom)) return false;
     if (filters.createdTo && (!created || created > filters.createdTo)) return false;
     return true;
+  }
+
+  function matchesFilters(user) {
+    return matchesUserFilters(user, state.filters);
   }
 
   function sortableValue(user, key) {
@@ -1250,14 +1259,20 @@
     elements.columnMenu.open = true;
   }
 
-  function moveColumn(sourceKey, targetKey) {
-    if (!sourceKey || sourceKey === 'user' || targetKey === 'user' || sourceKey === targetKey) return false;
-    const sourceIndex = columnOrder.indexOf(sourceKey);
-    const targetIndex = columnOrder.indexOf(targetKey);
-    if (sourceIndex < 1 || targetIndex < 1) return false;
-    const next = columnOrder.slice();
+  function reorderColumns(order, sourceKey, targetKey, fixedKey) {
+    const next = Array.isArray(order) ? order.slice() : [];
+    if (!sourceKey || !targetKey || sourceKey === targetKey || sourceKey === fixedKey || targetKey === fixedKey) return next;
+    const sourceIndex = next.indexOf(sourceKey);
+    if (sourceIndex < 0 || next.indexOf(targetKey) < 0) return next;
     next.splice(sourceIndex, 1);
-    next.splice(targetIndex, 0, sourceKey);
+    const targetIndexAfterRemoval = next.indexOf(targetKey);
+    next.splice(targetIndexAfterRemoval, 0, sourceKey);
+    return next;
+  }
+
+  function moveColumn(sourceKey, targetKey) {
+    const next = reorderColumns(columnOrder, sourceKey, targetKey, 'user');
+    if (next.every(function (key, index) { return key === columnOrder[index]; })) return false;
     columnOrder = next;
     writeStorage(ORDER_KEY, columnOrder);
     return true;
@@ -1413,7 +1428,9 @@
   const userListUtils = {
     neutralizeCsvFormula: neutralizeCsvFormula,
     compareUsers: compareUsers,
-    matchesSearchQuery: matchesSearchQuery
+    matchesSearchQuery: matchesSearchQuery,
+    matchesUserFilters: matchesUserFilters,
+    reorderColumns: reorderColumns
   };
   if (typeof module === 'object' && module.exports) module.exports = userListUtils;
   root.UserListUtils = userListUtils;

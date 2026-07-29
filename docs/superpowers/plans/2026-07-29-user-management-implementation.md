@@ -60,7 +60,7 @@ findByEmail(email: string): UserRecord | null
 createManual(payload: ManualUserInput): { ok: boolean, user?: UserRecord, existing?: UserRecord, error?: string }
 update(id: string, payload: Partial<UserRecord>): { ok: boolean, user?: UserRecord, error?: string }
 remove(id: string): { ok: boolean, error?: string }
-setAccountStatus(ids: string[], status: 'active' | 'pending' | 'disabled'): UserRecord[]
+setAccountStatus(ids: string[], status: 'disabled' | 'restore'): UserRecord[]
 setMarketingStatus(ids: string[], status: MarketingStatus, consent?: ConsentInput): { ok: boolean, users?: UserRecord[], error?: string }
 importProfiles(records: ImportRecord[], source: 'shopify_api' | 'shopify_csv'): ImportResult
 activateByEmail(email: string, provider: AuthProvider): { ok: boolean, user?: UserRecord, error?: string }
@@ -674,7 +674,7 @@ assert.equal(duplicateUpdate.ok, false);
 const activated = UserStore.activateByEmail('first@example.com', 'google');
 assert.equal(activated.ok, true);
 assert.equal(activated.user.id, first.user.id);
-assert.equal(activated.user.accountStatus, 'active');
+assert.equal(activated.user.accountStatus, 'registered');
 assert.equal(activated.user.authProviders.includes('google'), true);
 ```
 
@@ -697,13 +697,21 @@ function activateByEmail(email, provider) {
   const existing = findByEmail(email);
   if (!existing) return { ok: false, error: '未找到可认领的用户档案' };
   const authProviders = Array.from(new Set(existing.authProviders.concat(provider || 'email')));
-  return update(existing.id, {
-    accountStatus: 'active',
+  const users = list();
+  const index = users.findIndex((user) => user.id === existing.id);
+  const user = Object.assign({}, users[index], {
+    accountStatus: 'registered',
     authProviders,
     lastLoginAt: new Date().toISOString()
   });
+  delete user.previousAccountStatus;
+  users[index] = user;
+  write(users);
+  return { ok: true, user: clone(user) };
 }
 ```
+
+`activateByEmail` is the only public path that upgrades a pending profile to `registered`. It represents a completed trusted email/social verification flow and must not call or reopen the general `update()` account-status path.
 
 - [ ] **Step 4: Build the two-column form**
 

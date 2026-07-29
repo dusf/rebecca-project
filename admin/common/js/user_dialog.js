@@ -266,11 +266,19 @@
     var seen = {};
     var valid = 0;
     var invalid = 0;
+    var missingEmail = 0;
+    var invalidEmail = 0;
     var duplicates = 0;
     var consentMissing = 0;
     var consentInvalid = 0;
     records.forEach(function (record) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email || '')) {
+      if (!String(record.email || '').trim()) {
+        missingEmail += 1;
+        invalid += 1;
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) {
+        invalidEmail += 1;
         invalid += 1;
         return;
       }
@@ -284,6 +292,8 @@
       total: records.length,
       valid: valid,
       invalid: invalid,
+      missingEmail: missingEmail,
+      invalidEmail: invalidEmail,
       duplicates: duplicates,
       consentMissing: consentMissing,
       consentInvalid: consentInvalid
@@ -393,6 +403,32 @@
     return { ok: true, error: '', value: result };
   }
 
+  function resolveDeletionRiskState(outcome, ids) {
+    var result = outcome || {};
+    if (result.ok !== true) {
+      return {
+        riskStatus: 'error',
+        users: [],
+        error: '无法读取订单或 Shopify 关联风险。' +
+          (result.error ? ' ' + String(result.error) : ' 请重试。')
+      };
+    }
+    var value = result.value;
+    var users = Array.isArray(value) ? value : (value ? [value] : []);
+    var idSet = new Set(Array.isArray(ids) ? ids : []);
+    return {
+      riskStatus: 'ready',
+      users: users.filter(function (user) {
+        return user && idSet.has(user.id);
+      }),
+      error: ''
+    };
+  }
+
+  function canPermanentlyDelete(deletion) {
+    return Boolean(deletion && deletion.riskStatus === 'ready' && !deletion.busy);
+  }
+
   function mergeCsvImportResult(result, validation) {
     var source = result || {};
     var counts = source.counts || {};
@@ -402,10 +438,10 @@
         created: Number(counts.created) || 0,
         merged: Number(counts.merged) || 0,
         skipped: (Number(counts.skipped) || 0) +
-          (Number(review.invalid) || 0) +
+          (Number(review.missingEmail) || 0) +
           (Number(review.consentMissing) || 0) +
           (Number(review.consentInvalid) || 0),
-        failed: Number(counts.failed) || 0
+        failed: (Number(counts.failed) || 0) + (Number(review.invalidEmail) || 0)
       }
     });
   }
@@ -423,6 +459,8 @@
     getComboKeyAction: getComboKeyAction,
     canRestoreFocus: canRestoreFocus,
     normalizeHookResult: normalizeHookResult,
+    resolveDeletionRiskState: resolveDeletionRiskState,
+    canPermanentlyDelete: canPermanentlyDelete,
     mergeCsvImportResult: mergeCsvImportResult
   };
 
@@ -966,7 +1004,8 @@
         '</strong><p class="um-dialog-muted">已读取 ' + state.csv.rows.length + ' 行数据；下方仅预览前 5 行。</p></div>' +
         '<div class="um-summary-grid">' +
         '<div class="um-summary-card"><span>有效邮箱</span><strong>' + validation.valid + '</strong></div>' +
-        '<div class="um-summary-card"><span>无效邮箱</span><strong>' + validation.invalid + '</strong></div>' +
+        '<div class="um-summary-card"><span>缺失邮箱</span><strong>' + validation.missingEmail + '</strong></div>' +
+        '<div class="um-summary-card"><span>无效邮箱</span><strong>' + validation.invalidEmail + '</strong></div>' +
         '<div class="um-summary-card"><span>文件内重复</span><strong>' + validation.duplicates + '</strong></div>' +
         '<div class="um-summary-card"><span>订阅授权缺失</span><strong>' + validation.consentMissing + '</strong></div>' +
         '<div class="um-summary-card"><span>授权时间无效</span><strong>' + validation.consentInvalid + '</strong></div>' +
@@ -994,11 +1033,13 @@
             '<li>按标准化邮箱匹配，相同邮箱合并到一条用户档案。</li>' +
             '<li>新用户以待激活状态保存，不创建或迁移密码。</li>' +
             '<li>营销订阅仅在来源和时间完整时生效并记录历史。</li>' +
-            '<li>无效邮箱会计入失败，不阻止其他有效记录导入。</li></ul></div>' +
+            '<li>无效邮箱会计入失败；缺失邮箱和不完整营销授权会计入跳过，且每行只计一次。</li></ul></div>' +
             '<div class="um-summary-grid"><div class="um-summary-card"><span>准备导入</span><strong>' +
             state.csv.records.length + '</strong></div><div class="um-summary-card"><span>有效邮箱</span><strong>' +
-            state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>将跳过</span><strong>' +
-            (state.csv.validation.invalid + state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
+            state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>预计跳过</span><strong>' +
+            (state.csv.validation.missingEmail + state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
+            '</strong></div><div class="um-summary-card"><span>预计失败</span><strong>' +
+            state.csv.validation.invalidEmail +
             '</strong></div></div>' +
             (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '')),
       footer: result
@@ -1254,28 +1295,49 @@
     });
   }
 
-  function usersForDeletion(ids) {
-    var users = [];
-    try {
-      if (active && active.hooks) {
-        if (typeof active.hooks.getUsers === 'function') users = active.hooks.getUsers() || [];
-        else if (typeof active.hooks.getUser === 'function') {
-          var single = active.hooks.getUser();
-          if (single) users = [single];
-        }
-      }
-    } catch (error) {
-      state.deletion.error = error && error.message
-        ? error.message
-        : '读取用户风险信息失败，请取消后重试。';
-      showParentError(state.deletion.error);
+  function loadDeletionRisk() {
+    var outcome;
+    if (hooksAvailable('getUsers')) {
+      outcome = invokeHook('getUsers');
+    } else if (hooksAvailable('getUser')) {
+      outcome = invokeHook('getUser');
+    } else {
+      outcome = {
+        ok: false,
+        error: '当前页面未提供用户风险读取接口。',
+        value: null
+      };
     }
-    if (!Array.isArray(users)) users = [];
-    var idSet = new Set(ids);
-    return users.filter(function (user) { return idSet.has(user.id); });
+    var risk = resolveDeletionRiskState(outcome, state.deletion.ids);
+    state.deletion.users = risk.users;
+    state.deletion.riskStatus = risk.riskStatus;
+    state.deletion.error = risk.error;
+    state.deletion.busy = false;
+    renderDelete();
+    if (risk.riskStatus === 'error') showParentError(risk.error);
   }
 
   function renderDelete() {
+    if (state.deletion.riskStatus !== 'ready') {
+      var reading = state.deletion.riskStatus === 'loading';
+      renderShell('delete', {
+        title: state.deletion.title,
+        subtitle: state.deletion.ids.length + ' 位用户',
+        blocking: true,
+        body: '<div class="um-dialog-danger"><strong>此操作不可恢复。</strong> ' +
+          escapeHtml(state.deletion.message) + '</div>' +
+          (reading
+            ? '<div class="um-dialog-guidance">正在读取订单和 Shopify 关联风险，请稍候。</div>'
+            : '<div class="um-dialog-error" role="alert"><strong>无法读取订单或 Shopify 关联风险。</strong>' +
+              '<p>风险确认前不能永久删除用户。请重试读取，或取消本次操作。</p>' +
+              (state.deletion.error ? '<p>' + escapeHtml(state.deletion.error) + '</p>' : '') +
+              '</div>'),
+        footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
+          '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="delete-risk-retry"' +
+          (reading ? ' disabled' : '') + '>' + (reading ? '正在重试…' : '重试读取风险') + '</button>'
+      });
+      return;
+    }
     var users = state.deletion.users;
     var orderUsers = users.filter(function (user) { return Number(user.orderCount) > 0; });
     var shopifyUsers = users.filter(function (user) {
@@ -1600,7 +1662,16 @@
       completeAndClose(marketingCall.value, state.marketing, renderMarketing);
       return;
     }
+    if (action === 'delete-risk-retry') {
+      state.deletion.riskStatus = 'loading';
+      state.deletion.error = '';
+      state.deletion.busy = true;
+      renderDelete();
+      loadDeletionRisk();
+      return;
+    }
     if (action === 'delete-disable') {
+      if (state.deletion.riskStatus !== 'ready') return;
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
@@ -1613,6 +1684,7 @@
       return;
     }
     if (action === 'delete-confirm') {
+      if (state.deletion.riskStatus !== 'ready' || !canPermanentlyDelete(state.deletion)) return;
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
@@ -1782,12 +1854,13 @@
         title: settings.title || (ids.length > 1 ? '删除所选用户' : '删除用户'),
         message: settings.message || '删除后用户档案及其授权历史将无法恢复，请谨慎操作。',
         users: [],
+        riskStatus: 'loading',
         error: '',
         busy: false
       };
       return openDialog('delete', function () {
-        state.deletion.users = usersForDeletion(ids);
         renderDelete();
+        loadDeletionRisk();
       }, true).catch(function () { return false; });
     },
     closeAll: function (options) {

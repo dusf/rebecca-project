@@ -53,6 +53,50 @@ async function run() {
   );
   assert.strictEqual(dialog.parseConsentDateTime('2026-02-30T10:00:00Z'), '');
 
+  const invalidEmailValidation = dialog.validateCsvRecords([
+    {
+      email: 'not-an-email',
+      marketingStatus: 'not_subscribed',
+      importIssue: 'invalid_consent_time'
+    }
+  ]);
+  assert.deepStrictEqual(
+    dialog.mergeCsvImportResult(
+      { ok: true, counts: { created: 0, merged: 0, skipped: 0, failed: 0 } },
+      invalidEmailValidation
+    ).counts,
+    { created: 0, merged: 0, skipped: 0, failed: 1 },
+    'an invalid email is failed exactly once and is not skipped'
+  );
+  const missingEmailValidation = dialog.validateCsvRecords([
+    { email: '', marketingStatus: 'not_subscribed' }
+  ]);
+  assert.deepStrictEqual(
+    dialog.mergeCsvImportResult(
+      { ok: true, counts: { created: 0, merged: 0, skipped: 0, failed: 0 } },
+      missingEmailValidation
+    ).counts,
+    { created: 0, merged: 0, skipped: 1, failed: 0 },
+    'a missing email is skipped exactly once and is not failed'
+  );
+
+  let deletionRisk = dialog.resolveDeletionRiskState(
+    { ok: false, error: 'storage unavailable', value: null },
+    ['user-1']
+  );
+  assert.strictEqual(deletionRisk.riskStatus, 'error');
+  assert.strictEqual(dialog.canPermanentlyDelete(deletionRisk), false);
+  assert.match(deletionRisk.error, /无法读取订单或 Shopify 关联风险/);
+  deletionRisk = dialog.resolveDeletionRiskState(
+    {
+      ok: true,
+      value: [{ id: 'user-1', orderCount: 2, stores: [{ id: 'store-1' }] }]
+    },
+    ['user-1']
+  );
+  assert.strictEqual(deletionRisk.riskStatus, 'ready', 'a successful retry makes risk data ready');
+  assert.strictEqual(dialog.canPermanentlyDelete(deletionRisk), true);
+
   const gate = dialog.createSessionGate();
   const oldToken = gate.next();
   let resolveOld;
@@ -160,6 +204,15 @@ async function run() {
   assert(
     (source.match(/csvSessionGate\.next\(\)/g) || []).length >= 3,
     'CSV open, close, and reads must invalidate prior sessions'
+  );
+  assert(source.includes('data-dialog-action="delete-risk-retry"'), 'delete risk errors expose retry');
+  assert(
+    source.includes("state.deletion.riskStatus !== 'ready'"),
+    'remove event handling must guard unknown risk even if manually triggered'
+  );
+  assert(
+    source.includes('无法读取订单或 Shopify 关联风险'),
+    'delete risk failures must be explicit'
   );
 
   console.log('user dialog runtime tests passed');

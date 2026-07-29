@@ -112,6 +112,17 @@
     }
   }
 
+  function syncFromStorage() {
+    const store = storage();
+    if (!store) return;
+    try {
+      const saved = JSON.parse(store.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) memory = saved.map(buildUser);
+    } catch (error) {
+      // Keep the last valid in-memory snapshot if another frame writes malformed data.
+    }
+  }
+
   function write(users) {
     memory = users.map(buildUser);
     loaded = true;
@@ -121,6 +132,7 @@
 
   function list() {
     ensureLoaded();
+    syncFromStorage();
     return clone(memory);
   }
 

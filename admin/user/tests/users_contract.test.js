@@ -7,6 +7,17 @@ const html = fs.readFileSync(path.join(userRoot, 'users.html'), 'utf8');
 const js = fs.readFileSync(path.join(userRoot, 'js', 'users.js'), 'utf8');
 const storeJs = fs.readFileSync(path.join(userRoot, 'js', 'user_store.js'), 'utf8');
 const css = fs.readFileSync(path.join(userRoot, 'css', 'users.css'), 'utf8');
+const adminRoot = path.resolve(userRoot, '..');
+const commonsJs = fs.readFileSync(path.join(adminRoot, 'common', 'js', 'commons.js'), 'utf8');
+const commonsCss = fs.readFileSync(path.join(adminRoot, 'common', 'css', 'commons.css'), 'utf8');
+const adminIndex = fs.readFileSync(path.join(adminRoot, 'index.html'), 'utf8');
+
+assert.match(commonsJs, /class="sidebar-item\$\{activeClass\}"[^>]*role="link"[^>]*tabindex="0"/);
+assert.match(commonsJs, /sidebar\.addEventListener\('keydown'/);
+assert.match(commonsJs, /e\.key !== 'Enter' && e\.key !== ' '/);
+assert.match(commonsJs, /item\.click\(\)/);
+assert.match(commonsCss, /\.sidebar-item:focus-visible/);
+assert.match(adminIndex, /item\.setAttribute\('aria-current', item\.dataset\.page === page \? 'page' : 'false'\)/);
 
 assert.doesNotMatch(js, /data-account-status=["']registered["']/);
 assert.doesNotMatch(js, /设为已注册|批量启用/);

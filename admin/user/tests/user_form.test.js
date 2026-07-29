@@ -110,4 +110,31 @@ assert.equal(subscribedConsentChanged.changed, true);
 assert.equal(subscribedConsentChanged.status, 'subscribed');
 assert.deepEqual(subscribedConsentChanged.consent, newConsent);
 
+let refreshedCachedList = 0;
+const cachedListFrame = {
+  getAttribute(name) {
+    return name === 'src' ? 'user/users.html' : '';
+  },
+  contentWindow: {
+    UserPageHooks: {
+      onDialogComplete() {
+        refreshedCachedList += 1;
+      }
+    }
+  }
+};
+assert.equal(UserFormState.refreshCachedUserList({
+  document: {
+    querySelectorAll() {
+      return [cachedListFrame, {
+        getAttribute() {
+          return 'user/user_form.html?mode=edit&id=usr_1';
+        },
+        contentWindow: {}
+      }];
+    }
+  }
+}), true);
+assert.equal(refreshedCachedList, 1);
+
 console.log('user form runtime tests passed');

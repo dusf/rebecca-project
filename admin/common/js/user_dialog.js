@@ -389,6 +389,13 @@
     );
   }
 
+  function resolveFocusableOpener(target) {
+    if (!target || typeof target.closest !== 'function') return target;
+    var collapsedMenu = target.closest('details:not([open])');
+    if (!collapsedMenu || typeof collapsedMenu.querySelector !== 'function') return target;
+    return collapsedMenu.querySelector('summary') || target;
+  }
+
   function normalizeHookResult(result, allowVoid) {
     if ((result === undefined || result === null) && allowVoid) {
       return { ok: true, error: '', value: result };
@@ -458,6 +465,7 @@
     settleSessionTask: settleSessionTask,
     getComboKeyAction: getComboKeyAction,
     canRestoreFocus: canRestoreFocus,
+    resolveFocusableOpener: resolveFocusableOpener,
     normalizeHookResult: normalizeHookResult,
     resolveDeletionRiskState: resolveDeletionRiskState,
     canPermanentlyDelete: canPermanentlyDelete,
@@ -627,6 +635,7 @@
     if (!target && frameDocument) {
       target = frameDocument.querySelector('#userListHeader button, #userFormHeader button, button');
     }
+    target = resolveFocusableOpener(target);
     return canRestoreFocus({
       navigationMatches: previous.navigationGeneration === navigationGeneration,
       frameIsActive: activeFrame() === previous.frame,

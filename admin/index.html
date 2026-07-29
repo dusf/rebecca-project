@@ -210,6 +210,7 @@
       var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
       items.forEach(function(item) {
         item.classList.toggle('active', item.dataset.page === page);
+        item.setAttribute('aria-current', item.dataset.page === page ? 'page' : 'false');
       });
 
       // 更新面包屑
@@ -238,6 +239,7 @@
         var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
         items.forEach(function(item) {
           item.classList.toggle('active', item.dataset.page === matchedPage);
+          item.setAttribute('aria-current', item.dataset.page === matchedPage ? 'page' : 'false');
         });
         updateBreadcrumb(matchedPage);
         currentActivePage = matchedPage;
@@ -287,6 +289,7 @@
         var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
         items.forEach(function(item) {
           item.classList.toggle('active', item.dataset.page === matchedPage);
+          item.setAttribute('aria-current', item.dataset.page === matchedPage ? 'page' : 'false');
         });
         updateBreadcrumb(matchedPage);
         currentActivePage = matchedPage;

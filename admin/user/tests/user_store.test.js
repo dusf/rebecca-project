@@ -1,4 +1,7 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 const UserStore = require('../js/user_store.js');
 
 UserStore.resetForTests([]);
@@ -203,5 +206,31 @@ assert.equal(registeredVerification.user.id, 'activation-registered');
 assert.equal(registeredVerification.user.accountStatus, 'registered');
 assert.equal(registeredVerification.user.authProviders.includes('google'), true);
 assert.ok(registeredVerification.user.lastLoginAt);
+
+const sharedValues = new Map();
+const sharedStorage = {
+  getItem(key) {
+    return sharedValues.has(key) ? sharedValues.get(key) : null;
+  },
+  setItem(key, value) {
+    sharedValues.set(key, String(value));
+  },
+  removeItem(key) {
+    sharedValues.delete(key);
+  }
+};
+const storeSource = fs.readFileSync(path.resolve(__dirname, '../js/user_store.js'), 'utf8');
+function createBrowserStore() {
+  const context = vm.createContext({ localStorage: sharedStorage });
+  vm.runInContext(storeSource, context);
+  return context.UserStore;
+}
+const firstFrameStore = createBrowserStore();
+const secondFrameStore = createBrowserStore();
+firstFrameStore.list();
+secondFrameStore.list();
+const crossFrameUser = firstFrameStore.createManual({ email: 'cross-frame@example.com' });
+assert.equal(crossFrameUser.ok, true);
+assert.equal(secondFrameStore.findByEmail('cross-frame@example.com').id, crossFrameUser.user.id);
 
 console.log('user_store tests passed');

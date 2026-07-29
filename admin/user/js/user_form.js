@@ -152,7 +152,28 @@
     return false;
   }
 
+  function refreshCachedUserList(parentWindow) {
+    if (!parentWindow || !parentWindow.document) return false;
+    let refreshed = false;
+    try {
+      const frames = parentWindow.document.querySelectorAll('.iframe-container iframe');
+      Array.prototype.forEach.call(frames, function (frame) {
+        const source = String(frame.getAttribute('src') || '').split('?')[0];
+        if (!/(^|\/)user\/users\.html$/.test(source)) return;
+        const hooks = frame.contentWindow && frame.contentWindow.UserPageHooks;
+        if (hooks && typeof hooks.onDialogComplete === 'function') {
+          hooks.onDialogComplete();
+          refreshed = true;
+        }
+      });
+    } catch (error) {
+      return false;
+    }
+    return refreshed;
+  }
+
   function returnToList() {
+    refreshCachedUserList(root.parent);
     if (!navigate('user/users.html')) root.location.href = 'users.html';
   }
 
@@ -1060,7 +1081,8 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = {
       initializeMarketingState: initializeMarketingState,
-      resolveMarketingTransition: resolveMarketingTransition
+      resolveMarketingTransition: resolveMarketingTransition,
+      refreshCachedUserList: refreshCachedUserList
     };
   }
 

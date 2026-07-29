@@ -225,7 +225,8 @@ function navigateToPage(url) {
         group.items.forEach(item => {
           const activeClass = item.page === activePage ? ' active' : '';
           html += `
-        <div class="sidebar-item${activeClass}" data-page="${item.page}">
+        <div class="sidebar-item${activeClass}" data-page="${item.page}" role="link" tabindex="0"
+          aria-current="${item.page === activePage ? 'page' : 'false'}">
           <span class="sidebar-item-icon">${item.icon}</span>
           ${item.label}
         </div>`;
@@ -296,6 +297,14 @@ function navigateToPage(url) {
 
         // 未开发的页面：显示 toast 提示
         showToast('info', `${item.textContent.trim()} 页面开发中...`);
+      });
+
+      sidebar.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const item = e.target.closest('.sidebar-item');
+        if (!item || !sidebar.contains(item)) return;
+        e.preventDefault();
+        item.click();
       });
 
       // 自动渲染侧边栏

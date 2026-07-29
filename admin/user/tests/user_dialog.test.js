@@ -176,6 +176,18 @@ async function run() {
     frameVisible: true,
     targetConnected: false
   }), false);
+  const menuSummary = { id: 'menu-summary' };
+  assert.strictEqual(dialog.resolveFocusableOpener({
+    closest(selector) {
+      assert.strictEqual(selector, 'details:not([open])');
+      return {
+        querySelector(summarySelector) {
+          assert.strictEqual(summarySelector, 'summary');
+          return menuSummary;
+        }
+      };
+    }
+  }), menuSummary);
 
   assert.deepStrictEqual(dialog.normalizeHookResult({ ok: false, error: '拒绝导入' }), {
     ok: false,

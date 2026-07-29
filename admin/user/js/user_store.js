@@ -58,6 +58,7 @@
       orderCount: Number(input.orderCount) || 0,
       totalSpent: Number(input.totalSpent) || 0,
       lastOrderAt: input.lastOrderAt || null,
+      lastLoginAt: input.lastLoginAt || null,
       createdAt: input.createdAt || now,
       updatedAt: input.updatedAt || now
     };
@@ -172,6 +173,23 @@
     users[index] = buildUser(next);
     write(users);
     return { ok: true, user: get(id) };
+  }
+
+  function activateByEmail(email, provider) {
+    const existing = findByEmail(email);
+    if (!existing) return { ok: false, error: '未找到可认领的用户档案' };
+    const authProviders = Array.from(new Set(existing.authProviders.concat(provider || 'email')));
+    const users = list();
+    const index = users.findIndex(function (user) { return user.id === existing.id; });
+    const user = Object.assign({}, users[index], {
+      accountStatus: 'registered',
+      authProviders: authProviders,
+      lastLoginAt: new Date().toISOString()
+    });
+    delete user.previousAccountStatus;
+    users[index] = user;
+    write(users);
+    return { ok: true, user: clone(user) };
   }
 
   function remove(ids) {
@@ -333,5 +351,5 @@
     }
   }
 
-  return { list: list, get: get, findByEmail: findByEmail, createManual: createManual, update: update, remove: remove, setAccountStatus: setAccountStatus, setMarketingStatus: setMarketingStatus, importProfiles: importProfiles, subscribe: subscribe, resetForTests: resetForTests };
+  return { list: list, get: get, findByEmail: findByEmail, createManual: createManual, update: update, activateByEmail: activateByEmail, remove: remove, setAccountStatus: setAccountStatus, setMarketingStatus: setMarketingStatus, importProfiles: importProfiles, subscribe: subscribe, resetForTests: resetForTests };
 });

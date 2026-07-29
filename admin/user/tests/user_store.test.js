@@ -137,4 +137,31 @@ assert.deepEqual(UserStore.setAccountStatus(['disabled-registered'], 'disabled')
 assert.deepEqual(UserStore.setAccountStatus(['disabled-registered'], 'restore'), { ok: true, changed: 1 });
 assert.equal(UserStore.get('disabled-registered').accountStatus, 'registered');
 
+UserStore.resetForTests([]);
+const first = UserStore.createManual({ email: 'first@example.com', firstName: 'First', marketingOptIn: false });
+const second = UserStore.createManual({ email: 'second@example.com', firstName: 'Second', marketingOptIn: false });
+
+const updated = UserStore.update(first.user.id, { firstName: 'Updated', note: 'VIP buyer' });
+assert.equal(updated.ok, true);
+assert.equal(UserStore.get(first.user.id).firstName, 'Updated');
+
+const duplicateUpdate = UserStore.update(second.user.id, { email: 'FIRST@example.com' });
+assert.equal(duplicateUpdate.ok, false);
+assert.equal(duplicateUpdate.existing.id, first.user.id);
+assert.equal(UserStore.get(second.user.id).email, 'second@example.com');
+
+const missingActivation = UserStore.activateByEmail('missing@example.com', 'google');
+assert.equal(missingActivation.ok, false);
+assert.match(missingActivation.error, /未找到/);
+
+const activated = UserStore.activateByEmail('first@example.com', 'google');
+assert.equal(activated.ok, true);
+assert.equal(activated.user.id, first.user.id);
+assert.equal(activated.user.accountStatus, 'registered');
+assert.equal(activated.user.authProviders.includes('google'), true);
+assert.equal(UserStore.get(first.user.id).id, first.user.id);
+assert.equal(UserStore.get(first.user.id).accountStatus, 'registered');
+assert.equal(UserStore.get(first.user.id).authProviders.includes('google'), true);
+assert.ok(UserStore.get(first.user.id).lastLoginAt);
+
 console.log('user_store tests passed');

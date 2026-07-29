@@ -11,13 +11,17 @@
   <main class="um-page um-form-page" id="userFormPage">
     <section class="um-page-container">
       <header class="um-form-header" id="userFormHeader"></header>
-      <div class="um-guidance um-guidance-important" id="manualAddGuidance"></div>
-      <div class="um-form-layout">
-        <div class="um-form-main" id="userFormMain"></div>
-        <aside class="um-form-sidebar" id="userFormSidebar"></aside>
-      </div>
+      <form id="userForm" novalidate>
+        <div class="um-guidance um-guidance-important" id="manualAddGuidance"></div>
+        <div class="um-form-error-summary" id="userFormErrorSummary" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
+        <div class="um-form-layout">
+          <div class="um-form-main" id="userFormMain"></div>
+          <aside class="um-form-sidebar" id="userFormSidebar"></aside>
+        </div>
+      </form>
     </section>
   </main>
+  <div class="um-toast-region" id="userFormToastRegion" aria-live="polite" aria-atomic="true"></div>
 
   <script>var CURRENT_PAGE = 'users';</script>
   <script src="../common/js/commons.js"></script>

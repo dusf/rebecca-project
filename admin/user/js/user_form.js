@@ -161,6 +161,40 @@
     if (!navigate(path)) root.location.href = 'user_form.html?mode=edit&id=' + encodeURIComponent(userId);
   }
 
+  function openParentMarketingDialog() {
+    if (!state.user) return;
+    try {
+      const dialogs = root.parent && root.parent.UserDialogs;
+      if (dialogs && typeof dialogs.openMarketingConsent === 'function') {
+        dialogs.openMarketingConsent([state.user.id]);
+        return;
+      }
+    } catch (error) {
+      showToast('无法访问父页面的营销授权对话框。', 'error');
+      return;
+    }
+    showToast('营销授权对话框正在加载，请稍后再试。', 'error');
+  }
+
+  function openParentDeleteDialog() {
+    if (!state.user) return;
+    try {
+      const dialogs = root.parent && root.parent.UserDialogs;
+      if (dialogs && typeof dialogs.openDeleteConfirm === 'function') {
+        dialogs.openDeleteConfirm({
+          ids: [state.user.id],
+          title: '删除用户',
+          message: '删除后用户档案及其授权历史将无法恢复，请谨慎操作。'
+        });
+        return;
+      }
+    } catch (error) {
+      showToast('无法访问父页面的删除确认对话框。', 'error');
+      return;
+    }
+    showToast('删除确认对话框正在加载，请稍后再试。', 'error');
+  }
+
   function comboboxMarkup(name, value) {
     return '<div class="um-combobox" data-um-combobox="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(value || '') + '">' +
@@ -476,7 +510,12 @@
         summaryRow('累计消费', escapeHtml(formatMoney(user.totalSpent))) +
         '</dl>' + (importedFromShopify
           ? '<div class="um-sidebar-notice">导入不会迁移 Shopify 原密码；用户需在本商城首次验证后激活。</div>'
-          : ''));
+          : '')) +
+      cardMarkup('更多操作',
+        '<div class="um-sidebar-status">' +
+        '<button class="um-button um-button-secondary" id="openMarketingDialogButton" type="button">更新营销授权</button>' +
+        '<button class="um-button um-button-danger um-button-secondary" id="openDeleteDialogButton" type="button">删除用户档案</button>' +
+        '<p>营销与删除确认会在父页面全屏对话框中完成，覆盖侧栏和顶栏。</p></div>');
   }
 
   function renderGuidance() {
@@ -922,6 +961,14 @@
       if (existing) openExistingUser(existing.id);
       return;
     }
+    if (event.target.closest('#openMarketingDialogButton')) {
+      openParentMarketingDialog();
+      return;
+    }
+    if (event.target.closest('#openDeleteDialogButton')) {
+      openParentDeleteDialog();
+      return;
+    }
     const statusButton = event.target.closest('[data-status-action]');
     if (statusButton) handleStatusAction(statusButton);
   }
@@ -938,12 +985,27 @@
       getUser: function () {
         return state.user ? root.UserStore.get(state.user.id) : null;
       },
+      getUsers: function () {
+        return root.UserStore.list();
+      },
       updateMarketing: function (ids, status, consent) {
         return root.UserStore.setMarketingStatus(ids, status, consent);
       },
+      disableUsers: function (ids) {
+        return root.UserStore.setAccountStatus(ids, 'disabled');
+      },
+      removeUsers: function (ids) {
+        const results = ids.map(function (id) { return root.UserStore.remove(id); });
+        return { ok: results.every(function (item) { return item.ok; }), results: results };
+      },
       onConsentComplete: function () {
         if (state.mode !== 'edit') return;
-        state.user = root.UserStore.get(state.user.id);
+        const current = state.user && root.UserStore.get(state.user.id);
+        if (!current) {
+          returnToList();
+          return;
+        }
+        state.user = current;
         renderMain();
         renderSidebar();
       },

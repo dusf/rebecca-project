@@ -1401,6 +1401,7 @@
       getSelectedIds: () => Array.from(state.selected),
       importUsers: (records, source) => root.UserStore.importProfiles(records, source),
       updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatus(ids, status, consent),
+      disableUsers: (ids) => root.UserStore.setAccountStatus(ids, 'disabled'),
       removeUsers: (ids) => {
         const results = ids.map((id) => root.UserStore.remove(id));
         return { ok: results.every((item) => item.ok), results };

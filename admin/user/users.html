@@ -10,13 +10,72 @@
 <body>
   <main class="um-page um-list-page" id="userListPage">
     <section class="um-page-container">
-      <header class="um-page-header" id="userListHeader"></header>
-      <div class="um-guidance" id="userListGuidance"></div>
+      <header class="um-page-header" id="userListHeader">
+        <div>
+          <h1 class="um-page-title">用户管理 <span class="um-title-count" id="userTotalCount">0</span></h1>
+          <p class="um-page-subtitle">集中管理买家账号、邮件订阅和外部店铺用户档案。</p>
+        </div>
+        <div class="um-header-actions">
+          <button class="um-button um-button-secondary" type="button" id="userExportButton">导出用户</button>
+          <details class="um-menu" id="userImportMenu">
+            <summary class="um-button um-button-secondary">导入用户</summary>
+            <div class="um-menu-panel um-menu-panel-right">
+              <button type="button" data-import="shopify">从 Shopify 导入</button>
+              <button type="button" data-import="csv">从 CSV 导入</button>
+            </div>
+          </details>
+          <button class="um-button um-button-primary" type="button" id="userAddButton">添加用户</button>
+        </div>
+      </header>
+      <div class="um-guidance um-guidance-important" id="userListGuidance">
+        同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。
+      </div>
       <nav class="um-view-tabs" id="userViewTabs" aria-label="用户快捷视图"></nav>
-      <section class="um-toolbar" id="userToolbar"></section>
-      <section class="um-bulk-bar" id="userBulkBar" hidden></section>
-      <section class="um-table-card" id="userTableCard"></section>
+      <section class="um-toolbar" id="userToolbar" aria-label="用户筛选">
+        <div class="um-toolbar-search">
+          <label class="um-visually-hidden" for="userSearchInput">搜索用户</label>
+          <input class="um-text-control um-search-input" type="search" id="userSearchInput" placeholder="搜索姓名、邮箱、手机号或标签">
+        </div>
+        <div class="um-filter-grid">
+          <div id="userAccountFilter"></div>
+          <div id="userMarketingFilter"></div>
+          <div id="userSourceFilter"></div>
+          <div id="userProviderFilter"></div>
+          <div id="userStoreFilter"></div>
+          <label class="um-date-filter">
+            <span>创建日期从</span>
+            <input class="um-text-control" type="date" id="userCreatedFrom">
+          </label>
+          <label class="um-date-filter">
+            <span>至</span>
+            <input class="um-text-control" type="date" id="userCreatedTo">
+          </label>
+          <button class="um-button um-button-ghost" type="button" id="userClearFilters">清除筛选</button>
+        </div>
+      </section>
+      <section class="um-bulk-bar" id="userBulkBar" hidden aria-live="polite"></section>
+      <section class="um-table-card" id="userTableCard" aria-busy="false">
+        <div class="um-table-tools">
+          <span id="userResultSummary">0 个结果</span>
+          <div class="um-table-tool-actions">
+            <details class="um-menu" id="userColumnMenu">
+              <summary class="um-button um-button-secondary">自定义列</summary>
+              <div class="um-column-panel um-menu-panel-right" id="userColumnPanel"></div>
+            </details>
+            <button class="um-icon-button" type="button" id="userRefreshButton" aria-label="刷新用户列表" title="刷新用户列表">↻</button>
+          </div>
+        </div>
+        <div class="um-table-scroll" id="userTableScroll">
+          <table class="um-table" aria-label="用户列表">
+            <thead id="userTableHead"></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+        <div class="um-table-state" id="userTableState" hidden></div>
+        <footer class="um-pagination" id="userPagination"></footer>
+      </section>
     </section>
+    <div class="um-toast-region" id="userToastRegion" aria-live="polite" aria-atomic="true"></div>
   </main>
 
   <script>var CURRENT_PAGE = 'users';</script>

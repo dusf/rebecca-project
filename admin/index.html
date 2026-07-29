@@ -120,7 +120,9 @@
       'content-page-edit': 'content/page_edit.html',
       'content-article-edit': 'content/article_edit.html',
       'content-faq-edit':  'content/faq_edit.html',
-      'users':        'product/product_list.html',
+      'users':        'user/users.html',
+      'user-add':     'user/user_form.html?mode=add',
+      'user-edit':    'user/user_form.html?mode=edit',
       'settings':     'shop/shop_settings.html',
       'members':      'member/members.html',
       'shop-members': 'shop/members.html',
@@ -163,6 +165,8 @@
       'content-article-edit': ['内容', {label: '文章管理', page: 'content-articles'}, '编辑文章'],
       'content-faq-edit':  ['内容', {label: '帮助中心', page: 'content-faq'}, '编辑帮助条目'],
       'users':        ['用户', '用户管理'],
+      'user-add':     ['用户', { label: '用户管理', page: 'users' }, '添加用户'],
+      'user-edit':    ['用户', { label: '用户管理', page: 'users' }, '编辑用户'],
       'settings':     ['店铺管理', '店铺配置'],
       'members':      ['全局', '成员管理'],
       'shop-members': ['全局', { label: '店铺管理', page: 'shop-list' }, '成员管理'],
@@ -253,18 +257,28 @@
         }
         if (q.length) url += (url.indexOf('?') === -1 ? '?' : '&') + q.join('&');
       }
-      // 反查 PAGE_CONFIG（仅按文件名匹配），用于刷新侧边栏与面包屑
+      // 反查 PAGE_CONFIG（按文件名 + 关键 query 匹配），用于刷新侧边栏与面包屑
       var baseUrl = url.split('?')[0];
       var lastSeg = baseUrl.split('/').pop();
       var matchedPage = null;
+      var queryText = url.indexOf('?') === -1 ? '' : url.slice(url.indexOf('?') + 1);
+      var query = {};
+      queryText.split('&').forEach(function(part) {
+        if (!part) return;
+        var pair = part.split('=');
+        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair.slice(1).join('=') || '');
+      });
       for (var key in PAGE_CONFIG) {
         if (!PAGE_CONFIG.hasOwnProperty(key)) continue;
-        if (PAGE_CONFIG[key].split('/').pop() !== lastSeg) continue;
+        var configuredBase = PAGE_CONFIG[key].split('?')[0];
+        if (configuredBase.split('/').pop() !== lastSeg) continue;
         // 同名文件区分新增/编辑（由 query 决定）
         if (key === 'gift-pool-edit' && url.indexOf('edit=') === -1) continue;
         if (key === 'gift-pool-add' && url.indexOf('add=') === -1) continue;
         if (key === 'gift-rule-edit' && url.indexOf('edit=') === -1) continue;
         if (key === 'gift-rule-add' && url.indexOf('add=') === -1) continue;
+        if (key === 'user-add' && query.mode !== 'add') continue;
+        if (key === 'user-edit' && query.mode !== 'edit') continue;
         matchedPage = key;
         break;
       }

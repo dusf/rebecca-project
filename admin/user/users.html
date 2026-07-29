@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理</title>
+  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="css/users.css">
+</head>
+<body>
+  <main class="um-page um-list-page" id="userListPage">
+    <section class="um-page-container">
+      <header class="um-page-header" id="userListHeader"></header>
+      <div class="um-guidance" id="userListGuidance"></div>
+      <nav class="um-view-tabs" id="userViewTabs" aria-label="用户快捷视图"></nav>
+      <section class="um-toolbar" id="userToolbar"></section>
+      <section class="um-bulk-bar" id="userBulkBar" hidden></section>
+      <section class="um-table-card" id="userTableCard"></section>
+    </section>
+  </main>
+
+  <script>var CURRENT_PAGE = 'users';</script>
+  <script src="../common/js/commons.js"></script>
+  <script src="js/user_store.js"></script>
+  <script src="js/user_components.js"></script>
+  <script src="js/users.js"></script>
+</body>
+</html>

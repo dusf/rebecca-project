@@ -59,4 +59,36 @@ assert.deepEqual(imported.counts, { created: 1, merged: 1, skipped: 0, failed: 0
 assert.equal(UserStore.list().length, 2);
 assert.equal(UserStore.findByEmail('new@example.com').accountStatus, 'pending');
 
+const bypassedUpdate = UserStore.update(created.user.id, {
+  marketingStatus: 'subscribed',
+  consentHistory: []
+});
+assert.equal(bypassedUpdate.ok, false);
+assert.match(bypassedUpdate.error, /邮件营销状态/);
+
+const importedWithoutConsent = UserStore.importProfiles([{
+  externalId: 'gid://shopify/Customer/1003',
+  email: 'no-consent@example.com',
+  marketingStatus: 'subscribed',
+  store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
+}], 'shopify_api');
+assert.deepEqual(importedWithoutConsent.counts, { created: 1, merged: 0, skipped: 0, failed: 0 });
+const noConsentUser = UserStore.findByEmail('no-consent@example.com');
+assert.equal(noConsentUser.marketingStatus, 'not_subscribed');
+assert.deepEqual(noConsentUser.consentHistory, []);
+
+const importedWithConsent = UserStore.importProfiles([{
+  externalId: 'gid://shopify/Customer/1004',
+  email: 'with-consent@example.com',
+  marketingStatus: 'subscribed',
+  consent: { source: 'shopify_api', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent' },
+  store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
+}], 'shopify_api');
+assert.deepEqual(importedWithConsent.counts, { created: 1, merged: 0, skipped: 0, failed: 0 });
+const consentUser = UserStore.findByEmail('with-consent@example.com');
+assert.equal(consentUser.marketingStatus, 'subscribed');
+assert.deepEqual(consentUser.consentHistory, [{
+  status: 'subscribed', source: 'shopify_api', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent'
+}]);
+
 console.log('user_store tests passed');

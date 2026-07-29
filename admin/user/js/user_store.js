@@ -64,16 +64,16 @@
     const qvr = { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' };
     const noa = { id: 'store-noa', name: 'NOA生活馆', domain: 'noa.myshopify.com' };
     return [
-      buildUser({ id: 'usr_seed_001', email: 'lina.zhang@example.com', firstName: 'Lina', lastName: 'Zhang', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr], orderCount: 8, totalSpent: 6280, lastOrderAt: '2026-07-21T10:30:00+08:00' }),
+      buildUser({ id: 'usr_seed_001', email: 'lina.zhang@example.com', firstName: 'Lina', lastName: 'Zhang', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr], consentHistory: [{ status: 'subscribed', source: 'registration', consentedAt: '2026-06-20T10:00:00+08:00', note: '' }], orderCount: 8, totalSpent: 6280, lastOrderAt: '2026-07-21T10:30:00+08:00' }),
       buildUser({ id: 'usr_seed_002', email: 'mason.wu@example.com', firstName: 'Mason', lastName: 'Wu', accountStatus: 'registered', marketingStatus: 'unsubscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr], orderCount: 3, totalSpent: 1299 }),
       buildUser({ id: 'usr_seed_003', email: 'newsletter@example.com', firstName: 'Nora', lastName: 'Sun', accountStatus: 'pending', marketingStatus: 'subscribed', source: 'newsletter', consentHistory: [{ status: 'subscribed', source: 'footer', consentedAt: '2026-07-10T09:00:00+08:00', note: '' }], stores: [qvr] }),
       buildUser({ id: 'usr_seed_004', email: 'api.import@example.com', firstName: 'Api', lastName: 'Import', accountStatus: 'pending', marketingStatus: 'not_subscribed', source: 'shopify_api', externalProfiles: [{ externalId: 'gid://shopify/Customer/2001', source: 'shopify_api', store: qvr }], stores: [qvr], orderCount: 2, totalSpent: 498 }),
       buildUser({ id: 'usr_seed_005', email: 'csv.import@example.com', firstName: 'Csv', lastName: 'Import', accountStatus: 'pending', marketingStatus: 'unsubscribed', source: 'csv', stores: [qvr] }),
-      buildUser({ id: 'usr_seed_006', email: 'multistore@example.com', firstName: 'Mia', lastName: 'Chen', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'google', subject: 'google-mia-01' }], source: 'shopify_api', stores: [qvr, noa], orderCount: 12, totalSpent: 9888 }),
-      buildUser({ id: 'usr_seed_007', email: 'providers@example.com', firstName: 'Leo', lastName: 'Zhao', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }, { type: 'google', subject: 'google-leo-01' }, { type: 'facebook', subject: 'facebook-leo-01' }], source: 'storefront', stores: [qvr], orderCount: 1, totalSpent: 299 }),
+      buildUser({ id: 'usr_seed_006', email: 'multistore@example.com', firstName: 'Mia', lastName: 'Chen', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'google', subject: 'google-mia-01' }], source: 'shopify_api', stores: [qvr, noa], consentHistory: [{ status: 'subscribed', source: 'shopify_api', consentedAt: '2026-06-18T14:00:00+08:00', note: '' }], orderCount: 12, totalSpent: 9888 }),
+      buildUser({ id: 'usr_seed_007', email: 'providers@example.com', firstName: 'Leo', lastName: 'Zhao', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }, { type: 'google', subject: 'google-leo-01' }, { type: 'facebook', subject: 'facebook-leo-01' }], source: 'storefront', stores: [qvr], consentHistory: [{ status: 'subscribed', source: 'checkout', consentedAt: '2026-07-01T16:00:00+08:00', note: '' }], orderCount: 1, totalSpent: 299 }),
       buildUser({ id: 'usr_seed_008', email: 'disabled@example.com', firstName: 'Daisy', lastName: 'Gu', accountStatus: 'disabled', marketingStatus: 'unsubscribed', authProviders: [{ type: 'password' }], source: 'admin', stores: [qvr], orderCount: 4, totalSpent: 1880 }),
       buildUser({ id: 'usr_seed_009', email: 'zero.orders@example.com', firstName: 'Zero', lastName: 'Order', accountStatus: 'registered', marketingStatus: 'not_subscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr], orderCount: 0, totalSpent: 0 }),
-      buildUser({ id: 'usr_seed_010', email: 'vip@example.com', firstName: 'Victoria', lastName: 'Peng', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr, noa], orderCount: 36, totalSpent: 48680, lastOrderAt: '2026-07-28T15:20:00+08:00' }),
+      buildUser({ id: 'usr_seed_010', email: 'vip@example.com', firstName: 'Victoria', lastName: 'Peng', accountStatus: 'registered', marketingStatus: 'subscribed', authProviders: [{ type: 'password' }], source: 'storefront', stores: [qvr, noa], consentHistory: [{ status: 'subscribed', source: 'footer', consentedAt: '2026-05-05T08:00:00+08:00', note: '' }], orderCount: 36, totalSpent: 48680, lastOrderAt: '2026-07-28T15:20:00+08:00' }),
       buildUser({ id: 'usr_seed_011', email: 'manual.pending@example.com', firstName: 'Manual', lastName: 'Pending', accountStatus: 'pending', marketingStatus: 'not_subscribed', source: 'admin', stores: [] }),
       buildUser({ id: 'usr_seed_012', email: 'shopify.subscriber@example.com', firstName: 'Shopify', lastName: 'Subscriber', accountStatus: 'pending', marketingStatus: 'subscribed', source: 'shopify_api', externalProfiles: [{ externalId: 'gid://shopify/Customer/2012', source: 'shopify_api', store: noa }], stores: [noa], consentHistory: [{ status: 'subscribed', source: 'shopify_api', consentedAt: '2026-07-15T12:00:00+08:00', note: '' }] })
     ];
@@ -148,11 +148,15 @@
   }
 
   function update(id, changes) {
+    changes = changes || {};
+    if (Object.prototype.hasOwnProperty.call(changes, 'marketingStatus') || Object.prototype.hasOwnProperty.call(changes, 'consentHistory')) {
+      return { ok: false, error: '请通过邮件营销状态操作更新订阅状态和授权记录' };
+    }
     const users = list();
     const index = users.findIndex(function (user) { return user.id === id; });
     if (index < 0) return { ok: false, error: '未找到用户档案' };
-    const next = Object.assign({}, users[index], changes || {});
-    if (Object.prototype.hasOwnProperty.call(changes || {}, 'email')) {
+    const next = Object.assign({}, users[index], changes);
+    if (Object.prototype.hasOwnProperty.call(changes, 'email')) {
       next.email = normalizeEmail(changes.email);
       if (!next.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next.email)) return { ok: false, error: '请输入有效邮箱地址' };
       const duplicate = users.find(function (user) { return user.id !== id && user.email === next.email; });
@@ -207,6 +211,15 @@
     return { externalId: profile.externalId || '', source: source, store: profile.store ? clone(profile.store) : null };
   }
 
+  function importConsent(profile) {
+    const consent = profile && profile.consent && typeof profile.consent === 'object' ? profile.consent : (profile || {});
+    return { source: consent.source || consent.consentSource || '', consentedAt: consent.consentedAt || '', note: consent.note || '' };
+  }
+
+  function hasValidConsent(consent) {
+    return Boolean(consent && consent.source && consent.consentedAt);
+  }
+
   function addUniqueStore(user, store) {
     if (!store || !store.id) return;
     user.stores = Array.isArray(user.stores) ? user.stores : [];
@@ -220,12 +233,21 @@
       const email = normalizeEmail(profile && profile.email);
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { counts.failed += 1; return; }
       const externalId = profile.externalId || '';
+      const consent = importConsent(profile);
+      const importsSubscribed = profile.marketingStatus === 'subscribed';
+      const canImportSubscribed = importsSubscribed && hasValidConsent(consent);
       let user = users.find(function (item) { return item.email === email; });
       if (user) {
         counts.merged += 1;
         user.firstName = String(profile.firstName || user.firstName || '').trim();
         user.lastName = String(profile.lastName || user.lastName || '').trim();
-        if (MARKETING_STATUSES.has(profile.marketingStatus)) user.marketingStatus = profile.marketingStatus;
+        if (canImportSubscribed) {
+          user.marketingStatus = 'subscribed';
+          user.consentHistory = Array.isArray(user.consentHistory) ? user.consentHistory : [];
+          user.consentHistory.push({ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note });
+        } else if (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed) {
+          user.marketingStatus = profile.marketingStatus;
+        }
         user.externalProfiles = Array.isArray(user.externalProfiles) ? user.externalProfiles : [];
         if (externalId && !user.externalProfiles.some(function (item) { return item.externalId === externalId; })) user.externalProfiles.push(profileRecord(profile, source));
         addUniqueStore(user, profile.store);
@@ -234,8 +256,9 @@
       }
       user = buildUser({
         email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
-        accountStatus: 'pending', marketingStatus: MARKETING_STATUSES.has(profile.marketingStatus) ? profile.marketingStatus : 'not_subscribed',
-        source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : []
+        accountStatus: 'pending', marketingStatus: canImportSubscribed ? 'subscribed' : (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed ? profile.marketingStatus : 'not_subscribed'),
+        source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
+        consentHistory: canImportSubscribed ? [{ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note }] : []
       });
       users.push(user);
       counts.created += 1;

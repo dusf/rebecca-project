@@ -11,6 +11,9 @@
   let memory = [];
   let loaded = false;
   let idSequence = 0;
+  let lastStorageSnapshot = null;
+  let lastSynchronizedUsers = [];
+  let storageDirty = false;
   const listeners = new Set();
 
   function normalizeEmail(value) {
@@ -89,9 +92,13 @@
     const store = storage();
     if (store) {
       try {
-        const saved = JSON.parse(store.getItem(STORAGE_KEY));
+        const snapshot = store.getItem(STORAGE_KEY);
+        const saved = JSON.parse(snapshot);
         if (Array.isArray(saved)) {
           memory = saved.map(buildUser);
+          lastStorageSnapshot = snapshot;
+          lastSynchronizedUsers = clone(memory);
+          storageDirty = false;
           return;
         }
       } catch (error) {
@@ -104,20 +111,99 @@
 
   function persist() {
     const store = storage();
-    if (!store) return;
+    if (!store) return false;
+    const snapshot = JSON.stringify(memory);
     try {
-      store.setItem(STORAGE_KEY, JSON.stringify(memory));
+      store.setItem(STORAGE_KEY, snapshot);
+      lastStorageSnapshot = snapshot;
+      lastSynchronizedUsers = clone(memory);
+      storageDirty = false;
+      return true;
     } catch (error) {
       // Browsers may deny storage; the in-memory store remains usable.
+      storageDirty = true;
+      return false;
     }
+  }
+
+  function sameRecord(first, second) {
+    return JSON.stringify(first) === JSON.stringify(second);
+  }
+
+  function findMatchingIndex(users, user) {
+    const email = normalizeEmail(user && user.email);
+    return users.findIndex(function (candidate) {
+      return candidate.id === user.id || (email && normalizeEmail(candidate.email) === email);
+    });
+  }
+
+  function latestRecord(localRecord, externalRecord) {
+    const localTime = Date.parse(localRecord.updatedAt || localRecord.createdAt || '') || 0;
+    const externalTime = Date.parse(externalRecord.updatedAt || externalRecord.createdAt || '') || 0;
+    return externalTime > localTime ? externalRecord : localRecord;
+  }
+
+  function mergeDirtySnapshots(baseline, localUsers, externalUsers) {
+    const merged = externalUsers.map(buildUser);
+    const localIds = new Set(localUsers.map(function (user) { return user.id; }));
+
+    baseline.forEach(function (baseUser) {
+      if (localIds.has(baseUser.id)) return;
+      const externalIndex = findMatchingIndex(merged, baseUser);
+      if (externalIndex >= 0 && sameRecord(merged[externalIndex], baseUser)) {
+        merged.splice(externalIndex, 1);
+      }
+    });
+
+    localUsers.forEach(function (localUser) {
+      const baseUser = baseline.find(function (candidate) { return candidate.id === localUser.id; });
+      if (baseUser && sameRecord(localUser, baseUser)) return;
+      const externalIndex = findMatchingIndex(merged, localUser);
+      if (externalIndex < 0) {
+        merged.push(buildUser(localUser));
+        return;
+      }
+      const externalUser = merged[externalIndex];
+      merged[externalIndex] = buildUser(
+        baseUser && sameRecord(externalUser, baseUser)
+          ? localUser
+          : latestRecord(localUser, externalUser)
+      );
+    });
+
+    return merged;
   }
 
   function syncFromStorage() {
     const store = storage();
     if (!store) return;
+    if (storageDirty) {
+      try {
+        const snapshot = store.getItem(STORAGE_KEY);
+        if (snapshot !== lastStorageSnapshot) {
+          const saved = JSON.parse(snapshot);
+          if (Array.isArray(saved)) {
+            const externalUsers = saved.map(buildUser);
+            memory = mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers);
+            lastStorageSnapshot = snapshot;
+            lastSynchronizedUsers = clone(externalUsers);
+          }
+        }
+        persist();
+      } catch (error) {
+        // Keep dirty memory until storage can be read and written safely again.
+      }
+      return;
+    }
     try {
-      const saved = JSON.parse(store.getItem(STORAGE_KEY));
-      if (Array.isArray(saved)) memory = saved.map(buildUser);
+      const snapshot = store.getItem(STORAGE_KEY);
+      if (snapshot === lastStorageSnapshot) return;
+      const saved = JSON.parse(snapshot);
+      if (Array.isArray(saved)) {
+        memory = saved.map(buildUser);
+        lastStorageSnapshot = snapshot;
+        lastSynchronizedUsers = clone(memory);
+      }
     } catch (error) {
       // Keep the last valid in-memory snapshot if another frame writes malformed data.
     }
@@ -360,6 +446,9 @@
   function resetForTests(users) {
     memory = Array.isArray(users) ? users.map(buildUser) : [];
     loaded = true;
+    lastStorageSnapshot = null;
+    lastSynchronizedUsers = clone(memory);
+    storageDirty = false;
     const store = storage();
     if (store) {
       try { store.removeItem(STORAGE_KEY); } catch (error) { /* ignored for tests */ }

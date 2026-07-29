@@ -220,8 +220,8 @@ const sharedStorage = {
   }
 };
 const storeSource = fs.readFileSync(path.resolve(__dirname, '../js/user_store.js'), 'utf8');
-function createBrowserStore() {
-  const context = vm.createContext({ localStorage: sharedStorage });
+function createBrowserStore(storageInstance = sharedStorage) {
+  const context = vm.createContext({ localStorage: storageInstance });
   vm.runInContext(storeSource, context);
   return context.UserStore;
 }
@@ -232,5 +232,94 @@ secondFrameStore.list();
 const crossFrameUser = firstFrameStore.createManual({ email: 'cross-frame@example.com' });
 assert.equal(crossFrameUser.ok, true);
 assert.equal(secondFrameStore.findByEmail('cross-frame@example.com').id, crossFrameUser.user.id);
+
+let resilientRaw = JSON.stringify([{
+  id: 'persisted-old',
+  email: 'persisted-old@example.com',
+  firstName: 'Before',
+  accountStatus: 'pending',
+  updatedAt: '2020-01-01T00:00:00.000Z'
+}, {
+  id: 'local-newer',
+  email: 'local-newer@example.com',
+  firstName: 'Before',
+  accountStatus: 'pending',
+  updatedAt: '2020-01-01T00:00:00.000Z'
+}]);
+let rejectWrites = false;
+const recoveringStorage = {
+  getItem() {
+    return resilientRaw;
+  },
+  setItem(key, value) {
+    if (rejectWrites) throw new Error('storage quota exceeded');
+    resilientRaw = String(value);
+  },
+  removeItem() {
+    resilientRaw = null;
+  }
+};
+const resilientStore = createBrowserStore(recoveringStorage);
+assert.equal(resilientStore.list().length, 2);
+rejectWrites = true;
+const memoryOnlyUser = resilientStore.createManual({ email: 'memory-only@example.com' });
+assert.equal(memoryOnlyUser.ok, true);
+assert.equal(resilientStore.findByEmail('memory-only@example.com').id, memoryOnlyUser.user.id);
+const memoryOnlyUpdate = resilientStore.update('persisted-old', { firstName: 'After' });
+assert.equal(memoryOnlyUpdate.ok, true);
+assert.equal(resilientStore.get('persisted-old').firstName, 'After');
+const locallyNewerUpdate = resilientStore.update('local-newer', { firstName: 'Local newest' });
+assert.equal(locallyNewerUpdate.ok, true);
+const localOnlyUser = resilientStore.createManual({ email: 'local-only@example.com' });
+assert.equal(localOnlyUser.ok, true);
+assert.deepEqual(JSON.parse(resilientRaw).map(user => user.email), [
+  'persisted-old@example.com',
+  'local-newer@example.com'
+]);
+
+resilientRaw = JSON.stringify([
+  {
+    id: 'persisted-old',
+    email: 'persisted-old@example.com',
+    firstName: 'External latest',
+    accountStatus: 'pending',
+    updatedAt: '2099-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'local-newer',
+    email: 'local-newer@example.com',
+    firstName: 'External older',
+    accountStatus: 'pending',
+    updatedAt: '2021-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'external-only',
+    email: 'external-only@example.com',
+    accountStatus: 'pending',
+    updatedAt: '2099-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'external-same-email',
+    email: 'memory-only@example.com',
+    firstName: 'External same email',
+    accountStatus: 'pending',
+    updatedAt: '2099-01-01T00:00:00.000Z'
+  }
+]);
+rejectWrites = false;
+const recoveredUsers = resilientStore.list();
+assert.equal(recoveredUsers.length, 5);
+assert.equal(recoveredUsers.find(user => user.id === 'persisted-old').firstName, 'External latest');
+assert.equal(recoveredUsers.find(user => user.id === 'local-newer').firstName, 'Local newest');
+assert.equal(recoveredUsers.some(user => user.id === 'external-only'), true);
+assert.equal(recoveredUsers.some(user => user.id === localOnlyUser.user.id), true);
+assert.equal(recoveredUsers.filter(user => user.email === 'memory-only@example.com').length, 1);
+assert.equal(recoveredUsers.find(user => user.email === 'memory-only@example.com').id, 'external-same-email');
+assert.equal(JSON.parse(resilientRaw).length, 5);
+const afterRecoveryFrame = createBrowserStore(recoveringStorage);
+assert.equal(afterRecoveryFrame.findByEmail('memory-only@example.com').id, 'external-same-email');
+assert.equal(afterRecoveryFrame.findByEmail('local-only@example.com').id, localOnlyUser.user.id);
+assert.equal(afterRecoveryFrame.get('persisted-old').firstName, 'External latest');
+assert.equal(afterRecoveryFrame.get('local-newer').firstName, 'Local newest');
 
 console.log('user_store tests passed');

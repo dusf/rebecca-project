@@ -280,6 +280,9 @@ body.um-dialog-open {
 
 .um-dialog-input:focus,
 .um-dialog-combobox-trigger:focus-visible,
+.um-dialog-datetime-trigger:focus-visible,
+.um-dialog-check-action:focus-visible,
+.um-shopify-record:focus-visible,
 .um-dialog-button:focus-visible,
 .um-dialog-close:focus-visible {
   border-color: hsl(var(--ring));
@@ -412,8 +415,20 @@ body.um-dialog-open {
 }
 
 .um-dialog-combobox-option:hover,
+.um-dialog-combobox-option.is-active,
 .um-dialog-combobox-option[aria-selected="true"] {
   background: hsl(var(--muted));
+}
+
+.um-dialog-combobox-option.is-active {
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 35%);
+}
+
+.um-dialog-combobox-empty {
+  padding: 16px 8px 10px;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  text-align: center;
 }
 
 .um-store-list,
@@ -480,15 +495,42 @@ body.um-dialog-open {
 
 .um-shopify-record {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
 }
 
-.um-dialog-checkbox {
-  width: 17px;
-  height: 17px;
-  accent-color: hsl(var(--primary));
+.um-shopify-record:hover {
+  border-color: hsl(var(--primary) / 55%);
+}
+
+.um-shopify-record[aria-checked="true"] {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 5%);
+}
+
+.um-dialog-checkbox-box {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 5px;
+  background: hsl(var(--background));
+  color: hsl(var(--primary-foreground));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+[role="checkbox"][aria-checked="true"] .um-dialog-checkbox-box {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary));
 }
 
 .um-selection-meta {
@@ -506,6 +548,71 @@ body.um-dialog-open {
   background: transparent;
   color: hsl(var(--primary));
   cursor: pointer;
+}
+
+.um-selection-meta .um-dialog-check-action {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  color: hsl(var(--foreground));
+  font: inherit;
+}
+
+.um-dialog-datetime {
+  position: relative;
+}
+
+.um-dialog-datetime-trigger {
+  width: 100%;
+  height: 40px;
+  padding: 8px 11px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+
+.um-dialog-datetime-trigger.is-placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.um-dialog-datetime-popover {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(420px, calc(100vw - 80px));
+  padding: 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--popover, var(--background)));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 16%);
+}
+
+.um-dialog-datetime-popover .um-dialog-inline-actions {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.um-dialog-global-error {
+  position: fixed;
+  z-index: 13000;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(420px, calc(100vw - 48px));
+  padding: 12px 16px;
+  border: 1px solid hsl(var(--destructive) / 35%);
+  border-radius: 10px;
+  background: hsl(var(--background));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+  color: hsl(var(--destructive));
+  font-size: 14px;
 }
 
 .um-empty-panel {

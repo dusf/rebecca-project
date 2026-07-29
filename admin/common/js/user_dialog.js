@@ -37,6 +37,7 @@
       name: 'Rebecca 北美旗舰店',
       domain: 'rebecca-north.myshopify.com',
       state: '已连接',
+      connectionState: 'connected',
       lastSyncAt: '2026-07-29 09:18'
     },
     {
@@ -44,14 +45,16 @@
       name: 'Rebecca 欧洲站',
       domain: 'rebecca-eu.myshopify.com',
       state: '已连接',
+      connectionState: 'connected',
       lastSyncAt: '2026-07-28 21:06'
     },
     {
       id: 'store-outlet',
       name: 'Rebecca Outlet',
       domain: 'rebecca-outlet.myshopify.com',
-      state: '需要重新授权',
-      lastSyncAt: '2026-07-16 14:32'
+      state: '已连接',
+      connectionState: 'connected',
+      lastSyncAt: '2026-07-29 08:42'
     }
   ];
 
@@ -125,6 +128,13 @@
       .replace(/'/g, '&#039;');
   }
 
+  function csvError(code, message, details) {
+    var error = new Error(message);
+    error.code = code;
+    error.details = details || {};
+    return error;
+  }
+
   function parseCsv(text) {
     var source = String(text === null || text === undefined ? '' : text).replace(/^\uFEFF/, '');
     var rows = [];
@@ -159,8 +169,23 @@
         field += character;
       }
     }
+    if (quoted) {
+      throw csvError('CSV_UNCLOSED_QUOTE', 'CSV 存在未闭合的引号，请检查文件格式。');
+    }
     row.push(field);
     if (row.some(function (cell) { return String(cell).trim() !== ''; })) rows.push(row);
+    if (!rows.length) return rows;
+    var expectedColumns = rows[0].length;
+    rows.slice(1).forEach(function (dataRow, rowIndex) {
+      if (dataRow.length !== expectedColumns) {
+        throw csvError(
+          'CSV_COLUMN_MISMATCH',
+          'CSV 第 ' + (rowIndex + 2) + ' 行有 ' + dataRow.length +
+            ' 列，应为 ' + expectedColumns + ' 列。',
+          { row: rowIndex + 2, actual: dataRow.length, expected: expectedColumns }
+        );
+      }
+    });
     return rows;
   }
 
@@ -193,20 +218,45 @@
     return 'not_subscribed';
   }
 
+  function parseConsentDateTime(value) {
+    var text = String(value || '').trim();
+    var parts = text.match(
+      /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?$/
+    );
+    if (!parts) return '';
+    var year = Number(parts[1]);
+    var month = Number(parts[2]);
+    var day = Number(parts[3]);
+    var hour = Number(parts[4]);
+    var minute = Number(parts[5]);
+    var second = Number(parts[6] || 0);
+    var daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth ||
+        hour > 23 || minute > 59 || second > 59) return '';
+    var date = new Date(text);
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+  }
+
   function buildCsvRecords(rows, mapping) {
     return rows.map(function (row) {
-      var status = normalizeMarketingStatus(csvValue(row, mapping.marketingStatus));
+      var requestedStatus = normalizeMarketingStatus(csvValue(row, mapping.marketingStatus));
       var source = csvValue(row, mapping.consentSource);
       var consentedAt = csvValue(row, mapping.consentedAt);
+      var parsedConsentedAt = parseConsentDateTime(consentedAt);
       var record = {
         email: csvValue(row, mapping.email).toLocaleLowerCase(),
         firstName: csvValue(row, mapping.firstName),
         lastName: csvValue(row, mapping.lastName),
         phone: csvValue(row, mapping.phone),
-        marketingStatus: status
+        marketingStatus: requestedStatus
       };
-      if (status === 'subscribed' && source && consentedAt) {
-        record.consent = { source: source, consentedAt: consentedAt, note: 'CSV 导入授权记录' };
+      if (requestedStatus === 'subscribed' && source && parsedConsentedAt) {
+        record.consent = { source: source, consentedAt: parsedConsentedAt, note: 'CSV 导入授权记录' };
+      } else if (requestedStatus === 'subscribed') {
+        record.marketingStatus = 'not_subscribed';
+        record.importIssue = consentedAt && !parsedConsentedAt
+          ? 'invalid_consent_time'
+          : 'missing_consent';
       }
       return record;
     });
@@ -218,6 +268,7 @@
     var invalid = 0;
     var duplicates = 0;
     var consentMissing = 0;
+    var consentInvalid = 0;
     records.forEach(function (record) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email || '')) {
         invalid += 1;
@@ -226,14 +277,16 @@
       valid += 1;
       if (seen[record.email]) duplicates += 1;
       seen[record.email] = true;
-      if (record.marketingStatus === 'subscribed' && !record.consent) consentMissing += 1;
+      if (record.importIssue === 'missing_consent') consentMissing += 1;
+      if (record.importIssue === 'invalid_consent_time') consentInvalid += 1;
     });
     return {
       total: records.length,
       valid: valid,
       invalid: invalid,
       duplicates: duplicates,
-      consentMissing: consentMissing
+      consentMissing: consentMissing,
+      consentInvalid: consentInvalid
     };
   }
 
@@ -263,13 +316,114 @@
     return next;
   }
 
+  function createSessionGate() {
+    var generation = 0;
+    return {
+      next: function () {
+        generation += 1;
+        return generation;
+      },
+      isCurrent: function (token) {
+        return token === generation;
+      },
+      current: function () {
+        return generation;
+      }
+    };
+  }
+
+  function settleSessionTask(task, gate, token) {
+    return Promise.resolve(task).then(function (value) {
+      return { current: gate.isCurrent(token), value: value };
+    }, function (error) {
+      return Promise.reject({ current: gate.isCurrent(token), error: error });
+    });
+  }
+
+  function getComboKeyAction(event, currentIndex, count) {
+    var safeIndex = count > 0 ? Math.max(0, Math.min(currentIndex, count - 1)) : -1;
+    var result = { handled: false, index: safeIndex, select: false, close: false };
+    if (!event || event.isComposing || event.keyCode === 229) return result;
+    if (event.key === 'Escape') {
+      result.handled = true;
+      result.close = true;
+      return result;
+    }
+    if (count <= 0) return result;
+    if (event.key === 'ArrowDown') {
+      result.handled = true;
+      result.index = (safeIndex + 1) % count;
+    } else if (event.key === 'ArrowUp') {
+      result.handled = true;
+      result.index = (safeIndex - 1 + count) % count;
+    } else if (event.key === 'Home') {
+      result.handled = true;
+      result.index = 0;
+    } else if (event.key === 'End') {
+      result.handled = true;
+      result.index = count - 1;
+    } else if (event.key === 'Enter') {
+      result.handled = true;
+      result.select = true;
+    }
+    return result;
+  }
+
+  function canRestoreFocus(input) {
+    var state = input || {};
+    return Boolean(
+      state.navigationMatches &&
+      state.frameIsActive &&
+      state.frameVisible &&
+      state.targetConnected
+    );
+  }
+
+  function normalizeHookResult(result, allowVoid) {
+    if ((result === undefined || result === null) && allowVoid) {
+      return { ok: true, error: '', value: result };
+    }
+    if (!result || result.ok === false) {
+      return {
+        ok: false,
+        error: result && result.error ? String(result.error) : '操作未完成，请重试。',
+        value: null
+      };
+    }
+    return { ok: true, error: '', value: result };
+  }
+
+  function mergeCsvImportResult(result, validation) {
+    var source = result || {};
+    var counts = source.counts || {};
+    var review = validation || {};
+    return Object.assign({}, source, {
+      counts: {
+        created: Number(counts.created) || 0,
+        merged: Number(counts.merged) || 0,
+        skipped: (Number(counts.skipped) || 0) +
+          (Number(review.invalid) || 0) +
+          (Number(review.consentMissing) || 0) +
+          (Number(review.consentInvalid) || 0),
+        failed: Number(counts.failed) || 0
+      }
+    });
+  }
+
   var exported = {
     parseCsv: parseCsv,
+    parseConsentDateTime: parseConsentDateTime,
     autoCsvMapping: autoCsvMapping,
     buildCsvRecords: buildCsvRecords,
     validateCsvRecords: validateCsvRecords,
     filterShopifyRecords: filterShopifyRecords,
-    setCurrentSelection: setCurrentSelection
+    setCurrentSelection: setCurrentSelection,
+    createSessionGate: createSessionGate,
+    settleSessionTask: settleSessionTask,
+    getComboKeyAction: getComboKeyAction,
+    canRestoreFocus: canRestoreFocus,
+    normalizeHookResult: normalizeHookResult,
+    mergeCsvImportResult: mergeCsvImportResult
   };
 
   if (typeof module === 'object' && module.exports) module.exports = exported;
@@ -278,6 +432,9 @@
   var loaded = false;
   var loadPromise = null;
   var openNonce = 0;
+  var navigationGeneration = 0;
+  var focusRestoreTimer = null;
+  var csvSessionGate = createSessionGate();
   var active = null;
   var state = {
     csv: null,
@@ -308,6 +465,18 @@
     };
   }
 
+  function showParentError(message) {
+    var host = root.document.getElementById('toastContainer') || root.document.body;
+    var alert = root.document.createElement('div');
+    alert.className = 'um-dialog-global-error';
+    alert.setAttribute('role', 'alert');
+    alert.textContent = String(message || '操作失败，请重试。');
+    host.appendChild(alert);
+    root.setTimeout(function () {
+      if (alert.parentNode) alert.parentNode.removeChild(alert);
+    }, 4800);
+  }
+
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
@@ -332,6 +501,7 @@
       .catch(function (error) {
         loadPromise = null;
         root.console.error('用户对话框加载失败:', error);
+        showParentError('用户操作对话框加载失败，请刷新后台后重试。');
         throw error;
       });
     return loadPromise;
@@ -382,18 +552,26 @@
     }, 0);
   }
 
+  function isFrameVisible(frame) {
+    if (!frame || activeFrame() !== frame || !frame.classList.contains('active') || frame.hidden) return false;
+    var style = root.getComputedStyle ? root.getComputedStyle(frame) : null;
+    return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+  }
+
   function restoredOpener(previous) {
-    if (previous.opener && previous.opener.isConnected !== false) return previous.opener;
+    if (!previous || previous.navigationGeneration !== navigationGeneration ||
+        !isFrameVisible(previous.frame)) return null;
+    var target = previous.opener && previous.opener.isConnected !== false ? previous.opener : null;
     var frameDocument = null;
     try {
       frameDocument = previous.frame && previous.frame.contentDocument;
     } catch (error) {
       frameDocument = null;
     }
-    if (!frameDocument || !previous.opener) return null;
-    if (previous.opener.id) {
+    if (!target && (!frameDocument || !previous.opener)) return null;
+    if (!target && previous.opener.id) {
       var byId = frameDocument.getElementById(previous.opener.id);
-      if (byId) return byId;
+      if (byId) target = byId;
     }
     var attributes = ['data-row-action', 'data-user-id', 'data-bulk', 'data-import'];
     var selector = previous.opener.tagName ? previous.opener.tagName.toLocaleLowerCase() : '';
@@ -404,22 +582,35 @@
           String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]';
       }
     });
-    if (selector) {
+    if (!target && selector) {
       var replacement = frameDocument.querySelector(selector);
-      if (replacement) return replacement;
+      if (replacement) target = replacement;
     }
-    return frameDocument.querySelector('#userListHeader button, #userFormHeader button, button');
+    if (!target && frameDocument) {
+      target = frameDocument.querySelector('#userListHeader button, #userFormHeader button, button');
+    }
+    return canRestoreFocus({
+      navigationMatches: previous.navigationGeneration === navigationGeneration,
+      frameIsActive: activeFrame() === previous.frame,
+      frameVisible: isFrameVisible(previous.frame),
+      targetConnected: Boolean(target && target.isConnected !== false)
+    }) ? target : null;
   }
 
   function hideAll(restoreFocus) {
     var previous = active;
+    if (focusRestoreTimer !== null) {
+      root.clearTimeout(focusRestoreTimer);
+      focusRestoreTimer = null;
+    }
     Array.prototype.forEach.call(root.document.querySelectorAll('[data-user-dialog]'), function (overlay) {
       overlay.hidden = true;
     });
     root.document.body.classList.remove('um-dialog-open');
     active = null;
     if (restoreFocus !== false && previous && previous.opener && typeof previous.opener.focus === 'function') {
-      root.setTimeout(function () {
+      focusRestoreTimer = root.setTimeout(function () {
+        focusRestoreTimer = null;
         try {
           var target = restoredOpener(previous);
           if (target && typeof target.focus === 'function') target.focus();
@@ -435,6 +626,7 @@
     var context = captureContext();
     return ensureDialogs().then(function () {
       if (token !== openNonce) return;
+      if (active && active.type === 'csv') csvSessionGate.next();
       hideAll(false);
       active = {
         type: type,
@@ -443,7 +635,8 @@
         frame: context.frame,
         frameWindow: context.frameWindow,
         hooks: context.hooks,
-        opener: context.opener
+        opener: context.opener,
+        navigationGeneration: navigationGeneration
       };
       render();
       active.overlay.hidden = false;
@@ -454,11 +647,32 @@
 
   function closeActive(restoreFocus) {
     openNonce += 1;
+    csvSessionGate.next();
     hideAll(restoreFocus);
   }
 
   function hooksAvailable(method) {
     return active && active.hooks && typeof active.hooks[method] === 'function';
+  }
+
+  function invokeHook(method, args, allowVoid) {
+    if (!hooksAvailable(method)) {
+      return { ok: false, error: '当前页面未提供“' + method + '”操作，请刷新后重试。', value: null };
+    }
+    try {
+      return normalizeHookResult(active.hooks[method].apply(active.hooks, args || []), allowVoid);
+    } catch (error) {
+      return {
+        ok: false,
+        error: error && error.message ? error.message : '操作执行失败，请重试。',
+        value: null
+      };
+    }
+  }
+
+  function completeHook(result) {
+    if (!hooksAvailable('onDialogComplete')) return { ok: true, error: '', value: null };
+    return invokeHook('onDialogComplete', [result], true);
   }
 
   function resultCounts(result) {
@@ -489,20 +703,115 @@
       return { value: optionValue, label: String(option.label || optionValue) };
     });
     var selected = normalized.find(function (option) { return option.value === String(value); }) || normalized[0];
+    var safeName = String(name).replace(/[^a-z0-9_-]/gi, '-');
+    var listboxId = 'um-combo-list-' + safeName;
     return '<div class="um-dialog-combobox" data-dialog-combo="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(selected.value) + '">' +
       '<button class="um-dialog-combobox-trigger" type="button" data-dialog-action="combo-toggle" ' +
-      'aria-haspopup="listbox" aria-expanded="false" aria-label="' + escapeHtml(label || name) + '">' +
+      'aria-haspopup="listbox" aria-controls="' + listboxId +
+      '" aria-expanded="false" aria-label="' + escapeHtml(label || name) + '">' +
       '<span>' + escapeHtml(selected.label) + '</span></button>' +
-      '<div class="um-dialog-combobox-popover" role="listbox" hidden>' +
-      '<input class="um-dialog-input" type="text" data-combo-search placeholder="搜索选项" aria-label="搜索' +
-      escapeHtml(label || name) + '">' +
-      '<div class="um-dialog-combobox-options">' + normalized.map(function (option) {
-        return '<button class="um-dialog-combobox-option" type="button" role="option" data-dialog-action="combo-option" ' +
+      '<div class="um-dialog-combobox-popover" hidden>' +
+      '<input class="um-dialog-input" type="text" role="combobox" data-combo-search placeholder="搜索选项" aria-label="搜索' +
+      escapeHtml(label || name) + '" aria-controls="' + listboxId +
+      '" aria-expanded="true" aria-autocomplete="list" aria-activedescendant="">' +
+      '<div class="um-dialog-combobox-options" id="' + listboxId + '" role="listbox">' + normalized.map(function (option, index) {
+        return '<button class="um-dialog-combobox-option" id="' + listboxId + '-option-' + index +
+          '" type="button" role="option" data-dialog-action="combo-option" ' +
           'data-value="' + escapeHtml(option.value) + '" data-label="' + escapeHtml(option.label) +
           '" aria-selected="' + (option.value === selected.value ? 'true' : 'false') + '">' +
           escapeHtml(option.label) + '</button>';
-      }).join('') + '</div></div></div>';
+      }).join('') + '</div><div class="um-dialog-combobox-empty" hidden>无匹配选项</div></div></div>';
+  }
+
+  function comboVisibleOptions(combo) {
+    return Array.prototype.slice.call(combo.querySelectorAll('.um-dialog-combobox-option'))
+      .filter(function (option) { return !option.hidden; });
+  }
+
+  function setComboActive(combo, index) {
+    var visible = comboVisibleOptions(combo);
+    var search = combo.querySelector('[data-combo-search]');
+    Array.prototype.forEach.call(combo.querySelectorAll('.um-dialog-combobox-option'), function (option) {
+      option.classList.remove('is-active');
+    });
+    if (!visible.length) {
+      if (search) search.setAttribute('aria-activedescendant', '');
+      return;
+    }
+    var safeIndex = Math.max(0, Math.min(index, visible.length - 1));
+    var option = visible[safeIndex];
+    option.classList.add('is-active');
+    if (search) search.setAttribute('aria-activedescendant', option.id);
+    if (typeof option.scrollIntoView === 'function') option.scrollIntoView({ block: 'nearest' });
+  }
+
+  function closeCombo(combo, restoreFocus) {
+    if (!combo) return;
+    var popover = combo.querySelector('.um-dialog-combobox-popover');
+    var trigger = combo.querySelector('.um-dialog-combobox-trigger');
+    popover.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger.focus();
+  }
+
+  function closeOtherCombos(except) {
+    if (!active) return;
+    Array.prototype.forEach.call(active.overlay.querySelectorAll('[data-dialog-combo]'), function (combo) {
+      if (combo !== except) closeCombo(combo, false);
+    });
+  }
+
+  function openCombo(combo) {
+    closeOtherCombos(combo);
+    var popover = combo.querySelector('.um-dialog-combobox-popover');
+    var trigger = combo.querySelector('.um-dialog-combobox-trigger');
+    var search = combo.querySelector('[data-combo-search]');
+    popover.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    var visible = comboVisibleOptions(combo);
+    var selectedIndex = visible.findIndex(function (option) {
+      return option.getAttribute('aria-selected') === 'true';
+    });
+    setComboActive(combo, selectedIndex === -1 ? 0 : selectedIndex);
+    search.focus();
+  }
+
+  function handleComboKeyboard(event) {
+    var combo = event.target.closest && event.target.closest('[data-dialog-combo]');
+    if (!combo) return false;
+    var trigger = event.target.closest('.um-dialog-combobox-trigger');
+    var popover = combo.querySelector('.um-dialog-combobox-popover');
+    if (trigger && popover.hidden) {
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].indexOf(event.key) === -1) return false;
+      if (event.isComposing || event.keyCode === 229) return false;
+      event.preventDefault();
+      openCombo(combo);
+      var initial = event.key === 'End' || event.key === 'ArrowUp'
+        ? comboVisibleOptions(combo).length - 1
+        : 0;
+      setComboActive(combo, initial);
+      return true;
+    }
+    if (popover.hidden) return false;
+    var visible = comboVisibleOptions(combo);
+    var activeIndex = visible.findIndex(function (option) {
+      return option.classList.contains('is-active');
+    });
+    var action = getComboKeyAction(event, activeIndex === -1 ? 0 : activeIndex, visible.length);
+    if (!action.handled) return false;
+    event.preventDefault();
+    if (action.close) {
+      closeCombo(combo, true);
+      return true;
+    }
+    if (action.select) {
+      var selected = visible[activeIndex === -1 ? 0 : activeIndex];
+      if (selected) selected.click();
+      return true;
+    }
+    setComboActive(combo, action.index);
+    return true;
   }
 
   function csvDefaultState() {
@@ -515,7 +824,9 @@
       records: [],
       validation: null,
       result: null,
-      error: ''
+      error: '',
+      busy: false,
+      sessionToken: csvSessionGate.current()
     };
   }
 
@@ -532,11 +843,30 @@
   }
 
   function loadCsvText(fileName, text) {
-    var parsed = parseCsv(text);
+    var parsed;
+    try {
+      parsed = parseCsv(text);
+    } catch (error) {
+      state.csv.fileName = '';
+      state.csv.rows = [];
+      state.csv.headers = [];
+      state.csv.mapping = {};
+      state.csv.records = [];
+      state.csv.validation = null;
+      state.csv.result = null;
+      state.csv.step = 1;
+      state.csv.busy = false;
+      state.csv.error = error && error.message
+        ? error.message
+        : 'CSV 格式无法解析，请检查文件后重试。';
+      renderCsv();
+      return false;
+    }
     if (parsed.length < 2) {
       state.csv.error = '文件中没有可导入的数据行。';
+      state.csv.busy = false;
       renderCsv();
-      return;
+      return false;
     }
     state.csv.fileName = fileName;
     state.csv.headers = parsed[0].map(function (header) { return String(header || '').trim(); });
@@ -544,8 +874,35 @@
     state.csv.mapping = autoCsvMapping(state.csv.headers);
     state.csv.step = 2;
     state.csv.error = '';
+    state.csv.busy = false;
     refreshCsvRecords();
     renderCsv();
+    return true;
+  }
+
+  function readCsvFile(file) {
+    var csvState = state.csv;
+    var token = csvSessionGate.next();
+    csvState.sessionToken = token;
+    csvState.busy = true;
+    csvState.error = '';
+    renderCsv();
+    var readTask;
+    try {
+      readTask = file.text();
+    } catch (error) {
+      readTask = Promise.reject(error);
+    }
+    return settleSessionTask(readTask, csvSessionGate, token).then(function (outcome) {
+      if (!outcome.current || !active || active.type !== 'csv' || state.csv !== csvState) return false;
+      return loadCsvText(file.name, outcome.value);
+    }).catch(function (outcome) {
+      if (!outcome.current || !active || active.type !== 'csv' || state.csv !== csvState) return false;
+      csvState.busy = false;
+      csvState.error = '读取 CSV 文件失败，请重新选择。';
+      renderCsv();
+      return false;
+    });
   }
 
   function refreshCsvRecords() {
@@ -588,8 +945,10 @@
         '<div class="um-upload-zone" data-csv-drop-zone>' +
         '<div><span class="um-upload-icon" aria-hidden="true">⇧</span><strong>拖放 CSV 文件到这里</strong>' +
         '<p class="um-dialog-muted">支持 UTF-8 CSV、Shopify Customer CSV 和系统模板</p>' +
-        '<div class="um-upload-actions"><button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-pick">选择 CSV 文件</button>' +
-        '<button class="um-dialog-button" type="button" data-dialog-action="csv-example">使用示例文件体验</button></div>' +
+        '<div class="um-upload-actions"><button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-pick"' +
+        (state.csv.busy ? ' disabled' : '') + '>' + (state.csv.busy ? '正在读取…' : '选择 CSV 文件') + '</button>' +
+        '<button class="um-dialog-button" type="button" data-dialog-action="csv-example"' +
+        (state.csv.busy ? ' disabled' : '') + '>使用示例文件体验</button></div>' +
         '<input class="um-screenreader-only" id="umCsvFileInput" type="file" accept=".csv,text/csv"></div></div>' +
         (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '') +
         '<p class="um-dialog-section-copy">系统模板字段：邮箱、名字、姓氏、手机号、邮件营销状态、同意来源、同意时间。相同邮箱将合并到现有用户档案。</p>',
@@ -610,8 +969,9 @@
         '<div class="um-summary-card"><span>无效邮箱</span><strong>' + validation.invalid + '</strong></div>' +
         '<div class="um-summary-card"><span>文件内重复</span><strong>' + validation.duplicates + '</strong></div>' +
         '<div class="um-summary-card"><span>订阅授权缺失</span><strong>' + validation.consentMissing + '</strong></div>' +
+        '<div class="um-summary-card"><span>授权时间无效</span><strong>' + validation.consentInvalid + '</strong></div>' +
         '</div>' +
-        '<div class="um-dialog-warning">订阅记录缺少同意来源或时间时，将按未订阅导入；不会伪造营销授权。</div>' +
+        '<div class="um-dialog-warning">订阅记录缺少同意来源、时间，或时间无法解析时，将按未订阅导入并计入跳过；不会伪造营销授权。</div>' +
         '<h3>字段映射</h3><p class="um-dialog-section-copy">每个下拉都可以搜索 CSV 列名。</p>' +
         csvMappingMarkup() + '<h3>数据预览</h3>' + csvPreviewMarkup(),
       footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-back">上一步</button>' +
@@ -637,12 +997,16 @@
             '<li>无效邮箱会计入失败，不阻止其他有效记录导入。</li></ul></div>' +
             '<div class="um-summary-grid"><div class="um-summary-card"><span>准备导入</span><strong>' +
             state.csv.records.length + '</strong></div><div class="um-summary-card"><span>有效邮箱</span><strong>' +
-            state.csv.validation.valid + '</strong></div></div>'),
+            state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>将跳过</span><strong>' +
+            (state.csv.validation.invalid + state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
+            '</strong></div></div>' +
+            (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '')),
       footer: result
         ? '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
         : '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-edit">返回映射</button>' +
           '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-          '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-import">开始导入</button>'
+          '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-import"' +
+          (state.csv.busy ? ' disabled' : '') + '>' + (state.csv.busy ? '正在导入…' : '开始导入') + '</button>'
     };
   }
 
@@ -663,7 +1027,9 @@
       search: '',
       kind: 'all',
       status: 'all',
-      result: null
+      result: null,
+      error: '',
+      busy: false
     };
   }
 
@@ -682,10 +1048,11 @@
   function storeListMarkup() {
     return '<div class="um-store-list">' + CONNECTED_STORES.map(function (store) {
       var selected = store.id === state.shopify.selectedStoreId;
-      var warning = store.state !== '已连接';
+      var connected = store.connectionState === 'connected';
       return '<button class="um-store-row' + (selected ? ' is-selected' : '') +
         '" type="button" data-dialog-action="shopify-store" data-store-id="' + escapeHtml(store.id) +
-        '" aria-pressed="' + selected + '"><span class="um-status-dot' + (warning ? ' is-warning' : '') +
+        '" aria-pressed="' + selected + '"' + (connected ? '' : ' disabled') +
+        '><span class="um-status-dot' + (connected ? '' : ' is-warning') +
         '" aria-hidden="true"></span><span class="um-store-row-copy"><strong>' +
         escapeHtml(store.name) + '</strong><span>' + escapeHtml(store.domain) +
         '</span></span><span class="um-dialog-muted">' + escapeHtml(store.state) +
@@ -698,13 +1065,15 @@
     if (!records.length) return '<div class="um-empty-panel">没有符合当前筛选条件的 Shopify 客户档案。</div>';
     return '<div class="um-shopify-list">' + records.map(function (record) {
       var checked = state.shopify.selected.has(record.id);
-      return '<label class="um-shopify-record"><input class="um-dialog-checkbox" type="checkbox" data-shopify-record="' +
-        escapeHtml(record.id) + '"' + (checked ? ' checked' : '') + '><span class="um-shopify-record-copy"><strong>' +
+      return '<button class="um-shopify-record" type="button" role="checkbox" aria-checked="' +
+        checked + '" data-dialog-action="shopify-toggle-record" data-shopify-record="' +
+        escapeHtml(record.id) + '"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
+        (checked ? '✓' : '') + '</span><span class="um-shopify-record-copy"><strong>' +
         escapeHtml(record.firstName + ' ' + record.lastName) + '</strong><span>' +
         escapeHtml(record.email) + (record.phone ? ' · ' + escapeHtml(record.phone) : '') +
         '</span></span><span class="um-dialog-muted">' +
         escapeHtml(record.profileKind === 'subscriber' ? '邮件订阅者' : '客户档案') + '<br>' +
-        escapeHtml(record.marketingStatus) + '</span></label>';
+        escapeHtml(record.marketingStatus) + '</span></button>';
     }).join('') + '</div>';
   }
 
@@ -768,15 +1137,19 @@
           { value: 'pending', label: '待确认' },
           { value: 'invalid', label: '无效邮箱' }
         ], '营销状态') + '</div></div>' +
-        '<div class="um-selection-meta"><label><input class="um-dialog-checkbox" type="checkbox" data-shopify-select-current' +
-        (allCurrentSelected ? ' checked' : '') + '> 全选当前筛选结果（' + records.length + '）</label>' +
+        '<div class="um-selection-meta"><button class="um-dialog-check-action" type="button" role="checkbox" aria-checked="' +
+        Boolean(allCurrentSelected) + '" data-dialog-action="shopify-select-current"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
+        (allCurrentSelected ? '✓' : '') + '</span> 全选当前筛选结果（' + records.length + '）</button>' +
         '<span>已选 ' + state.shopify.selected.size +
         ' 项 <button type="button" data-dialog-action="shopify-clear">清空全部</button></span></div>' +
-        shopifyRecordListMarkup(),
+        shopifyRecordListMarkup() +
+        (state.shopify.error ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.shopify.error) + '</div>' : ''),
       footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-stores">上一步</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-import"' +
-        (state.shopify.selected.size ? '' : ' disabled') + '>导入所选用户</button>'
+        (state.shopify.selected.size && !state.shopify.busy ? '' : ' disabled') + '>' +
+        (state.shopify.busy ? '正在导入…' : '导入所选用户') + '</button>'
     };
   }
 
@@ -807,10 +1180,38 @@
     return new Date(value.getTime() - offset).toISOString().slice(0, 16);
   }
 
+  function marketingTimeMarkup() {
+    var value = state.marketing.consentedAt;
+    var label = value
+      ? new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(value))
+      : '请选择同意时间';
+    return '<div class="um-dialog-datetime" data-marketing-datetime>' +
+      '<input type="hidden" id="umMarketingTimeValue" value="' + escapeHtml(value) + '">' +
+      '<button class="um-dialog-datetime-trigger' + (value ? '' : ' is-placeholder') +
+      '" type="button" data-dialog-action="marketing-time-toggle" aria-haspopup="dialog" aria-expanded="' +
+      state.marketing.timeOpen + '">' + escapeHtml(label) + '</button>' +
+      '<div class="um-dialog-datetime-popover" role="dialog" aria-label="设置同意日期和时间"' +
+      (state.marketing.timeOpen ? '' : ' hidden') + '>' +
+      '<div class="um-dialog-form-grid"><div class="um-dialog-field"><label for="umMarketingDateDraft">日期</label>' +
+      '<input class="um-dialog-input" id="umMarketingDateDraft" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" value="' +
+      escapeHtml(state.marketing.dateDraft) + '"></div>' +
+      '<div class="um-dialog-field"><label for="umMarketingClockDraft">时间</label>' +
+      '<input class="um-dialog-input" id="umMarketingClockDraft" type="text" inputmode="numeric" placeholder="HH:MM" value="' +
+      escapeHtml(state.marketing.timeDraft) + '"></div></div>' +
+      (state.marketing.timeError ? '<div class="um-dialog-error" role="alert">' +
+        escapeHtml(state.marketing.timeError) + '</div>' : '') +
+      '<div class="um-dialog-inline-actions"><button class="um-dialog-button" type="button" data-dialog-action="marketing-time-now">现在</button>' +
+      '<button class="um-dialog-button" type="button" data-dialog-action="marketing-time-clear">清除</button>' +
+      '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="marketing-time-confirm">确定</button>' +
+      '</div></div></div>';
+  }
+
   function marketingValid() {
     if (!state.marketing || state.marketing.status !== 'subscribed') return true;
-    return state.marketing.source !== 'none' && Boolean(state.marketing.consentedAt) &&
-      !Number.isNaN(new Date(state.marketing.consentedAt).getTime());
+    return state.marketing.source !== 'none' && Boolean(parseConsentDateTime(state.marketing.consentedAt));
   }
 
   function renderMarketing() {
@@ -836,30 +1237,40 @@
           { value: 'customer_service', label: '客服沟通' },
           { value: 'admin', label: '后台人工确认' },
           { value: 'other', label: '其他' }
-        ], '同意来源') + '</div>' +
-        '<div class="um-dialog-field"><label for="umMarketingTime">同意时间' +
-        (state.marketing.status === 'subscribed' ? ' *' : '') + '</label>' +
-        '<input class="um-dialog-input" id="umMarketingTime" type="datetime-local" value="' +
-        escapeHtml(state.marketing.consentedAt) + '"></div>' +
+         ], '同意来源') + '</div>' +
+        '<div class="um-dialog-field"><span class="um-dialog-field-label">同意时间' +
+        (state.marketing.status === 'subscribed' ? ' *' : '') + '</span>' +
+        marketingTimeMarkup() + '</div>' +
         '<div class="um-dialog-field" style="flex-basis:100%"><label for="umMarketingNote">授权备注</label>' +
         '<textarea class="um-dialog-input" id="umMarketingNote" rows="3" style="height:auto" placeholder="可填写授权场景或凭证说明">' +
         escapeHtml(state.marketing.note) + '</textarea></div></div>' +
-        (marketingValid() ? '' : '<div class="um-dialog-error" role="alert">标记为已订阅必须选择非空同意来源并填写有效同意时间。</div>'),
+        (marketingValid() ? '' : '<div class="um-dialog-error" role="alert">标记为已订阅必须选择非空同意来源并填写有效同意时间。</div>') +
+        (state.marketing.error ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.marketing.error) + '</div>' : ''),
       footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="marketing-confirm"' +
-        (marketingValid() ? '' : ' disabled') + '>确认更新</button>'
+        (marketingValid() && !state.marketing.busy ? '' : ' disabled') + '>' +
+        (state.marketing.busy ? '正在更新…' : '确认更新') + '</button>'
     });
   }
 
   function usersForDeletion(ids) {
     var users = [];
-    if (active && active.hooks) {
-      if (typeof active.hooks.getUsers === 'function') users = active.hooks.getUsers() || [];
-      else if (typeof active.hooks.getUser === 'function') {
-        var single = active.hooks.getUser();
-        if (single) users = [single];
+    try {
+      if (active && active.hooks) {
+        if (typeof active.hooks.getUsers === 'function') users = active.hooks.getUsers() || [];
+        else if (typeof active.hooks.getUser === 'function') {
+          var single = active.hooks.getUser();
+          if (single) users = [single];
+        }
       }
+    } catch (error) {
+      state.deletion.error = error && error.message
+        ? error.message
+        : '读取用户风险信息失败，请取消后重试。';
+      showParentError(state.deletion.error);
     }
+    if (!Array.isArray(users)) users = [];
     var idSet = new Set(ids);
     return users.filter(function (user) { return idSet.has(user.id); });
   }
@@ -887,19 +1298,33 @@
             ' 位存在 Shopify 绑定。禁用可保留订单、授权和审计关系。</div>'
           : '<div class="um-dialog-guidance">未检测到订单或 Shopify 绑定；删除仍会移除用户档案和授权历史。</div>') +
         '<ul class="um-risk-list"><li>有订单的用户：' + orderUsers.length +
-        '</li><li>有 Shopify 绑定的用户：' + shopifyUsers.length + '</li></ul>',
+        '</li><li>有 Shopify 绑定的用户：' + shopifyUsers.length + '</li></ul>' +
+        (state.deletion.error ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.deletion.error) + '</div>' : ''),
       footer: (risky && hooksAvailable('disableUsers')
-        ? '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="delete-disable">改为禁用账号</button>'
+        ? '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="delete-disable"' +
+          (state.deletion.busy ? ' disabled' : '') + '>改为禁用账号</button>'
         : '') +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-        '<button class="um-dialog-button um-dialog-button-danger" type="button" data-dialog-action="delete-confirm">确认永久删除</button>'
+        '<button class="um-dialog-button um-dialog-button-danger" type="button" data-dialog-action="delete-confirm"' +
+        (state.deletion.busy ? ' disabled' : '') + '>' +
+        (state.deletion.busy ? '正在处理…' : '确认永久删除') + '</button>'
     });
   }
 
-  function completeAndClose(result) {
-    var hooks = active && active.hooks;
+  function operationFailed(targetState, render, message) {
+    targetState.busy = false;
+    targetState.error = message || '操作未完成，请重试。';
+    render();
+    showParentError(targetState.error);
+    return false;
+  }
+
+  function completeAndClose(result, targetState, render) {
+    var completion = completeHook(result);
+    if (!completion.ok) return operationFailed(targetState, render, completion.error);
     closeActive(true);
-    if (hooks && typeof hooks.onDialogComplete === 'function') hooks.onDialogComplete(result);
+    return true;
   }
 
   function handleComboChange(name, value) {
@@ -946,15 +1371,8 @@
     if (action === 'combo-toggle') {
       var combo = actionTarget.closest('[data-dialog-combo]');
       var popover = combo.querySelector('.um-dialog-combobox-popover');
-      var opening = popover.hidden;
-      Array.prototype.forEach.call(active.overlay.querySelectorAll('.um-dialog-combobox-popover'), function (item) {
-        item.hidden = true;
-        var trigger = item.parentNode.querySelector('.um-dialog-combobox-trigger');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-      });
-      popover.hidden = !opening;
-      actionTarget.setAttribute('aria-expanded', String(opening));
-      if (opening) popover.querySelector('[data-combo-search]').focus();
+      if (popover.hidden) openCombo(combo);
+      else closeCombo(combo, true);
       return;
     }
     if (action === 'combo-option') {
@@ -971,7 +1389,11 @@
       return;
     }
     if (action === 'csv-example') {
-      loadCsvText('user-import-example.csv', csvMockText());
+      var exampleToken = csvSessionGate.next();
+      state.csv.sessionToken = exampleToken;
+      if (csvSessionGate.isCurrent(exampleToken) && active.type === 'csv') {
+        loadCsvText('user-import-example.csv', csvMockText());
+      }
       return;
     }
     if (action === 'csv-back') {
@@ -990,9 +1412,25 @@
       return;
     }
     if (action === 'csv-import') {
-      if (!hooksAvailable('importUsers')) return;
-      state.csv.result = active.hooks.importUsers(state.csv.records, 'shopify_csv');
-      if (typeof active.hooks.onDialogComplete === 'function') active.hooks.onDialogComplete(state.csv.result);
+      state.csv.busy = true;
+      state.csv.error = '';
+      renderCsv();
+      var importableRecords = state.csv.records.filter(function (record) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email || '');
+      });
+      var csvImport = invokeHook('importUsers', [importableRecords, 'shopify_csv']);
+      if (!csvImport.ok) {
+        operationFailed(state.csv, renderCsv, csvImport.error);
+        return;
+      }
+      var csvResult = mergeCsvImportResult(csvImport.value, state.csv.validation);
+      var csvCompletion = completeHook(csvResult);
+      if (!csvCompletion.ok) {
+        operationFailed(state.csv, renderCsv, csvCompletion.error);
+        return;
+      }
+      state.csv.busy = false;
+      state.csv.result = csvResult;
       renderCsv();
       return;
     }
@@ -1016,7 +1454,11 @@
       return;
     }
     if (action === 'shopify-store') {
-      state.shopify.selectedStoreId = actionTarget.getAttribute('data-store-id');
+      var chosenStore = CONNECTED_STORES.find(function (store) {
+        return store.id === actionTarget.getAttribute('data-store-id');
+      });
+      if (!chosenStore || chosenStore.connectionState !== 'connected') return;
+      state.shopify.selectedStoreId = chosenStore.id;
       state.shopify.selected = new Set();
       renderShopify();
       return;
@@ -1036,8 +1478,27 @@
       renderShopify();
       return;
     }
+    if (action === 'shopify-toggle-record') {
+      var recordId = actionTarget.getAttribute('data-shopify-record');
+      if (state.shopify.selected.has(recordId)) state.shopify.selected.delete(recordId);
+      else state.shopify.selected.add(recordId);
+      renderShopify();
+      return;
+    }
+    if (action === 'shopify-select-current') {
+      var currentRecords = currentShopifyRecords();
+      var currentSelected = currentRecords.length > 0 && currentRecords.every(function (record) {
+        return state.shopify.selected.has(record.id);
+      });
+      state.shopify.selected = setCurrentSelection(
+        state.shopify.selected,
+        currentRecords.map(function (record) { return record.id; }),
+        !currentSelected
+      );
+      renderShopify();
+      return;
+    }
     if (action === 'shopify-import') {
-      if (!hooksAvailable('importUsers')) return;
       var store = selectedStore();
       var selectedRecords = SHOPIFY_RECORDS.filter(function (record) {
         return state.shopify.selected.has(record.id);
@@ -1051,14 +1512,72 @@
         };
         return profile;
       });
-      state.shopify.result = active.hooks.importUsers(selectedRecords, 'shopify_api');
-      if (typeof active.hooks.onDialogComplete === 'function') active.hooks.onDialogComplete(state.shopify.result);
+      state.shopify.busy = true;
+      state.shopify.error = '';
+      renderShopify();
+      var shopifyImport = invokeHook('importUsers', [selectedRecords, 'shopify_api']);
+      if (!shopifyImport.ok) {
+        operationFailed(state.shopify, renderShopify, shopifyImport.error);
+        return;
+      }
+      var shopifyCompletion = completeHook(shopifyImport.value);
+      if (!shopifyCompletion.ok) {
+        operationFailed(state.shopify, renderShopify, shopifyCompletion.error);
+        return;
+      }
+      state.shopify.busy = false;
+      state.shopify.result = shopifyImport.value;
       state.shopify.step = 4;
       renderShopify();
       return;
     }
+    if (action === 'marketing-time-toggle') {
+      state.marketing.timeOpen = !state.marketing.timeOpen;
+      state.marketing.timeError = '';
+      renderMarketing();
+      if (state.marketing.timeOpen) {
+        var dateDraft = root.document.getElementById('umMarketingDateDraft');
+        if (dateDraft) dateDraft.focus();
+      } else {
+        var timeTrigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
+        if (timeTrigger) timeTrigger.focus();
+      }
+      return;
+    }
+    if (action === 'marketing-time-now') {
+      var nowValue = localDateTimeValue(new Date());
+      state.marketing.dateDraft = nowValue.slice(0, 10);
+      state.marketing.timeDraft = nowValue.slice(11, 16);
+      state.marketing.timeError = '';
+      renderMarketing();
+      return;
+    }
+    if (action === 'marketing-time-clear') {
+      state.marketing.consentedAt = '';
+      state.marketing.dateDraft = '';
+      state.marketing.timeDraft = '';
+      state.marketing.timeError = '';
+      state.marketing.timeOpen = false;
+      renderMarketing();
+      return;
+    }
+    if (action === 'marketing-time-confirm') {
+      var draft = state.marketing.dateDraft + 'T' + state.marketing.timeDraft;
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft) || !parseConsentDateTime(draft)) {
+        state.marketing.timeError = '请输入有效日期和时间（YYYY-MM-DD、HH:MM）。';
+        renderMarketing();
+        return;
+      }
+      state.marketing.consentedAt = draft;
+      state.marketing.timeError = '';
+      state.marketing.timeOpen = false;
+      renderMarketing();
+      var confirmedTrigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
+      if (confirmedTrigger) confirmedTrigger.focus();
+      return;
+    }
     if (action === 'marketing-confirm') {
-      if (!marketingValid() || !hooksAvailable('updateMarketing')) return;
+      if (!marketingValid()) return;
       var consent = {
         source: state.marketing.source === 'none' ? 'admin' : state.marketing.source,
         consentedAt: state.marketing.consentedAt
@@ -1066,24 +1585,43 @@
           : new Date().toISOString(),
         note: state.marketing.note
       };
-      var marketingResult = active.hooks.updateMarketing(
+      state.marketing.busy = true;
+      state.marketing.error = '';
+      renderMarketing();
+      var marketingCall = invokeHook('updateMarketing', [
         state.marketing.ids,
         state.marketing.status,
         consent
-      );
-      completeAndClose(marketingResult);
+      ]);
+      if (!marketingCall.ok) {
+        operationFailed(state.marketing, renderMarketing, marketingCall.error);
+        return;
+      }
+      completeAndClose(marketingCall.value, state.marketing, renderMarketing);
       return;
     }
     if (action === 'delete-disable') {
-      if (!hooksAvailable('disableUsers')) return;
-      var disabledResult = active.hooks.disableUsers(state.deletion.ids);
-      completeAndClose(disabledResult);
+      state.deletion.busy = true;
+      state.deletion.error = '';
+      renderDelete();
+      var disableCall = invokeHook('disableUsers', [state.deletion.ids]);
+      if (!disableCall.ok) {
+        operationFailed(state.deletion, renderDelete, disableCall.error);
+        return;
+      }
+      completeAndClose(disableCall.value, state.deletion, renderDelete);
       return;
     }
     if (action === 'delete-confirm') {
-      if (!hooksAvailable('removeUsers')) return;
-      var removeResult = active.hooks.removeUsers(state.deletion.ids);
-      completeAndClose(removeResult);
+      state.deletion.busy = true;
+      state.deletion.error = '';
+      renderDelete();
+      var removeCall = invokeHook('removeUsers', [state.deletion.ids]);
+      if (!removeCall.ok) {
+        operationFailed(state.deletion, renderDelete, removeCall.error);
+        return;
+      }
+      completeAndClose(removeCall.value, state.deletion, renderDelete);
     }
   }
 
@@ -1091,12 +1629,18 @@
     if (!active || !active.overlay.contains(event.target)) return;
     if (event.target.matches('[data-combo-search]')) {
       var query = event.target.value.trim().toLocaleLowerCase();
+      var combo = event.target.closest('[data-dialog-combo]');
+      var visibleCount = 0;
       Array.prototype.forEach.call(
         event.target.parentNode.querySelectorAll('.um-dialog-combobox-option'),
         function (option) {
           option.hidden = option.textContent.toLocaleLowerCase().indexOf(query) === -1;
+          if (!option.hidden) visibleCount += 1;
         }
       );
+      var empty = combo.querySelector('.um-dialog-combobox-empty');
+      if (empty) empty.hidden = visibleCount > 0;
+      setComboActive(combo, 0);
       return;
     }
     if (event.target.id === 'umShopifySearch') {
@@ -1110,12 +1654,14 @@
       }
       return;
     }
-    if (event.target.id === 'umMarketingTime') {
-      state.marketing.consentedAt = event.target.value;
-      var confirm = active.overlay.querySelector('[data-dialog-action="marketing-confirm"]');
-      if (confirm) confirm.disabled = !marketingValid();
-      var validationError = active.overlay.querySelector('.um-dialog-error');
-      if (validationError) validationError.hidden = marketingValid();
+    if (event.target.id === 'umMarketingDateDraft') {
+      state.marketing.dateDraft = event.target.value;
+      state.marketing.timeError = '';
+      return;
+    }
+    if (event.target.id === 'umMarketingClockDraft') {
+      state.marketing.timeDraft = event.target.value;
+      state.marketing.timeError = '';
       return;
     }
     if (event.target.id === 'umMarketingNote') state.marketing.note = event.target.value;
@@ -1124,29 +1670,7 @@
   function handleChange(event) {
     if (!active || !active.overlay.contains(event.target)) return;
     if (event.target.id === 'umCsvFileInput' && event.target.files && event.target.files[0]) {
-      var file = event.target.files[0];
-      file.text().then(function (text) {
-        loadCsvText(file.name, text);
-      }).catch(function () {
-        state.csv.error = '读取 CSV 文件失败，请重新选择。';
-        renderCsv();
-      });
-      return;
-    }
-    if (event.target.matches('[data-shopify-record]')) {
-      var id = event.target.getAttribute('data-shopify-record');
-      if (event.target.checked) state.shopify.selected.add(id);
-      else state.shopify.selected.delete(id);
-      renderShopify();
-      return;
-    }
-    if (event.target.matches('[data-shopify-select-current]')) {
-      state.shopify.selected = setCurrentSelection(
-        state.shopify.selected,
-        currentShopifyRecords().map(function (record) { return record.id; }),
-        event.target.checked
-      );
-      renderShopify();
+      readCsvFile(event.target.files[0]);
     }
   }
 
@@ -1169,17 +1693,22 @@
     zone.classList.remove('is-dragging');
     var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
     if (!file) return;
-    file.text().then(function (text) {
-      loadCsvText(file.name, text);
-    }).catch(function () {
-      state.csv.error = '读取 CSV 文件失败，请重新选择。';
-      renderCsv();
-    });
+    readCsvFile(file);
   }
 
   function trapFocus(event) {
     if (!active) return;
+    if (handleComboKeyboard(event)) return;
     if (event.key === 'Escape') {
+      if (active.type === 'marketing' && state.marketing && state.marketing.timeOpen) {
+        event.preventDefault();
+        state.marketing.timeOpen = false;
+        state.marketing.timeError = '';
+        renderMarketing();
+        var trigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
+        if (trigger) trigger.focus();
+        return;
+      }
       if (!active.blocking) {
         event.preventDefault();
         closeActive(true);
@@ -1219,12 +1748,14 @@
 
   root.UserDialogs = {
     openCsvImport: function () {
+      csvSessionGate.next();
       state.csv = csvDefaultState();
-      return openDialog('csv', renderCsv, false);
+      state.csv.sessionToken = csvSessionGate.current();
+      return openDialog('csv', renderCsv, false).catch(function () { return false; });
     },
     openShopifyImport: function () {
       state.shopify = shopifyDefaultState();
-      return openDialog('shopify', renderShopify, false);
+      return openDialog('shopify', renderShopify, false).catch(function () { return false; });
     },
     openMarketingConsent: function (ids) {
       var normalizedIds = Array.isArray(ids) ? ids.filter(Boolean) : [ids].filter(Boolean);
@@ -1233,9 +1764,15 @@
         status: 'subscribed',
         source: 'none',
         consentedAt: '',
-        note: ''
+        dateDraft: '',
+        timeDraft: '',
+        timeOpen: false,
+        timeError: '',
+        note: '',
+        error: '',
+        busy: false
       };
-      return openDialog('marketing', renderMarketing, false);
+      return openDialog('marketing', renderMarketing, false).catch(function () { return false; });
     },
     openDeleteConfirm: function (options) {
       var settings = options || {};
@@ -1244,12 +1781,14 @@
         ids: ids,
         title: settings.title || (ids.length > 1 ? '删除所选用户' : '删除用户'),
         message: settings.message || '删除后用户档案及其授权历史将无法恢复，请谨慎操作。',
-        users: []
+        users: [],
+        error: '',
+        busy: false
       };
       return openDialog('delete', function () {
         state.deletion.users = usersForDeletion(ids);
         renderDelete();
-      }, true);
+      }, true).catch(function () { return false; });
     },
     closeAll: function (options) {
       closeActive(!(options && options.restoreFocus === false));
@@ -1273,6 +1812,7 @@
 
   var previousNavigate = root.adOnNavigate;
   root.adOnNavigate = function () {
+    navigationGeneration += 1;
     root.UserDialogs.closeAll({ restoreFocus: false });
     if (typeof previousNavigate === 'function') previousNavigate();
   };

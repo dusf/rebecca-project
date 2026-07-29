@@ -85,18 +85,35 @@ const noConsentUser = UserStore.findByEmail('no-consent@example.com');
 assert.equal(noConsentUser.marketingStatus, 'not_subscribed');
 assert.deepEqual(noConsentUser.consentHistory, []);
 
+const subscribedUpgrade = {
+  externalId: 'gid://shopify/Customer/1005',
+  email: 'no-consent@example.com',
+  marketingStatus: 'subscribed',
+  consent: { source: 'checkout', consentedAt: '2026-07-29T10:05:00+08:00', note: 'Checkout consent' },
+  store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
+};
+assert.deepEqual(UserStore.importProfiles([subscribedUpgrade], 'shopify_api').counts, { created: 0, merged: 1, skipped: 0, failed: 0 });
+const upgradedUser = UserStore.findByEmail('no-consent@example.com');
+assert.equal(upgradedUser.marketingStatus, 'subscribed');
+assert.deepEqual(upgradedUser.consentHistory, [{
+  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T10:05:00+08:00', note: 'Checkout consent'
+}]);
+const upgradeHistoryLength = upgradedUser.consentHistory.length;
+assert.deepEqual(UserStore.importProfiles([subscribedUpgrade], 'shopify_api').counts, { created: 0, merged: 1, skipped: 0, failed: 0 });
+assert.equal(UserStore.findByEmail('no-consent@example.com').consentHistory.length, upgradeHistoryLength);
+
 const importedWithConsent = UserStore.importProfiles([{
   externalId: 'gid://shopify/Customer/1004',
   email: 'with-consent@example.com',
   marketingStatus: 'subscribed',
-  consent: { source: 'shopify_api', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent' },
+  consent: { source: 'checkout', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent' },
   store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
 }], 'shopify_api');
 assert.deepEqual(importedWithConsent.counts, { created: 1, merged: 0, skipped: 0, failed: 0 });
 const consentUser = UserStore.findByEmail('with-consent@example.com');
 assert.equal(consentUser.marketingStatus, 'subscribed');
 assert.deepEqual(consentUser.consentHistory, [{
-  status: 'subscribed', source: 'shopify_api', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent'
+  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent'
 }]);
 
 console.log('user_store tests passed');

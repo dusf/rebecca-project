@@ -228,7 +228,7 @@
     user.consentHistory = Array.isArray(user.consentHistory) ? user.consentHistory : [];
     user.consentHistory.push({
       status: status,
-      source: source || 'import',
+      source: consent && consent.source ? consent.source : (source || 'import'),
       consentedAt: consent && consent.consentedAt ? consent.consentedAt : importStatusTime(profile),
       note: consent && consent.note ? consent.note : ''
     });

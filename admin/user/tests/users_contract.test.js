@@ -13,6 +13,7 @@ const commonsCss = fs.readFileSync(path.join(adminRoot, 'common', 'css', 'common
 const adminIndex = fs.readFileSync(path.join(adminRoot, 'index.html'), 'utf8');
 const dialogJs = fs.readFileSync(path.join(adminRoot, 'common', 'js', 'user_dialog.js'), 'utf8');
 const dialogHtml = fs.readFileSync(path.join(adminRoot, 'common', 'html', 'user_dialogs.html'), 'utf8');
+const userFormJs = fs.readFileSync(path.join(userRoot, 'js', 'user_form.js'), 'utf8');
 
 assert.match(commonsJs, /class="sidebar-item\$\{activeClass\}"[^>]*role="link"[^>]*tabindex="0"/);
 assert.match(commonsJs, /sidebar\.addEventListener\('keydown'/);
@@ -71,11 +72,20 @@ assert.match(js, /addTags:/);
 assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
 assert.match(dialogJs, /openBatchTag:/);
 assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
-assert.match(dialogJs, /invokeHook\(['"]addTags['"]/);
+assert.match(dialogJs, /await invokeHookAsync\(['"]addTags['"]/);
 assert.doesNotMatch(dialogJs, /revalidateDeletionRisk/);
-assert.match(dialogJs, /invokeHook\(['"]removeUsersIfRiskUnchanged['"]/);
+assert.match(dialogJs, /await invokeHookAsync\(['"]removeUsersIfRiskUnchanged['"]/);
 assert.match(js, /removeUsersIfRiskUnchanged:/);
 assert.match(js, /getUsers:\s*\(ids\)/);
+assert.match(js, /UserStore\.importProfilesLocked/);
+assert.match(js, /UserStore\.addTagToUsersLocked/);
+assert.match(js, /UserStore\.setMarketingStatusLocked/);
+assert.match(js, /UserStore\.setAccountStatusLocked/);
+assert.match(js, /UserStore\.removeUsersIfRiskUnchangedLocked/);
+assert.match(userFormJs, /await root\.UserStore\.updateLocked/);
+assert.match(userFormJs, /root\.UserStore\.createManualLocked/);
+assert.match(userFormJs, /UserStore\.removeUsersIfRiskUnchangedLocked/);
+assert.match(dialogJs, /async function handleClick/);
 assert.doesNotMatch(dialogJs, /不完整营销授权会计入跳过|按未订阅导入并计入跳过/);
 assert.match(dialogJs, /授权降级/);
 
@@ -162,4 +172,23 @@ assert.equal(utils.compareUsers(first, second, { key: 'lastLoginAt', direction: 
 assert.equal(utils.compareUsers(first, second, { key: 'lastLoginAt', direction: 'desc' }) < 0, true);
 assert.equal(utils.matchesSearchQuery({ id: 'USR-900', email: 'other@example.com' }, 'usr-900'), true);
 
-console.log('users contract tests passed');
+async function runLockedUiContract() {
+  UserStore.resetForTests([]);
+  const createdLocked = await UserStore.createManualLocked({
+    email: 'locked-form@example.com',
+    marketingOptIn: false
+  });
+  assert.equal(createdLocked.ok, true);
+  const importedLocked = await UserStore.importProfilesLocked([
+    { email: 'locked-import@example.com', marketingStatus: 'not_subscribed' }
+  ], 'shopify_csv');
+  assert.equal(importedLocked.ok, true);
+  assert.equal(UserStore.findByEmail('locked-import@example.com').email, 'locked-import@example.com');
+}
+
+runLockedUiContract().then(() => {
+  console.log('users contract tests passed');
+}).catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -1030,10 +1030,10 @@
     render();
   }
 
-  function updateSelectedAccountStatus(status, ids) {
+  async function updateSelectedAccountStatus(status, ids) {
     if (state.status !== 'ready') return;
     const targetIds = ids && ids.length ? ids : selectedIds();
-    const result = root.UserStore.setAccountStatus(targetIds, status);
+    const result = await root.UserStore.setAccountStatusLocked(targetIds, status);
     if (!result.ok) {
       showToast(result.error || '账号状态更新失败。', 'error');
       return;
@@ -1402,46 +1402,20 @@
     window.UserPageHooks = {
       getUsers: (ids) => getUsersForIds(root.UserStore, ids),
       getSelectedIds: () => Array.from(state.selected),
-      importUsers: (records, source) => root.UserStore.importProfiles(records, source),
+      importUsers: (records, source) => root.UserStore.importProfilesLocked(records, source),
       addTags: (ids, value) => {
         const tag = String(value || '').trim();
         if (!tag || tag.length > 40) return { ok: false, error: '请输入不超过 40 个字符的标签名称。' };
-        let changed = 0;
-        let skipped = 0;
-        let failed = 0;
-        ids.forEach((id) => {
-          const user = root.UserStore.get(id);
-          if (!user) {
-            failed += 1;
-            return;
-          }
-          const tags = Array.isArray(user.tags) ? user.tags.slice() : [];
-          if (tags.indexOf(tag) !== -1) {
-            skipped += 1;
-            return;
-          }
-          tags.push(tag);
-          if (root.UserStore.update(id, { tags }).ok) changed += 1;
-          else failed += 1;
-        });
-        return {
-          ok: true,
-          changed,
-          skipped,
-          failed,
-          message: '已为 ' + changed + ' 位用户添加标签' +
-            (skipped ? '，' + skipped + ' 位已有该标签' : '') +
-            (failed ? '，' + failed + ' 位处理失败' : '') + '。'
-        };
+        return root.UserStore.addTagToUsersLocked(ids, tag);
       },
-      updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatus(ids, status, consent),
-      disableUsers: (ids) => root.UserStore.setAccountStatus(ids, 'disabled'),
+      updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatusLocked(ids, status, consent),
+      disableUsers: (ids) => root.UserStore.setAccountStatusLocked(ids, 'disabled'),
       removeUsersIfRiskUnchanged: (ids, reviewedUsers) => {
         const expectedFingerprints = (Array.isArray(reviewedUsers) ? reviewedUsers : []).reduce((result, user) => {
           if (user && user.id) result[user.id] = root.UserStore.deletionRiskFingerprint(user);
           return result;
         }, {});
-        return root.UserStore.removeUsersIfRiskUnchanged(ids, expectedFingerprints);
+        return root.UserStore.removeUsersIfRiskUnchangedLocked(ids, expectedFingerprints);
       },
       onDialogComplete: () => {
         state.selected.clear();

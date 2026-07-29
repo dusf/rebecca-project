@@ -410,6 +410,20 @@
     return { ok: true, error: '', value: result };
   }
 
+  function settleHookResult(task, allowVoid) {
+    return Promise.resolve(task).then(function (result) {
+      var normalized = normalizeHookResult(result, allowVoid);
+      if (!normalized.ok) normalized.failure = result;
+      return normalized;
+    }, function (error) {
+      return {
+        ok: false,
+        error: error && error.message ? error.message : '操作执行失败，请重试。',
+        value: null
+      };
+    });
+  }
+
   function canonicalValue(value) {
     if (Array.isArray(value)) return value.map(canonicalValue);
     if (!value || typeof value !== 'object') return value;
@@ -502,6 +516,7 @@
     canRestoreFocus: canRestoreFocus,
     resolveFocusableOpener: resolveFocusableOpener,
     normalizeHookResult: normalizeHookResult,
+    settleHookResult: settleHookResult,
     resolveDeletionRiskState: resolveDeletionRiskState,
     canPermanentlyDelete: canPermanentlyDelete,
     mergeCsvImportResult: mergeCsvImportResult
@@ -756,9 +771,32 @@
     }
   }
 
-  function completeHook(result) {
-    if (!hooksAvailable('onDialogComplete')) return { ok: true, error: '', value: null };
-    return invokeHook('onDialogComplete', [result], true);
+  function invokeHookAsync(method, args, allowVoid) {
+    if (!hooksAvailable(method)) {
+      return Promise.resolve({
+        ok: false,
+        error: '当前页面未提供“' + method + '”操作，请刷新后重试。',
+        value: null
+      });
+    }
+    var rawResult;
+    try {
+      rawResult = active.hooks[method].apply(active.hooks, args || []);
+    } catch (error) {
+      return Promise.resolve({
+        ok: false,
+        error: error && error.message ? error.message : '操作执行失败，请重试。',
+        value: null
+      });
+    }
+    return settleHookResult(rawResult, allowVoid);
+  }
+
+  function completeHookAsync(result) {
+    if (!hooksAvailable('onDialogComplete')) {
+      return Promise.resolve({ ok: true, error: '', value: null });
+    }
+    return invokeHookAsync('onDialogComplete', [result], true);
   }
 
   function resultCounts(result) {
@@ -1419,14 +1457,15 @@
         '</li><li>有 Shopify 绑定的用户：' + shopifyUsers.length + '</li></ul>' +
         (state.deletion.error ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.deletion.error) + '</div>' : ''),
-      footer: (risky && hooksAvailable('disableUsers')
+      footer: ((risky || state.deletion.lockUnavailable) && hooksAvailable('disableUsers')
         ? '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="delete-disable"' +
           (state.deletion.busy ? ' disabled' : '') + '>改为禁用账号</button>'
         : '') +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
         '<button class="um-dialog-button um-dialog-button-danger" type="button" data-dialog-action="delete-confirm"' +
-        (state.deletion.busy ? ' disabled' : '') + '>' +
-        (state.deletion.busy ? '正在处理…' : '确认永久删除') + '</button>'
+        (state.deletion.busy || state.deletion.lockUnavailable ? ' disabled' : '') + '>' +
+        (state.deletion.busy ? '正在处理…' :
+          (state.deletion.lockUnavailable ? '当前无法安全删除' : '确认永久删除')) + '</button>'
     });
   }
 
@@ -1473,8 +1512,8 @@
     return false;
   }
 
-  function completeAndClose(result, targetState, render) {
-    var completion = completeHook(result);
+  async function completeAndClose(result, targetState, render) {
+    var completion = await completeHookAsync(result);
     if (!completion.ok) return operationFailed(targetState, render, completion.error);
     closeActive(true);
     return true;
@@ -1508,7 +1547,7 @@
     }
   }
 
-  function handleClick(event) {
+  async function handleClick(event) {
     if (!active || !active.overlay.contains(event.target)) return;
     if (event.target === active.overlay) {
       if (!active.blocking) closeActive(true);
@@ -1565,19 +1604,22 @@
       return;
     }
     if (action === 'csv-import') {
+      var csvOperationNonce = openNonce;
       state.csv.busy = true;
       state.csv.error = '';
       renderCsv();
       var importableRecords = state.csv.records.filter(function (record) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email || '');
       });
-      var csvImport = invokeHook('importUsers', [importableRecords, 'shopify_csv']);
+      var csvImport = await invokeHookAsync('importUsers', [importableRecords, 'shopify_csv']);
+      if (csvOperationNonce !== openNonce) return;
       if (!csvImport.ok) {
         operationFailed(state.csv, renderCsv, csvImport.error);
         return;
       }
       var csvResult = mergeCsvImportResult(csvImport.value, state.csv.validation);
-      var csvCompletion = completeHook(csvResult);
+      var csvCompletion = await completeHookAsync(csvResult);
+      if (csvOperationNonce !== openNonce) return;
       if (!csvCompletion.ok) {
         operationFailed(state.csv, renderCsv, csvCompletion.error);
         return;
@@ -1652,6 +1694,7 @@
       return;
     }
     if (action === 'shopify-import') {
+      var shopifyOperationNonce = openNonce;
       var store = selectedStore();
       var selectedRecords = SHOPIFY_RECORDS.filter(function (record) {
         return state.shopify.selected.has(record.id);
@@ -1668,12 +1711,14 @@
       state.shopify.busy = true;
       state.shopify.error = '';
       renderShopify();
-      var shopifyImport = invokeHook('importUsers', [selectedRecords, 'shopify_api']);
+      var shopifyImport = await invokeHookAsync('importUsers', [selectedRecords, 'shopify_api']);
+      if (shopifyOperationNonce !== openNonce) return;
       if (!shopifyImport.ok) {
         operationFailed(state.shopify, renderShopify, shopifyImport.error);
         return;
       }
-      var shopifyCompletion = completeHook(shopifyImport.value);
+      var shopifyCompletion = await completeHookAsync(shopifyImport.value);
+      if (shopifyOperationNonce !== openNonce) return;
       if (!shopifyCompletion.ok) {
         operationFailed(state.shopify, renderShopify, shopifyCompletion.error);
         return;
@@ -1731,6 +1776,7 @@
     }
     if (action === 'marketing-confirm') {
       if (!marketingValid()) return;
+      var marketingOperationNonce = openNonce;
       var consent = {
         source: state.marketing.source === 'none' ? 'admin' : state.marketing.source,
         consentedAt: state.marketing.consentedAt
@@ -1741,30 +1787,34 @@
       state.marketing.busy = true;
       state.marketing.error = '';
       renderMarketing();
-      var marketingCall = invokeHook('updateMarketing', [
+      var marketingCall = await invokeHookAsync('updateMarketing', [
         state.marketing.ids,
         state.marketing.status,
         consent
       ]);
+      if (marketingOperationNonce !== openNonce) return;
       if (!marketingCall.ok) {
         operationFailed(state.marketing, renderMarketing, marketingCall.error);
         return;
       }
-      completeAndClose(marketingCall.value, state.marketing, renderMarketing);
+      await completeAndClose(marketingCall.value, state.marketing, renderMarketing);
       return;
     }
     if (action === 'batch-tag-confirm') {
       var tag = batchTagValue();
       if (!tag || tag.length > 40 || state.batchTag.busy) return;
+      var tagOperationNonce = openNonce;
       state.batchTag.busy = true;
       state.batchTag.error = '';
       renderBatchTag();
-      var tagCall = invokeHook('addTags', [state.batchTag.ids, tag]);
+      var tagCall = await invokeHookAsync('addTags', [state.batchTag.ids, tag]);
+      if (tagOperationNonce !== openNonce) return;
       if (!tagCall.ok) {
         operationFailed(state.batchTag, renderBatchTag, tagCall.error);
         return;
       }
-      var tagCompletion = completeHook(tagCall.value);
+      var tagCompletion = await completeHookAsync(tagCall.value);
+      if (tagOperationNonce !== openNonce) return;
       if (!tagCompletion.ok) {
         operationFailed(state.batchTag, renderBatchTag, tagCompletion.error);
         return;
@@ -1789,26 +1839,30 @@
     }
     if (action === 'delete-disable') {
       if (state.deletion.riskStatus !== 'ready') return;
+      var disableOperationNonce = openNonce;
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
-      var disableCall = invokeHook('disableUsers', [state.deletion.ids]);
+      var disableCall = await invokeHookAsync('disableUsers', [state.deletion.ids]);
+      if (disableOperationNonce !== openNonce) return;
       if (!disableCall.ok) {
         operationFailed(state.deletion, renderDelete, disableCall.error);
         return;
       }
-      completeAndClose(disableCall.value, state.deletion, renderDelete);
+      await completeAndClose(disableCall.value, state.deletion, renderDelete);
       return;
     }
     if (action === 'delete-confirm') {
       if (state.deletion.riskStatus !== 'ready' || !canPermanentlyDelete(state.deletion)) return;
+      var deleteOperationNonce = openNonce;
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
-      var removeCall = invokeHook('removeUsersIfRiskUnchanged', [
+      var removeCall = await invokeHookAsync('removeUsersIfRiskUnchanged', [
         state.deletion.ids,
         state.deletion.users
       ]);
+      if (deleteOperationNonce !== openNonce) return;
       if (!removeCall.ok) {
         if (removeCall.failure && removeCall.failure.code === 'RISK_CHANGED') {
           var changedMessage = removeCall.failure.error ||
@@ -1822,10 +1876,19 @@
           showParentError(changedMessage);
           return;
         }
+        if (removeCall.failure && removeCall.failure.code === 'LOCK_UNAVAILABLE') {
+          state.deletion.lockUnavailable = true;
+          operationFailed(
+            state.deletion,
+            renderDelete,
+            removeCall.failure.error || '当前浏览器无法取得安全写锁，请改为禁用账号或重试。'
+          );
+          return;
+        }
         operationFailed(state.deletion, renderDelete, removeCall.error);
         return;
       }
-      completeAndClose(removeCall.value, state.deletion, renderDelete);
+      await completeAndClose(removeCall.value, state.deletion, renderDelete);
     }
   }
 
@@ -2014,6 +2077,7 @@
         riskStatus: 'loading',
         version: '',
         error: '',
+        lockUnavailable: false,
         busy: false
       };
       return openDialog('delete', function () {

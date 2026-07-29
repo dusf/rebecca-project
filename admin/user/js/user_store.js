@@ -6,6 +6,7 @@
   'use strict';
 
   const STORAGE_KEY = 'rebecca_users_v1';
+  const WRITE_LOCK_NAME = 'rbk-user-store-write';
   const ACCOUNT_STATUSES = new Set(['registered', 'pending', 'disabled']);
   const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed', 'pending', 'invalid']);
   const EDITABLE_PROFILE_FIELDS = new Set(['email', 'firstName', 'lastName', 'phone', 'preferredLanguage', 'tags', 'note']);
@@ -530,6 +531,30 @@
     };
   }
 
+  function latestUsersForPermanentDelete() {
+    ensureLoaded();
+    const store = storage();
+    if (!store) {
+      return { ok: false, error: '永久删除需要可用的本地存储' };
+    }
+    try {
+      const snapshot = store.getItem(STORAGE_KEY);
+      const saved = JSON.parse(snapshot);
+      if (!Array.isArray(saved)) {
+        return { ok: false, error: '最新用户数据格式错误' };
+      }
+      const externalUsers = ensureUniqueUserIds(saved.map(buildUser));
+      memory = storageDirty
+        ? mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers)
+        : externalUsers;
+      lastStorageSnapshot = snapshot;
+      lastSynchronizedUsers = clone(externalUsers);
+      return { ok: true, users: clone(memory) };
+    } catch (error) {
+      return { ok: false, error: '无法读取最新用户数据' };
+    }
+  }
+
   function removeUsersIfRiskUnchanged(ids, expectedFingerprints) {
     const normalizedIds = (Array.isArray(ids) ? ids : []).map(function (id) {
       return String(id || '').trim();
@@ -549,23 +574,11 @@
       return { ok: false, code: 'RISK_INVALID', error: '删除目标与风险指纹不完整', removed: 0 };
     }
 
-    list();
-    const store = storage();
-    let reviewedStorageSnapshot = null;
-    if (store) {
-      try {
-        reviewedStorageSnapshot = store.getItem(STORAGE_KEY);
-        if (!Array.isArray(JSON.parse(reviewedStorageSnapshot))) {
-          return { ok: false, code: 'STORAGE_ERROR', error: '最新用户数据格式错误', removed: 0 };
-        }
-        if (reviewedStorageSnapshot !== lastStorageSnapshot) {
-          syncFromStorage();
-        }
-      } catch (error) {
-        return { ok: false, code: 'STORAGE_ERROR', error: '无法读取最新用户数据', removed: 0 };
-      }
+    const latest = latestUsersForPermanentDelete();
+    if (!latest.ok) {
+      return { ok: false, code: 'STORAGE_ERROR', error: latest.error, removed: 0 };
     }
-    const latestUsers = clone(memory);
+    const latestUsers = latest.users;
     const usersById = new Map(latestUsers.map(function (user) { return [user.id, user]; }));
     const targets = normalizedIds.map(function (id) { return usersById.get(id); });
     if (targets.some(function (user) { return !user; })) {
@@ -575,18 +588,6 @@
       return deletionRiskFingerprint(user) !== expectedFingerprints[user.id];
     });
     if (changed) return riskChanged();
-
-    if (store) {
-      try {
-        const latestStorageSnapshot = store.getItem(STORAGE_KEY);
-        if (latestStorageSnapshot !== reviewedStorageSnapshot) {
-          syncFromStorage();
-          return riskChanged();
-        }
-      } catch (error) {
-        return { ok: false, code: 'STORAGE_ERROR', error: '无法确认最新用户数据', removed: 0 };
-      }
-    }
 
     const remaining = latestUsers.filter(function (user) { return !targetIds.has(user.id); });
     const writeResult = write(remaining);
@@ -657,6 +658,45 @@
   function importConsent(profile) {
     const consent = profile && profile.consent && typeof profile.consent === 'object' ? profile.consent : (profile || {});
     return { source: consent.source || consent.consentSource || '', consentedAt: consent.consentedAt || '', note: consent.note || '' };
+  }
+
+  function addTagToUsers(ids, value) {
+    const tag = String(value || '').trim();
+    if (!tag || tag.length > 40) {
+      return { ok: false, error: '请输入不超过 40 个字符的标签名称。' };
+    }
+    const targetIds = new Set((Array.isArray(ids) ? ids : []).map(function (id) {
+      return String(id || '').trim();
+    }));
+    const users = list();
+    let changed = 0;
+    let skipped = 0;
+    let failed = 0;
+    users.forEach(function (user) {
+      if (!targetIds.has(user.id)) return;
+      const tags = Array.isArray(user.tags) ? user.tags.slice() : [];
+      if (tags.indexOf(tag) !== -1) {
+        skipped += 1;
+        targetIds.delete(user.id);
+        return;
+      }
+      tags.push(tag);
+      user.tags = tags;
+      user.updatedAt = new Date().toISOString();
+      changed += 1;
+      targetIds.delete(user.id);
+    });
+    failed = targetIds.size;
+    if (changed) write(users);
+    return {
+      ok: true,
+      changed: changed,
+      skipped: skipped,
+      failed: failed,
+      message: '已为 ' + changed + ' 位用户添加标签' +
+        (skipped ? '，' + skipped + ' 位已有该标签' : '') +
+        (failed ? '，' + failed + ' 位处理失败' : '') + '。'
+    };
   }
 
   function importStatusTime(profile) {
@@ -773,6 +813,90 @@
     });
   }
 
+  function writeLockApi() {
+    const locks = root && root.navigator && root.navigator.locks;
+    return locks && typeof locks.request === 'function' ? locks : null;
+  }
+
+  function lockFailure(code, error) {
+    return {
+      ok: false,
+      code: code,
+      error: error,
+      removed: 0
+    };
+  }
+
+  function withWriteLock(operation, options) {
+    const config = options || {};
+    const locks = writeLockApi();
+    if (!locks) {
+      if (config.requireLock) {
+        return Promise.resolve(lockFailure(
+          'LOCK_UNAVAILABLE',
+          '当前浏览器无法取得安全写锁，未执行永久删除。请改为禁用账号或重试。'
+        ));
+      }
+      // Reversible mutations retain an explicit compatibility fallback.
+      return Promise.resolve().then(operation);
+    }
+    try {
+      return Promise.resolve(locks.request(
+        WRITE_LOCK_NAME,
+        { mode: 'exclusive' },
+        operation
+      )).catch(function (error) {
+        return lockFailure(
+          'LOCK_ERROR',
+          error && error.message ? error.message : '无法取得安全写锁，请重试。'
+        );
+      });
+    } catch (error) {
+      return Promise.resolve(lockFailure(
+        'LOCK_ERROR',
+        error && error.message ? error.message : '无法取得安全写锁，请重试。'
+      ));
+    }
+  }
+
+  function createManualLocked(payload) {
+    return withWriteLock(function () { return createManual(payload); });
+  }
+
+  function updateLocked(id, changes) {
+    return withWriteLock(function () { return update(id, changes); });
+  }
+
+  function activateByEmailLocked(email, provider) {
+    return withWriteLock(function () { return activateByEmail(email, provider); });
+  }
+
+  function setAccountStatusLocked(ids, status) {
+    return withWriteLock(function () { return setAccountStatus(ids, status); });
+  }
+
+  function setMarketingStatusLocked(ids, status, consent) {
+    return withWriteLock(function () { return setMarketingStatus(ids, status, consent); });
+  }
+
+  function addTagToUsersLocked(ids, value) {
+    return withWriteLock(function () { return addTagToUsers(ids, value); });
+  }
+
+  function importProfilesLocked(profiles, source) {
+    return withWriteLock(function () { return importProfiles(profiles, source); });
+  }
+
+  function subscribeLocked(payload) {
+    return withWriteLock(function () { return subscribe(payload); });
+  }
+
+  function removeUsersIfRiskUnchangedLocked(ids, expectedFingerprints) {
+    return withWriteLock(function () {
+      return removeUsersIfRiskUnchanged(ids, expectedFingerprints);
+    }, { requireLock: true });
+  }
+
   function resetForTests(users) {
     reservedIds.clear();
     memory = Array.isArray(users) ? ensureUniqueUserIds(users.map(buildUser)) : [];
@@ -791,15 +915,25 @@
     get: get,
     findByEmail: findByEmail,
     createManual: createManual,
+    createManualLocked: createManualLocked,
     update: update,
+    updateLocked: updateLocked,
     activateByEmail: activateByEmail,
+    activateByEmailLocked: activateByEmailLocked,
     remove: remove,
     removeUsersIfRiskUnchanged: removeUsersIfRiskUnchanged,
+    removeUsersIfRiskUnchangedLocked: removeUsersIfRiskUnchangedLocked,
     deletionRiskFingerprint: deletionRiskFingerprint,
     setAccountStatus: setAccountStatus,
+    setAccountStatusLocked: setAccountStatusLocked,
     setMarketingStatus: setMarketingStatus,
+    setMarketingStatusLocked: setMarketingStatusLocked,
+    addTagToUsers: addTagToUsers,
+    addTagToUsersLocked: addTagToUsersLocked,
     importProfiles: importProfiles,
+    importProfilesLocked: importProfilesLocked,
     subscribe: subscribe,
+    subscribeLocked: subscribeLocked,
     resetForTests: resetForTests
   };
 });

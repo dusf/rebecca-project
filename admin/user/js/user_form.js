@@ -880,7 +880,7 @@
   }
 
   function saveAdd() {
-    return root.UserStore.createManual({
+    return root.UserStore.createManualLocked({
       email: readText('userEmail'),
       firstName: readText('firstName'),
       lastName: readText('lastName'),
@@ -897,8 +897,8 @@
     });
   }
 
-  function saveEdit() {
-    const result = root.UserStore.update(state.user.id, {
+  async function saveEdit() {
+    const result = await root.UserStore.updateLocked(state.user.id, {
       email: readText('userEmail'),
       firstName: readText('firstName'),
       lastName: readText('lastName'),
@@ -912,13 +912,13 @@
     const decision = marketingDecision();
     let marketingResult = null;
     if (decision.changed && decision.status === 'subscribed') {
-      marketingResult = root.UserStore.setMarketingStatus(
+      marketingResult = await root.UserStore.setMarketingStatusLocked(
         [state.user.id],
         'subscribed',
         decision.consent
       );
     } else if (decision.changed && decision.status === 'unsubscribed') {
-      marketingResult = root.UserStore.setMarketingStatus([state.user.id], 'unsubscribed', {
+      marketingResult = await root.UserStore.setMarketingStatusLocked([state.user.id], 'unsubscribed', {
         source: 'admin',
         consentedAt: new Date().toISOString(),
         note: '后台编辑用户资料'
@@ -928,11 +928,11 @@
     return { ok: true, user: root.UserStore.get(state.user.id) };
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     if (state.saving || !validate()) return;
     setSaving(true);
-    const result = state.mode === 'edit' ? saveEdit() : saveAdd();
+    const result = await (state.mode === 'edit' ? saveEdit() : saveAdd());
     if (!result.ok) {
       setSaving(false);
       if (result.existing) showDuplicate(result.existing);
@@ -943,10 +943,10 @@
     root.setTimeout(returnToList, 550);
   }
 
-  function handleStatusAction(button) {
+  async function handleStatusAction(button) {
     if (!state.user || state.saving) return;
     const action = button.getAttribute('data-status-action');
-    const result = root.UserStore.setAccountStatus([state.user.id], action);
+    const result = await root.UserStore.setAccountStatusLocked([state.user.id], action);
     if (!result.ok) {
       showToast(result.error || '账号状态更新失败。', 'error');
       return;
@@ -1015,17 +1015,17 @@
         });
       },
       updateMarketing: function (ids, status, consent) {
-        return root.UserStore.setMarketingStatus(ids, status, consent);
+        return root.UserStore.setMarketingStatusLocked(ids, status, consent);
       },
       disableUsers: function (ids) {
-        return root.UserStore.setAccountStatus(ids, 'disabled');
+        return root.UserStore.setAccountStatusLocked(ids, 'disabled');
       },
       removeUsersIfRiskUnchanged: function (ids, reviewedUsers) {
         const expectedFingerprints = (Array.isArray(reviewedUsers) ? reviewedUsers : []).reduce(function (result, user) {
           if (user && user.id) result[user.id] = root.UserStore.deletionRiskFingerprint(user);
           return result;
         }, {});
-        return root.UserStore.removeUsersIfRiskUnchanged(ids, expectedFingerprints);
+        return root.UserStore.removeUsersIfRiskUnchangedLocked(ids, expectedFingerprints);
       },
       onConsentComplete: function () {
         if (state.mode !== 'edit') return;

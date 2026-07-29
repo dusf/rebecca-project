@@ -221,6 +221,28 @@ async function run() {
     error: '拒绝导入',
     value: null
   });
+  assert.deepStrictEqual(
+    await dialog.settleHookResult(Promise.resolve({ ok: true, counts: { created: 1 } })),
+    {
+      ok: true,
+      error: '',
+      value: { ok: true, counts: { created: 1 } }
+    },
+    'async import hooks must settle before the dialog advances'
+  );
+  const asyncFailure = await dialog.settleHookResult(Promise.resolve({
+    ok: false,
+    code: 'LOCK_UNAVAILABLE',
+    error: '无法取得安全写锁',
+    removed: 0
+  }));
+  assert.strictEqual(asyncFailure.ok, false);
+  assert.strictEqual(asyncFailure.failure.code, 'LOCK_UNAVAILABLE');
+  assert.deepStrictEqual(
+    await dialog.settleHookResult(Promise.reject(new Error('异步写入失败'))),
+    { ok: false, error: '异步写入失败', value: null },
+    'rejected async hooks must become retryable operation failures'
+  );
   assert.deepStrictEqual(dialog.normalizeHookResult({ ok: true, counts: { created: 1 } }), {
     ok: true,
     error: '',
@@ -252,6 +274,16 @@ async function run() {
   assert(
     source.includes('无法读取订单或 Shopify 关联风险'),
     'delete risk failures must be explicit'
+  );
+  assert(
+    source.includes("code === 'LOCK_UNAVAILABLE'") &&
+      source.includes('state.deletion.lockUnavailable'),
+    'lock-unavailable deletion must remain fail closed'
+  );
+  assert(
+    source.includes('当前浏览器无法取得安全写锁') &&
+      source.includes('改为禁用账号'),
+    'lock-unavailable deletion must offer the reversible disable alternative'
   );
 
   console.log('user dialog runtime tests passed');

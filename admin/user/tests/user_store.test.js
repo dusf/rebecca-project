@@ -459,60 +459,6 @@ assert.equal(atomicStore.get('atomic-a'), null);
 assert.equal(atomicStore.get('atomic-b'), null);
 assert.ok(atomicStore.get('atomic-unrelated'));
 
-let racingReads = 0;
-let raceArmed = false;
-let racingRaw = JSON.stringify([
-  {
-    id: 'race-target',
-    email: 'race-target@example.com',
-    orderCount: 0,
-    externalProfiles: [],
-    stores: [],
-    updatedAt: '2026-07-29T00:00:00.000Z'
-  },
-  {
-    id: 'race-unrelated',
-    email: 'race-unrelated@example.com',
-    orderCount: 0,
-    externalProfiles: [],
-    stores: [],
-    updatedAt: '2026-07-29T00:00:00.000Z'
-  }
-]);
-const racingStorage = {
-  getItem() {
-    racingReads += 1;
-    if (raceArmed && racingReads === 3) {
-      const changedUsers = JSON.parse(racingRaw);
-      changedUsers.find((user) => user.id === 'race-target').orderCount = 4;
-      racingRaw = JSON.stringify(changedUsers);
-    }
-    return racingRaw;
-  },
-  setItem(key, value) {
-    racingRaw = String(value);
-  },
-  removeItem() {
-    racingRaw = null;
-  }
-};
-const racingStore = createBrowserStore(racingStorage);
-const reviewedRaceTarget = racingStore.get('race-target');
-const expectedRaceFingerprint = {
-  'race-target': racingStore.deletionRiskFingerprint(reviewedRaceTarget)
-};
-racingReads = 0;
-raceArmed = true;
-const rawSnapshotBlocked = racingStore.removeUsersIfRiskUnchanged(
-  ['race-target'],
-  expectedRaceFingerprint
-);
-assert.equal(rawSnapshotBlocked.ok, false);
-assert.equal(rawSnapshotBlocked.code, 'RISK_CHANGED');
-assert.equal(rawSnapshotBlocked.removed, 0);
-assert.ok(racingStore.get('race-target'));
-assert.ok(racingStore.get('race-unrelated'));
-
 let invalidConsentRaw = JSON.stringify([{
   id: 'invalid-consent-cache',
   email: 'invalid-consent-cache@example.com',
@@ -774,4 +720,118 @@ assert.deepEqual(identitySummary(updatedExternalSurvivesDeletion.users), [
 ]);
 assertUniqueIdentities(updatedExternalSurvivesDeletion.persisted);
 
-console.log('user_store tests passed');
+function createControlledLocks() {
+  const queue = [];
+  let held = false;
+  return {
+    api: {
+      request(name, options, callback) {
+        assert.equal(name, 'rbk-user-store-write');
+        assert.equal(options && options.mode, 'exclusive');
+        return new Promise((resolve, reject) => {
+          queue.push({ callback, resolve, reject });
+        });
+      }
+    },
+    pending() {
+      return queue.length;
+    },
+    async grantNext() {
+      assert.equal(held, false, 'exclusive lock must not be granted while held');
+      const next = queue.shift();
+      assert.ok(next, 'a lock request must be queued');
+      held = true;
+      try {
+        const value = await next.callback();
+        next.resolve(value);
+      } catch (error) {
+        next.reject(error);
+      } finally {
+        held = false;
+      }
+    }
+  };
+}
+
+async function runWriteLockTests() {
+  let lockedRaw = JSON.stringify([
+    identityFixture('locked-target', 'locked-target@example.com', '2026-07-29T00:00:00.000Z'),
+    identityFixture('locked-keep', 'locked-keep@example.com', '2026-07-29T00:00:00.000Z')
+  ]);
+  const lockedStorage = {
+    getItem() {
+      return lockedRaw;
+    },
+    setItem(key, value) {
+      lockedRaw = String(value);
+    },
+    removeItem() {
+      lockedRaw = null;
+    }
+  };
+  const controlledLocks = createControlledLocks();
+  const lockedFrameA = createBrowserStore(lockedStorage, {
+    navigator: { locks: controlledLocks.api }
+  });
+  const lockedFrameB = createBrowserStore(lockedStorage, {
+    navigator: { locks: controlledLocks.api }
+  });
+  const reviewedLockedTarget = lockedFrameA.get('locked-target');
+  const lockedFingerprints = {
+    'locked-target': lockedFrameA.deletionRiskFingerprint(reviewedLockedTarget)
+  };
+
+  const queuedUpdate = lockedFrameB.setMarketingStatusLocked(
+    ['locked-target'],
+    'pending',
+    { source: 'double_opt_in' }
+  );
+  const queuedDelete = lockedFrameA.removeUsersIfRiskUnchangedLocked(
+    ['locked-target'],
+    lockedFingerprints
+  );
+  assert.equal(controlledLocks.pending(), 2);
+  await controlledLocks.grantNext();
+  assert.equal((await queuedUpdate).ok, true);
+  await controlledLocks.grantNext();
+  const serializedDelete = await queuedDelete;
+  assert.equal(serializedDelete.ok, false);
+  assert.equal(serializedDelete.code, 'RISK_CHANGED');
+  assert.equal(serializedDelete.removed, 0);
+  assert.ok(lockedFrameA.get('locked-target'));
+
+  const successfulFingerprints = {
+    'locked-target': lockedFrameA.deletionRiskFingerprint(lockedFrameA.get('locked-target'))
+  };
+  const queuedSuccessfulDelete = lockedFrameA.removeUsersIfRiskUnchangedLocked(
+    ['locked-target'],
+    successfulFingerprints
+  );
+  assert.equal(controlledLocks.pending(), 1);
+  await controlledLocks.grantNext();
+  const successfulLockedDelete = await queuedSuccessfulDelete;
+  assert.equal(successfulLockedDelete.ok, true);
+  assert.equal(successfulLockedDelete.removed, 1);
+  assert.equal(lockedFrameA.get('locked-target'), null);
+  assert.ok(lockedFrameA.get('locked-keep'));
+
+  const noLockStore = createBrowserStore(lockedStorage);
+  const noLockFingerprints = {
+    'locked-keep': noLockStore.deletionRiskFingerprint(noLockStore.get('locked-keep'))
+  };
+  const noLockDelete = await noLockStore.removeUsersIfRiskUnchangedLocked(
+    ['locked-keep'],
+    noLockFingerprints
+  );
+  assert.equal(noLockDelete.ok, false);
+  assert.equal(noLockDelete.code, 'LOCK_UNAVAILABLE');
+  assert.equal(noLockDelete.removed, 0);
+  assert.ok(noLockStore.get('locked-keep'));
+}
+
+runWriteLockTests().then(() => {
+  console.log('user_store tests passed');
+}).catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

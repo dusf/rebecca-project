@@ -1037,23 +1037,17 @@
 
   function addTagToSelected() {
     if (state.status !== 'ready') return;
-    const value = root.prompt('输入要添加的标签');
-    const tag = String(value || '').trim();
-    if (!tag) return;
-    let changed = 0;
-    selectedIds().forEach(function (id) {
-      const user = root.UserStore.get(id);
-      if (!user) return;
-      const tags = Array.isArray(user.tags) ? user.tags.slice() : [];
-      if (tags.indexOf(tag) === -1) {
-        tags.push(tag);
-        if (root.UserStore.update(id, { tags: tags }).ok) changed += 1;
+    const ids = selectedIds();
+    try {
+      if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openBatchTag === 'function') {
+        window.parent.UserDialogs.openBatchTag(ids);
+        return;
       }
-    });
-    allUsers = root.UserStore.list();
-    state.selected.clear();
-    render();
-    showToast(changed ? '已为 ' + changed + ' 位用户添加标签。' : '所选用户已包含该标签。', 'success');
+    } catch (error) {
+      showToast('无法访问父页面的批量标签功能。', 'error');
+      return;
+    }
+    showToast('批量标签功能正在加载，请稍后再试。', 'error');
   }
 
   function neutralizeCsvFormula(value) {
@@ -1400,6 +1394,37 @@
       getUsers: () => root.UserStore.list(),
       getSelectedIds: () => Array.from(state.selected),
       importUsers: (records, source) => root.UserStore.importProfiles(records, source),
+      addTags: (ids, value) => {
+        const tag = String(value || '').trim();
+        if (!tag || tag.length > 40) return { ok: false, error: '请输入不超过 40 个字符的标签名称。' };
+        let changed = 0;
+        let skipped = 0;
+        let failed = 0;
+        ids.forEach((id) => {
+          const user = root.UserStore.get(id);
+          if (!user) {
+            failed += 1;
+            return;
+          }
+          const tags = Array.isArray(user.tags) ? user.tags.slice() : [];
+          if (tags.indexOf(tag) !== -1) {
+            skipped += 1;
+            return;
+          }
+          tags.push(tag);
+          if (root.UserStore.update(id, { tags }).ok) changed += 1;
+          else failed += 1;
+        });
+        return {
+          ok: true,
+          changed,
+          skipped,
+          failed,
+          message: '已为 ' + changed + ' 位用户添加标签' +
+            (skipped ? '，' + skipped + ' 位已有该标签' : '') +
+            (failed ? '，' + failed + ' 位处理失败' : '') + '。'
+        };
+      },
       updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatus(ids, status, consent),
       disableUsers: (ids) => root.UserStore.setAccountStatus(ids, 'disabled'),
       removeUsers: (ids) => {

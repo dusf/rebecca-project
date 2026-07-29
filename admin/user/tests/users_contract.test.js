@@ -11,6 +11,8 @@ const adminRoot = path.resolve(userRoot, '..');
 const commonsJs = fs.readFileSync(path.join(adminRoot, 'common', 'js', 'commons.js'), 'utf8');
 const commonsCss = fs.readFileSync(path.join(adminRoot, 'common', 'css', 'commons.css'), 'utf8');
 const adminIndex = fs.readFileSync(path.join(adminRoot, 'index.html'), 'utf8');
+const dialogJs = fs.readFileSync(path.join(adminRoot, 'common', 'js', 'user_dialog.js'), 'utf8');
+const dialogHtml = fs.readFileSync(path.join(adminRoot, 'common', 'html', 'user_dialogs.html'), 'utf8');
 
 assert.match(commonsJs, /class="sidebar-item\$\{activeClass\}"[^>]*role="link"[^>]*tabindex="0"/);
 assert.match(commonsJs, /sidebar\.addEventListener\('keydown'/);
@@ -63,6 +65,16 @@ assert.match(js, /selectionDisabled \? ' disabled'/);
 
 assert.match(js, /window\.parent\.UserDialogs\.openDeleteConfirm\(options\)/);
 assert.doesNotMatch(js, /openDeleteUsers|openRemoveUsers/);
+assert.doesNotMatch(js, /\.prompt\s*\(/);
+assert.match(js, /window\.parent\.UserDialogs\.openBatchTag/);
+assert.match(js, /addTags:/);
+assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
+assert.match(dialogJs, /openBatchTag:/);
+assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
+assert.match(dialogJs, /invokeHook\(['"]addTags['"]/);
+assert.match(dialogJs, /revalidateDeletionRisk/);
+assert.doesNotMatch(dialogJs, /不完整营销授权会计入跳过|按未订阅导入并计入跳过/);
+assert.match(dialogJs, /授权降级/);
 
 assert.match(js, /data-row-action=["']copy-email["']/);
 assert.match(js, /navigator\.clipboard/);

@@ -410,6 +410,15 @@
     return { ok: true, error: '', value: result };
   }
 
+  function canonicalValue(value) {
+    if (Array.isArray(value)) return value.map(canonicalValue);
+    if (!value || typeof value !== 'object') return value;
+    return Object.keys(value).sort().reduce(function (result, key) {
+      result[key] = canonicalValue(value[key]);
+      return result;
+    }, {});
+  }
+
   function resolveDeletionRiskState(outcome, ids) {
     var result = outcome || {};
     if (result.ok !== true) {
@@ -422,35 +431,61 @@
     }
     var value = result.value;
     var users = Array.isArray(value) ? value : (value ? [value] : []);
-    var idSet = new Set(Array.isArray(ids) ? ids : []);
+    var requestedIds = Array.isArray(ids) ? ids : [];
+    var normalizedIds = requestedIds.map(function (id) { return String(id || '').trim(); });
+    var idSet = new Set(normalizedIds);
+    var returnedIds = users.map(function (user) {
+      return user && typeof user === 'object' ? String(user.id || '').trim() : '';
+    });
+    var returnedIdSet = new Set(returnedIds);
+    var complete = normalizedIds.length > 0 &&
+      normalizedIds.every(Boolean) &&
+      idSet.size === normalizedIds.length &&
+      users.length === normalizedIds.length &&
+      returnedIds.every(Boolean) &&
+      returnedIdSet.size === returnedIds.length &&
+      returnedIds.every(function (id) { return idSet.has(id); });
+    if (!complete) {
+      return {
+        riskStatus: 'error',
+        users: [],
+        version: '',
+        error: '无法读取订单或 Shopify 关联风险。返回的用户风险数据不完整或格式错误，请重试。'
+      };
+    }
+    var sortedUsers = users.slice().sort(function (first, second) {
+      return String(first.id).localeCompare(String(second.id));
+    });
     return {
       riskStatus: 'ready',
-      users: users.filter(function (user) {
-        return user && idSet.has(user.id);
-      }),
+      users: sortedUsers,
+      version: JSON.stringify(canonicalValue(sortedUsers)),
       error: ''
     };
   }
 
   function canPermanentlyDelete(deletion) {
-    return Boolean(deletion && deletion.riskStatus === 'ready' && !deletion.busy);
+    return Boolean(deletion && deletion.riskStatus === 'ready' && deletion.version && !deletion.busy);
   }
 
   function mergeCsvImportResult(result, validation) {
     var source = result || {};
     var counts = source.counts || {};
     var review = validation || {};
-    return Object.assign({}, source, {
+    var sourceWarnings = source.warnings || {};
+    var validationWarnings = (Number(review.consentMissing) || 0) + (Number(review.consentInvalid) || 0);
+    var merged = Object.assign({}, source, {
       counts: {
         created: Number(counts.created) || 0,
         merged: Number(counts.merged) || 0,
-        skipped: (Number(counts.skipped) || 0) +
-          (Number(review.missingEmail) || 0) +
-          (Number(review.consentMissing) || 0) +
-          (Number(review.consentInvalid) || 0),
+        skipped: (Number(counts.skipped) || 0) + (Number(review.missingEmail) || 0),
         failed: (Number(counts.failed) || 0) + (Number(review.invalidEmail) || 0)
+      },
+      warnings: {
+        consentDowngraded: Math.max(Number(sourceWarnings.consentDowngraded) || 0, validationWarnings)
       }
     });
+    return merged;
   }
 
   var exported = {
@@ -486,6 +521,7 @@
     csv: null,
     shopify: null,
     marketing: null,
+    batchTag: null,
     deletion: null
   };
 
@@ -734,12 +770,17 @@
 
   function resultMarkup(result) {
     var counts = resultCounts(result);
+    var consentDowngraded = Number(result && result.warnings && result.warnings.consentDowngraded) || 0;
     return '<div class="um-result-grid">' +
       '<div class="um-result-card"><span>新建</span><strong>' + counts.created + '</strong></div>' +
       '<div class="um-result-card"><span>合并</span><strong>' + counts.merged + '</strong></div>' +
       '<div class="um-result-card"><span>跳过</span><strong>' + counts.skipped + '</strong></div>' +
       '<div class="um-result-card"><span>失败</span><strong>' + counts.failed + '</strong></div>' +
-      '</div>';
+      '</div>' +
+      (consentDowngraded
+        ? '<div class="um-dialog-warning"><strong>订阅授权降级：</strong>' + consentDowngraded +
+          ' 条记录缺少有效授权，已按未订阅档案导入。</div>'
+        : '');
   }
 
   function comboMarkup(name, value, options, label) {
@@ -1019,7 +1060,7 @@
         '<div class="um-summary-card"><span>订阅授权缺失</span><strong>' + validation.consentMissing + '</strong></div>' +
         '<div class="um-summary-card"><span>授权时间无效</span><strong>' + validation.consentInvalid + '</strong></div>' +
         '</div>' +
-        '<div class="um-dialog-warning">订阅记录缺少同意来源、时间，或时间无法解析时，将按未订阅导入并计入跳过；不会伪造营销授权。</div>' +
+        '<div class="um-dialog-warning">订阅记录缺少同意来源、时间，或时间无法解析时，将按未订阅导入并单独计为授权降级；不会伪造营销授权。</div>' +
         '<h3>字段映射</h3><p class="um-dialog-section-copy">每个下拉都可以搜索 CSV 列名。</p>' +
         csvMappingMarkup() + '<h3>数据预览</h3>' + csvPreviewMarkup(),
       footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-back">上一步</button>' +
@@ -1042,13 +1083,15 @@
             '<li>按标准化邮箱匹配，相同邮箱合并到一条用户档案。</li>' +
             '<li>新用户以待激活状态保存，不创建或迁移密码。</li>' +
             '<li>营销订阅仅在来源和时间完整时生效并记录历史。</li>' +
-            '<li>无效邮箱会计入失败；缺失邮箱和不完整营销授权会计入跳过，且每行只计一次。</li></ul></div>' +
+            '<li>无效邮箱会计入失败，缺失邮箱会计入跳过；不完整营销授权单独计为降级警告。</li></ul></div>' +
             '<div class="um-summary-grid"><div class="um-summary-card"><span>准备导入</span><strong>' +
             state.csv.records.length + '</strong></div><div class="um-summary-card"><span>有效邮箱</span><strong>' +
             state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>预计跳过</span><strong>' +
-            (state.csv.validation.missingEmail + state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
+            state.csv.validation.missingEmail +
             '</strong></div><div class="um-summary-card"><span>预计失败</span><strong>' +
             state.csv.validation.invalidEmail +
+            '</strong></div><div class="um-summary-card"><span>授权降级</span><strong>' +
+            (state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
             '</strong></div></div>' +
             (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '')),
       footer: result
@@ -1320,10 +1363,43 @@
     var risk = resolveDeletionRiskState(outcome, state.deletion.ids);
     state.deletion.users = risk.users;
     state.deletion.riskStatus = risk.riskStatus;
+    state.deletion.version = risk.version || '';
     state.deletion.error = risk.error;
     state.deletion.busy = false;
     renderDelete();
     if (risk.riskStatus === 'error') showParentError(risk.error);
+  }
+
+  function revalidateDeletionRisk() {
+    var reviewedVersion = state.deletion.version;
+    var outcome;
+    if (hooksAvailable('getUsers')) {
+      outcome = invokeHook('getUsers');
+    } else if (hooksAvailable('getUser')) {
+      outcome = invokeHook('getUser');
+    } else {
+      outcome = { ok: false, error: '当前页面未提供用户风险读取接口。', value: null };
+    }
+    var risk = resolveDeletionRiskState(outcome, state.deletion.ids);
+    state.deletion.users = risk.users;
+    state.deletion.riskStatus = risk.riskStatus;
+    state.deletion.version = risk.version || '';
+    if (risk.riskStatus !== 'ready') {
+      state.deletion.busy = false;
+      state.deletion.error = risk.error;
+      renderDelete();
+      showParentError(risk.error);
+      return false;
+    }
+    if (risk.version !== reviewedVersion) {
+      state.deletion.busy = false;
+      state.deletion.error = '用户订单或 Shopify 关联风险已发生变化。请重新查看最新风险后，再次确认永久删除。';
+      renderDelete();
+      showParentError(state.deletion.error);
+      return false;
+    }
+    state.deletion.error = '';
+    return true;
   }
 
   function renderDelete() {
@@ -1380,6 +1456,41 @@
         '<button class="um-dialog-button um-dialog-button-danger" type="button" data-dialog-action="delete-confirm"' +
         (state.deletion.busy ? ' disabled' : '') + '>' +
         (state.deletion.busy ? '正在处理…' : '确认永久删除') + '</button>'
+    });
+  }
+
+  function batchTagValue() {
+    return String(state.batchTag && state.batchTag.tag || '').trim();
+  }
+
+  function renderBatchTag() {
+    if (state.batchTag.result) {
+      renderShell('batch-tag', {
+        title: '标签添加完成',
+        subtitle: state.batchTag.ids.length + ' 位用户',
+        body: '<div class="um-dialog-guidance" role="status"><strong>已完成批量标签操作。</strong>' +
+          escapeHtml(state.batchTag.result.message || '') + '</div>',
+        footer: '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
+      });
+      return;
+    }
+    var tag = batchTagValue();
+    var tooLong = tag.length > 40;
+    renderShell('batch-tag', {
+      title: '为所选用户添加标签',
+      subtitle: state.batchTag.ids.length + ' 位用户',
+      body: '<div class="um-dialog-field"><label for="umBatchTagInput">标签名称 *</label>' +
+        '<input class="um-dialog-input" id="umBatchTagInput" type="text" maxlength="80" autocomplete="off" autofocus ' +
+        'value="' + escapeHtml(state.batchTag.tag) + '" placeholder="例如：VIP 客户"></div>' +
+        '<div class="um-dialog-guidance">标签会添加到全部所选用户；已经包含该标签的档案不会重复添加。</div>' +
+        (tooLong ? '<div class="um-dialog-error" role="alert">标签名称不能超过 40 个字符。</div>' : '') +
+        (state.batchTag.error ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.batchTag.error) + '</div>' : ''),
+      footer: '<button class="um-dialog-button" type="button" data-dialog-action="close"' +
+        (state.batchTag.busy ? ' disabled' : '') + '>取消</button>' +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="batch-tag-confirm"' +
+        (tag && !tooLong && !state.batchTag.busy ? '' : ' disabled') + '>' +
+        (state.batchTag.busy ? '正在添加…' : '添加标签') + '</button>'
     });
   }
 
@@ -1671,6 +1782,32 @@
       completeAndClose(marketingCall.value, state.marketing, renderMarketing);
       return;
     }
+    if (action === 'batch-tag-confirm') {
+      var tag = batchTagValue();
+      if (!tag || tag.length > 40 || state.batchTag.busy) return;
+      state.batchTag.busy = true;
+      state.batchTag.error = '';
+      renderBatchTag();
+      var tagCall = invokeHook('addTags', [state.batchTag.ids, tag]);
+      if (!tagCall.ok) {
+        operationFailed(state.batchTag, renderBatchTag, tagCall.error);
+        return;
+      }
+      var tagCompletion = completeHook(tagCall.value);
+      if (!tagCompletion.ok) {
+        operationFailed(state.batchTag, renderBatchTag, tagCompletion.error);
+        return;
+      }
+      state.batchTag.busy = false;
+      state.batchTag.result = {
+        message: tagCall.value && tagCall.value.message
+          ? String(tagCall.value.message)
+          : '标签“' + tag + '”已处理。'
+      };
+      renderBatchTag();
+      focusFirst(active.overlay);
+      return;
+    }
     if (action === 'delete-risk-retry') {
       state.deletion.riskStatus = 'loading';
       state.deletion.error = '';
@@ -1697,6 +1834,7 @@
       state.deletion.busy = true;
       state.deletion.error = '';
       renderDelete();
+      if (!revalidateDeletionRisk()) return;
       var removeCall = invokeHook('removeUsers', [state.deletion.ids]);
       if (!removeCall.ok) {
         operationFailed(state.deletion, renderDelete, removeCall.error);
@@ -1743,6 +1881,18 @@
     if (event.target.id === 'umMarketingClockDraft') {
       state.marketing.timeDraft = event.target.value;
       state.marketing.timeError = '';
+      return;
+    }
+    if (event.target.id === 'umBatchTagInput') {
+      state.batchTag.tag = event.target.value;
+      state.batchTag.error = '';
+      var cursor = event.target.selectionStart;
+      renderBatchTag();
+      var nextTagInput = root.document.getElementById('umBatchTagInput');
+      if (nextTagInput) {
+        nextTagInput.focus();
+        nextTagInput.setSelectionRange(cursor, cursor);
+      }
       return;
     }
     if (event.target.id === 'umMarketingNote') state.marketing.note = event.target.value;
@@ -1855,6 +2005,19 @@
       };
       return openDialog('marketing', renderMarketing, false).catch(function () { return false; });
     },
+    openBatchTag: function (ids) {
+      var normalizedIds = Array.from(new Set(
+        (Array.isArray(ids) ? ids : [ids]).filter(Boolean)
+      ));
+      state.batchTag = {
+        ids: normalizedIds,
+        tag: '',
+        error: normalizedIds.length ? '' : '请先选择至少一位用户。',
+        busy: false,
+        result: null
+      };
+      return openDialog('batch-tag', renderBatchTag, false).catch(function () { return false; });
+    },
     openDeleteConfirm: function (options) {
       var settings = options || {};
       var ids = Array.isArray(settings.ids) ? settings.ids.filter(Boolean) : [];
@@ -1864,6 +2027,7 @@
         message: settings.message || '删除后用户档案及其授权历史将无法恢复，请谨慎操作。',
         users: [],
         riskStatus: 'loading',
+        version: '',
         error: '',
         busy: false
       };
@@ -1887,6 +2051,7 @@
         csv: state.csv,
         shopify: state.shopify,
         marketing: state.marketing,
+        batchTag: state.batchTag,
         deletion: state.deletion
       };
     }

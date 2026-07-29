@@ -31,14 +31,26 @@ const missingConsent = UserStore.setMarketingStatus(
   { source: '', consentedAt: '' }
 );
 assert.equal(missingConsent.ok, false);
+assert.equal(UserStore.setMarketingStatus(
+  [created.user.id],
+  'subscribed',
+  { source: ' checkout ', consentedAt: 'not-a-date' }
+).ok, false);
+assert.equal(UserStore.createManual({
+  email: 'invalid-direct-consent@example.com',
+  marketingOptIn: true,
+  consent: { source: '   ', consentedAt: '2026-07-29T09:30:00+08:00' }
+}).ok, false);
 
 const consented = UserStore.setMarketingStatus(
   [created.user.id],
   'subscribed',
-  { source: 'customer_service', consentedAt: '2026-07-29T09:30:00+08:00', note: '电话确认' }
+  { source: ' customer_service ', consentedAt: '2026-07-29T09:30:00+08:00', note: '电话确认' }
 );
 assert.equal(consented.ok, true);
 assert.equal(UserStore.get(created.user.id).marketingStatus, 'subscribed');
+assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).source, 'customer_service');
+assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).consentedAt, '2026-07-29T01:30:00.000Z');
 
 const imported = UserStore.importProfiles([
   {
@@ -64,7 +76,7 @@ assert.equal(UserStore.findByEmail('new@example.com').accountStatus, 'pending');
 const mergedUnsubscribed = UserStore.get(created.user.id);
 assert.equal(mergedUnsubscribed.marketingStatus, 'unsubscribed');
 assert.deepEqual(mergedUnsubscribed.consentHistory[0], {
-  status: 'subscribed', source: 'customer_service', consentedAt: '2026-07-29T09:30:00+08:00', note: '电话确认'
+  status: 'subscribed', source: 'customer_service', consentedAt: '2026-07-29T01:30:00.000Z', note: '电话确认'
 });
 assert.equal(mergedUnsubscribed.consentHistory[1].status, 'unsubscribed');
 assert.equal(mergedUnsubscribed.consentHistory[1].source, 'shopify_api');
@@ -84,9 +96,21 @@ const importedWithoutConsent = UserStore.importProfiles([{
   store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
 }], 'shopify_api');
 assert.deepEqual(importedWithoutConsent.counts, { created: 1, merged: 0, skipped: 0, failed: 0 });
+assert.deepEqual(importedWithoutConsent.warnings, { consentDowngraded: 1 });
+assert.equal(importedWithoutConsent.details.warnings[0].code, 'CONSENT_DOWNGRADED');
 const noConsentUser = UserStore.findByEmail('no-consent@example.com');
 assert.equal(noConsentUser.marketingStatus, 'not_subscribed');
 assert.deepEqual(noConsentUser.consentHistory, []);
+
+const mixedImport = UserStore.importProfiles([
+  { email: 'mixed-valid@example.com', marketingStatus: 'not_subscribed' },
+  { email: 'not-an-email', marketingStatus: 'not_subscribed' }
+], 'shopify_api');
+assert.equal(mixedImport.ok, true);
+assert.deepEqual(mixedImport.counts, { created: 1, merged: 0, skipped: 0, failed: 1 });
+assert.equal(mixedImport.details.failures.length, 1);
+assert.equal(mixedImport.details.failures[0].index, 1);
+assert.equal(UserStore.findByEmail('mixed-valid@example.com').email, 'mixed-valid@example.com');
 
 const subscribedUpgrade = {
   externalId: 'gid://shopify/Customer/1005',
@@ -99,7 +123,7 @@ assert.deepEqual(UserStore.importProfiles([subscribedUpgrade], 'shopify_api').co
 const upgradedUser = UserStore.findByEmail('no-consent@example.com');
 assert.equal(upgradedUser.marketingStatus, 'subscribed');
 assert.deepEqual(upgradedUser.consentHistory, [{
-  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T10:05:00+08:00', note: 'Checkout consent'
+  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T02:05:00.000Z', note: 'Checkout consent'
 }]);
 const upgradeHistoryLength = upgradedUser.consentHistory.length;
 assert.deepEqual(UserStore.importProfiles([subscribedUpgrade], 'shopify_api').counts, { created: 0, merged: 1, skipped: 0, failed: 0 });
@@ -116,7 +140,7 @@ assert.deepEqual(importedWithConsent.counts, { created: 1, merged: 0, skipped: 0
 const consentUser = UserStore.findByEmail('with-consent@example.com');
 assert.equal(consentUser.marketingStatus, 'subscribed');
 assert.deepEqual(consentUser.consentHistory, [{
-  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T10:00:00+08:00', note: 'Shopify marketing consent'
+  status: 'subscribed', source: 'checkout', consentedAt: '2026-07-29T02:00:00.000Z', note: 'Shopify marketing consent'
 }]);
 
 UserStore.resetForTests([
@@ -147,6 +171,25 @@ const second = UserStore.createManual({ email: 'second@example.com', firstName: 
 const updated = UserStore.update(first.user.id, { firstName: 'Updated', note: 'VIP buyer' });
 assert.equal(updated.ok, true);
 assert.equal(UserStore.get(first.user.id).firstName, 'Updated');
+[
+  { id: 'replaced-id' },
+  { authProviders: [{ type: 'google' }] },
+  { source: 'shopify_api' },
+  { externalProfiles: [] },
+  { stores: [] },
+  { orderCount: 99 },
+  { totalSpent: 99 },
+  { createdAt: '2000-01-01T00:00:00.000Z' },
+  { updatedAt: '2000-01-01T00:00:00.000Z' },
+  { lastLoginAt: '2000-01-01T00:00:00.000Z' },
+  { unknownField: true }
+].forEach((protectedChanges) => {
+  const before = UserStore.get(first.user.id);
+  const result = UserStore.update(first.user.id, protectedChanges);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /不允许|受保护|未知/);
+  assert.deepEqual(UserStore.get(first.user.id), before);
+});
 
 const duplicateUpdate = UserStore.update(second.user.id, { email: 'FIRST@example.com' });
 assert.equal(duplicateUpdate.ok, false);
@@ -161,11 +204,18 @@ const activated = UserStore.activateByEmail('first@example.com', 'google');
 assert.equal(activated.ok, true);
 assert.equal(activated.user.id, first.user.id);
 assert.equal(activated.user.accountStatus, 'registered');
-assert.equal(activated.user.authProviders.includes('google'), true);
+assert.deepEqual(activated.user.authProviders, [{ type: 'google' }]);
 assert.equal(UserStore.get(first.user.id).id, first.user.id);
 assert.equal(UserStore.get(first.user.id).accountStatus, 'registered');
-assert.equal(UserStore.get(first.user.id).authProviders.includes('google'), true);
+assert.deepEqual(UserStore.get(first.user.id).authProviders, [{ type: 'google' }]);
 assert.ok(UserStore.get(first.user.id).lastLoginAt);
+const invalidProviderBefore = UserStore.get(first.user.id);
+const invalidProvider = UserStore.activateByEmail('first@example.com', 'linkedin');
+assert.equal(invalidProvider.ok, false);
+assert.deepEqual(UserStore.get(first.user.id), invalidProviderBefore);
+const repeatedGoogle = UserStore.activateByEmail('first@example.com', ' GOOGLE ');
+assert.equal(repeatedGoogle.ok, true);
+assert.deepEqual(repeatedGoogle.user.authProviders, [{ type: 'google' }]);
 
 UserStore.resetForTests([
   {
@@ -204,7 +254,7 @@ const registeredVerification = UserStore.activateByEmail('activation-registered@
 assert.equal(registeredVerification.ok, true);
 assert.equal(registeredVerification.user.id, 'activation-registered');
 assert.equal(registeredVerification.user.accountStatus, 'registered');
-assert.equal(registeredVerification.user.authProviders.includes('google'), true);
+assert.deepEqual(registeredVerification.user.authProviders, [{ type: 'password' }, { type: 'google' }]);
 assert.ok(registeredVerification.user.lastLoginAt);
 
 const sharedValues = new Map();
@@ -220,8 +270,8 @@ const sharedStorage = {
   }
 };
 const storeSource = fs.readFileSync(path.resolve(__dirname, '../js/user_store.js'), 'utf8');
-function createBrowserStore(storageInstance = sharedStorage) {
-  const context = vm.createContext({ localStorage: storageInstance });
+function createBrowserStore(storageInstance = sharedStorage, globals = {}) {
+  const context = vm.createContext(Object.assign({ localStorage: storageInstance }, globals));
   vm.runInContext(storeSource, context);
   return context.UserStore;
 }
@@ -232,6 +282,53 @@ secondFrameStore.list();
 const crossFrameUser = firstFrameStore.createManual({ email: 'cross-frame@example.com' });
 assert.equal(crossFrameUser.ok, true);
 assert.equal(secondFrameStore.findByEmail('cross-frame@example.com').id, crossFrameUser.user.id);
+
+const collisionValues = new Map();
+const collisionStorage = {
+  getItem(key) {
+    return collisionValues.has(key) ? collisionValues.get(key) : null;
+  },
+  setItem(key, value) {
+    collisionValues.set(key, String(value));
+  },
+  removeItem(key) {
+    collisionValues.delete(key);
+  }
+};
+const collidingCrypto = {
+  randomUUID() {
+    return '00000000-0000-4000-8000-000000000001';
+  },
+  getRandomValues(values) {
+    values.fill(7);
+    return values;
+  }
+};
+const collisionFrameOne = createBrowserStore(collisionStorage, { crypto: collidingCrypto });
+const collisionFrameTwo = createBrowserStore(collisionStorage, { crypto: collidingCrypto });
+collisionFrameOne.list();
+collisionFrameTwo.list();
+const collisionUserOne = collisionFrameOne.createManual({ email: 'uuid-one@example.com' });
+const collisionUserTwo = collisionFrameTwo.createManual({ email: 'uuid-two@example.com' });
+assert.equal(collisionUserOne.ok, true);
+assert.equal(collisionUserTwo.ok, true);
+assert.notEqual(collisionUserOne.user.id, collisionUserTwo.user.id);
+const collisionIds = collisionFrameTwo.list().map((user) => user.id);
+assert.equal(new Set(collisionIds).size, collisionIds.length);
+
+let invalidConsentRaw = JSON.stringify([{
+  id: 'invalid-consent-cache',
+  email: 'invalid-consent-cache@example.com',
+  marketingStatus: 'subscribed',
+  consentHistory: [{ status: 'subscribed', source: ' ', consentedAt: 'not-a-date' }]
+}]);
+const invalidConsentStorage = {
+  getItem() { return invalidConsentRaw; },
+  setItem(key, value) { invalidConsentRaw = String(value); },
+  removeItem() { invalidConsentRaw = null; }
+};
+const invalidConsentStore = createBrowserStore(invalidConsentStorage);
+assert.equal(invalidConsentStore.get('invalid-consent-cache').marketingStatus, 'not_subscribed');
 
 let resilientRaw = JSON.stringify([{
   id: 'persisted-old',

@@ -8,6 +8,8 @@
   const STORAGE_KEY = 'rebecca_users_v1';
   const ACCOUNT_STATUSES = new Set(['registered', 'pending', 'disabled']);
   const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed', 'pending', 'invalid']);
+  const EDITABLE_PROFILE_FIELDS = new Set(['email', 'firstName', 'lastName', 'phone', 'preferredLanguage', 'tags', 'note']);
+  const AUTH_PROVIDER_TYPES = new Set(['email', 'password', 'google', 'facebook', 'tiktok', 'instagram', 'x', 'shop']);
   let memory = [];
   let loaded = false;
   let idSequence = 0;
@@ -15,6 +17,7 @@
   let lastSynchronizedUsers = [];
   let storageDirty = false;
   const listeners = new Set();
+  const reservedIds = new Set();
 
   function normalizeEmail(value) {
     return String(value || '').trim().toLowerCase();
@@ -32,15 +35,150 @@
     }
   }
 
-  function createId() {
+  function storedIds() {
+    const ids = new Set(reservedIds);
+    memory.forEach(function (user) {
+      if (user && user.id) ids.add(String(user.id));
+    });
+    const store = storage();
+    if (!store) return ids;
+    try {
+      const saved = JSON.parse(store.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) {
+        saved.forEach(function (user) {
+          if (user && user.id) ids.add(String(user.id));
+        });
+      }
+    } catch (error) {
+      // A malformed snapshot cannot contribute a trustworthy identifier.
+    }
+    return ids;
+  }
+
+  function fallbackId() {
+    const cryptoApi = root && root.crypto;
+    if (cryptoApi && typeof cryptoApi.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      cryptoApi.getRandomValues(bytes);
+      return Array.from(bytes).map(function (byte) {
+        return byte.toString(16).padStart(2, '0');
+      }).join('');
+    }
     idSequence += 1;
-    return 'usr_' + Date.now().toString(36) + '_' + idSequence;
+    return [
+      Date.now().toString(36),
+      idSequence.toString(36),
+      Math.random().toString(36).slice(2),
+      Math.random().toString(36).slice(2)
+    ].join('_');
+  }
+
+  function createId(additionalIds) {
+    const existing = storedIds();
+    if (additionalIds) {
+      additionalIds.forEach(function (id) { existing.add(String(id)); });
+    }
+    const cryptoApi = root && root.crypto;
+    for (let attempt = 0; attempt < 64; attempt += 1) {
+      let token = '';
+      if (attempt === 0 && cryptoApi && typeof cryptoApi.randomUUID === 'function') {
+        try { token = cryptoApi.randomUUID(); } catch (error) { token = ''; }
+      }
+      if (!token) token = fallbackId();
+      const candidate = 'usr_' + token;
+      if (existing.has(candidate)) continue;
+      reservedIds.add(candidate);
+      return candidate;
+    }
+    idSequence += 1;
+    const candidate = 'usr_' + Date.now().toString(36) + '_' + idSequence.toString(36) + '_' + fallbackId();
+    reservedIds.add(candidate);
+    return candidate;
+  }
+
+  function normalizeProviderType(provider) {
+    const value = provider && typeof provider === 'object' ? provider.type : provider;
+    const type = String(value || '').trim().toLowerCase();
+    return AUTH_PROVIDER_TYPES.has(type) ? type : '';
+  }
+
+  function normalizeAuthProviders(providers) {
+    const result = [];
+    const seen = new Set();
+    (Array.isArray(providers) ? providers : []).forEach(function (provider) {
+      const type = normalizeProviderType(provider);
+      if (!type || seen.has(type)) return;
+      const normalized = { type: type };
+      if (provider && typeof provider === 'object' && String(provider.subject || '').trim()) {
+        normalized.subject = String(provider.subject).trim();
+      }
+      seen.add(type);
+      result.push(normalized);
+    });
+    return result;
+  }
+
+  function validateConsent(consent) {
+    const source = String(consent && consent.source || '').trim();
+    const parsed = Date.parse(consent && consent.consentedAt || '');
+    if (!source || !Number.isFinite(parsed)) {
+      return { ok: false, error: '标记为已订阅时必须填写有效的同意来源和同意时间' };
+    }
+    return {
+      ok: true,
+      consent: {
+        source: source,
+        consentedAt: new Date(parsed).toISOString(),
+        note: String(consent && consent.note || '').trim()
+      }
+    };
+  }
+
+  function normalizeConsentHistory(history) {
+    return (Array.isArray(history) ? history : []).reduce(function (result, entry) {
+      if (!entry || !MARKETING_STATUSES.has(entry.status)) return result;
+      if (entry.status === 'subscribed') {
+        const validation = validateConsent(entry);
+        if (validation.ok) result.push(Object.assign({ status: 'subscribed' }, validation.consent));
+        return result;
+      }
+      const parsed = Date.parse(entry.consentedAt || '');
+      result.push({
+        status: entry.status,
+        source: String(entry.source || '').trim(),
+        consentedAt: Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date().toISOString(),
+        note: String(entry.note || '').trim()
+      });
+      return result;
+    }, []);
+  }
+
+  function ensureUniqueUserIds(users) {
+    const seen = new Set();
+    return users.map(function (user) {
+      if (!seen.has(user.id)) {
+        seen.add(user.id);
+        reservedIds.add(user.id);
+        return user;
+      }
+      const next = Object.assign({}, user, { id: createId(seen) });
+      seen.add(next.id);
+      return next;
+    });
   }
 
   function buildUser(input) {
+    input = input || {};
     const now = new Date().toISOString();
+    const id = String(input.id || '').trim() || createId();
+    reservedIds.add(id);
+    const consentHistory = normalizeConsentHistory(input.consentHistory);
+    let marketingStatus = MARKETING_STATUSES.has(input.marketingStatus) ? input.marketingStatus : 'not_subscribed';
+    if (marketingStatus === 'subscribed' && !consentHistory.some(function (entry) { return entry.status === 'subscribed'; })) {
+      marketingStatus = 'not_subscribed';
+    }
     return {
-      id: input.id || createId(),
+      id: id,
       email: normalizeEmail(input.email),
       firstName: String(input.firstName || '').trim(),
       lastName: String(input.lastName || '').trim(),
@@ -52,12 +190,12 @@
       previousAccountStatus: input.previousAccountStatus === 'registered' || input.previousAccountStatus === 'pending'
         ? input.previousAccountStatus
         : null,
-      marketingStatus: MARKETING_STATUSES.has(input.marketingStatus) ? input.marketingStatus : 'not_subscribed',
-      authProviders: Array.isArray(input.authProviders) ? clone(input.authProviders) : [],
+      marketingStatus: marketingStatus,
+      authProviders: normalizeAuthProviders(input.authProviders),
       source: input.source || 'admin',
       externalProfiles: Array.isArray(input.externalProfiles) ? clone(input.externalProfiles) : [],
       stores: Array.isArray(input.stores) ? clone(input.stores) : [],
-      consentHistory: Array.isArray(input.consentHistory) ? clone(input.consentHistory) : [],
+      consentHistory: consentHistory,
       orderCount: Number(input.orderCount) || 0,
       totalSpent: Number(input.totalSpent) || 0,
       lastOrderAt: input.lastOrderAt || null,
@@ -95,7 +233,7 @@
         const snapshot = store.getItem(STORAGE_KEY);
         const saved = JSON.parse(snapshot);
         if (Array.isArray(saved)) {
-          memory = saved.map(buildUser);
+          memory = ensureUniqueUserIds(saved.map(buildUser));
           lastStorageSnapshot = snapshot;
           lastSynchronizedUsers = clone(memory);
           storageDirty = false;
@@ -105,7 +243,7 @@
         // A corrupt cache is replaced with the documented sample records.
       }
     }
-    memory = seedUsers();
+    memory = ensureUniqueUserIds(seedUsers());
     persist();
   }
 
@@ -225,7 +363,7 @@
         if (snapshot !== lastStorageSnapshot) {
           const saved = JSON.parse(snapshot);
           if (Array.isArray(saved)) {
-            const externalUsers = saved.map(buildUser);
+            const externalUsers = ensureUniqueUserIds(saved.map(buildUser));
             memory = mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers);
             lastStorageSnapshot = snapshot;
             lastSynchronizedUsers = clone(externalUsers);
@@ -242,7 +380,7 @@
       if (snapshot === lastStorageSnapshot) return;
       const saved = JSON.parse(snapshot);
       if (Array.isArray(saved)) {
-        memory = saved.map(buildUser);
+        memory = ensureUniqueUserIds(saved.map(buildUser));
         lastStorageSnapshot = snapshot;
         lastSynchronizedUsers = clone(memory);
       }
@@ -252,7 +390,7 @@
   }
 
   function write(users) {
-    memory = users.map(buildUser);
+    memory = ensureUniqueUserIds(users.map(buildUser));
     loaded = true;
     persist();
     listeners.forEach(function (listener) { listener(list()); });
@@ -279,13 +417,14 @@
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: '请输入有效邮箱地址' };
     const existing = findByEmail(email);
     if (existing) return { ok: false, existing: existing, error: '该邮箱已经存在用户档案' };
-    if (payload.marketingOptIn && (!payload.consent || !payload.consent.source || !payload.consent.consentedAt)) return { ok: false, error: '标记为已订阅时必须填写同意来源和同意时间' };
+    const consentValidation = payload.marketingOptIn ? validateConsent(payload.consent) : null;
+    if (payload.marketingOptIn && !consentValidation.ok) return { ok: false, error: consentValidation.error };
     const user = buildUser({
       email: email, firstName: payload.firstName, lastName: payload.lastName, phone: payload.phone,
       preferredLanguage: payload.preferredLanguage, tags: payload.tags, note: payload.note,
       accountStatus: 'pending', marketingStatus: payload.marketingOptIn ? 'subscribed' : 'not_subscribed',
       authProviders: [], source: 'admin',
-      consentHistory: payload.marketingOptIn ? [{ status: 'subscribed', source: payload.consent.source, consentedAt: payload.consent.consentedAt, note: payload.consent.note || '' }] : []
+      consentHistory: payload.marketingOptIn ? [Object.assign({ status: 'subscribed' }, consentValidation.consent)] : []
     });
     write(list().concat(user));
     return { ok: true, user: clone(user) };
@@ -298,6 +437,12 @@
     }
     if (Object.prototype.hasOwnProperty.call(changes, 'marketingStatus') || Object.prototype.hasOwnProperty.call(changes, 'consentHistory')) {
       return { ok: false, error: '请通过邮件营销状态操作更新订阅状态和授权记录' };
+    }
+    const invalidField = Object.keys(changes).find(function (field) {
+      return !EDITABLE_PROFILE_FIELDS.has(field);
+    });
+    if (invalidField) {
+      return { ok: false, error: '不允许通过资料编辑操作更新字段“' + invalidField + '”' };
     }
     const users = list();
     const index = users.findIndex(function (user) { return user.id === id; });
@@ -321,7 +466,9 @@
     if (existing.accountStatus === 'disabled') {
       return { ok: false, error: '该用户账号已禁用，无法完成登录验证' };
     }
-    const authProviders = Array.from(new Set(existing.authProviders.concat(provider || 'email')));
+    const providerType = normalizeProviderType(provider || 'email');
+    if (!providerType) return { ok: false, error: '不支持的登录方式' };
+    const authProviders = normalizeAuthProviders(existing.authProviders.concat({ type: providerType }));
     const users = list();
     const index = users.findIndex(function (user) { return user.id === existing.id; });
     const user = Object.assign({}, users[index], {
@@ -371,7 +518,8 @@
   function setMarketingStatus(ids, status, consent) {
     if (!MARKETING_STATUSES.has(status)) return { ok: false, error: '无效的邮件营销状态' };
     consent = consent || {};
-    if (status === 'subscribed' && (!consent.source || !consent.consentedAt)) return { ok: false, error: '标记为已订阅时必须填写同意来源和同意时间' };
+    const consentValidation = status === 'subscribed' ? validateConsent(consent) : null;
+    if (status === 'subscribed' && !consentValidation.ok) return { ok: false, error: consentValidation.error };
     const targetIds = new Set(Array.isArray(ids) ? ids : [ids]);
     const users = list();
     let changed = 0;
@@ -379,7 +527,14 @@
       if (!targetIds.has(user.id)) return;
       user.marketingStatus = status;
       user.consentHistory = Array.isArray(user.consentHistory) ? user.consentHistory : [];
-      user.consentHistory.push({ status: status, source: consent.source || '', consentedAt: consent.consentedAt || new Date().toISOString(), note: consent.note || '' });
+      user.consentHistory.push(status === 'subscribed'
+        ? Object.assign({ status: status }, consentValidation.consent)
+        : {
+            status: status,
+            source: String(consent.source || '').trim(),
+            consentedAt: new Date().toISOString(),
+            note: String(consent.note || '').trim()
+          });
       user.updatedAt = new Date().toISOString();
       changed += 1;
     });
@@ -396,12 +551,10 @@
     return { source: consent.source || consent.consentSource || '', consentedAt: consent.consentedAt || '', note: consent.note || '' };
   }
 
-  function hasValidConsent(consent) {
-    return Boolean(consent && consent.source && consent.consentedAt);
-  }
-
   function importStatusTime(profile) {
-    return profile.marketingStatusAt || profile.marketingStatusUpdatedAt || profile.statusUpdatedAt || profile.updatedAt || new Date().toISOString();
+    const raw = profile.marketingStatusAt || profile.marketingStatusUpdatedAt || profile.statusUpdatedAt || profile.updatedAt;
+    const parsed = Date.parse(raw || '');
+    return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date().toISOString();
   }
 
   function appendImportedStatus(user, status, profile, source, consent) {
@@ -423,56 +576,83 @@
   function importProfiles(profiles, source) {
     const users = list();
     const counts = { created: 0, merged: 0, skipped: 0, failed: 0 };
-    (Array.isArray(profiles) ? profiles : []).forEach(function (profile) {
-      const email = normalizeEmail(profile && profile.email);
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { counts.failed += 1; return; }
-      const externalId = profile.externalId || '';
-      const consent = importConsent(profile);
-      const importsSubscribed = profile.marketingStatus === 'subscribed';
-      const canImportSubscribed = importsSubscribed && hasValidConsent(consent);
-      let user = users.find(function (item) { return item.email === email; });
-      if (user) {
-        counts.merged += 1;
-        user.firstName = String(profile.firstName || user.firstName || '').trim();
-        user.lastName = String(profile.lastName || user.lastName || '').trim();
-        if (canImportSubscribed && user.marketingStatus !== 'subscribed') {
-          user.marketingStatus = 'subscribed';
-          appendImportedStatus(user, 'subscribed', profile, source, consent);
-        } else if (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed && user.marketingStatus !== profile.marketingStatus) {
-          user.marketingStatus = profile.marketingStatus;
-          appendImportedStatus(user, profile.marketingStatus, profile, source);
+    const warnings = { consentDowngraded: 0 };
+    const details = { failures: [], warnings: [] };
+    (Array.isArray(profiles) ? profiles : []).forEach(function (profile, index) {
+      try {
+        const email = normalizeEmail(profile && profile.email);
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          counts.failed += 1;
+          details.failures.push({ index: index, email: email, code: 'INVALID_EMAIL', error: '邮箱地址无效' });
+          return;
         }
-        user.externalProfiles = Array.isArray(user.externalProfiles) ? user.externalProfiles : [];
-        if (externalId && !user.externalProfiles.some(function (item) { return item.externalId === externalId; })) user.externalProfiles.push(profileRecord(profile, source));
-        addUniqueStore(user, profile.store);
-        user.updatedAt = new Date().toISOString();
-        return;
+        const externalId = profile.externalId || '';
+        const consent = importConsent(profile);
+        const consentValidation = validateConsent(consent);
+        const importsSubscribed = profile.marketingStatus === 'subscribed';
+        const canImportSubscribed = importsSubscribed && consentValidation.ok;
+        const needsConsentWarning = Boolean(profile.importIssue) || (importsSubscribed && !consentValidation.ok);
+        if (needsConsentWarning) {
+          warnings.consentDowngraded += 1;
+          details.warnings.push({
+            index: index,
+            email: email,
+            code: 'CONSENT_DOWNGRADED',
+            warning: '缺少有效订阅授权，已按未订阅导入'
+          });
+        }
+        let user = users.find(function (item) { return item.email === email; });
+        if (user) {
+          counts.merged += 1;
+          user.firstName = String(profile.firstName || user.firstName || '').trim();
+          user.lastName = String(profile.lastName || user.lastName || '').trim();
+          if (canImportSubscribed && user.marketingStatus !== 'subscribed') {
+            user.marketingStatus = 'subscribed';
+            appendImportedStatus(user, 'subscribed', profile, source, consentValidation.consent);
+          } else if (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed && user.marketingStatus !== profile.marketingStatus) {
+            user.marketingStatus = profile.marketingStatus;
+            appendImportedStatus(user, profile.marketingStatus, profile, source);
+          }
+          user.externalProfiles = Array.isArray(user.externalProfiles) ? user.externalProfiles : [];
+          if (externalId && !user.externalProfiles.some(function (item) { return item.externalId === externalId; })) user.externalProfiles.push(profileRecord(profile, source));
+          addUniqueStore(user, profile.store);
+          user.updatedAt = new Date().toISOString();
+          return;
+        }
+        const initialMarketingStatus = canImportSubscribed
+          ? 'subscribed'
+          : (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed ? profile.marketingStatus : 'not_subscribed');
+        let initialConsentHistory = [];
+        if (initialMarketingStatus === 'subscribed') {
+          initialConsentHistory = [Object.assign({ status: 'subscribed' }, consentValidation.consent)];
+        } else if (initialMarketingStatus !== 'not_subscribed' && MARKETING_STATUSES.has(initialMarketingStatus)) {
+          initialConsentHistory = [{
+            status: initialMarketingStatus,
+            source: source || 'import',
+            consentedAt: importStatusTime(profile),
+            note: ''
+          }];
+        }
+        user = buildUser({
+          email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
+          accountStatus: 'pending', marketingStatus: initialMarketingStatus,
+          source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
+          consentHistory: initialConsentHistory
+        });
+        users.push(user);
+        counts.created += 1;
+      } catch (error) {
+        counts.failed += 1;
+        details.failures.push({
+          index: index,
+          email: normalizeEmail(profile && profile.email),
+          code: 'IMPORT_ROW_FAILED',
+          error: error && error.message ? error.message : '导入失败'
+        });
       }
-      const initialMarketingStatus = canImportSubscribed
-        ? 'subscribed'
-        : (MARKETING_STATUSES.has(profile.marketingStatus) && !importsSubscribed ? profile.marketingStatus : 'not_subscribed');
-      let initialConsentHistory = [];
-      if (initialMarketingStatus === 'subscribed') {
-        initialConsentHistory = [{ status: 'subscribed', source: consent.source, consentedAt: consent.consentedAt, note: consent.note }];
-      } else if (initialMarketingStatus !== 'not_subscribed' && MARKETING_STATUSES.has(initialMarketingStatus)) {
-        initialConsentHistory = [{
-          status: initialMarketingStatus,
-          source: source || 'import',
-          consentedAt: importStatusTime(profile),
-          note: ''
-        }];
-      }
-      user = buildUser({
-        email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
-        accountStatus: 'pending', marketingStatus: initialMarketingStatus,
-        source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
-        consentHistory: initialConsentHistory
-      });
-      users.push(user);
-      counts.created += 1;
     });
     write(users);
-    return { ok: counts.failed === 0, counts: counts };
+    return { ok: true, counts: counts, warnings: warnings, details: details };
   }
 
   function subscribe(payload) {
@@ -486,7 +666,8 @@
   }
 
   function resetForTests(users) {
-    memory = Array.isArray(users) ? users.map(buildUser) : [];
+    reservedIds.clear();
+    memory = Array.isArray(users) ? ensureUniqueUserIds(users.map(buildUser)) : [];
     loaded = true;
     lastStorageSnapshot = null;
     lastSynchronizedUsers = clone(memory);

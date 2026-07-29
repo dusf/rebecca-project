@@ -47,9 +47,13 @@ async function run() {
     dialog.mergeCsvImportResult(
       { ok: true, counts: { created: 1, merged: 0, skipped: 0, failed: 0 } },
       invalidValidation
-    ).counts,
-    { created: 1, merged: 0, skipped: 1, failed: 0 },
-    'invalid consent time is visible in final skipped counts'
+    ),
+    {
+      ok: true,
+      counts: { created: 1, merged: 0, skipped: 0, failed: 0 },
+      warnings: { consentDowngraded: 1 }
+    },
+    'a downgraded subscribed row is imported once and reported separately as a warning'
   );
   assert.strictEqual(dialog.parseConsentDateTime('2026-02-30T10:00:00Z'), '');
 
@@ -96,6 +100,29 @@ async function run() {
   );
   assert.strictEqual(deletionRisk.riskStatus, 'ready', 'a successful retry makes risk data ready');
   assert.strictEqual(dialog.canPermanentlyDelete(deletionRisk), true);
+  assert.ok(deletionRisk.version);
+  [
+    { value: [] },
+    { value: [{ id: 'user-1' }, { id: 'user-1' }] },
+    { value: [{ id: '' }] }
+  ].forEach((malformed) => {
+    const rejectedRisk = dialog.resolveDeletionRiskState(
+      { ok: true, value: malformed.value },
+      ['user-1']
+    );
+    assert.strictEqual(rejectedRisk.riskStatus, 'error');
+    assert.strictEqual(dialog.canPermanentlyDelete(rejectedRisk), false);
+  });
+  const duplicateTargets = dialog.resolveDeletionRiskState(
+    { ok: true, value: [{ id: 'user-1' }] },
+    ['user-1', 'user-1']
+  );
+  assert.strictEqual(duplicateTargets.riskStatus, 'error');
+  const changedDeletionRisk = dialog.resolveDeletionRiskState(
+    { ok: true, value: [{ id: 'user-1', orderCount: 3, stores: [{ id: 'store-1' }] }] },
+    ['user-1']
+  );
+  assert.notStrictEqual(changedDeletionRisk.version, deletionRisk.version);
 
   const gate = dialog.createSessionGate();
   const oldToken = gate.next();

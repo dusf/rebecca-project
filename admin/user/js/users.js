@@ -99,6 +99,7 @@
   const ICONS = {
     edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
     mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+    moreButton: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>',
     more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>'
   };
 
@@ -842,7 +843,7 @@
       '<button class="btn btn-secondary btn-sm" type="button" data-bulk="export"' +
       (disabled ? ' disabled' : '') + '>导出所选</button>' +
       '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
-      (disabled ? 'true' : 'false') + '">' + ICONS.more + '更多操作</summary>' +
+      (disabled ? 'true' : 'false') + '">' + ICONS.moreButton + '更多操作</summary>' +
       '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
       '<button type="button" data-bulk="clear">取消选择</button></div></details>' +
       '';

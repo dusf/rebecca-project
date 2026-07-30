@@ -73,6 +73,8 @@ assert.match(js, /dragstart/);
 assert.match(js, /drop/);
 assert.match(js, /data-column-reset/);
 assert.match(js, /恢复默认/);
+assert.match(js, /moreButton: '<svg width="14" height="14"[\s\S]*stroke-width="2"[\s\S]*<circle cx="12" cy="12" r="1"/);
+assert.match(js, /ICONS\.moreButton \+ '更多操作/);
 assert.match(js, /class="custom-col-header"/);
 assert.match(js, /class="custom-col-hint">拖拽字段调整列顺序。用户信息始终固定在左侧。/);
 assert.match(js, /class="custom-col-body"/);
@@ -164,7 +166,7 @@ assert.match(html, /同一邮箱只保留一条用户档案。邮件订阅与账
 assert.match(html, /src="\.\.\/common\/js\/commons\.js\?v=5"/);
 assert.match(html, /src="js\/user_store\.js\?v=2"/);
 assert.match(html, /src="js\/user_components\.js\?v=3"/);
-assert.match(html, /src="js\/users\.js\?v=14"/);
+assert.match(html, /src="js\/users\.js\?v=15"/);
 assert.match(userFormHtml, /href="css\/users\.css\?v=14"/);
 assert.match(userFormHtml, /src="js\/user_store\.js\?v=2"/);
 assert.match(userFormHtml, /src="js\/user_components\.js\?v=3"/);

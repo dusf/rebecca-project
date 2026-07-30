@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>折扣管理</title>
-  <link rel="stylesheet" href="../common/css/commons.css">
-  <link rel="stylesheet" href="css/promotion_list.css">
+  <link rel="stylesheet" href="../common/css/commons.css?v=8">
+  <link rel="stylesheet" href="css/promotion_list.css?v=2">
 </head>
 <body class="promotion-list-page">
 
@@ -23,7 +23,7 @@
   <!-- 工具栏 -->
   <div class="toolbar">
     <div class="toolbar-left">
-      <input type="text" class="search-input" placeholder="搜索折扣名称 / 折扣码..." id="searchInput" oninput="pApplyFilters()">
+      <input type="text" class="search-input" placeholder="搜索折扣名称、编号或折扣码..." id="searchInput" oninput="pApplyFilters()">
       <select class="filter-select" id="typeFilter" onchange="pOnFilterChange()">
         <option value="">全部类型</option>
         <option value="order_amount">订单金额折扣</option>
@@ -108,7 +108,7 @@
     </div>
   </div>
 
-  <script src="../common/js/commons.js"></script>
-  <script src="js/promotion_list.js"></script>
+  <script src="../common/js/commons.js?v=9"></script>
+  <script src="js/promotion_list.js?v=3"></script>
 </body>
 </html>

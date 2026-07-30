@@ -28,40 +28,26 @@ async function run() {
     'row width must match the header'
   );
 
-  const headers = ['Email', 'Accepts Email Marketing', 'Consent Source', 'Consented At'];
+  const headers = ['邮箱（必填）', '标签', '订阅状态', '短信营销授权', 'WhatsApp 营销授权'];
   const mapping = dialog.autoCsvMapping(headers);
   const validRecord = dialog.buildCsvRecords([
-    ['valid@example.com', 'yes', 'checkout', '2026-07-01T10:00:00.000Z']
+    ['valid@example.com', 'VIP|高价值客户', '已订阅', '是', '否']
   ], mapping)[0];
   assert.strictEqual(validRecord.marketingStatus, 'subscribed');
-  assert.strictEqual(validRecord.consent.consentedAt, '2026-07-01T10:00:00.000Z');
+  assert.strictEqual(validRecord.consent.source, 'csv_import');
+  assert.deepStrictEqual(validRecord.tags, ['VIP', '高价值客户']);
+  assert.deepStrictEqual(validRecord.marketingChannels, { sms: true, whatsapp: false });
 
-  const invalidRecord = dialog.buildCsvRecords([
-    ['invalid@example.com', 'yes', 'checkout', 'not-a-date']
+  const blankOptionalRecord = dialog.buildCsvRecords([
+    ['blank@example.com', '', '', '', '']
   ], mapping)[0];
-  assert.strictEqual(invalidRecord.marketingStatus, 'not_subscribed');
-  assert.strictEqual(invalidRecord.importIssue, 'invalid_consent_time');
-  const invalidValidation = dialog.validateCsvRecords([invalidRecord]);
-  assert.strictEqual(invalidValidation.consentInvalid, 1);
-  assert.deepStrictEqual(
-    dialog.mergeCsvImportResult(
-      { ok: true, counts: { created: 1, merged: 0, skipped: 0, failed: 0 } },
-      invalidValidation
-    ),
-    {
-      ok: true,
-      counts: { created: 1, merged: 0, skipped: 0, failed: 0 },
-      warnings: { consentDowngraded: 1 }
-    },
-    'a downgraded subscribed row is imported once and reported separately as a warning'
-  );
-  assert.strictEqual(dialog.parseConsentDateTime('2026-02-30T10:00:00Z'), '');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(blankOptionalRecord, 'marketingStatus'), false);
+  assert.deepStrictEqual(blankOptionalRecord.marketingChannels, {});
 
   const invalidEmailValidation = dialog.validateCsvRecords([
     {
       email: 'not-an-email',
-      marketingStatus: 'not_subscribed',
-      importIssue: 'invalid_consent_time'
+      marketingStatus: 'not_subscribed'
     }
   ]);
   assert.deepStrictEqual(
@@ -256,8 +242,23 @@ async function run() {
   assert(source.includes('role="checkbox"'), 'self-drawn checkbox semantics must exist');
   assert(source.includes("openExportUsers: function"), 'export dialog API must exist');
   assert(source.includes('data-dialog-action="export-confirm"'), 'export field confirmation must exist');
-  assert(source.includes("name === 'marketing-channel'"), 'marketing dialog must support channel switching');
+  assert(!source.includes("name === 'marketing-action'"), 'marketing dialog must not expose a redundant grant or revoke action');
+  assert(!source.includes('marketing-source'), 'marketing dialog must not expose consent source, time, or note fields');
+  assert(!source.includes("label: '同意来源'") && !source.includes("label: '同意时间'"), 'CSV mapping must not expose removed consent metadata fields');
+  assert(source.includes("label: '订阅状态'"), 'CSV mapping must use the current subscription status wording');
+  assert(source.includes("label: '短信营销授权'"), 'CSV mapping must include SMS marketing authorization');
+  assert(source.includes("label: 'WhatsApp 营销授权'"), 'CSV mapping must include WhatsApp marketing authorization');
+  assert(source.includes('data-dialog-action="csv-template"'), 'CSV dialog must provide a downloadable current template');
+  assert(source.includes('邮箱（必填）'), 'CSV template must identify the required email column');
+  assert(source.includes('data-dialog-action="marketing-toggle-channel"'), 'marketing dialog must support selecting multiple channels');
+  assert(source.includes('客户同意接收营销电子邮件。'), 'marketing dialog must align with the add-user email consent wording');
+  assert(source.includes('客户同意接收营销短信。'), 'marketing dialog must align with the add-user SMS consent wording');
+  assert(source.includes('客户同意接收 WhatsApp 营销消息。'), 'marketing dialog must align with the add-user WhatsApp consent wording');
   assert(source.includes("invokeHookAsync('updateMarketingChannel'"), 'non-email marketing must use the channel hook');
+  assert(source.includes("source: 'admin'"), 'marketing dialog must record admin consent metadata internally');
+  assert(source.includes('data-dialog-action="batch-tag-add"'), 'tag dialog must support creating multiple tags');
+  assert(source.includes('data-dialog-action="batch-tag-remove"'), 'tag dialog must support removing staged tags');
+  assert(source.includes("invokeHookAsync('addTags', [state.batchTag.ids, tags])"), 'tag dialog must submit all staged tags together');
   assert(source.includes('aria-activedescendant'), 'combobox active descendant semantics must exist');
   assert(source.includes('无匹配选项'), 'combobox no-match state must exist');
   assert(source.includes('isComposing') && source.includes('keyCode'), 'combobox must ignore IME commit keys');

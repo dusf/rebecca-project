@@ -71,7 +71,10 @@ const imported = UserStore.importProfiles([
     email: 'BUYER@example.com',
     firstName: 'Amy',
     lastName: 'Lee',
+    phone: '+86 13800001001',
+    tags: ['VIP', '高价值客户'],
     marketingStatus: 'unsubscribed',
+    marketingChannels: { sms: true, whatsapp: true },
     store: { id: 'store-qvr', name: 'QVR品牌站', domain: 'qvr.myshopify.com' }
   },
   {
@@ -89,6 +92,9 @@ assert.equal(UserStore.findByEmail('new@example.com').accountStatus, 'pending');
 assert.equal(UserStore.findByEmail('new@example.com').customerNumber, 'CUS-000002');
 const mergedUnsubscribed = UserStore.get(created.user.id);
 assert.equal(mergedUnsubscribed.marketingStatus, 'unsubscribed');
+assert.equal(mergedUnsubscribed.phone, '+86 13800001001');
+assert.deepEqual(mergedUnsubscribed.tags, ['VIP', '高价值客户']);
+assert.deepEqual(mergedUnsubscribed.marketingChannels, { email: false, sms: true, whatsapp: true });
 assert.deepEqual(mergedUnsubscribed.consentHistory[0], {
   status: 'subscribed', source: 'customer_service', consentedAt: '2026-07-29T01:30:00.000Z', note: '电话确认'
 });
@@ -181,6 +187,18 @@ assert.equal(UserStore.get('disabled-registered').accountStatus, 'registered');
 UserStore.resetForTests([]);
 const first = UserStore.createManual({ email: 'first@example.com', firstName: 'First', marketingOptIn: false });
 const second = UserStore.createManual({ email: 'second@example.com', firstName: 'Second', marketingOptIn: false });
+
+const multiTagResult = UserStore.addTagsToUsers(
+  [first.user.id, second.user.id],
+  ['VIP 客户', '高价值', 'VIP 客户']
+);
+assert.equal(multiTagResult.ok, true);
+assert.equal(multiTagResult.tagCount, 2);
+assert.equal(multiTagResult.changed, 2);
+assert.equal(multiTagResult.added, 4);
+assert.deepEqual(UserStore.get(first.user.id).tags, ['VIP 客户', '高价值']);
+assert.equal(UserStore.addTagsToUsers([first.user.id], ['']).ok, false);
+assert.equal(UserStore.addTagsToUsers([first.user.id], Array.from({ length: 21 }, (_, index) => '标签' + index)).ok, false);
 
 const updated = UserStore.update(first.user.id, { firstName: 'Updated', note: 'VIP buyer' });
 assert.equal(updated.ok, true);

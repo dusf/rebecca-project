@@ -131,6 +131,16 @@
   }
 
   function showToast(message, tone) {
+    try {
+      if (root.parent && root.parent !== root && typeof root.parent.showToast === 'function') {
+        root.parent.showToast(tone || 'success', message);
+        return;
+      }
+    } catch (error) {}
+    if (typeof root.showToast === 'function') {
+      root.showToast(tone || 'success', message);
+      return;
+    }
     const region = elements.toastRegion;
     if (!region) return;
     const toast = root.document.createElement('div');
@@ -206,8 +216,8 @@
       if (dialogs && typeof dialogs.openDeleteConfirm === 'function') {
         dialogs.openDeleteConfirm({
           ids: [state.user.id],
-          title: '删除用户',
-          message: '删除后用户档案及其授权历史将无法恢复，请谨慎操作。'
+          title: '确认删除',
+          message: '删除后，该用户的档案及营销授权记录将永久移除，且无法恢复。'
         });
         return;
       }
@@ -222,6 +232,9 @@
     return '<div class="um-combobox" data-um-combobox="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(value || '') + '">' +
       '<button class="um-control um-combobox-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"></button>' +
+      '<button class="um-combobox-clear" type="button" title="清除选择" aria-label="清除选择">' +
+      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+      '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
       '<div class="um-combobox-popover" role="listbox" hidden>' +
       '<div class="um-combobox-search-wrap">' +
       '<input class="um-combobox-search" type="text" placeholder="输入关键词搜索" aria-label="搜索选项">' +
@@ -1066,6 +1079,9 @@
       },
       updateMarketing: function (ids, status, consent) {
         return root.UserStore.setMarketingStatusLocked(ids, status, consent);
+      },
+      updateMarketingChannel: function (ids, channel, enabled, consent) {
+        return root.UserStore.setMarketingChannelStatusLocked(ids, channel, enabled, consent);
       },
       disableUsers: function (ids) {
         return root.UserStore.setAccountStatusLocked(ids, 'disabled');

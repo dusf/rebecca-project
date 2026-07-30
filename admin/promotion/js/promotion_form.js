@@ -1132,10 +1132,17 @@
     var store = window.parent._promoStore.data;
     if (PF_EDIT_ID) {
       var idx = store.findIndex(function (p) { return p.id === PF_EDIT_ID; });
+      if (idx >= 0 && store[idx].discountNumber) data.discountNumber = store[idx].discountNumber;
       if (idx >= 0) store[idx] = data; else store.push(data);
     } else {
       store.push(data);
     }
+    ensureBusinessNumbers(
+      store,
+      'discountNumber',
+      'DSC',
+      'rebecca_discount_number_sequence_v1'
+    );
     toast(PF_EDIT_ID ? '折扣已更新' : '折扣已创建');
     setTimeout(function () { pfNavBack(); }, 700);
   };

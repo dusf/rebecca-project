@@ -93,6 +93,60 @@ body.um-dialog-open {
   line-height: 1.4;
 }
 
+[data-user-dialog="delete"] .um-dialog-header h2 {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+[data-user-dialog="delete"] .um-dialog {
+  width: min(440px, calc(100vw - 48px));
+  padding: 24px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 15%);
+}
+
+[data-user-dialog="delete"] .um-dialog-header {
+  padding: 0 0 8px;
+  border-bottom: 0;
+}
+
+[data-user-dialog="delete"] .um-dialog-body {
+  flex: 0 1 auto;
+  padding: 0;
+  margin-bottom: 24px;
+  overflow: visible;
+}
+
+[data-user-dialog="delete"] .um-dialog-footer {
+  gap: 12px;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+}
+
+[data-user-dialog="delete"] .um-dialog-close {
+  display: none;
+}
+
+[data-user-dialog="delete"] .um-dialog-button {
+  min-height: 36px;
+  padding: 8px 20px;
+  border-radius: 6px;
+}
+
+.um-delete-confirm-copy {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.um-delete-confirm-copy + .um-dialog-warning,
+.um-delete-confirm-copy + .um-dialog-error {
+  margin-top: 12px;
+}
+
 .um-dialog-header-copy p,
 .um-dialog-section-copy,
 .um-dialog-muted {
@@ -748,6 +802,126 @@ body.um-dialog-open {
   outline: none;
 }
 
+.um-batch-tag-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.um-batch-tag-input-row .um-dialog-input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.um-batch-tag-input-row .um-dialog-button {
+  min-width: 64px;
+  flex: 0 0 auto;
+}
+
+.um-dialog-field-help {
+  margin-top: 6px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.um-batch-tag-list {
+  display: flex;
+  min-height: 48px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  gap: 7px;
+  margin: 14px 0 18px;
+  padding: 9px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9px;
+  background: hsl(var(--muted) / 24%);
+}
+
+.um-batch-tag-chip {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 5px 4px 9px;
+  border-radius: 999px;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+}
+
+.um-batch-tag-chip button {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  font: inherit;
+}
+
+.um-batch-tag-chip button:hover {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.um-batch-tag-chip button:focus-visible {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 18%);
+  outline: none;
+}
+
+.um-batch-tag-empty {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.um-marketing-channel-group {
+  margin-top: 18px;
+}
+
+.um-marketing-channel-list {
+  display: grid;
+  gap: 6px;
+}
+
+.um-marketing-channel-option {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.um-marketing-channel-option:hover {
+  background: hsl(var(--muted) / 55%);
+}
+
+.um-marketing-channel-option:focus-visible {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 18%);
+  outline: none;
+}
+
+.um-dialog-consent-fields {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid hsl(var(--border));
+}
+
 .um-dialog-datetime {
   position: relative;
 }
@@ -861,6 +1035,11 @@ body.um-dialog-open {
 }
 
 @media (max-width: 600px) {
+  .um-batch-tag-input-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .um-export-field-grid {
     grid-template-columns: 1fr;
   }

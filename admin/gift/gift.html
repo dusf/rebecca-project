@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>赠品管理</title>
-  <link rel="stylesheet" href="/admin/common/css/commons.css">
+  <link rel="stylesheet" href="/admin/common/css/commons.css?v=8">
   <link rel="stylesheet" href="/admin/gift/css/gift.css">
 </head>
 <body>
@@ -32,7 +32,7 @@
       <div class="gwp-tab-panel active" id="panelPool">
         <div class="toolbar">
           <div class="toolbar-left">
-            <input type="text" class="search-input" id="poolSearch" placeholder="搜索赠品名称">
+            <input type="text" class="search-input" id="poolSearch" placeholder="搜索赠品名称、编号">
             <div class="gwp-combo" id="poolStatus" data-kind="enum" data-arg="all:全部状态|active:启用|disabled:禁用|draft:草稿" data-value="all" data-default="all" data-placeholder="状态"></div>
           </div>
           <div class="toolbar-right">
@@ -144,7 +144,8 @@
     </div>
   </div>
 
-  <script src="/admin/gift/js/gift_common.js"></script>
-  <script src="/admin/gift/js/gift_list.js"></script>
+  <script src="/admin/common/js/commons.js?v=9"></script>
+  <script src="/admin/gift/js/gift_common.js?v=2"></script>
+  <script src="/admin/gift/js/gift_list.js?v=2"></script>
 </body>
 </html>

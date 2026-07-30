@@ -10,24 +10,28 @@
   ].join(',');
 
   var CSV_FIELDS = [
-    { key: 'email', label: '邮箱', required: true, aliases: ['email', 'email address', '邮箱', '电子邮箱'] },
+    { key: 'email', label: '邮箱', required: true, aliases: ['email', 'email address', '邮箱', '邮箱（必填）', '电子邮箱'] },
     { key: 'firstName', label: '名字', aliases: ['first name', 'firstname', '名字', '名'] },
     { key: 'lastName', label: '姓氏', aliases: ['last name', 'lastname', '姓氏', '姓'] },
     { key: 'phone', label: '手机号', aliases: ['phone', 'phone number', '手机号', '电话'] },
+    { key: 'tags', label: '标签', aliases: ['tags', 'tag', '标签', '用户标签'] },
     {
       key: 'marketingStatus',
-      label: '邮件营销状态',
-      aliases: ['email marketing consent state', 'accepts email marketing', 'marketing status', '邮件营销状态', '接受邮件营销']
+      label: '订阅状态',
+      aliases: [
+        'subscription status', 'email subscription status', '订阅状态',
+        'email marketing consent state', 'accepts email marketing', 'marketing status', '邮件营销状态', '接受邮件营销'
+      ]
     },
     {
-      key: 'consentSource',
-      label: '同意来源',
-      aliases: ['consent source', 'marketing consent source', '同意来源', '授权来源']
+      key: 'smsMarketing',
+      label: '短信营销授权',
+      aliases: ['sms marketing consent', 'accepts sms marketing', 'sms marketing', '短信营销授权', '短信授权']
     },
     {
-      key: 'consentedAt',
-      label: '同意时间',
-      aliases: ['email marketing consent updated at', 'consented at', 'consent time', '同意时间', '授权时间']
+      key: 'whatsappMarketing',
+      label: 'WhatsApp 营销授权',
+      aliases: ['whatsapp marketing consent', 'accepts whatsapp marketing', 'whatsapp marketing', 'whatsapp 营销授权', 'whatsapp 授权']
     }
   ];
 
@@ -223,48 +227,52 @@
     if (['unsubscribed', '退订', '已退订'].indexOf(normalized) !== -1) return 'unsubscribed';
     if (['pending', '待确认'].indexOf(normalized) !== -1) return 'pending';
     if (['invalid', '无效邮箱'].indexOf(normalized) !== -1) return 'invalid';
-    return 'not_subscribed';
+    if (['no', 'false', '0', 'not_subscribed', '未订阅'].indexOf(normalized) !== -1) return 'not_subscribed';
+    return '';
   }
 
-  function parseConsentDateTime(value) {
-    var text = String(value || '').trim();
-    var parts = text.match(
-      /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?$/
-    );
-    if (!parts) return '';
-    var year = Number(parts[1]);
-    var month = Number(parts[2]);
-    var day = Number(parts[3]);
-    var hour = Number(parts[4]);
-    var minute = Number(parts[5]);
-    var second = Number(parts[6] || 0);
-    var daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    if (month < 1 || month > 12 || day < 1 || day > daysInMonth ||
-        hour > 23 || minute > 59 || second > 59) return '';
-    var date = new Date(text);
-    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+  function normalizeMarketingAuthorization(value) {
+    var normalized = String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, '_');
+    if (!normalized) return null;
+    if (['yes', 'true', '1', '是', '已授权', '授权'].indexOf(normalized) !== -1) return true;
+    if (['no', 'false', '0', '否', '未授权'].indexOf(normalized) !== -1) return false;
+    return null;
+  }
+
+  function normalizeCsvTags(value) {
+    var tags = [];
+    String(value || '').split(/[|,，;；]/).forEach(function(tag) {
+      var normalized = tag.trim();
+      if (normalized && normalized.length <= 40 && tags.indexOf(normalized) === -1 && tags.length < 20) {
+        tags.push(normalized);
+      }
+    });
+    return tags;
   }
 
   function buildCsvRecords(rows, mapping) {
     return rows.map(function (row) {
       var requestedStatus = normalizeMarketingStatus(csvValue(row, mapping.marketingStatus));
-      var source = csvValue(row, mapping.consentSource);
-      var consentedAt = csvValue(row, mapping.consentedAt);
-      var parsedConsentedAt = parseConsentDateTime(consentedAt);
+      var smsMarketing = normalizeMarketingAuthorization(csvValue(row, mapping.smsMarketing));
+      var whatsappMarketing = normalizeMarketingAuthorization(csvValue(row, mapping.whatsappMarketing));
+      var marketingChannels = {};
+      if (smsMarketing !== null) marketingChannels.sms = smsMarketing;
+      if (whatsappMarketing !== null) marketingChannels.whatsapp = whatsappMarketing;
       var record = {
         email: csvValue(row, mapping.email).toLocaleLowerCase(),
         firstName: csvValue(row, mapping.firstName),
         lastName: csvValue(row, mapping.lastName),
         phone: csvValue(row, mapping.phone),
-        marketingStatus: requestedStatus
+        tags: normalizeCsvTags(csvValue(row, mapping.tags)),
+        marketingChannels: marketingChannels
       };
-      if (requestedStatus === 'subscribed' && source && parsedConsentedAt) {
-        record.consent = { source: source, consentedAt: parsedConsentedAt, note: 'CSV 导入授权记录' };
-      } else if (requestedStatus === 'subscribed') {
-        record.marketingStatus = 'not_subscribed';
-        record.importIssue = consentedAt && !parsedConsentedAt
-          ? 'invalid_consent_time'
-          : 'missing_consent';
+      if (requestedStatus) record.marketingStatus = requestedStatus;
+      if (requestedStatus === 'subscribed') {
+        record.consent = {
+          source: 'csv_import',
+          consentedAt: new Date().toISOString(),
+          note: 'CSV 导入订阅授权'
+        };
       }
       return record;
     });
@@ -277,8 +285,6 @@
     var missingEmail = 0;
     var invalidEmail = 0;
     var duplicates = 0;
-    var consentMissing = 0;
-    var consentInvalid = 0;
     records.forEach(function (record) {
       if (!String(record.email || '').trim()) {
         missingEmail += 1;
@@ -293,8 +299,6 @@
       valid += 1;
       if (seen[record.email]) duplicates += 1;
       seen[record.email] = true;
-      if (record.importIssue === 'missing_consent') consentMissing += 1;
-      if (record.importIssue === 'invalid_consent_time') consentInvalid += 1;
     });
     return {
       total: records.length,
@@ -302,9 +306,7 @@
       invalid: invalid,
       missingEmail: missingEmail,
       invalidEmail: invalidEmail,
-      duplicates: duplicates,
-      consentMissing: consentMissing,
-      consentInvalid: consentInvalid
+      duplicates: duplicates
     };
   }
 
@@ -512,7 +514,6 @@
 
   var exported = {
     parseCsv: parseCsv,
-    parseConsentDateTime: parseConsentDateTime,
     autoCsvMapping: autoCsvMapping,
     buildCsvRecords: buildCsvRecords,
     validateCsvRecords: validateCsvRecords,
@@ -991,14 +992,29 @@
 
   function csvMockText() {
     return [
-      'First Name,Last Name,Email,Phone,Accepts Email Marketing,Consent Source,Consented At',
-      'Mia,Chen,mia.chen@example.com,+86 13800001001,yes,checkout,2026-07-12T09:30:00.000Z',
-      'Leo,\"Wang, Jr.\",leo.wang@example.com,+86 13800001002,no,,',
-      'Ava,\"O\"\"Connor\",ava.oconnor@example.com,+1 4155550188,yes,footer,2026-07-15T11:20:00.000Z',
-      'Noah,Li,noah.li@example.com,,unsubscribed,,',
-      'Emma,Zhou,emma.zhou@example.com,+86 13800001005,pending,,',
-      '重复,档案,MIA.CHEN@example.com,,no,,'
+      '名字,姓氏,邮箱（必填）,手机号,标签,订阅状态,短信营销授权,WhatsApp 营销授权',
+      'Mia,Chen,mia.chen@example.com,+86 13800001001,VIP|高价值客户,已订阅,是,否',
+      'Leo,\"Wang, Jr.\",leo.wang@example.com,+86 13800001002,批发客户,未订阅,否,是',
+      'Ava,\"O\"\"Connor\",ava.oconnor@example.com,+1 4155550188,新品关注,已订阅,是,是',
+      'Noah,Li,noah.li@example.com,,线下客户,已退订,否,否',
+      'Emma,Zhou,emma.zhou@example.com,+86 13800001005,,待确认,,',
+      '重复,档案,MIA.CHEN@example.com,,复购客户,未订阅,否,否'
     ].join('\r\n');
+  }
+
+  function csvTemplateText() {
+    return '\uFEFF邮箱（必填）,名字,姓氏,手机号,标签,订阅状态,短信营销授权,WhatsApp 营销授权\r\n';
+  }
+
+  function downloadCsvTemplate() {
+    var url = root.URL.createObjectURL(new Blob([csvTemplateText()], { type: 'text/csv;charset=utf-8' }));
+    var link = root.document.createElement('a');
+    link.href = url;
+    link.download = '用户导入模板.csv';
+    root.document.body.appendChild(link);
+    link.click();
+    link.remove();
+    root.URL.revokeObjectURL(url);
   }
 
   function loadCsvText(fileName, text) {
@@ -1085,13 +1101,16 @@
   function csvPreviewMarkup() {
     var preview = state.csv.records.slice(0, 5);
     return '<div class="um-dialog-table-wrap"><table class="um-dialog-table"><thead><tr>' +
-      '<th>邮箱</th><th>名字</th><th>姓氏</th><th>手机号</th><th>营销状态</th></tr></thead><tbody>' +
+      '<th>邮箱</th><th>姓名</th><th>标签</th><th>订阅状态</th><th>短信授权</th><th>WhatsApp 授权</th></tr></thead><tbody>' +
       preview.map(function (record) {
-        return '<tr><td>' + escapeHtml(record.email || '—') + '</td><td>' +
-          escapeHtml(record.firstName || '—') + '</td><td>' +
-          escapeHtml(record.lastName || '—') + '</td><td>' +
-          escapeHtml(record.phone || '—') + '</td><td>' +
-          escapeHtml(record.marketingStatus) + '</td></tr>';
+        var channels = record.marketingChannels || {};
+        return '<tr><td>' + escapeHtml(record.email || '-') + '</td><td>' +
+          escapeHtml([record.firstName, record.lastName].filter(Boolean).join(' ') || '-') + '</td><td>' +
+          escapeHtml((record.tags || []).join('、') || '-') + '</td><td>' +
+          escapeHtml(MARKETING_STATUS_LABELS[record.marketingStatus] || '-') + '</td><td>' +
+          escapeHtml(channels.sms === true ? '已授权' : (channels.sms === false ? '未授权' : '-')) + '</td><td>' +
+          escapeHtml(channels.whatsapp === true ? '已授权' : (channels.whatsapp === false ? '未授权' : '-')) +
+          '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
 
@@ -1100,17 +1119,18 @@
       title: 'CSV 导入用户',
       subtitle: '上传 Shopify 客户 CSV 或本系统模板',
       body: stepsMarkup(['上传文件', '校验与映射', '确认结果'], 1) +
-        '<div class="um-dialog-guidance"><strong>身份边界：</strong>CSV 只能导入客户资料和营销状态，不能迁移 Shopify 密码或快捷登录绑定。导入用户将以待激活状态保存。</div>' +
+        '<div class="um-dialog-guidance"><strong>身份边界：</strong>CSV 只能导入客户资料、标签、订阅状态和营销授权，不能迁移 Shopify 密码或快捷登录绑定。导入用户将以待激活状态保存。</div>' +
         '<div class="um-upload-zone" data-csv-drop-zone>' +
         '<div><span class="um-upload-icon" aria-hidden="true">⇧</span><strong>拖放 CSV 文件到这里</strong>' +
         '<p class="um-dialog-muted">支持 UTF-8 CSV、Shopify Customer CSV 和系统模板</p>' +
         '<div class="um-upload-actions"><button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-pick"' +
         (state.csv.busy ? ' disabled' : '') + '>' + (state.csv.busy ? '正在读取…' : '选择 CSV 文件') + '</button>' +
+        '<button class="um-dialog-button" type="button" data-dialog-action="csv-template">下载 CSV 模板</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="csv-example"' +
         (state.csv.busy ? ' disabled' : '') + '>使用示例文件体验</button></div>' +
         '<input class="um-screenreader-only" id="umCsvFileInput" type="file" accept=".csv,text/csv"></div></div>' +
         (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '') +
-        '<p class="um-dialog-section-copy">系统模板字段：邮箱、名字、姓氏、手机号、邮件营销状态、同意来源、同意时间。相同邮箱将合并到现有用户档案。</p>',
+        '<p class="um-dialog-section-copy">邮箱为必填字段；模板同时支持名字、姓氏、手机号、标签、订阅状态、短信营销授权和 WhatsApp 营销授权。多个标签使用“|”分隔；订阅状态支持已订阅、未订阅、待确认、已退订和无效邮箱，营销授权填写“是”或“否”；邮件渠道授权由订阅状态表达。</p>',
       footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>'
     };
   }
@@ -1128,10 +1148,8 @@
         '<div class="um-summary-card"><span>缺失邮箱</span><strong>' + validation.missingEmail + '</strong></div>' +
         '<div class="um-summary-card"><span>无效邮箱</span><strong>' + validation.invalidEmail + '</strong></div>' +
         '<div class="um-summary-card"><span>文件内重复</span><strong>' + validation.duplicates + '</strong></div>' +
-        '<div class="um-summary-card"><span>订阅授权缺失</span><strong>' + validation.consentMissing + '</strong></div>' +
-        '<div class="um-summary-card"><span>授权时间无效</span><strong>' + validation.consentInvalid + '</strong></div>' +
         '</div>' +
-        '<div class="um-dialog-warning">订阅记录缺少同意来源、时间，或时间无法解析时，将按未订阅导入并单独计为授权降级；不会伪造营销授权。</div>' +
+        '<div class="um-dialog-guidance">邮箱是唯一必填字段。订阅状态与短信、WhatsApp 营销授权留空时，不覆盖现有用户的对应状态；系统自动记录 CSV 导入来源和操作时间。</div>' +
         '<h3>字段映射</h3><p class="um-dialog-section-copy">每个下拉都可以搜索 CSV 列名。</p>' +
         csvMappingMarkup() + '<h3>数据预览</h3>' + csvPreviewMarkup(),
       footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-back">上一步</button>' +
@@ -1153,17 +1171,15 @@
           : '<div class="um-rule-card"><strong>合并规则</strong><ul class="um-risk-list">' +
             '<li>按标准化邮箱匹配，相同邮箱合并到一条用户档案。</li>' +
             '<li>新用户以待激活状态保存，不创建或迁移密码。</li>' +
-            '<li>营销订阅仅在来源和时间完整时生效并记录历史。</li>' +
-            '<li>无效邮箱会计入失败，缺失邮箱会计入跳过；不完整营销授权单独计为降级警告。</li></ul></div>' +
+            '<li>订阅状态和营销授权按模板值导入，来源与操作时间由系统自动记录。</li>' +
+            '<li>客户编号、账号状态、登录方式、用户来源和交易数据均不允许通过 CSV 覆盖。</li>' +
+            '<li>无效邮箱会计入失败，缺失邮箱会计入跳过。</li></ul></div>' +
             '<div class="um-summary-grid"><div class="um-summary-card"><span>准备导入</span><strong>' +
             state.csv.records.length + '</strong></div><div class="um-summary-card"><span>有效邮箱</span><strong>' +
             state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>预计跳过</span><strong>' +
             state.csv.validation.missingEmail +
             '</strong></div><div class="um-summary-card"><span>预计失败</span><strong>' +
-            state.csv.validation.invalidEmail +
-            '</strong></div><div class="um-summary-card"><span>授权降级</span><strong>' +
-            (state.csv.validation.consentMissing + state.csv.validation.consentInvalid) +
-            '</strong></div></div>' +
+            state.csv.validation.invalidEmail + '</strong></div></div>' +
             (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '')),
       footer: result
         ? '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
@@ -1353,99 +1369,41 @@
     renderShell('shopify', renderers[state.shopify.step - 1]());
   }
 
-  function localDateTimeValue(date) {
-    var value = date || new Date();
-    var offset = value.getTimezoneOffset() * 60000;
-    return new Date(value.getTime() - offset).toISOString().slice(0, 16);
+  function marketingSelectedChannels() {
+    if (!state.marketing || !state.marketing.channels) return [];
+    return ['email', 'sms', 'whatsapp'].filter(function (channel) {
+      return Boolean(state.marketing.channels[channel]);
+    });
   }
 
-  function marketingTimeMarkup() {
-    var value = state.marketing.consentedAt;
-    var label = value
-      ? new Intl.DateTimeFormat('zh-CN', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', hour12: false
-      }).format(new Date(value))
-      : '请选择同意时间';
-    return '<div class="um-dialog-datetime" data-marketing-datetime>' +
-      '<input type="hidden" id="umMarketingTimeValue" value="' + escapeHtml(value) + '">' +
-      '<button class="um-dialog-datetime-trigger' + (value ? '' : ' is-placeholder') +
-      '" type="button" data-dialog-action="marketing-time-toggle" aria-haspopup="dialog" aria-expanded="' +
-      state.marketing.timeOpen + '">' + escapeHtml(label) + '</button>' +
-      '<div class="um-dialog-datetime-popover" role="dialog" aria-label="设置同意日期和时间"' +
-      (state.marketing.timeOpen ? '' : ' hidden') + '>' +
-      '<div class="um-dialog-form-grid"><div class="um-dialog-field"><label for="umMarketingDateDraft">日期</label>' +
-      '<input class="um-dialog-input" id="umMarketingDateDraft" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" value="' +
-      escapeHtml(state.marketing.dateDraft) + '"></div>' +
-      '<div class="um-dialog-field"><label for="umMarketingClockDraft">时间</label>' +
-      '<input class="um-dialog-input" id="umMarketingClockDraft" type="text" inputmode="numeric" placeholder="HH:MM" value="' +
-      escapeHtml(state.marketing.timeDraft) + '"></div></div>' +
-      (state.marketing.timeError ? '<div class="um-dialog-error" role="alert">' +
-        escapeHtml(state.marketing.timeError) + '</div>' : '') +
-      '<div class="um-dialog-inline-actions"><button class="um-dialog-button" type="button" data-dialog-action="marketing-time-now">现在</button>' +
-      '<button class="um-dialog-button" type="button" data-dialog-action="marketing-time-clear">清除</button>' +
-      '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="marketing-time-confirm">确定</button>' +
-      '</div></div></div>';
+  function marketingValidationMessage() {
+    if (!marketingSelectedChannels().length) return '请至少选择一个需要更新的营销渠道。';
+    return '';
   }
 
   function marketingValid() {
-    if (!state.marketing || state.marketing.channel !== 'email' || state.marketing.status !== 'subscribed') return true;
-    return state.marketing.source !== 'none' && Boolean(parseConsentDateTime(state.marketing.consentedAt));
+    return !marketingValidationMessage();
+  }
+
+  function marketingChannelMarkup(channel, label) {
+    var checked = Boolean(state.marketing.channels[channel]);
+    return '<button class="um-marketing-channel-option" type="button" role="checkbox" aria-checked="' +
+      checked + '" data-dialog-action="marketing-toggle-channel" data-marketing-channel="' +
+      channel + '"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
+      (checked ? '✓' : '') + '</span><span>' + label + '</span></button>';
   }
 
   function renderMarketing() {
     var count = state.marketing.ids.length;
-    var emailChannel = state.marketing.channel === 'email';
-    var statusOptions = emailChannel
-      ? [
-          { value: 'subscribed', label: '已订阅' },
-          { value: 'unsubscribed', label: '已退订' },
-          { value: 'not_subscribed', label: '未订阅' }
-        ]
-      : [
-          { value: 'enabled', label: '已同意' },
-          { value: 'disabled', label: '未同意' }
-        ];
-    var consentFields = emailChannel
-      ? '<div class="um-dialog-field"><span class="um-dialog-field-label">同意来源' +
-        (state.marketing.status === 'subscribed' ? ' *' : '') + '</span>' +
-        comboMarkup('marketing-source', state.marketing.source, [
-          { value: 'none', label: '请选择同意来源' },
-          { value: 'registration', label: '注册页面' },
-          { value: 'checkout', label: '结账页面' },
-          { value: 'footer', label: '页脚订阅' },
-          { value: 'offline_event', label: '线下活动' },
-          { value: 'customer_service', label: '客服沟通' },
-          { value: 'admin', label: '后台人工确认' },
-          { value: 'other', label: '其他' }
-        ], '同意来源') + '</div>' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">同意时间' +
-        (state.marketing.status === 'subscribed' ? ' *' : '') + '</span>' +
-        marketingTimeMarkup() + '</div>' +
-        '<div class="um-dialog-field" style="flex-basis:100%"><label for="umMarketingNote">授权备注</label>' +
-        '<textarea class="um-dialog-input" id="umMarketingNote" rows="3" style="height:auto" placeholder="可填写授权场景或凭证说明">' +
-        escapeHtml(state.marketing.note) + '</textarea></div>'
-      : '';
     renderShell('marketing', {
-      title: count > 1 ? '批量更新营销授权' : '更新营销授权',
-      subtitle: '将更新 ' + count + ' 位用户的营销渠道状态',
-      body: '<div class="um-dialog-guidance">' +
-        (emailChannel
-          ? '电子邮件标记为已订阅时必须记录明确同意；登录验证码和订单通知等服务邮件不受此状态影响。'
-          : '请仅在已经取得客户明确同意后开启该营销渠道。') +
-        '</div><div class="um-dialog-form-grid">' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">营销渠道</span>' +
-        comboMarkup('marketing-channel', state.marketing.channel, [
-          { value: 'email', label: '电子邮件' },
-          { value: 'sms', label: '短信' },
-          { value: 'whatsapp', label: 'WhatsApp' }
-        ], '营销渠道') + '</div>' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">' +
-        (emailChannel ? '营销状态' : '授权状态') + '</span>' +
-        comboMarkup('marketing-status', state.marketing.status, statusOptions,
-          emailChannel ? '营销状态' : '授权状态') + '</div>' +
-        consentFields + '</div>' +
-        (marketingValid() ? '' : '<div class="um-dialog-error" role="alert">标记为已订阅必须选择非空同意来源并填写有效同意时间。</div>') +
+      title: count > 1 ? '批量营销授权' : '营销授权',
+      subtitle: '将为 ' + count + ' 位用户授予所选营销渠道权限',
+      body: '<div class="um-marketing-channel-group"><span class="um-dialog-field-label">营销渠道 *</span>' +
+        '<div class="um-marketing-channel-list" role="group" aria-label="选择营销渠道">' +
+        marketingChannelMarkup('email', '客户同意接收营销电子邮件。') +
+        marketingChannelMarkup('sms', '客户同意接收营销短信。') +
+        marketingChannelMarkup('whatsapp', '客户同意接收 WhatsApp 营销消息。') +
+        '</div></div>' +
         (state.marketing.error ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.marketing.error) + '</div>' : ''),
       footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
@@ -1483,19 +1441,14 @@
       var reading = state.deletion.riskStatus === 'loading';
       renderShell('delete', {
         title: state.deletion.title,
-        subtitle: state.deletion.ids.length + ' 位用户',
         blocking: true,
-        body: '<div class="um-dialog-danger"><strong>此操作不可恢复。</strong> ' +
-          escapeHtml(state.deletion.message) + '</div>' +
-          (reading
-            ? '<div class="um-dialog-guidance">正在读取订单和 Shopify 关联风险，请稍候。</div>'
-            : '<div class="um-dialog-error" role="alert"><strong>无法读取订单或 Shopify 关联风险。</strong>' +
-              '<p>风险确认前不能永久删除用户。请重试读取，或取消本次操作。</p>' +
-              (state.deletion.error ? '<p>' + escapeHtml(state.deletion.error) + '</p>' : '') +
-              '</div>'),
+        body: reading
+          ? '<p class="um-delete-confirm-copy">正在检查用户关联数据，请稍候…</p>'
+          : '<div class="um-dialog-error" role="alert"><strong>暂时无法确认是否可安全删除。</strong>' +
+            '<p>请重试检查，或取消本次操作。</p></div>',
         footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
           '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="delete-risk-retry"' +
-          (reading ? ' disabled' : '') + '>' + (reading ? '正在重试…' : '重试读取风险') + '</button>'
+          (reading ? ' disabled' : '') + '>' + (reading ? '正在检查…' : '重试') + '</button>'
       });
       return;
     }
@@ -1505,23 +1458,13 @@
       return (user.stores && user.stores.length) || (user.externalProfiles && user.externalProfiles.length);
     });
     var risky = orderUsers.length > 0 || shopifyUsers.length > 0;
-    var names = users.slice(0, 4).map(function (user) {
-      return escapeHtml([user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || user.id);
-    }).join('、');
     renderShell('delete', {
       title: state.deletion.title,
-      subtitle: state.deletion.ids.length + ' 位用户',
       blocking: true,
-      body: '<div class="um-dialog-danger"><strong>此操作不可恢复。</strong> ' +
-        escapeHtml(state.deletion.message) + '</div>' +
-        (names ? '<p>即将处理：' + names + (users.length > 4 ? ' 等' : '') + '</p>' : '') +
+      body: '<p class="um-delete-confirm-copy">' + escapeHtml(state.deletion.message) + '</p>' +
         (risky
-          ? '<div class="um-dialog-warning"><strong>建议改为禁用账号：</strong>所选用户中有 ' +
-            orderUsers.length + ' 位存在订单，' + shopifyUsers.length +
-            ' 位存在 Shopify 绑定。禁用可保留订单、授权和审计关系。</div>'
-          : '<div class="um-dialog-guidance">未检测到订单或 Shopify 绑定；删除仍会移除用户档案和授权历史。</div>') +
-        '<ul class="um-risk-list"><li>有订单的用户：' + orderUsers.length +
-        '</li><li>有 Shopify 绑定的用户：' + shopifyUsers.length + '</li></ul>' +
+          ? '<div class="um-dialog-warning">所选用户存在订单或 Shopify 关联，建议改为禁用账号以保留业务记录。</div>'
+          : '') +
         (state.deletion.error ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.deletion.error) + '</div>' : ''),
       footer: ((risky || state.deletion.lockUnavailable) && hooksAvailable('disableUsers')
@@ -1532,12 +1475,68 @@
         '<button class="um-dialog-button um-dialog-button-danger" type="button" data-dialog-action="delete-confirm"' +
         (state.deletion.busy || state.deletion.lockUnavailable ? ' disabled' : '') + '>' +
         (state.deletion.busy ? '正在处理…' :
-          (state.deletion.lockUnavailable ? '当前无法安全删除' : '确认永久删除')) + '</button>'
+          (state.deletion.lockUnavailable ? '当前无法安全删除' : '确认删除')) + '</button>'
     });
   }
 
-  function batchTagValue() {
-    return String(state.batchTag && state.batchTag.tag || '').trim();
+  function batchTagDraft() {
+    return String(state.batchTag && state.batchTag.draft || '').trim();
+  }
+
+  function batchTagValues() {
+    if (!state.batchTag) return [];
+    var tags = Array.isArray(state.batchTag.tags) ? state.batchTag.tags.slice() : [];
+    var draft = batchTagDraft();
+    if (draft && tags.indexOf(draft) === -1) tags.push(draft);
+    return tags;
+  }
+
+  function batchTagValidationMessage() {
+    var draft = batchTagDraft();
+    if (draft.length > 40) return '每个标签名称不能超过 40 个字符。';
+    if (batchTagValues().length > 20) return '一次最多添加 20 个标签。';
+    return '';
+  }
+
+  function focusBatchTagInput() {
+    var input = root.document.getElementById('umBatchTagInput');
+    if (input) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
+
+  function commitBatchTagDraft() {
+    var source = String(state.batchTag && state.batchTag.draft || '');
+    var parts = source.split(/[,，]/).map(function (value) {
+      return value.trim();
+    }).filter(Boolean);
+    if (!parts.length) {
+      focusBatchTagInput();
+      return false;
+    }
+    if (parts.some(function (tag) { return tag.length > 40; })) {
+      state.batchTag.error = '每个标签名称不能超过 40 个字符。';
+      renderBatchTag();
+      focusBatchTagInput();
+      return false;
+    }
+    var next = Array.isArray(state.batchTag.tags) ? state.batchTag.tags.slice() : [];
+    parts.forEach(function (tag) {
+      if (next.indexOf(tag) === -1) next.push(tag);
+    });
+    if (next.length > 20) {
+      state.batchTag.error = '一次最多添加 20 个标签。';
+      renderBatchTag();
+      focusBatchTagInput();
+      return false;
+    }
+    state.batchTag.tags = next;
+    state.batchTag.draft = '';
+    state.batchTag.error = '';
+    renderBatchTag();
+    focusBatchTagInput();
+    return true;
   }
 
   function renderBatchTag() {
@@ -1551,23 +1550,35 @@
       });
       return;
     }
-    var tag = batchTagValue();
-    var tooLong = tag.length > 40;
+    var draft = batchTagDraft();
+    var tags = Array.isArray(state.batchTag.tags) ? state.batchTag.tags : [];
+    var values = batchTagValues();
+    var validationMessage = batchTagValidationMessage();
+    var tagMarkup = tags.length ? tags.map(function (tag, index) {
+      return '<span class="um-batch-tag-chip"><span>' + escapeHtml(tag) + '</span>' +
+        '<button type="button" data-dialog-action="batch-tag-remove" data-tag-index="' + index +
+        '" aria-label="移除标签 ' + escapeHtml(tag) + '">×</button></span>';
+    }).join('') : '<span class="um-batch-tag-empty">已创建的标签会显示在这里</span>';
     renderShell('batch-tag', {
       title: state.batchTag.ids.length === 1 ? '为用户添加标签' : '为所选用户添加标签',
       subtitle: state.batchTag.ids.length + ' 位用户',
       body: '<div class="um-dialog-field"><label for="umBatchTagInput">标签名称 *</label>' +
-        '<input class="um-dialog-input" id="umBatchTagInput" type="text" maxlength="80" autocomplete="off" autofocus ' +
-        'value="' + escapeHtml(state.batchTag.tag) + '" placeholder="例如：VIP 客户"></div>' +
-        '<div class="um-dialog-guidance">标签会添加到全部所选用户；已经包含该标签的档案不会重复添加。</div>' +
-        (tooLong ? '<div class="um-dialog-error" role="alert">标签名称不能超过 40 个字符。</div>' : '') +
+        '<div class="um-batch-tag-input-row"><input class="um-dialog-input" id="umBatchTagInput" type="text" maxlength="80" autocomplete="off" autofocus ' +
+        'value="' + escapeHtml(state.batchTag.draft) + '" placeholder="输入标签后按 Enter 或逗号">' +
+        '<button class="um-dialog-button" type="button" data-dialog-action="batch-tag-add"' +
+        (draft && draft.length <= 40 && tags.length < 20 ? '' : ' disabled') + '>添加</button></div>' +
+        '<div class="um-dialog-field-help">按 Enter、中文或英文逗号创建标签，可连续添加多个；一次最多添加 20 个。</div></div>' +
+        '<div class="um-batch-tag-list" aria-label="待添加标签">' + tagMarkup + '</div>' +
+        '<div class="um-dialog-guidance">这些标签会一次添加到全部所选用户；用户已有的同名标签不会重复添加。</div>' +
+        (validationMessage ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(validationMessage) + '</div>' : '') +
         (state.batchTag.error ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.batchTag.error) + '</div>' : ''),
       footer: '<button class="um-dialog-button" type="button" data-dialog-action="close"' +
         (state.batchTag.busy ? ' disabled' : '') + '>取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="batch-tag-confirm"' +
-        (tag && !tooLong && !state.batchTag.busy ? '' : ' disabled') + '>' +
-        (state.batchTag.busy ? '正在添加…' : '添加标签') + '</button>'
+        (values.length && !validationMessage && !state.batchTag.busy ? '' : ' disabled') + '>' +
+        (state.batchTag.busy ? '正在添加…' : '添加 ' + values.length + ' 个标签') + '</button>'
     });
   }
 
@@ -1643,22 +1654,6 @@
       renderShopify();
       return;
     }
-    if (name === 'marketing-status') {
-      state.marketing.status = value;
-      renderMarketing();
-      return;
-    }
-    if (name === 'marketing-channel') {
-      state.marketing.channel = value;
-      state.marketing.status = value === 'email' ? 'subscribed' : 'enabled';
-      state.marketing.error = '';
-      renderMarketing();
-      return;
-    }
-    if (name === 'marketing-source') {
-      state.marketing.source = value;
-      renderMarketing();
-    }
   }
 
   async function handleClick(event) {
@@ -1700,6 +1695,10 @@
       if (csvSessionGate.isCurrent(exampleToken) && active.type === 'csv') {
         loadCsvText('user-import-example.csv', csvMockText());
       }
+      return;
+    }
+    if (action === 'csv-template') {
+      downloadCsvTemplate();
       return;
     }
     if (action === 'csv-back') {
@@ -1869,82 +1868,58 @@
       renderShopify();
       return;
     }
-    if (action === 'marketing-time-toggle') {
-      state.marketing.timeOpen = !state.marketing.timeOpen;
-      state.marketing.timeError = '';
+    if (action === 'marketing-toggle-channel') {
+      var marketingChannel = actionTarget.getAttribute('data-marketing-channel');
+      if (['email', 'sms', 'whatsapp'].indexOf(marketingChannel) === -1) return;
+      state.marketing.channels[marketingChannel] = !state.marketing.channels[marketingChannel];
+      state.marketing.error = '';
       renderMarketing();
-      if (state.marketing.timeOpen) {
-        var dateDraft = root.document.getElementById('umMarketingDateDraft');
-        if (dateDraft) dateDraft.focus();
-      } else {
-        var timeTrigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
-        if (timeTrigger) timeTrigger.focus();
-      }
-      return;
-    }
-    if (action === 'marketing-time-now') {
-      var nowValue = localDateTimeValue(new Date());
-      state.marketing.dateDraft = nowValue.slice(0, 10);
-      state.marketing.timeDraft = nowValue.slice(11, 16);
-      state.marketing.timeError = '';
-      renderMarketing();
-      return;
-    }
-    if (action === 'marketing-time-clear') {
-      state.marketing.consentedAt = '';
-      state.marketing.dateDraft = '';
-      state.marketing.timeDraft = '';
-      state.marketing.timeError = '';
-      state.marketing.timeOpen = false;
-      renderMarketing();
-      return;
-    }
-    if (action === 'marketing-time-confirm') {
-      var draft = state.marketing.dateDraft + 'T' + state.marketing.timeDraft;
-      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft) || !parseConsentDateTime(draft)) {
-        state.marketing.timeError = '请输入有效日期和时间（YYYY-MM-DD、HH:MM）。';
-        renderMarketing();
-        return;
-      }
-      state.marketing.consentedAt = draft;
-      state.marketing.timeError = '';
-      state.marketing.timeOpen = false;
-      renderMarketing();
-      var confirmedTrigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
-      if (confirmedTrigger) confirmedTrigger.focus();
+      var channelToggle = active.overlay.querySelector(
+        '[data-dialog-action="marketing-toggle-channel"][data-marketing-channel="' +
+        marketingChannel + '"]'
+      );
+      if (channelToggle) channelToggle.focus();
       return;
     }
     if (action === 'marketing-confirm') {
       if (!marketingValid()) return;
       var marketingOperationNonce = openNonce;
+      var selectedMarketingChannels = marketingSelectedChannels();
       var consent = {
-        source: state.marketing.source === 'none' ? 'admin' : state.marketing.source,
-        consentedAt: state.marketing.consentedAt
-          ? new Date(state.marketing.consentedAt).toISOString()
-          : new Date().toISOString(),
-        note: state.marketing.note
+        source: 'admin',
+        consentedAt: new Date().toISOString(),
+        note: '后台营销授权'
       };
       state.marketing.busy = true;
       state.marketing.error = '';
       renderMarketing();
-      var marketingCall = state.marketing.channel === 'email'
-        ? await invokeHookAsync('updateMarketing', [
-            state.marketing.ids,
-            state.marketing.status,
-            consent
-          ])
-        : await invokeHookAsync('updateMarketingChannel', [
-            state.marketing.ids,
-            state.marketing.channel,
-            state.marketing.status === 'enabled',
-            consent
-          ]);
-      if (marketingOperationNonce !== openNonce) return;
-      if (!marketingCall.ok) {
-        operationFailed(state.marketing, renderMarketing, marketingCall.error);
-        return;
+      var marketingChanged = 0;
+      for (var channelIndex = 0; channelIndex < selectedMarketingChannels.length; channelIndex += 1) {
+        var selectedMarketingChannel = selectedMarketingChannels[channelIndex];
+        var marketingCall = selectedMarketingChannel === 'email'
+          ? await invokeHookAsync('updateMarketing', [
+              state.marketing.ids,
+              'subscribed',
+              consent
+            ])
+          : await invokeHookAsync('updateMarketingChannel', [
+              state.marketing.ids,
+              selectedMarketingChannel,
+              true,
+              consent
+            ]);
+        if (marketingOperationNonce !== openNonce) return;
+        if (!marketingCall.ok) {
+          operationFailed(state.marketing, renderMarketing, marketingCall.error);
+          return;
+        }
+        marketingChanged += Number(marketingCall.value && marketingCall.value.changed) || 0;
       }
-      await completeAndClose(marketingCall.value, state.marketing, renderMarketing);
+      await completeAndClose(
+        { ok: true, changed: marketingChanged, channels: selectedMarketingChannels },
+        state.marketing,
+        renderMarketing
+      );
       return;
     }
     if (action === 'export-toggle-field') {
@@ -1986,14 +1961,27 @@
       closeActive(true);
       return;
     }
+    if (action === 'batch-tag-add') {
+      commitBatchTagDraft();
+      return;
+    }
+    if (action === 'batch-tag-remove') {
+      var tagIndex = Number(actionTarget.getAttribute('data-tag-index'));
+      if (!Number.isInteger(tagIndex) || tagIndex < 0 || tagIndex >= state.batchTag.tags.length) return;
+      state.batchTag.tags.splice(tagIndex, 1);
+      state.batchTag.error = '';
+      renderBatchTag();
+      focusBatchTagInput();
+      return;
+    }
     if (action === 'batch-tag-confirm') {
-      var tag = batchTagValue();
-      if (!tag || tag.length > 40 || state.batchTag.busy) return;
+      var tags = batchTagValues();
+      if (!tags.length || batchTagValidationMessage() || state.batchTag.busy) return;
       var tagOperationNonce = openNonce;
       state.batchTag.busy = true;
       state.batchTag.error = '';
       renderBatchTag();
-      var tagCall = await invokeHookAsync('addTags', [state.batchTag.ids, tag]);
+      var tagCall = await invokeHookAsync('addTags', [state.batchTag.ids, tags]);
       if (tagOperationNonce !== openNonce) return;
       if (!tagCall.ok) {
         operationFailed(state.batchTag, renderBatchTag, tagCall.error);
@@ -2009,7 +1997,7 @@
       state.batchTag.result = {
         message: tagCall.value && tagCall.value.message
           ? String(tagCall.value.message)
-          : '标签“' + tag + '”已处理。'
+          : tags.length + ' 个标签已处理。'
       };
       renderBatchTag();
       focusFirst(active.overlay);
@@ -2107,19 +2095,13 @@
       }
       return;
     }
-    if (event.target.id === 'umMarketingDateDraft') {
-      state.marketing.dateDraft = event.target.value;
-      state.marketing.timeError = '';
-      return;
-    }
-    if (event.target.id === 'umMarketingClockDraft') {
-      state.marketing.timeDraft = event.target.value;
-      state.marketing.timeError = '';
-      return;
-    }
     if (event.target.id === 'umBatchTagInput') {
-      state.batchTag.tag = event.target.value;
+      state.batchTag.draft = event.target.value;
       state.batchTag.error = '';
+      if (/[,，]/.test(state.batchTag.draft)) {
+        commitBatchTagDraft();
+        return;
+      }
       var cursor = event.target.selectionStart;
       renderBatchTag();
       var nextTagInput = root.document.getElementById('umBatchTagInput');
@@ -2129,7 +2111,6 @@
       }
       return;
     }
-    if (event.target.id === 'umMarketingNote') state.marketing.note = event.target.value;
   }
 
   function handleChange(event) {
@@ -2164,16 +2145,14 @@
   function trapFocus(event) {
     if (!active) return;
     if (handleComboKeyboard(event)) return;
+    if (active.type === 'batch-tag' && event.target.id === 'umBatchTagInput' &&
+        (event.key === 'Enter' || event.key === ',' || event.key === '，') &&
+        !event.isComposing && event.keyCode !== 229) {
+      event.preventDefault();
+      commitBatchTagDraft();
+      return;
+    }
     if (event.key === 'Escape') {
-      if (active.type === 'marketing' && state.marketing && state.marketing.timeOpen) {
-        event.preventDefault();
-        state.marketing.timeOpen = false;
-        state.marketing.timeError = '';
-        renderMarketing();
-        var trigger = active.overlay.querySelector('[data-dialog-action="marketing-time-toggle"]');
-        if (trigger) trigger.focus();
-        return;
-      }
       if (!active.blocking) {
         event.preventDefault();
         closeActive(true);
@@ -2226,15 +2205,11 @@
       var normalizedIds = Array.isArray(ids) ? ids.filter(Boolean) : [ids].filter(Boolean);
       state.marketing = {
         ids: normalizedIds,
-        channel: 'email',
-        status: 'subscribed',
-        source: 'none',
-        consentedAt: '',
-        dateDraft: '',
-        timeDraft: '',
-        timeOpen: false,
-        timeError: '',
-        note: '',
+        channels: {
+          email: false,
+          sms: false,
+          whatsapp: false
+        },
         error: '',
         busy: false
       };
@@ -2246,7 +2221,8 @@
       ));
       state.batchTag = {
         ids: normalizedIds,
-        tag: '',
+        tags: [],
+        draft: '',
         error: normalizedIds.length ? '' : '请先选择至少一位用户。',
         busy: false,
         result: null
@@ -2280,8 +2256,10 @@
       var ids = Array.isArray(settings.ids) ? settings.ids.filter(Boolean) : [];
       state.deletion = {
         ids: ids,
-        title: settings.title || (ids.length > 1 ? '删除所选用户' : '删除用户'),
-        message: settings.message || '删除后用户档案及其授权历史将无法恢复，请谨慎操作。',
+        title: settings.title || '确认删除',
+        message: settings.message || (ids.length > 1
+          ? '删除后，所选 ' + ids.length + ' 位用户的档案及营销授权记录将永久移除，且无法恢复。'
+          : '删除后，该用户的档案及营销授权记录将永久移除，且无法恢复。'),
         users: [],
         riskStatus: 'loading',
         version: '',

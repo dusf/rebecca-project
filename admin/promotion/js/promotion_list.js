@@ -203,6 +203,12 @@ var pAllData = (window._promoStore && window._promoStore.data) || [
     createdAt: '2026-07-15', description: '订阅用户双11期间输入折扣码全球免邮（未开始）'
   }
 ];
+ensureBusinessNumbers(
+  pAllData,
+  'discountNumber',
+  'DSC',
+  'rebecca_discount_number_sequence_v1'
+);
 
 // 持久化到父窗口
 function pSyncToParent() {
@@ -292,6 +298,7 @@ function pApplyFilters() {
     data = data.filter(function(d) {
       return (d.name && d.name.toLowerCase().indexOf(pFilters.search) !== -1)
         || (d.code && d.code.toLowerCase().indexOf(pFilters.search) !== -1)
+        || (d.discountNumber && d.discountNumber.toLowerCase().indexOf(pFilters.search) !== -1)
         || (d.id && d.id.toLowerCase().indexOf(pFilters.search) !== -1);
     });
   }
@@ -442,7 +449,8 @@ function pRenderCell(d, key, isChecked) {
     case 'promoInfo':
       return '<div class="promo-info-cell">'
         + '<span class="promo-info-name">' + pEscape(d.name) + '</span>'
-        + '<span class="promo-info-meta">' + d.id
+        + '<span class="promo-info-meta">' +
+        businessNumberMarkup(d.discountNumber, '折扣编号')
         + (d.code ? ' <span class="promo-code-tag">' + pEscape(d.code) + '</span>' : '')
         + '</span></div>';
     case 'type':
@@ -488,7 +496,7 @@ function pRenderCell(d, key, isChecked) {
     case 'actions':
       return '<div class="row-actions">'
         + '<button class="row-action-btn" title="编辑" onclick="event.stopPropagation();pGoEdit(\'' + d.id + '\')">'
-        + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+        + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
         + '<button class="row-action-btn danger" title="删除" onclick="event.stopPropagation();pHandleAction(\'delete\',\'' + d.id + '\')">'
         + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>'
         + '<div class="more-actions-dropdown">'
@@ -895,6 +903,7 @@ function pDuplicate(id) {
   var newId = 'P' + src.type.substring(0,1).toUpperCase() + '-' + String(pAllData.length + 1).padStart(3, '0');
   var clone = JSON.parse(JSON.stringify(src));
   clone.id = newId;
+  delete clone.discountNumber;
   clone.name = src.name + ' (副本)';
   clone.totalUsage = 0;
   clone.salesAmount = 0;
@@ -904,6 +913,12 @@ function pDuplicate(id) {
   clone.createdAt = new Date().toISOString().slice(0, 10);
   if (src.method === 'code') clone.code = src.code + 'CP';
   pAllData.push(clone);
+  ensureBusinessNumbers(
+    pAllData,
+    'discountNumber',
+    'DSC',
+    'rebecca_discount_number_sequence_v1'
+  );
   pSyncToParent();
   pApplyFilters();
   if (typeof showToast === 'function') showToast('已复制折扣活动', 'success');

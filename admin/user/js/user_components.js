@@ -13,12 +13,19 @@
       { value: 'disabled', label: '已禁用' }
     ],
     marketingStatus: [
-      { value: 'all', label: '营销状态', placeholder: true },
+      { value: 'all', label: '订阅状态', placeholder: true },
       { value: 'subscribed', label: '已订阅' },
       { value: 'not_subscribed', label: '未订阅' },
       { value: 'pending', label: '待确认' },
       { value: 'unsubscribed', label: '已退订' },
       { value: 'invalid', label: '无效邮箱' }
+    ],
+    marketingChannel: [
+      { value: 'all', label: '营销授权', placeholder: true },
+      { value: 'email', label: '邮件已授权' },
+      { value: 'sms', label: '短信已授权' },
+      { value: 'whatsapp', label: 'WhatsApp 已授权' },
+      { value: 'none', label: '未授权任何渠道' }
     ]
   };
 
@@ -87,6 +94,11 @@
     element.setAttribute('data-value', value || '');
     element.innerHTML =
       '<button class="um-control um-combobox-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"></button>' +
+      '<button class="um-combobox-clear" type="button" title="清除选择" aria-label="清除选择">' +
+        '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+          '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>' +
+        '</svg>' +
+      '</button>' +
       '<div class="um-combobox-popover" role="listbox" hidden>' +
         '<div class="um-combobox-search-wrap">' +
           '<input class="um-combobox-search" type="text" placeholder="输入关键词搜索" aria-label="搜索选项">' +
@@ -104,11 +116,24 @@
     var source = suppliedOptions || CONTROL_OPTIONS[name];
     var options = normalizeOptions(name, source);
     var trigger = element.querySelector('.um-combobox-trigger');
+    var clear = element.querySelector('.um-combobox-clear');
     var popover = element.querySelector('.um-combobox-popover');
     var search = element.querySelector('.um-combobox-search');
     var optionsHost = element.querySelector('.um-combobox-options');
     if (!trigger || !popover || !search || !optionsHost) {
       throw new Error('UserComponents: invalid combobox markup for "' + name + '".');
+    }
+    if (!clear) {
+      clear = getDocument(element).createElement('button');
+      clear.className = 'um-combobox-clear';
+      clear.type = 'button';
+      clear.title = '清除选择';
+      clear.setAttribute('aria-label', '清除选择');
+      clear.innerHTML =
+        '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+          '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>' +
+        '</svg>';
+      trigger.insertAdjacentElement('afterend', clear);
     }
 
     idSequence += 1;
@@ -127,6 +152,14 @@
 
     function selectedOption() {
       return options.filter(function (option) { return option.value === value; })[0] || options[0];
+    }
+
+    function defaultOption() {
+      return options.filter(function (option) {
+        return option.placeholder && !option.disabled;
+      })[0] || options.filter(function (option) {
+        return !option.disabled;
+      })[0];
     }
 
     function enabledIndexes() {
@@ -214,10 +247,15 @@
 
     function syncValue() {
       var option = selectedOption();
+      var initialOption = defaultOption();
+      var isDefault = initialOption && initialOption.value === option.value;
       element.setAttribute('data-value', value);
       trigger.textContent = option.label;
       trigger.setAttribute('data-value', value);
       trigger.classList.toggle('is-placeholder', option.placeholder);
+      element.classList.toggle('has-value', !isDefault);
+      clear.hidden = Boolean(isDefault);
+      clear.setAttribute('aria-label', '清除' + option.label + '，恢复默认选项');
       Array.prototype.forEach.call(optionsHost.querySelectorAll('.um-combobox-option'), function (node) {
         node.setAttribute('aria-selected', node.getAttribute('data-value') === value ? 'true' : 'false');
       });
@@ -295,6 +333,20 @@
       else open(true);
     }
 
+    function onClearClick(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      var option = defaultOption();
+      if (!option || option.value === value) return;
+      value = option.value;
+      filtered = options.slice();
+      syncValue();
+      renderOptions();
+      close(false);
+      dispatchChange(element, name, value, option.label);
+      trigger.focus();
+    }
+
     function onSearchInput() {
       var query = search.value.trim().toLocaleLowerCase();
       filtered = options.filter(function (option) {
@@ -311,6 +363,7 @@
     }
 
     trigger.addEventListener('click', onTriggerClick);
+    clear.addEventListener('click', onClearClick);
     trigger.addEventListener('keydown', handleNavigation);
     search.addEventListener('input', onSearchInput);
     search.addEventListener('keydown', handleNavigation);
@@ -352,6 +405,7 @@
       destroy: function () {
         close(false);
         trigger.removeEventListener('click', onTriggerClick);
+        clear.removeEventListener('click', onClearClick);
         trigger.removeEventListener('keydown', handleNavigation);
         search.removeEventListener('input', onSearchInput);
         search.removeEventListener('keydown', handleNavigation);

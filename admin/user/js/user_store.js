@@ -842,11 +842,25 @@
     return { source: consent.source || consent.consentSource || '', consentedAt: consent.consentedAt || '', note: consent.note || '' };
   }
 
-  function addTagToUsers(ids, value) {
-    const tag = String(value || '').trim();
-    if (!tag || tag.length > 40) {
-      return { ok: false, error: '请输入不超过 40 个字符的标签名称。' };
+  function normalizeTagValues(values) {
+    const source = Array.isArray(values) ? values : [values];
+    const tags = [];
+    source.forEach(function (value) {
+      const tag = String(value || '').trim();
+      if (tag && tags.indexOf(tag) === -1) tags.push(tag);
+    });
+    if (!tags.length) return { ok: false, error: '请至少添加一个标签。', tags: [] };
+    if (tags.length > 20) return { ok: false, error: '一次最多添加 20 个标签。', tags: [] };
+    if (tags.some(function (tag) { return tag.length > 40; })) {
+      return { ok: false, error: '每个标签名称不能超过 40 个字符。', tags: [] };
     }
+    return { ok: true, error: '', tags: tags };
+  }
+
+  function addTagsToUsers(ids, values) {
+    const normalized = normalizeTagValues(values);
+    if (!normalized.ok) return { ok: false, error: normalized.error };
+    const requestedTags = normalized.tags;
     const targetIds = new Set((Array.isArray(ids) ? ids : []).map(function (id) {
       return String(id || '').trim();
     }));
@@ -854,18 +868,24 @@
     let changed = 0;
     let skipped = 0;
     let failed = 0;
+    let added = 0;
     users.forEach(function (user) {
       if (!targetIds.has(user.id)) return;
       const tags = Array.isArray(user.tags) ? user.tags.slice() : [];
-      if (tags.indexOf(tag) !== -1) {
+      const before = tags.length;
+      requestedTags.forEach(function (tag) {
+        if (tags.indexOf(tag) === -1) tags.push(tag);
+      });
+      const addedForUser = tags.length - before;
+      if (!addedForUser) {
         skipped += 1;
         targetIds.delete(user.id);
         return;
       }
-      tags.push(tag);
       user.tags = tags;
       user.updatedAt = new Date().toISOString();
       changed += 1;
+      added += addedForUser;
       targetIds.delete(user.id);
     });
     failed = targetIds.size;
@@ -875,10 +895,16 @@
       changed: changed,
       skipped: skipped,
       failed: failed,
-      message: '已为 ' + changed + ' 位用户添加标签' +
-        (skipped ? '，' + skipped + ' 位已有该标签' : '') +
+      added: added,
+      tagCount: requestedTags.length,
+      message: '已为 ' + changed + ' 位用户处理 ' + requestedTags.length + ' 个标签，共新增 ' + added + ' 个标签' +
+        (skipped ? '，' + skipped + ' 位用户已包含全部所选标签' : '') +
         (failed ? '，' + failed + ' 位处理失败' : '') + '。'
     };
+  }
+
+  function addTagToUsers(ids, value) {
+    return addTagsToUsers(ids, [value]);
   }
 
   function importStatusTime(profile) {
@@ -939,6 +965,16 @@
           counts.merged += 1;
           user.firstName = String(profile.firstName || user.firstName || '').trim();
           user.lastName = String(profile.lastName || user.lastName || '').trim();
+          if (String(profile.phone || '').trim()) user.phone = String(profile.phone).trim();
+          if (Array.isArray(profile.tags) && profile.tags.length) {
+            user.tags = Array.isArray(user.tags) ? user.tags.slice() : [];
+            profile.tags.forEach(function (tag) {
+              const normalizedTag = String(tag || '').trim();
+              if (normalizedTag && user.tags.indexOf(normalizedTag) === -1 && user.tags.length < 20) {
+                user.tags.push(normalizedTag);
+              }
+            });
+          }
           if (canImportSubscribed && user.marketingStatus !== 'subscribed') {
             user.marketingStatus = 'subscribed';
             appendImportedStatus(user, 'subscribed', profile, source, consentValidation.consent);
@@ -946,6 +982,18 @@
             user.marketingStatus = profile.marketingStatus;
             appendImportedStatus(user, profile.marketingStatus, profile, source);
           }
+          user.marketingChannels = user.marketingChannels || {
+            email: user.marketingStatus === 'subscribed',
+            sms: false,
+            whatsapp: false
+          };
+          user.marketingChannels.email = user.marketingStatus === 'subscribed';
+          ['sms', 'whatsapp'].forEach(function (channel) {
+            if (profile.marketingChannels &&
+                Object.prototype.hasOwnProperty.call(profile.marketingChannels, channel)) {
+              user.marketingChannels[channel] = Boolean(profile.marketingChannels[channel]);
+            }
+          });
           user.externalProfiles = Array.isArray(user.externalProfiles) ? user.externalProfiles : [];
           if (externalId && !user.externalProfiles.some(function (item) { return item.externalId === externalId; })) user.externalProfiles.push(profileRecord(profile, source));
           addUniqueStore(user, profile.store);
@@ -968,7 +1016,9 @@
         }
         user = buildUser({
           shopId: targetShopId, email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
+          tags: Array.isArray(profile.tags) ? profile.tags : [],
           accountStatus: 'pending', marketingStatus: initialMarketingStatus,
+          marketingChannels: profile.marketingChannels,
           source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
           consentHistory: initialConsentHistory
         });
@@ -1078,6 +1128,10 @@
     return withWriteLock(function () { return addTagToUsers(ids, value); });
   }
 
+  function addTagsToUsersLocked(ids, values) {
+    return withWriteLock(function () { return addTagsToUsers(ids, values); });
+  }
+
   function importProfilesLocked(profiles, source, shopId) {
     return withWriteLock(function () { return importProfiles(profiles, source, shopId); }, {
       requireLock: true,
@@ -1142,6 +1196,8 @@
     setMarketingChannelStatusLocked: setMarketingChannelStatusLocked,
     addTagToUsers: addTagToUsers,
     addTagToUsersLocked: addTagToUsersLocked,
+    addTagsToUsers: addTagsToUsers,
+    addTagsToUsersLocked: addTagsToUsersLocked,
     importProfiles: importProfiles,
     importProfilesLocked: importProfilesLocked,
     subscribe: subscribe,

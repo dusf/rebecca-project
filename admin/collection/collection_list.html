@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css?v=3">
-  <link rel="stylesheet" href="css/collection.css">
+  <link rel="stylesheet" href="../common/css/commons.css?v=8">
+  <link rel="stylesheet" href="css/collection.css?v=2">
   <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
   <script>
     (function(){
@@ -83,7 +83,7 @@
             <div class="toolbar-left">
               <div class="search-input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(var(--muted-foreground));flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" placeholder="搜索系列名称..." id="collectionSearch" oninput="filterCollections()" />
+                <input type="text" placeholder="搜索系列名称、系列编号..." id="collectionSearch" oninput="filterCollections()" />
               </div>
               <select class="filter-select" id="statusFilter" onchange="filterCollections()">
                 <option value="">全部状态</option>
@@ -157,7 +157,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script>var CURRENT_PAGE = 'series';</script>
-  <script src="../common/js/commons.js"></script>
+  <script src="../common/js/commons.js?v=9"></script>
   <script>
     // ==================== 系列数据 ====================
     // 从 localStorage 加载，若没有则使用默认数据
@@ -182,7 +182,13 @@
       } catch(e) {}
     }
 
-    var collections = loadCollections();
+    var collections = ensureBusinessNumbers(
+      loadCollections(),
+      'collectionNumber',
+      'COL',
+      'rebecca_collection_number_sequence_v1'
+    );
+    saveCollections(collections);
     var selectedIds = {};
 
     // ==================== 批量操作 ====================
@@ -191,7 +197,9 @@
       var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
       var filtered = collections.filter(function(c) {
         if (filter && c.status !== filter) return false;
-        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        if (search &&
+            c.name.toLowerCase().indexOf(search) === -1 &&
+            c.collectionNumber.toLowerCase().indexOf(search) === -1) return false;
         return true;
       });
       var allSelected = filtered.length > 0 && filtered.every(function(c) { return selectedIds[c.id]; });
@@ -220,7 +228,9 @@
       var search = (document.getElementById('collectionSearch').value || '').toLowerCase();
       var filtered = collections.filter(function(c) {
         if (filter && c.status !== filter) return false;
-        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        if (search &&
+            c.name.toLowerCase().indexOf(search) === -1 &&
+            c.collectionNumber.toLowerCase().indexOf(search) === -1) return false;
         return true;
       });
       var allSel = filtered.length > 0 && filtered.every(function(c) { return selectedIds[c.id]; });
@@ -283,7 +293,9 @@
 
       var filtered = collections.filter(function(c) {
         if (filter && c.status !== filter) return false;
-        if (search && c.name.toLowerCase().indexOf(search) === -1) return false;
+        if (search &&
+            c.name.toLowerCase().indexOf(search) === -1 &&
+            c.collectionNumber.toLowerCase().indexOf(search) === -1) return false;
         return true;
       });
 
@@ -315,7 +327,9 @@
               (!c.cover ? '<span class="placeholder" style="color:rgba(255,255,255,0.7);font-size:12px;">' + c.name.charAt(0) + '</span>' : '') +
             '</div>' +
           '</td>' +
-          '<td><a class="series-name-link" onclick="editCollection(\'' + c.id + '\')">' + c.name + '</a></td>' +
+          '<td><div class="series-info-cell"><a class="series-name-link" onclick="editCollection(\'' +
+            c.id + '\')">' + c.name + '</a>' +
+            businessNumberMarkup(c.collectionNumber, '系列编号') + '</div></td>' +
           '<td style="text-align:center">' + c.productCount + '</td>' +
           '<td><span class="status-tag ' + statusClass + '"><span class="dot"></span>' + statusText + '</span></td>' +
           '<td style="color:hsl(var(--muted-foreground));font-size:13px;">' + c.createdAt + '</td>' +

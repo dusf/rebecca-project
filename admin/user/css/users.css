@@ -48,7 +48,7 @@
 .um-field-help {
   margin-top: 4px;
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .um-list-page .um-page-subtitle {
@@ -91,7 +91,7 @@
   border-radius: 10px;
   background: hsl(var(--primary-50));
   color: hsl(var(--foreground));
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .um-guidance:empty {
@@ -308,7 +308,7 @@ textarea.um-text-control {
 .um-field-label {
   display: inline-block;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -337,6 +337,57 @@ textarea.um-text-control {
   height: 14px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0937D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") center / 14px no-repeat;
   transform: translateY(-50%);
+  transition: opacity .16s ease;
+}
+
+.um-combobox-clear {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 6px;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  opacity: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+  pointer-events: none;
+  transition: color .16s ease, background-color .16s ease, opacity .16s ease;
+}
+
+.um-combobox-clear[hidden] {
+  display: none;
+}
+
+.um-combobox-clear svg {
+  width: 14px;
+  height: 14px;
+}
+
+.um-combobox.has-value:hover .um-combobox-trigger::after,
+.um-combobox.has-value:focus-within .um-combobox-trigger::after {
+  opacity: 0;
+}
+
+.um-combobox.has-value:hover .um-combobox-clear,
+.um-combobox.has-value:focus-within .um-combobox-clear,
+.um-combobox-clear:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.um-combobox-clear:hover,
+.um-combobox-clear:focus-visible {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  outline: none;
 }
 
 .um-combobox-popover {
@@ -437,7 +488,7 @@ textarea.um-text-control {
 .um-combobox-empty {
   padding: 18px 10px;
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -622,7 +673,7 @@ textarea.um-text-control {
   grid-template-columns: repeat(7, minmax(32px, 1fr));
   margin-bottom: 4px;
   color: hsl(var(--muted-foreground));
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -797,14 +848,14 @@ textarea.um-text-control {
   padding: 12px 14px;
   border-bottom: 1px solid hsl(var(--border));
   background: hsl(var(--card));
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
   vertical-align: middle;
 }
 
 .um-table th {
   color: hsl(var(--muted-foreground));
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -835,7 +886,7 @@ textarea.um-text-control {
   min-height: 260px;
   padding: 28px;
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -867,7 +918,7 @@ textarea.um-text-control {
 .um-title-count {
   margin-left: 8px;
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
 }
 
@@ -880,6 +931,15 @@ textarea.um-text-control {
   gap: 8px;
 }
 
+.um-header-actions .um-file-action {
+  background: #fff;
+}
+
+.um-header-actions .um-file-action:hover,
+.um-header-actions .um-file-action:focus-visible {
+  background: hsl(var(--background));
+}
+
 .um-button,
 .um-icon-button {
   display: inline-flex;
@@ -889,7 +949,7 @@ textarea.um-text-control {
   padding: 0 13px;
   border: 1px solid transparent;
   border-radius: 8px;
-  font: 600 13px/1.4 var(--font-sans);
+  font: 600 14px/1.4 var(--font-sans);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -900,7 +960,7 @@ textarea.um-text-control {
   height: 32px;
   padding: 0 12px;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -971,7 +1031,7 @@ textarea.um-text-control {
 .um-icon-button {
   width: 38px;
   padding: 0;
-  font-size: 19px;
+  font-size: 20px;
 }
 
 .um-icon-button.um-button-sm {
@@ -994,16 +1054,16 @@ textarea.um-text-control {
 
 .um-menu summary::after {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 14px;
+  height: 14px;
   margin-left: 9px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
+  border: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0937D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") center / 14px no-repeat;
+  transform: none;
 }
 
 .um-menu[open] summary::after {
-  transform: translateY(2px) rotate(225deg);
+  transform: rotate(180deg);
 }
 
 .um-menu.is-disabled summary {
@@ -1046,7 +1106,7 @@ textarea.um-text-control {
   border-radius: 7px;
   background: transparent;
   color: hsl(var(--popover-foreground));
-  font: 13px/1.4 var(--font-sans);
+  font: 14px/1.4 var(--font-sans);
   text-align: left;
   cursor: pointer;
 }
@@ -1065,9 +1125,10 @@ textarea.um-text-control {
 }
 
 .um-menu-panel [data-export-count] {
-  margin-left: auto;
+  margin-left: 2px;
   color: hsl(var(--muted-foreground));
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .um-toolbar {
@@ -1180,12 +1241,12 @@ textarea.um-text-control {
   width: 16px;
   height: 16px;
   right: 13px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A0937D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") center / 16px no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23A0937D' d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V9h14v11Z'/%3E%3C/svg%3E") center / 16px no-repeat;
 }
 
 .um-date-filter-separator {
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .um-date-trigger.is-placeholder {
@@ -1200,7 +1261,7 @@ textarea.um-text-control {
   padding: 8px 12px 8px 16px;
   border-bottom: 1px solid hsl(var(--border));
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .um-column-panel {
@@ -1355,11 +1416,109 @@ textarea.um-text-control {
 
 .um-user-id {
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   overflow: hidden;
   color: hsl(var(--muted-foreground));
-  font-size: 11px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.um-user-id > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.um-copy-number {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.um-copy-number:hover,
+.um-copy-number:focus-visible {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+
+.um-copy-number:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+}
+
+.um-copy-number svg {
+  width: 13px;
+  height: 13px;
+}
+
+.um-list-tags {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.um-list-tag {
+  max-width: 72px;
+  overflow: hidden;
+  padding: 3px 7px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: hsl(var(--muted) / 72%);
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.um-tag-overflow {
+  display: inline-flex;
+  min-width: 28px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: hsl(var(--accent));
+  color: hsl(var(--muted-foreground));
+  cursor: help;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.um-tag-overflow:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.um-tag-tooltip {
+  position: fixed;
+  z-index: 5200;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--popover));
+  box-shadow: 0 10px 28px rgb(0 0 0 / 14%);
+  color: hsl(var(--popover-foreground));
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.um-tag-tooltip[hidden] {
+  display: none;
 }
 
 .um-user-email {
@@ -1488,7 +1647,7 @@ textarea.um-text-control {
 .um-detail-card strong {
   display: block;
   margin-bottom: 5px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .um-detail-row + .um-detail-row {
@@ -1529,6 +1688,11 @@ textarea.um-text-control {
 .um-row-action:hover {
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
+}
+
+.um-row-action-danger:hover {
+  background: hsl(0 84% 90%);
+  color: hsl(var(--error));
 }
 
 .um-row-action svg {
@@ -1670,11 +1834,12 @@ textarea.um-text-control {
 .um-toast-region {
   position: fixed;
   z-index: 700;
-  top: 18px;
-  right: 18px;
+  top: 24px;
+  left: 50%;
   display: grid;
   gap: 8px;
   width: min(360px, calc(100vw - 36px));
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
@@ -1685,7 +1850,7 @@ textarea.um-text-control {
   background: hsl(var(--popover));
   color: hsl(var(--popover-foreground));
   box-shadow: 0 10px 28px hsl(var(--shadow-color) / .16);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   animation: um-toast-in .18s ease-out;
 }
@@ -1730,7 +1895,7 @@ textarea.um-text-control {
   border-radius: 10px;
   background: hsl(var(--error) / .06);
   color: hsl(var(--foreground));
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
@@ -1910,7 +2075,7 @@ textarea.um-text-control {
 
 .um-duplicate-card p {
   margin: 4px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .um-duplicate-card small {
@@ -1968,7 +2133,7 @@ textarea.um-text-control {
 }
 
 .um-summary-row code {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .um-sidebar-notice {
@@ -2010,7 +2175,7 @@ textarea.um-text-control {
 }
 
 .um-readonly-row strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .um-readonly-row span,
@@ -2059,7 +2224,7 @@ textarea.um-text-control {
   border: 1px dashed hsl(var(--border));
   border-radius: 9px;
   color: hsl(var(--muted-foreground));
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
   text-align: center;
 }

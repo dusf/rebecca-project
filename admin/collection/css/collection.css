@@ -202,6 +202,14 @@
   color: hsl(var(--primary));
 }
 
+.series-info-cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 /* 状态标签 */
 .status-tag {
   display: inline-flex;

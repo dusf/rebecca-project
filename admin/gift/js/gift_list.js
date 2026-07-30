@@ -116,7 +116,7 @@
   function cellHtml(tab, row, key) {
     if (tab === 'pool') {
       switch (key) {
-        case 'name': return `<div class="gwp-cell-product"><span class="gwp-thumb">🎁</span><div><div>${esc(row.displayName)}</div><div class="gwp-sub">${esc(row.id)}</div></div></div>`;
+        case 'name': return `<div class="gwp-cell-product"><span class="gwp-thumb">🎁</span><div><div>${esc(row.displayName)}</div><div class="gwp-sub">${businessNumberMarkup(row.giftNumber, '赠品编号')}</div></div></div>`;
         case 'skuCount': {
           const total = totalSku(row);
           if (!total) return '0';
@@ -133,7 +133,7 @@
       }
     } else {
       switch (key) {
-        case 'name': return `<div><div>${esc(row.name)}</div><div class="gwp-rule-code">${esc(row.id)}</div></div>`;
+        case 'name': return `<div><div>${esc(row.name)}</div><div class="gwp-rule-code">${businessNumberMarkup(row.giftRuleNumber, '赠品规则编号')}</div></div>`;
         case 'scope': return scopeText(row.scope);
         case 'conditions': return conditionsText(row);
         case 'reward': return giftContentText(row);
@@ -152,7 +152,10 @@
       const q = s.search.toLowerCase();
       arr = arr.filter((r) => {
         const name = tab === 'pool' ? (r.displayName || '') : (r.name || '');
-        return name.toLowerCase().includes(q) || (r.id || '').toLowerCase().includes(q);
+        const businessNumber = tab === 'pool' ? r.giftNumber : r.giftRuleNumber;
+        return name.toLowerCase().includes(q) ||
+          (businessNumber || '').toLowerCase().includes(q) ||
+          (r.id || '').toLowerCase().includes(q);
       });
     }
     if (s.status && s.status !== 'all') arr = arr.filter((r) => r.status === s.status);

@@ -11,7 +11,13 @@ function saveCollections(cols) {
   try { localStorage.setItem('rebecca_collections_' + (getCurrentShopId ? getCurrentShopId() : 'default'), JSON.stringify(cols)); } catch(e) {}
 }
 
-var collections = loadCollections();
+var collections = ensureBusinessNumbers(
+  loadCollections(),
+  'collectionNumber',
+  'COL',
+  'rebecca_collection_number_sequence_v1'
+);
+saveCollections(collections);
 var editingId = null;
 var isEditMode = false;
 var assocProducts = [];
@@ -451,6 +457,12 @@ function saveCollection() {
     var dup = collections.find(function(c) { return c.name === name; });
     if (dup) { showToast('error', '该系列名称已被使用'); return; }
     collections.unshift(newCol);
+    ensureBusinessNumbers(
+      collections,
+      'collectionNumber',
+      'COL',
+      'rebecca_collection_number_sequence_v1'
+    );
     saveCollections(collections);
     showToast('success', '系列创建成功');
   }

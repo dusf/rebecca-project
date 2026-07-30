@@ -4,17 +4,19 @@
   const COLUMNS = [
     { key: 'user', label: '用户信息', fixed: 'left', alwaysShow: true, width: 260 },
     { key: 'accountStatus', label: '账号状态' },
-    { key: 'marketingStatus', label: '邮件营销' },
+    { key: 'marketingStatus', label: '订阅状态' },
+    { key: 'marketingAuthorization', label: '营销授权', width: 220 },
     { key: 'authProviders', label: '登录方式' },
     { key: 'source', label: '用户来源' },
+    { key: 'tags', label: '标签', width: 200 },
     { key: 'orderCount', label: '订单数', sortable: true },
     { key: 'totalSpent', label: '累计消费', sortable: true },
     { key: 'lastLoginAt', label: '最后登录时间', sortable: true },
     { key: 'createdAt', label: '创建时间', sortable: true }
   ];
 
-  const VISIBLE_KEY = 'rebecca_user_columns_v1';
-  const ORDER_KEY = 'rebecca_user_column_order_v1';
+  const VISIBLE_KEY = 'rebecca_user_columns_v3';
+  const ORDER_KEY = 'rebecca_user_column_order_v3';
   const GUIDANCE_PREF_KEY = 'rebecca_user_guidance_never_show_v1';
 
   const state = {
@@ -23,6 +25,7 @@
     filters: {
       accountStatus: 'all',
       marketingStatus: 'all',
+      marketingChannel: 'all',
       source: 'all',
       authProvider: 'all',
       createdFrom: '',
@@ -71,7 +74,7 @@
   const VIEW_DEFINITIONS = [
     { key: 'all', label: '全部用户' },
     { key: 'active', label: '已注册' },
-    { key: 'subscribed', label: '已订阅' },
+    { key: 'subscribed', label: '邮件已订阅' },
     { key: 'pending', label: '待激活' },
     { key: 'disabled', label: '已禁用' }
   ];
@@ -82,9 +85,9 @@
     { key: 'phone', label: '手机号' },
     { key: 'tags', label: '标签' },
     { key: 'accountStatus', label: '账号状态' },
-    { key: 'emailMarketing', label: '电子邮件营销' },
-    { key: 'smsMarketing', label: '短信营销' },
-    { key: 'whatsappMarketing', label: 'WhatsApp 营销' },
+    { key: 'emailMarketing', label: '订阅状态' },
+    { key: 'smsMarketing', label: '短信营销授权' },
+    { key: 'whatsappMarketing', label: 'WhatsApp 营销授权' },
     { key: 'authProviders', label: '登录方式' },
     { key: 'source', label: '用户来源' },
     { key: 'orderCount', label: '订单数', numeric: true },
@@ -114,8 +117,9 @@
   }
 
   const ICONS = {
-    edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
-    mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>',
+    delete: '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
     moreButton: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>',
     more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>'
   };
@@ -332,6 +336,16 @@
   }
 
   function showToast(message, tone) {
+    try {
+      if (root.parent && root.parent !== root && typeof root.parent.showToast === 'function') {
+        root.parent.showToast(tone || 'success', message);
+        return;
+      }
+    } catch (error) {}
+    if (typeof root.showToast === 'function') {
+      root.showToast(tone || 'success', message);
+      return;
+    }
     const region = elements.toastRegion || root.document.getElementById('userToastRegion');
     if (!region) return;
     const toast = root.document.createElement('div');
@@ -380,15 +394,17 @@
       method.call(dialogs, ids.slice());
       return true;
     }
-    showToast('邮件营销批量操作暂未加载，请稍后再试。', 'error');
+    showToast('营销授权批量操作暂未加载，请稍后再试。', 'error');
     return false;
   }
 
   function openDeleteDialog(ids) {
     const options = {
       ids: ids.slice(),
-      title: ids.length > 1 ? '删除所选用户' : '删除用户',
-      message: '删除后用户档案及其授权历史将无法恢复，请谨慎操作。'
+      title: '确认删除',
+      message: ids.length > 1
+        ? '删除后，所选 ' + ids.length + ' 位用户的档案及营销授权记录将永久移除，且无法恢复。'
+        : '删除后，该用户的档案及营销授权记录将永久移除，且无法恢复。'
     };
     try {
       if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openDeleteConfirm === 'function') {
@@ -437,6 +453,9 @@
     return '<div class="um-combobox" data-um-combobox="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(value) + '">' +
       '<button class="um-control um-combobox-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"></button>' +
+      '<button class="um-combobox-clear" type="button" title="清除选择" aria-label="清除选择">' +
+      '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+      '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
       '<div class="um-combobox-popover" role="listbox" hidden>' +
       '<div class="um-combobox-search-wrap">' +
       '<input class="um-combobox-search" type="text" placeholder="输入关键词搜索" aria-label="搜索选项">' +
@@ -625,12 +644,19 @@
         option('disabled', '已禁用')
       ],
       marketingStatus: [
-        option('all', '营销状态', true),
+        option('all', '订阅状态', true),
         option('subscribed', '已订阅'),
         option('not_subscribed', '未订阅'),
         option('unsubscribed', '已退订'),
         option('pending', '待确认'),
         option('invalid', '无效邮箱')
+      ],
+      marketingChannel: [
+        option('all', '营销授权', true),
+        option('email', '邮件已授权'),
+        option('sms', '短信已授权'),
+        option('whatsapp', 'WhatsApp 已授权'),
+        option('none', '未授权任何渠道')
       ],
       source: [
         option('all', '用户来源', true),
@@ -659,6 +685,7 @@
     const definitions = [
       { host: elements.accountFilter, name: 'accountStatus' },
       { host: elements.marketingFilter, name: 'marketingStatus' },
+      { host: elements.marketingChannelFilter, name: 'marketingChannel' },
       { host: elements.sourceFilter, name: 'source' },
       { host: elements.providerFilter, name: 'authProvider' }
     ];
@@ -735,14 +762,29 @@
     return user.source === source;
   }
 
+  function hasMarketingAuthorization(user, channel) {
+    if (channel === 'email') return user.marketingStatus === 'subscribed';
+    const channels = user.marketingChannels || {};
+    return Boolean(channels[channel]);
+  }
+
   function matchesUserFilters(user, filters) {
     filters = filters || {};
     const accountStatus = filters.accountStatus || 'all';
     const marketingStatus = filters.marketingStatus || 'all';
+    const marketingChannel = filters.marketingChannel || 'all';
     const source = filters.source || 'all';
     const authProvider = filters.authProvider || 'all';
     if (accountStatus !== 'all' && user.accountStatus !== accountStatus) return false;
     if (marketingStatus !== 'all' && user.marketingStatus !== marketingStatus) return false;
+    if (marketingChannel !== 'all') {
+      const hasAnyAuthorization = ['email', 'sms', 'whatsapp'].some(function (channel) {
+        return hasMarketingAuthorization(user, channel);
+      });
+      if (marketingChannel === 'none' ? hasAnyAuthorization : !hasMarketingAuthorization(user, marketingChannel)) {
+        return false;
+      }
+    }
     if (source !== 'all' && !matchesSource(user, source)) return false;
     if (authProvider !== 'all' && !(user.authProviders || []).some(function (provider) {
       return provider.type === authProvider;
@@ -868,7 +910,7 @@
       const button = elements.exportMenu.querySelector('[data-export-scope="' + scope + '"]');
       const countElement = elements.exportMenu.querySelector('[data-export-count="' + scope + '"]');
       if (button) button.disabled = count === 0 || state.status !== 'ready';
-      if (countElement) countElement.textContent = count;
+      if (countElement) countElement.textContent = '（' + count + '）';
     });
   }
 
@@ -885,7 +927,7 @@
       (disabled ? 'true' : 'false') + '">账号状态</summary>' +
       '<div class="um-menu-panel"><button type="button" data-account-action="disabled">禁用所选账号</button>' +
       '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
-      '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
+      '<details class="um-menu um-more-actions um-viewport-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">' + ICONS.moreButton + '更多操作</summary>' +
       '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
       '<button type="button" data-bulk="clear">取消选择</button></div></details>' +
@@ -894,6 +936,20 @@
 
   function badge(label, tone) {
     return '<span class="um-badge' + (tone ? ' um-badge-' + tone : '') + '">' + escapeHtml(label) + '</span>';
+  }
+
+  function renderMarketingAuthorization(user) {
+    const channels = [
+      { key: 'email', label: '邮件' },
+      { key: 'sms', label: '短信' },
+      { key: 'whatsapp', label: 'WhatsApp' }
+    ].filter(function (channel) {
+      return hasMarketingAuthorization(user, channel.key);
+    });
+    if (!channels.length) return '<span class="um-muted">未授权</span>';
+    return '<div class="um-badge-row">' + channels.map(function (channel) {
+      return badge(channel.label, 'provider');
+    }).join('') + '</div>';
   }
 
   function orderDetail(user) {
@@ -906,12 +962,80 @@
       '</span></button>';
   }
 
+  function renderUserTags(user) {
+    const tags = Array.isArray(user.tags) ? user.tags.filter(Boolean) : [];
+    if (!tags.length) return '<span class="um-muted">-</span>';
+    const visible = tags.slice(0, 2);
+    const hiddenCount = Math.max(0, tags.length - visible.length);
+    const fullLabel = tags.join('、');
+    return '<div class="um-list-tags">' +
+      visible.map(function (tag) {
+        return '<span class="um-list-tag" title="' + escapeHtml(tag) + '">' +
+          escapeHtml(tag) + '</span>';
+      }).join('') +
+      (hiddenCount
+        ? '<span class="um-tag-overflow" tabindex="0" data-full-tags="' +
+          escapeHtml(fullLabel) + '" aria-describedby="userTagTooltip" aria-label="查看全部标签：' +
+          escapeHtml(fullLabel) + '">+' + hiddenCount + '</span>'
+        : '') +
+      '</div>';
+  }
+
+  function tagTooltip() {
+    let tooltip = root.document.getElementById('userTagTooltip');
+    if (tooltip) return tooltip;
+    tooltip = root.document.createElement('div');
+    tooltip.id = 'userTagTooltip';
+    tooltip.className = 'um-tag-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.hidden = true;
+    root.document.body.appendChild(tooltip);
+    return tooltip;
+  }
+
+  function showTagTooltip(target) {
+    if (!target) return;
+    const tooltip = tagTooltip();
+    tooltip.textContent = target.getAttribute('data-full-tags') || '';
+    tooltip.hidden = false;
+    const rect = target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(12, rect.left),
+      Math.max(12, root.innerWidth - tooltipRect.width - 12)
+    );
+    const top = rect.top > tooltipRect.height + 12
+      ? rect.top - tooltipRect.height - 8
+      : rect.bottom + 8;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+
+  function hideTagTooltip() {
+    const tooltip = root.document.getElementById('userTagTooltip');
+    if (tooltip) tooltip.hidden = true;
+  }
+
+  function handleTagTooltipEnter(event) {
+    const target = event.target.closest('[data-full-tags]');
+    if (target) showTagTooltip(target);
+  }
+
+  function handleTagTooltipLeave(event) {
+    const target = event.target.closest('[data-full-tags]');
+    if (target && !target.contains(event.relatedTarget)) hideTagTooltip();
+  }
+
   function renderCell(user, key) {
     if (key === 'user') {
       return '<div class="um-user-main"><div class="um-user-copy">' +
         '<div class="um-user-email" title="' + escapeHtml(user.email) + '">' + escapeHtml(user.email) +
-        '</div><div class="um-user-id">' + escapeHtml(user.customerNumber) + '</div></div></div>';
+        '</div><div class="um-user-id"><span>' + escapeHtml(user.customerNumber) + '</span>' +
+        '<button class="um-copy-number" type="button" data-row-action="copy-number" data-user-id="' +
+        escapeHtml(user.id) + '" title="复制编号" aria-label="复制客户编号 ' +
+        escapeHtml(user.customerNumber) + '">' + ICONS.copy + '</button></div></div></div>';
     }
+    if (key === 'tags') return renderUserTags(user);
     if (key === 'accountStatus') {
       const tone = user.accountStatus === 'registered' ? 'success' :
         (user.accountStatus === 'disabled' ? 'danger' : 'warning');
@@ -922,6 +1046,7 @@
         (user.marketingStatus === 'unsubscribed' ? 'danger' : '');
       return badge(MARKETING_LABELS[user.marketingStatus] || user.marketingStatus, tone);
     }
+    if (key === 'marketingAuthorization') return renderMarketingAuthorization(user);
     if (key === 'authProviders') {
       if (!user.authProviders || !user.authProviders.length) return '<span class="um-muted">未激活</span>';
       return '<div class="um-badge-row">' + user.authProviders.map(function (provider) {
@@ -983,18 +1108,18 @@
         '<td class="um-operation-cell um-frozen-right"><div class="um-row-actions">' +
         '<button class="um-row-action" type="button" data-row-action="edit" data-user-id="' +
         escapeHtml(user.id) + '" aria-label="编辑用户" title="编辑">' + ICONS.edit + '</button>' +
-        '<button class="um-row-action" type="button" data-row-action="marketing" data-user-id="' +
-        escapeHtml(user.id) + '" aria-label="设置营销授权" title="营销授权">' + ICONS.mail + '</button>' +
+        '<button class="um-row-action um-row-action-danger" type="button" data-row-action="delete" data-user-id="' +
+        escapeHtml(user.id) + '" aria-label="删除用户" title="删除">' + ICONS.delete + '</button>' +
         '<details class="um-menu um-row-menu um-viewport-menu"><summary class="um-row-action" aria-label="更多用户操作" title="更多操作">' +
         ICONS.more + '</summary>' +
         '<div class="um-menu-panel um-menu-panel-right">' +
-        '<button type="button" data-row-action="copy-email" data-user-id="' + escapeHtml(user.id) + '">复制邮箱</button>' +
+        '<button type="button" data-row-action="marketing" data-user-id="' + escapeHtml(user.id) + '">营销授权</button>' +
         '<button type="button" data-row-action="tag" data-user-id="' + escapeHtml(user.id) + '">添加标签</button>' +
+        '<button type="button" data-row-action="copy-email" data-user-id="' + escapeHtml(user.id) + '">复制邮箱</button>' +
         '<button type="button" data-row-action="account" data-account-action="' +
         (user.accountStatus === 'disabled' ? 'restore' : 'disabled') + '" data-user-id="' +
-        escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '恢复禁用前状态' : '禁用账号') + '</button>' +
-        '<button class="um-button-danger" type="button" data-row-action="delete" data-user-id="' +
-        escapeHtml(user.id) + '">删除用户</button></div></details></div></td></tr>';
+        escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '恢复禁用前状态' : '禁用账号') +
+        '</button></div></details></div></td></tr>';
     }).join('');
   }
 
@@ -1124,6 +1249,7 @@
     state.filters = {
       accountStatus: 'all',
       marketingStatus: 'all',
+      marketingChannel: 'all',
       source: 'all',
       authProvider: 'all',
       createdFrom: '',
@@ -1136,6 +1262,7 @@
     [
       [elements.accountFilter, 'all'],
       [elements.marketingFilter, 'all'],
+      [elements.marketingChannelFilter, 'all'],
       [elements.sourceFilter, 'all'],
       [elements.providerFilter, 'all']
     ].forEach(function (entry) {
@@ -1357,6 +1484,26 @@
     report(fallbackCopyText(user.email));
   }
 
+  function copyUserNumber(userId) {
+    const user = allUsers.find(function (item) { return item.id === userId; });
+    if (!user || !user.customerNumber) {
+      showToast('该用户没有可复制的客户编号。', 'error');
+      return;
+    }
+    function report(copied) {
+      showToast(copied ? '复制成功' : '复制失败', copied ? 'success' : 'error');
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(user.customerNumber).then(function () {
+        report(true);
+      }).catch(function () {
+        report(fallbackCopyText(user.customerNumber));
+      });
+      return;
+    }
+    report(fallbackCopyText(user.customerNumber));
+  }
+
   function handleTableClick(event) {
     if (state.status !== 'ready') return;
     const sortButton = event.target.closest('[data-sort]');
@@ -1373,6 +1520,7 @@
       const id = rowAction.getAttribute('data-user-id');
       const action = rowAction.getAttribute('data-row-action');
       if (action === 'edit') navigateToEdit(id);
+      else if (action === 'copy-number') copyUserNumber(id);
       else if (action === 'copy-email') copyUserEmail(id);
       else if (action === 'tag') openTagDialog([id]);
       else if (action === 'marketing') openMarketingDialog([id]);
@@ -1543,6 +1691,7 @@
     elements.searchInput = root.document.getElementById('userSearchInput');
     elements.accountFilter = root.document.getElementById('userAccountFilter');
     elements.marketingFilter = root.document.getElementById('userMarketingFilter');
+    elements.marketingChannelFilter = root.document.getElementById('userMarketingChannelFilter');
     elements.sourceFilter = root.document.getElementById('userSourceFilter');
     elements.providerFilter = root.document.getElementById('userProviderFilter');
     elements.createdFrom = root.document.getElementById('userCreatedFrom');
@@ -1587,7 +1736,14 @@
     });
     elements.tableCard.addEventListener('click', handleTableClick);
     elements.tableCard.addEventListener('change', handleTableChange);
-    elements.tableScroll.addEventListener('scroll', closeViewportMenus);
+    elements.tableCard.addEventListener('mouseover', handleTagTooltipEnter);
+    elements.tableCard.addEventListener('mouseout', handleTagTooltipLeave);
+    elements.tableCard.addEventListener('focusin', handleTagTooltipEnter);
+    elements.tableCard.addEventListener('focusout', handleTagTooltipLeave);
+    elements.tableScroll.addEventListener('scroll', function () {
+      closeViewportMenus();
+      hideTagTooltip();
+    });
     elements.bulkBar.addEventListener('click', handleBulkClick);
     elements.columnPanel.addEventListener('change', handleColumnChange);
     elements.columnPanel.addEventListener('click', handleColumnClick);
@@ -1641,11 +1797,7 @@
       getUsers: (ids) => getUsersForIds(root.UserStore, ids),
       getSelectedIds: () => Array.from(state.selected),
       importUsers: (records, source) => root.UserStore.importProfilesLocked(records, source),
-      addTags: (ids, value) => {
-        const tag = String(value || '').trim();
-        if (!tag || tag.length > 40) return { ok: false, error: '请输入不超过 40 个字符的标签名称。' };
-        return root.UserStore.addTagToUsersLocked(ids, tag);
-      },
+      addTags: (ids, values) => root.UserStore.addTagsToUsersLocked(ids, values),
       updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatusLocked(ids, status, consent),
       updateMarketingChannel: (ids, channel, enabled, consent) =>
         root.UserStore.setMarketingChannelStatusLocked(ids, channel, enabled, consent),

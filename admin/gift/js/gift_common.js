@@ -328,7 +328,24 @@
   }
 
   /* ====================== 数据访问（含 localStorage 持久化） ====================== */
-  GWP.pool = function () { return gwpLoad(LS_POOL, defaultPool()); };
+  function withGiftBusinessNumbers(storageKey, records, field, prefix, sequenceKey) {
+    const list = Array.isArray(records) ? records : [];
+    const matcher = new RegExp('^' + prefix + '-\\d{6,}$');
+    const needsSave = list.some((record) => !matcher.test(String(record && record[field] || '').toUpperCase()));
+    ensureBusinessNumbers(list, field, prefix, sequenceKey);
+    if (needsSave) gwpSave(storageKey, list);
+    return list;
+  }
+
+  GWP.pool = function () {
+    return withGiftBusinessNumbers(
+      LS_POOL,
+      gwpLoad(LS_POOL, defaultPool()),
+      'giftNumber',
+      'GFT',
+      'rebecca_gift_number_sequence_v1'
+    );
+  };
   function normalizeGiftRule(rule) {
     if (!rule || !rule.reward || rule.reward.type !== 'gift') return null;
     const normalized = { ...rule };
@@ -346,27 +363,52 @@
   }
   function loadRules() {
     const current = gwpLoad(LS_RULE, null);
-    if (Array.isArray(current)) return current.map(normalizeGiftRule).filter(Boolean);
+    if (Array.isArray(current)) {
+      return withGiftBusinessNumbers(
+        LS_RULE,
+        current.map(normalizeGiftRule).filter(Boolean),
+        'giftRuleNumber',
+        'GFR',
+        'rebecca_gift_rule_number_sequence_v1'
+      );
+    }
 
     const defaults = defaultRules();
     const previous = gwpLoad(LS_RULE_PREVIOUS, null);
     const legacy = Array.isArray(previous) ? previous : gwpLoad(LS_RULE_LEGACY, null);
     if (!Array.isArray(legacy)) {
-      gwpSave(LS_RULE, defaults);
-      return defaults;
+      return withGiftBusinessNumbers(
+        LS_RULE,
+        defaults,
+        'giftRuleNumber',
+        'GFR',
+        'rebecca_gift_rule_number_sequence_v1'
+      );
     }
 
     const defaultIds = new Set(defaults.map((rule) => rule.id));
     const customRules = legacy.map(normalizeGiftRule).filter(Boolean).filter((rule) => !defaultIds.has(rule.id));
     const result = defaults.concat(customRules);
-    gwpSave(LS_RULE, result);
-    return result;
+    return withGiftBusinessNumbers(
+      LS_RULE,
+      result,
+      'giftRuleNumber',
+      'GFR',
+      'rebecca_gift_rule_number_sequence_v1'
+    );
   }
   GWP.rules = loadRules;
   GWP.savePool = function (obj) {
     const list = GWP.pool();
     const i = list.findIndex((x) => x.id === obj.id);
+    if (i >= 0 && !obj.giftNumber) obj.giftNumber = list[i].giftNumber;
     if (i >= 0) list[i] = obj; else list.push(obj);
+    ensureBusinessNumbers(
+      list,
+      'giftNumber',
+      'GFT',
+      'rebecca_gift_number_sequence_v1'
+    );
     gwpSave(LS_POOL, list);
     return obj;
   };
@@ -377,7 +419,14 @@
   GWP.saveRule = function (obj) {
     const list = GWP.rules();
     const i = list.findIndex((x) => x.id === obj.id);
+    if (i >= 0 && !obj.giftRuleNumber) obj.giftRuleNumber = list[i].giftRuleNumber;
     if (i >= 0) list[i] = obj; else list.push(obj);
+    ensureBusinessNumbers(
+      list,
+      'giftRuleNumber',
+      'GFR',
+      'rebecca_gift_rule_number_sequence_v1'
+    );
     gwpSave(LS_RULE, list);
     return obj;
   };
@@ -389,6 +438,7 @@
     const p = GWP.getPool(id); if (!p) return null;
     const copy = JSON.parse(JSON.stringify(p));
     copy.id = GWP.newId('P');
+    delete copy.giftNumber;
     copy.displayName = p.displayName + ' 副本';
     copy.status = 'draft';
     copy.createdAt = GWP.today();
@@ -398,6 +448,7 @@
     const r = GWP.getRule(id); if (!r) return null;
     const copy = JSON.parse(JSON.stringify(r));
     copy.id = GWP.newId('R');
+    delete copy.giftRuleNumber;
     copy.name = r.name + ' 副本';
     copy.status = 'draft';
     copy.createdAt = GWP.today();

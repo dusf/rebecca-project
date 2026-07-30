@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css?v=5">
+  <link rel="stylesheet" href="../common/css/commons.css?v=9">
   <style>
     /* ==================== 产品列表页专用样式 ==================== */
     /* 统计卡片 */
@@ -138,49 +138,190 @@
       color: hsl(var(--control-placeholder));
     }
 
-    /* 日期筛选 */
-    .filter-date {
+    .product-secondary-action {
+      background: #fff;
+      color: hsl(var(--secondary-foreground));
+      border-color: hsl(var(--border));
+    }
+
+    .product-secondary-action:hover,
+    .product-secondary-action:focus-visible {
+      background: hsl(var(--background));
+    }
+
+    .filter-select.is-placeholder,
+    .filter-select option[value=""] {
+      color: hsl(var(--control-placeholder));
+    }
+
+    .product-clear-filters {
+      min-height: 38px;
+      padding: 0 13px;
+      border-color: transparent;
+      background: transparent;
+      color: hsl(var(--primary-700));
+      font-weight: 600;
+    }
+
+    .product-clear-filters:focus-visible {
+      outline: 3px solid hsl(var(--ring) / 0.18);
+      outline-offset: 2px;
+    }
+
+    /* 日期筛选：与用户管理保持同一选择框和日历弹层规格 */
+    .filter-date-control {
+      position: relative;
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .filter-date-native {
+      display: none;
+    }
+
+    .filter-date-trigger {
       position: relative;
       display: inline-flex;
+      width: 140px;
+      height: 38px;
+      min-height: 38px;
       align-items: center;
       background-color: #FFFFFF;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23A0937D' d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V9h14v11Z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      background-size: 16px;
       border: 1.5px solid hsl(30 15% 88%);
       border-radius: 10px;
-      height: 38px;
-      padding: 0 14px;
+      padding: 0 38px 0 14px;
       font-size: 14px;
       color: hsl(var(--foreground));
       font-family: var(--font-sans);
+      text-align: left;
       outline: none;
-      flex-shrink: 0;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
       transition: all 0.2s ease;
       box-sizing: border-box;
-      min-width: 140px;
       cursor: pointer;
     }
-    .filter-date.is-placeholder {
+
+    .filter-date-trigger.is-placeholder {
       color: hsl(var(--control-placeholder));
     }
-    .filter-date:hover {
+
+    .filter-date-trigger:hover {
       border-color: hsl(30 20% 78%);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.06);
     }
-    .filter-date:focus {
+
+    .filter-date-trigger:focus-visible,
+    .filter-date-control.is-open .filter-date-trigger {
       border-color: hsl(var(--primary));
       box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
     }
-    .filter-date::-webkit-calendar-picker-indicator {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
+
+    .filter-date-popover {
+      position: fixed;
+      z-index: 10000;
+      width: 288px;
+      padding: 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 10px;
+      background: hsl(var(--popover));
+      box-shadow: 0 14px 34px hsl(var(--shadow-color) / 0.14);
+      box-sizing: border-box;
+    }
+
+    .filter-date-popover[hidden] {
+      display: none;
+    }
+
+    .filter-date-header,
+    .filter-date-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .filter-date-header {
+      margin-bottom: 10px;
+    }
+
+    .filter-date-header button,
+    .filter-date-footer button {
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: hsl(var(--foreground));
       cursor: pointer;
     }
+
+    .filter-date-header button:hover,
+    .filter-date-header button:focus-visible,
+    .filter-date-footer button:hover,
+    .filter-date-footer button:focus-visible {
+      background: hsl(var(--accent));
+      outline: 2px solid hsl(var(--ring) / 0.18);
+    }
+
+    .filter-date-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(32px, 1fr));
+      margin-bottom: 4px;
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .filter-date-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(32px, 1fr));
+      gap: 4px;
+    }
+
+    .filter-date-cell,
+    .filter-date-cell-empty {
+      width: 36px;
+      height: 36px;
+    }
+
+    .filter-date-cell {
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+    }
+
+    .filter-date-cell:hover,
+    .filter-date-cell:focus-visible {
+      background: hsl(var(--accent));
+      outline: none;
+    }
+
+    .filter-date-cell[aria-selected="true"] {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .filter-date-footer {
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .filter-date-footer button {
+      color: hsl(var(--primary-700));
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     .filter-date-sep {
-      font-size: 13px;
+      font-size: 14px;
       color: hsl(var(--muted-foreground));
       flex-shrink: 0;
     }
@@ -263,15 +404,6 @@
       background: hsl(var(--primary-50));
     }
 
-    /* 成功按钮 */
-    .btn-success {
-      background: hsl(var(--success));
-      color: hsl(var(--success-foreground));
-    }
-    .btn-success:hover {
-      background: hsl(142 60% 30%);
-      box-shadow: 0 2px 8px hsl(var(--success) / 0.3);
-    }
   </style>
   <script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
   <script>
@@ -320,8 +452,8 @@
               </div>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
-              <button class="btn btn-secondary" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
-              <button class="btn btn-secondary" onclick="window.parent.ShopifyAuth.open()" style="background:hsl(142 50% 40%);color:#fff;" onmouseover="this.style.background='hsl(142 55% 33%)'" onmouseout="this.style.background='hsl(142 50% 40%)'">拉取shopify</button>
+              <button class="btn btn-secondary product-secondary-action" id="exportBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 导出</button>
+              <button class="btn btn-secondary product-secondary-action" onclick="window.parent.ShopifyAuth.open()">拉取 Shopify</button>
               <button class="btn btn-primary" onclick="navigateToPage('product/add_product.html')">添加产品</button>
             </div>
           </div>
@@ -331,20 +463,27 @@
             <div class="toolbar-left">
               <div class="search-input">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:hsl(30 10% 50%);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" placeholder="搜索产品名称、SPU..." id="productSearch" />
+                <input type="text" placeholder="搜索产品名称、产品编号..." id="productSearch" />
               </div>
-              <select class="filter-select" id="categoryFilter">
+              <select class="filter-select is-placeholder" id="categoryFilter">
                 <!-- 由 buildCategoryFilter() 动态生成 -->
               </select>
-              <select class="filter-select" id="statusFilter">
+              <select class="filter-select is-placeholder" id="statusFilter">
                 <option value="">全部状态</option>
                 <option value="on-sale">已上架</option>
                 <option value="off-sale">已下架</option>
                 <option value="draft">草稿</option>
               </select>
-              <input type="date" class="filter-date" id="dateFrom" placeholder="开始日期" />
+              <div class="filter-date-control" data-product-date data-label="开始时间">
+                <input class="filter-date-native" type="hidden" id="dateFrom" value="">
+                <button class="filter-date-trigger is-placeholder" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="开始时间">开始时间</button>
+              </div>
               <span class="filter-date-sep">至</span>
-              <input type="date" class="filter-date" id="dateTo" placeholder="结束日期" />
+              <div class="filter-date-control" data-product-date data-label="结束时间">
+                <input class="filter-date-native" type="hidden" id="dateTo" value="">
+                <button class="filter-date-trigger is-placeholder" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="结束时间">结束时间</button>
+              </div>
+              <button class="btn product-clear-filters" type="button" id="productClearFilters" onclick="clearProductFilters()">清除筛选</button>
             </div>
           </div>
 
@@ -352,8 +491,8 @@
           <div class="bulk-action-bar" id="bulkActionBar">
             <div class="bulk-selected-count">已选 <span class="count" id="selectedCount">0</span> 条</div>
             <div class="bulk-actions">
-              <button class="btn btn-success btn-sm" id="btnBatchOnSale" onclick="batchSetStatus('on-sale')" disabled>批量上架</button>
-              <button class="btn btn-destructive btn-sm" id="btnBatchOffSale" onclick="batchSetStatus('off-sale')" disabled>批量下架</button>
+              <button class="btn btn-secondary btn-sm" id="btnBatchOnSale" onclick="batchSetStatus('on-sale')" disabled>批量上架</button>
+              <button class="btn btn-secondary btn-sm" id="btnBatchOffSale" onclick="batchSetStatus('off-sale')" disabled>批量下架</button>
               <button class="btn btn-secondary btn-sm" id="btnBatchDelete" onclick="batchDelete()" disabled>批量删除</button>
               <div class="custom-col-wrapper" id="moreActionsWrapper" style="position:relative;">
                 <button class="btn btn-secondary btn-sm" id="btnMoreActions" onclick="toggleMoreActions()">
@@ -423,7 +562,7 @@
   </div>
 
   <script>var CURRENT_PAGE = 'products';</script>
-  <script src="../common/js/commons.js?v=5"></script>
+  <script src="../common/js/commons.js?v=12"></script>
   <script>
     // ==================== 初始化 ====================
     buildCustomColPanel();

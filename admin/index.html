@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="common/css/commons.css?v=4">
-  <link rel="stylesheet" href="common/css/user_dialogs.css?v=12">
+  <link rel="stylesheet" href="common/css/commons.css?v=9">
+  <link rel="stylesheet" href="common/css/user_dialogs.css?v=16">
   <style>
     /* ==================== index.html 专用样式 ==================== */
     .iframe-container {
@@ -356,7 +356,7 @@
     // DOM 就绪后初始化
     document.addEventListener('DOMContentLoaded', adminInit);
   </script>
-  <script src="common/js/commons.js"></script>
+  <script src="common/js/commons.js?v=9"></script>
 </head>
 <body>
   <div class="app-layout">
@@ -388,10 +388,10 @@
   <div id="dialogHost"></div>
 
   <!-- Toast 容器 -->
-  <div class="toast-container" id="toastContainer"></div>
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
   <script src="common/js/dialog_host.js"></script>
-  <script src="common/js/user_dialog.js?v=12"></script>
+  <script src="common/js/user_dialog.js?v=18"></script>
   <script src="common/js/shopify_dialog.js"></script>
   <!-- 页面初始化：在 body 末尾直接执行，避免 DOMContentLoaded 未触发导致 iframe 未显示 -->
   <script>

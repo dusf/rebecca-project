@@ -4,11 +4,33 @@
 
     // ==================== Toast 通知 ====================
     function showToast(type, message) {
-      const container = document.getElementById('toastContainer');
+      try {
+        if (window.parent && window.parent !== window && typeof window.parent.showToast === 'function') {
+          window.parent.showToast(type, message);
+          return;
+        }
+      } catch (error) {}
+
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'toastContainer';
+        container.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
+      }
       const icons = { success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>', error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' };
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
-      toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
+      toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+      const icon = document.createElement('span');
+      icon.className = 'toast-icon';
+      icon.innerHTML = icons[type] || icons.info;
+      const copy = document.createElement('span');
+      copy.textContent = String(message || '');
+      toast.appendChild(icon);
+      toast.appendChild(copy);
       container.appendChild(toast);
 
       setTimeout(() => {
@@ -16,6 +38,101 @@
         setTimeout(() => toast.remove(), 300);
       }, 3000);
     }
+
+    // ==================== 业务编号 ====================
+    const BUSINESS_NUMBER_COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    function businessNumberEscape(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatBusinessNumber(prefix, sequence) {
+      return String(prefix || '').toUpperCase() + '-' + String(Math.max(1, Number(sequence) || 1)).padStart(6, '0');
+    }
+
+    function ensureBusinessNumbers(records, field, prefix, sequenceKey) {
+      var list = Array.isArray(records) ? records : [];
+      var shopId = typeof getCurrentShopId === 'function' ? getCurrentShopId() : 'default';
+      var storageKey = String(sequenceKey || ('rebecca_' + String(prefix).toLowerCase() + '_number_sequence_v1')) + '_' + shopId;
+      var matcher = new RegExp('^' + String(prefix).toUpperCase() + '-(\\d{6,})$');
+      var highWater = 0;
+      try {
+        highWater = Math.max(0, Number(localStorage.getItem(storageKey)) || 0);
+      } catch (error) {}
+      list.forEach(function (record) {
+        var match = String(record && record[field] || '').toUpperCase().match(matcher);
+        if (match) {
+          record[field] = String(prefix).toUpperCase() + '-' + match[1];
+          highWater = Math.max(highWater, Number(match[1]) || 0);
+        }
+      });
+      list.forEach(function (record) {
+        if (!record || matcher.test(String(record[field] || '').toUpperCase())) return;
+        highWater += 1;
+        record[field] = formatBusinessNumber(prefix, highWater);
+      });
+      try {
+        localStorage.setItem(storageKey, String(highWater));
+      } catch (error) {}
+      return list;
+    }
+
+    function businessNumberMarkup(number, label) {
+      var value = String(number || '').toUpperCase();
+      var objectLabel = String(label || '业务编号');
+      return '<span class="business-number"><span class="business-number-value">' +
+        businessNumberEscape(value) + '</span><button class="business-number-copy" type="button" ' +
+        'data-copy-business-number="' + businessNumberEscape(value) + '" title="复制编号" aria-label="复制' +
+        businessNumberEscape(objectLabel) + ' ' + businessNumberEscape(value) + '">' +
+        BUSINESS_NUMBER_COPY_ICON + '</button></span>';
+    }
+
+    function fallbackCopyBusinessNumber(text) {
+      var input = document.createElement('textarea');
+      input.value = text;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.select();
+      var copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (error) {}
+      input.remove();
+      return copied;
+    }
+
+    function reportBusinessNumberCopy(copied) {
+      showToast(copied ? 'success' : 'error', copied ? '复制成功' : '复制失败');
+    }
+
+    function copyBusinessNumber(number) {
+      var value = String(number || '');
+      if (!value) return;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(value).then(function () {
+          reportBusinessNumberCopy(true);
+        }).catch(function () {
+          reportBusinessNumberCopy(fallbackCopyBusinessNumber(value));
+        });
+        return;
+      }
+      reportBusinessNumberCopy(fallbackCopyBusinessNumber(value));
+    }
+
+    document.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-copy-business-number]');
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      copyBusinessNumber(button.getAttribute('data-copy-business-number'));
+    });
 
     // ==================== 侧边栏菜单数据 ====================
     const SIDEBAR_MENU = [
@@ -875,6 +992,12 @@ function navigateToPage(url) {
       { id: 9, name: 'Custom Color Full Wig', spu: 'SPU-CW-00001', category: '定制假发', price: 2599, originalPrice: 2999, stock: '2款0件', stockLink: false, stockUpdateTime: '', status: 'off-sale', seoSlug: 'custom-color-full-wig', seriesCount: 1, seriesNames: ['定制系列'], creator: '吴十', org: '护肤组', orgPath: '总部/美妆事业部/护肤组', date: '2026-05-25', updateDate: '2026-06-08' },
       { id: 10, name: 'Boho Braided Headband', spu: 'SPU-HA-00003', category: '发饰配件', price: 69, originalPrice: 99, stock: '2款350件', stockLink: true, stockUpdateTime: '2026-07-06 18:20', status: 'on-sale', seoSlug: 'boho-braided-headband', seriesCount: 2, seriesNames: ['发饰精选', '性价比之王'], creator: '张三', org: '数码组', orgPath: '总部/数码事业部/数码组', date: '2026-05-20', updateDate: '2026-05-20' },
     ];
+    products.forEach(function (product, index) {
+      if (!product.productNumber) {
+        product.productNumber = formatBusinessNumber('SPU', Number(product.id) || (index + 1));
+      }
+    });
+    ensureBusinessNumbers(products, 'productNumber', 'SPU', 'rebecca_spu_number_sequence_v1');
 
     // ==================== 组织架构数据 ====================
     const orgTree = [
@@ -1263,7 +1386,9 @@ function navigateToPage(url) {
         if (filter.search) {
           var s = filter.search.toLowerCase();
           filteredProducts = filteredProducts.filter(function(p) {
-            return p.name.toLowerCase().indexOf(s) !== -1 || p.spu.toLowerCase().indexOf(s) !== -1;
+            return p.name.toLowerCase().indexOf(s) !== -1 ||
+              p.spu.toLowerCase().indexOf(s) !== -1 ||
+              p.productNumber.toLowerCase().indexOf(s) !== -1;
           });
         }
         if (filter.category) {
@@ -1308,7 +1433,7 @@ function navigateToPage(url) {
         coffee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
         home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
         droplet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
-        edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+        edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
         copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
         trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
         check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -1344,7 +1469,11 @@ function navigateToPage(url) {
           var content = '';
           switch (key) {
             case 'productInfo':
-              content = '<div class="product-cell"><div class="product-img-placeholder">' + (categoryIconMap[p.category] || svgIcon.box) + '</div><div class="product-info"><div class="product-name">' + p.name + '</div><div class="product-sku">' + p.spu + '</div></div></div>';
+              content = '<div class="product-cell"><div class="product-img-placeholder">' +
+                (categoryIconMap[p.category] || svgIcon.box) +
+                '</div><div class="product-info"><div class="product-name">' + p.name +
+                '</div><div class="product-sku">' +
+                businessNumberMarkup(p.productNumber, '产品编号') + '</div></div></div>';
               break;
             case 'category':
               content = p.category;
@@ -1388,6 +1517,27 @@ function navigateToPage(url) {
     // ==================== 搜索和筛选 ====================
     function filterAndRender() {
       renderProducts(getCurrentFilter());
+    }
+
+    function clearProductFilters() {
+      var search = document.getElementById('productSearch');
+      if (search) search.value = '';
+
+      ['categoryFilter', 'statusFilter'].forEach(function(id) {
+        var select = document.getElementById(id);
+        if (!select) return;
+        select.value = '';
+        syncFilterPromptState(select);
+        syncSearchableSelectState(select);
+        closeSearchableDropdown(id);
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('[data-product-date]'), function(element) {
+        if (element._productDateController) element._productDateController.setValue('', false);
+      });
+
+      filterAndRender();
+      if (search) search.focus();
     }
 
     // 产品表格排序点击
@@ -1648,6 +1798,178 @@ function navigateToPage(url) {
       grid.appendChild(item);
     }
 
+    // ==================== 产品列表日期选择器 ====================
+    function formatProductFilterDate(date) {
+      return date.getFullYear() + '-' +
+        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date.getDate()).padStart(2, '0');
+    }
+
+    function isValidProductFilterDate(value) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+    }
+
+    function closeAllProductFilterDates(exceptElement) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-product-date]'), function(element) {
+        if (element !== exceptElement && element._productDateController) {
+          element._productDateController.close(false);
+        }
+      });
+    }
+
+    function mountProductFilterDate(element) {
+      if (!element || element._productDateController) return element && element._productDateController;
+      var input = element.querySelector('.filter-date-native');
+      var trigger = element.querySelector('.filter-date-trigger');
+      if (!input || !trigger) return null;
+      var label = element.getAttribute('data-label') || trigger.textContent || '选择日期';
+      var selectedValue = isValidProductFilterDate(input.value) ? input.value : '';
+      var selectedDate = selectedValue ? new Date(selectedValue + 'T00:00:00') : new Date();
+      var cursor = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      var popover = document.createElement('div');
+      popover.className = 'filter-date-popover';
+      popover.setAttribute('role', 'dialog');
+      popover.setAttribute('aria-label', label);
+      popover.hidden = true;
+      popover.innerHTML =
+        '<div class="filter-date-header"><button type="button" data-product-date-nav="prev" aria-label="上个月">‹</button>' +
+        '<strong data-product-date-month></strong><button type="button" data-product-date-nav="next" aria-label="下个月">›</button></div>' +
+        '<div class="filter-date-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>' +
+        '<div class="filter-date-grid"></div>' +
+        '<div class="filter-date-footer"><button type="button" data-product-date-action="clear">清除</button>' +
+        '<button type="button" data-product-date-action="today">今天</button></div>';
+      element.appendChild(popover);
+      var grid = popover.querySelector('.filter-date-grid');
+      var monthLabel = popover.querySelector('[data-product-date-month]');
+
+      function syncValue() {
+        input.value = selectedValue;
+        trigger.textContent = selectedValue || label;
+        trigger.classList.toggle('is-placeholder', !selectedValue);
+      }
+
+      function renderCalendar() {
+        var year = cursor.getFullYear();
+        var month = cursor.getMonth();
+        monthLabel.textContent = year + '年' + (month + 1) + '月';
+        var firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+        var days = new Date(year, month + 1, 0).getDate();
+        var cells = '';
+        for (var blank = 0; blank < firstWeekday; blank++) {
+          cells += '<span class="filter-date-cell-empty" aria-hidden="true"></span>';
+        }
+        for (var day = 1; day <= days; day++) {
+          var dayValue = formatProductFilterDate(new Date(year, month, day));
+          cells += '<button class="filter-date-cell" type="button" data-product-date-value="' + dayValue +
+            '" aria-selected="' + (dayValue === selectedValue ? 'true' : 'false') + '">' + day + '</button>';
+        }
+        grid.innerHTML = cells;
+      }
+
+      function positionPopover() {
+        var rect = trigger.getBoundingClientRect();
+        var width = 288;
+        popover.style.width = width + 'px';
+        popover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
+        popover.style.top = (rect.bottom + 6) + 'px';
+      }
+
+      function open() {
+        closeAllProductFilterDates(element);
+        if (popover.parentNode !== document.body) document.body.appendChild(popover);
+        popover.hidden = false;
+        positionPopover();
+        trigger.setAttribute('aria-expanded', 'true');
+        element.classList.add('is-open');
+        renderCalendar();
+        var selected = grid.querySelector('[aria-selected="true"]') || grid.querySelector('.filter-date-cell');
+        if (selected) selected.focus();
+      }
+
+      function close(restoreFocus) {
+        popover.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        element.classList.remove('is-open');
+        if (popover.parentNode !== element) element.appendChild(popover);
+        if (restoreFocus) trigger.focus();
+      }
+
+      function setValue(nextValue, emit) {
+        selectedValue = isValidProductFilterDate(nextValue) ? String(nextValue) : '';
+        if (selectedValue) {
+          var date = new Date(selectedValue + 'T00:00:00');
+          cursor = new Date(date.getFullYear(), date.getMonth(), 1);
+        }
+        syncValue();
+        renderCalendar();
+        if (emit) input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      trigger.addEventListener('click', function() {
+        if (popover.hidden) open();
+        else close(false);
+      });
+      popover.addEventListener('click', function(event) {
+        var nav = event.target.closest('[data-product-date-nav]');
+        if (nav) {
+          cursor = new Date(
+            cursor.getFullYear(),
+            cursor.getMonth() + (nav.getAttribute('data-product-date-nav') === 'prev' ? -1 : 1),
+            1
+          );
+          renderCalendar();
+          return;
+        }
+        var cell = event.target.closest('[data-product-date-value]');
+        if (cell) {
+          setValue(cell.getAttribute('data-product-date-value'), true);
+          close(true);
+          return;
+        }
+        var action = event.target.closest('[data-product-date-action]');
+        if (action) {
+          setValue(
+            action.getAttribute('data-product-date-action') === 'today'
+              ? formatProductFilterDate(new Date())
+              : '',
+            true
+          );
+          close(true);
+        }
+      });
+      document.addEventListener('pointerdown', function(event) {
+        if (!popover.hidden && !element.contains(event.target) && !popover.contains(event.target)) close(false);
+      });
+      window.addEventListener('resize', function() {
+        if (!popover.hidden) positionPopover();
+      });
+      window.addEventListener('scroll', function() {
+        if (!popover.hidden) positionPopover();
+      }, true);
+      trigger.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && !popover.hidden) {
+          event.preventDefault();
+          close(true);
+        }
+      });
+      popover.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          close(true);
+        }
+      });
+
+      var controller = { element: element, open: open, close: close, setValue: setValue };
+      element._productDateController = controller;
+      syncValue();
+      renderCalendar();
+      return controller;
+    }
+
+    function initProductFilterDates() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-product-date]'), mountProductFilterDate);
+    }
+
     // ==================== 可搜索下拉选择器 ====================
 
     /** 初始化页面上所有 select 为可搜索下拉（跳过已转换的） */
@@ -1662,6 +1984,7 @@ function navigateToPage(url) {
 
     /** 页面加载后自动初始化所有下拉 */
     document.addEventListener('DOMContentLoaded', initSearchableSelects);
+    document.addEventListener('DOMContentLoaded', initProductFilterDates);
 
     function buildSearchableSelect(select) {
       var selectId = select.id;
@@ -1676,6 +1999,8 @@ function navigateToPage(url) {
       var trigger = document.createElement('button');
       trigger.className = 'searchable-select-trigger';
       trigger.type = 'button';
+      trigger.setAttribute('aria-haspopup', 'listbox');
+      trigger.setAttribute('aria-expanded', 'false');
       var selOpt = select.options[select.selectedIndex];
       var triggerSpan = document.createElement('span');
       triggerSpan.textContent = selOpt ? selOpt.text : '请选择';
@@ -1684,6 +2009,14 @@ function navigateToPage(url) {
       arrow.className = 'searchable-select-arrow';
       arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A0937D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
       trigger.appendChild(arrow);
+
+      var clear = document.createElement('button');
+      clear.className = 'searchable-select-clear';
+      clear.type = 'button';
+      clear.hidden = true;
+      clear.title = '清除选择';
+      clear.setAttribute('aria-label', '清除选择');
+      clear.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
       // 下拉面板
       var dropdown = document.createElement('div');
@@ -1698,6 +2031,9 @@ function navigateToPage(url) {
       searchInput.type = 'text';
       searchInput.placeholder = '输入关键词检索...';
       searchInput.id = selectId + 'Search';
+      searchInput.setAttribute('role', 'combobox');
+      searchInput.setAttribute('aria-controls', selectId + 'List');
+      searchInput.setAttribute('aria-autocomplete', 'list');
       searchArea.appendChild(searchInput);
       dropdown.appendChild(searchArea);
 
@@ -1705,6 +2041,7 @@ function navigateToPage(url) {
       var listDiv = document.createElement('div');
       listDiv.className = 'searchable-select-list';
       listDiv.id = selectId + 'List';
+      listDiv.setAttribute('role', 'listbox');
       var selValue = select.value;
       var opts = select.querySelectorAll('option');
       for (var j = 0; j < opts.length; j++) {
@@ -1713,7 +2050,17 @@ function navigateToPage(url) {
         item.className = 'searchable-select-option';
         if (opt.value === selValue) item.classList.add('selected');
         item.dataset.value = opt.value;
-        item.textContent = (j + 1) + '. ' + opt.text;
+        item.id = selectId + 'Option' + j;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', opt.value === selValue ? 'true' : 'false');
+        var sequence = document.createElement('span');
+        sequence.className = 'searchable-select-option-sequence';
+        sequence.textContent = (j + 1) + '.';
+        var optionLabel = document.createElement('span');
+        optionLabel.className = 'searchable-select-option-label';
+        optionLabel.textContent = opt.text;
+        item.appendChild(sequence);
+        item.appendChild(optionLabel);
         (function(value, text) {
           item.addEventListener('click', function() {
             selectSearchableOption(selectId, value, text);
@@ -1725,6 +2072,7 @@ function navigateToPage(url) {
 
       // 组装
       wrapper.appendChild(trigger);
+      wrapper.appendChild(clear);
       wrapper.appendChild(dropdown);
 
       // 隐藏原始 select，插入 wrapper
@@ -1735,6 +2083,15 @@ function navigateToPage(url) {
       trigger.addEventListener('click', function(e) {
         e.stopPropagation();
         toggleSearchableDropdown(selectId);
+      });
+
+      clear.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var defaultOption = select.querySelector('option[value=""]') || select.options[0];
+        if (!defaultOption || defaultOption.value === select.value) return;
+        selectSearchableOption(selectId, defaultOption.value, defaultOption.text);
+        trigger.focus();
       });
 
       // 搜索过滤
@@ -1761,6 +2118,37 @@ function navigateToPage(url) {
         } else if (noneEl) {
           noneEl.remove();
         }
+        setSearchableActiveOption(selectId, 0);
+      });
+
+      searchInput.addEventListener('keydown', function(e) {
+        var visibleItems = getVisibleSearchableOptions(selectId);
+        if (!visibleItems.length) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeSearchableDropdown(selectId);
+            trigger.focus();
+          }
+          return;
+        }
+        var activeIndex = visibleItems.findIndex(function(item) {
+          return item.classList.contains('is-active');
+        });
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          var direction = e.key === 'ArrowDown' ? 1 : -1;
+          var nextIndex = activeIndex < 0
+            ? (direction > 0 ? 0 : visibleItems.length - 1)
+            : (activeIndex + direction + visibleItems.length) % visibleItems.length;
+          setSearchableActiveOption(selectId, nextIndex);
+        } else if (e.key === 'Enter' && activeIndex >= 0) {
+          e.preventDefault();
+          visibleItems[activeIndex].click();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSearchableDropdown(selectId);
+          trigger.focus();
+        }
       });
 
       // 点击外部关闭（使用全局事件）
@@ -1772,7 +2160,59 @@ function navigateToPage(url) {
       });
 
       // 保存引用
-      select._searchable = { wrapper: wrapper, trigger: trigger, triggerSpan: triggerSpan, dropdown: dropdown };
+      select._searchable = {
+        wrapper: wrapper,
+        trigger: trigger,
+        triggerSpan: triggerSpan,
+        arrow: arrow,
+        clear: clear,
+        dropdown: dropdown
+      };
+      select.addEventListener('change', function() {
+        syncSearchableSelectState(select);
+      });
+      syncSearchableSelectState(select);
+    }
+
+    function syncSearchableSelectState(select) {
+      if (!select || !select._searchable) return;
+      var refs = select._searchable;
+      var selected = select.options[select.selectedIndex] || select.options[0];
+      var defaultOption = select.querySelector('option[value=""]') || select.options[0];
+      var isDefault = selected === defaultOption;
+      var hasValue = !isDefault;
+      refs.triggerSpan.textContent = selected ? selected.text : '请选择';
+      refs.trigger.classList.toggle('is-placeholder', isDefault && (!selected || !selected.value));
+      refs.wrapper.classList.toggle('has-value', hasValue);
+      refs.clear.hidden = !hasValue;
+      refs.clear.setAttribute('aria-label', '清除' + (selected ? selected.text : '选择') + '，恢复默认选项');
+      var items = refs.dropdown.querySelectorAll('.searchable-select-option');
+      for (var i = 0; i < items.length; i++) {
+        var isSelected = items[i].dataset.value === select.value;
+        items[i].classList.toggle('selected', isSelected);
+        items[i].setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      }
+    }
+
+    function getVisibleSearchableOptions(selectId) {
+      var list = document.getElementById(selectId + 'List');
+      if (!list) return [];
+      return Array.prototype.filter.call(
+        list.querySelectorAll('.searchable-select-option'),
+        function(item) { return !item.classList.contains('hidden'); }
+      );
+    }
+
+    function setSearchableActiveOption(selectId, index) {
+      var visibleItems = getVisibleSearchableOptions(selectId);
+      visibleItems.forEach(function(item) { item.classList.remove('is-active'); });
+      if (!visibleItems.length) return;
+      var normalized = Math.max(0, Math.min(index, visibleItems.length - 1));
+      var active = visibleItems[normalized];
+      active.classList.add('is-active');
+      var search = document.getElementById(selectId + 'Search');
+      if (search) search.setAttribute('aria-activedescendant', active.id);
+      if (typeof active.scrollIntoView === 'function') active.scrollIntoView({ block: 'nearest' });
     }
 
     function toggleSearchableDropdown(selectId) {
@@ -1800,9 +2240,19 @@ function navigateToPage(url) {
         dropdown.style.minWidth = rect.width + 'px';
       }
       dropdown.style.display = 'block';
-      if (triggerEl) triggerEl.classList.add('open');
+      if (triggerEl) {
+        triggerEl.classList.add('open');
+        triggerEl.setAttribute('aria-expanded', 'true');
+      }
       var search = document.getElementById(selectId + 'Search');
-      if (search) setTimeout(function() { search.focus(); }, 100);
+      if (search) setTimeout(function() {
+        search.focus();
+        var visibleItems = getVisibleSearchableOptions(selectId);
+        var selectedIndex = visibleItems.findIndex(function(item) {
+          return item.classList.contains('selected');
+        });
+        setSearchableActiveOption(selectId, selectedIndex < 0 ? 0 : selectedIndex);
+      }, 0);
     }
 
     function closeSearchableDropdown(selectId) {
@@ -1816,9 +2266,15 @@ function navigateToPage(url) {
           wrapper.appendChild(dropdown);
         }
       }
-      if (triggerEl) triggerEl.classList.remove('open');
+      if (triggerEl) {
+        triggerEl.classList.remove('open');
+        triggerEl.setAttribute('aria-expanded', 'false');
+      }
       var search = document.getElementById(selectId + 'Search');
-      if (search) search.value = '';
+      if (search) {
+        search.value = '';
+        search.removeAttribute('aria-activedescendant');
+      }
       var list = document.getElementById(selectId + 'List');
       if (list) {
         var items = list.querySelectorAll('.searchable-select-option');
@@ -1832,19 +2288,7 @@ function navigateToPage(url) {
       var select = document.getElementById(selectId);
       if (!select) return;
       select.value = value;
-      var triggerSpan = document.querySelector('#' + selectId + 'Wrapper .searchable-select-trigger span');
-      if (triggerSpan) triggerSpan.textContent = text;
-      var list = document.getElementById(selectId + 'List');
-      if (list) {
-        var items = list.querySelectorAll('.searchable-select-option');
-        for (var i = 0; i < items.length; i++) {
-          if (items[i].dataset.value === value) {
-            items[i].classList.add('selected');
-          } else {
-            items[i].classList.remove('selected');
-          }
-        }
-      }
+      syncSearchableSelectState(select);
       closeSearchableDropdown(selectId);
       select.dispatchEvent(new Event('change', { bubbles: true }));
     }

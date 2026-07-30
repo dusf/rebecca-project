@@ -395,6 +395,10 @@ body.um-dialog-open {
   font-size: 14px;
 }
 
+.um-dialog-input::placeholder {
+  color: hsl(var(--control-placeholder));
+}
+
 .um-dialog-input:focus,
 .um-dialog-combobox-trigger:focus-visible,
 .um-dialog-datetime-trigger:focus-visible,
@@ -496,6 +500,10 @@ body.um-dialog-open {
 .um-dialog-combobox-trigger::after {
   content: "⌄";
   color: hsl(var(--muted-foreground));
+}
+
+.um-dialog-combobox-trigger.is-placeholder {
+  color: hsl(var(--control-placeholder));
 }
 
 .um-dialog-combobox-popover {
@@ -696,7 +704,7 @@ body.um-dialog-open {
 }
 
 .um-dialog-datetime-trigger.is-placeholder {
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--control-placeholder));
 }
 
 .um-dialog-datetime-popover {

@@ -859,6 +859,7 @@ function navigateToPage(url) {
         var exists = categories.some(function(c) { return c.nameZh === currentVal; });
         if (exists) select.value = currentVal;
       }
+      syncFilterPromptState(select);
     }
 
     // ==================== 产品数据 ====================
@@ -1121,6 +1122,11 @@ function navigateToPage(url) {
       };
     }
 
+    function syncFilterPromptState(control) {
+      if (!control || !control.classList) return;
+      control.classList.toggle('is-placeholder', !control.value);
+    }
+
     function renderTableHead() {
       var thead = document.querySelector('.table-card table thead tr');
       if (!thead) return;
@@ -1370,13 +1376,45 @@ function navigateToPage(url) {
     var productSearchEl = document.getElementById('productSearch');
     if (productSearchEl) productSearchEl.addEventListener('input', filterAndRender);
     var categoryFilterEl = document.getElementById('categoryFilter');
-    if (categoryFilterEl) categoryFilterEl.addEventListener('change', filterAndRender);
+    if (categoryFilterEl) {
+      syncFilterPromptState(categoryFilterEl);
+      categoryFilterEl.addEventListener('change', function() {
+        syncFilterPromptState(categoryFilterEl);
+        filterAndRender();
+      });
+    }
     var statusFilterEl = document.getElementById('statusFilter');
-    if (statusFilterEl) statusFilterEl.addEventListener('change', filterAndRender);
+    if (statusFilterEl) {
+      syncFilterPromptState(statusFilterEl);
+      statusFilterEl.addEventListener('change', function() {
+        syncFilterPromptState(statusFilterEl);
+        filterAndRender();
+      });
+    }
     var dateFromEl = document.getElementById('dateFrom');
-    if (dateFromEl) dateFromEl.addEventListener('change', filterAndRender);
+    if (dateFromEl) {
+      syncFilterPromptState(dateFromEl);
+      dateFromEl.addEventListener('change', function() {
+        syncFilterPromptState(dateFromEl);
+        filterAndRender();
+      });
+    }
     var dateToEl = document.getElementById('dateTo');
-    if (dateToEl) dateToEl.addEventListener('change', filterAndRender);
+    if (dateToEl) {
+      syncFilterPromptState(dateToEl);
+      dateToEl.addEventListener('change', function() {
+        syncFilterPromptState(dateToEl);
+        filterAndRender();
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(
+      '.form-select, .form-input[type="date"], .form-input[type="datetime-local"], .form-input[type="time"]'
+    ), function(control) {
+      syncFilterPromptState(control);
+      control.addEventListener('change', function() {
+        syncFilterPromptState(control);
+      });
+    });
 
     // ==================== Checkbox ====================
     function updateSelectedCount() {

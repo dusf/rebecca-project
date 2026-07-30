@@ -45,7 +45,7 @@
     { value: '+61', label: '澳大利亚 +61' }
   ];
   const CONSENT_OPTIONS = [
-    { value: 'none', label: '请选择同意来源' },
+    { value: 'none', label: '请选择同意来源', placeholder: true },
     { value: 'registration', label: '注册页面' },
     { value: 'checkout', label: '结账页面' },
     { value: 'footer', label: '页脚订阅' },

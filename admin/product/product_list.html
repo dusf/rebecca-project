@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css?v=3">
+  <link rel="stylesheet" href="../common/css/commons.css?v=4">
   <style>
     /* ==================== 产品列表页专用样式 ==================== */
     /* 统计卡片 */
@@ -134,6 +134,10 @@
       font-family: var(--font-sans);
     }
 
+    .search-input input::placeholder {
+      color: hsl(var(--control-placeholder));
+    }
+
     /* 日期筛选 */
     .filter-date {
       position: relative;
@@ -154,6 +158,9 @@
       box-sizing: border-box;
       min-width: 140px;
       cursor: pointer;
+    }
+    .filter-date.is-placeholder {
+      color: hsl(var(--control-placeholder));
     }
     .filter-date:hover {
       border-color: hsl(30 20% 78%);
@@ -415,7 +422,7 @@
   </div>
 
   <script>var CURRENT_PAGE = 'products';</script>
-  <script src="../common/js/commons.js"></script>
+  <script src="../common/js/commons.js?v=4"></script>
   <script>
     // ==================== 初始化 ====================
     buildCustomColPanel();

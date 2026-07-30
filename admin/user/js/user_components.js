@@ -7,13 +7,13 @@
 
   const CONTROL_OPTIONS = {
     accountStatus: [
-      { value: 'all', label: '全部账号状态' },
+      { value: 'all', label: '账号状态', placeholder: true },
       { value: 'active', label: '已注册' },
       { value: 'pending', label: '待激活' },
       { value: 'disabled', label: '已禁用' }
     ],
     marketingStatus: [
-      { value: 'all', label: '全部营销状态' },
+      { value: 'all', label: '营销状态', placeholder: true },
       { value: 'subscribed', label: '已订阅' },
       { value: 'not_subscribed', label: '未订阅' },
       { value: 'pending', label: '待确认' },
@@ -45,7 +45,8 @@
       return {
         value: value,
         label: label,
-        disabled: Boolean(option.disabled)
+        disabled: Boolean(option.disabled),
+        placeholder: Boolean(option.placeholder)
       };
     });
     if (!normalized.some(function (option) { return !option.disabled; })) {
@@ -207,6 +208,7 @@
       element.setAttribute('data-value', value);
       trigger.textContent = option.label;
       trigger.setAttribute('data-value', value);
+      trigger.classList.toggle('is-placeholder', option.placeholder);
       Array.prototype.forEach.call(optionsHost.querySelectorAll('.um-combobox-option'), function (node) {
         node.setAttribute('aria-selected', node.getAttribute('data-value') === value ? 'true' : 'false');
       });

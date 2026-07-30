@@ -218,6 +218,29 @@ function buildCombobox(value = 'active') {
 }
 
 {
+  const fixture = buildCombobox('all');
+  const controller = UserComponents.mountCombobox(fixture.host);
+  assert.equal(
+    fixture.trigger.classList.values().includes('is-placeholder'),
+    true,
+    'default prompt option must use placeholder styling'
+  );
+  controller.setValue('active', false);
+  assert.equal(
+    fixture.trigger.classList.values().includes('is-placeholder'),
+    false,
+    'a concrete selected value must use normal text styling'
+  );
+  controller.setValue('all', false);
+  assert.equal(
+    fixture.trigger.classList.values().includes('is-placeholder'),
+    true,
+    'returning to the default prompt must restore placeholder styling'
+  );
+  controller.destroy();
+}
+
+{
   const fixture = buildCombobox();
   const changes = [];
   fixture.host.addEventListener('um:change', (event) => changes.push(event.detail));

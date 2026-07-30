@@ -253,6 +253,11 @@
   outline: none;
 }
 
+.um-text-control::placeholder,
+.um-combobox-search::placeholder {
+  color: hsl(var(--control-placeholder));
+}
+
 textarea.um-text-control {
   min-height: 96px;
   resize: vertical;
@@ -396,6 +401,10 @@ textarea.um-text-control {
   font: 14px/1.4 var(--font-sans);
   text-align: left;
   cursor: pointer;
+}
+
+.um-combobox-trigger.is-placeholder {
+  color: hsl(var(--control-placeholder));
 }
 
 .um-combobox-option::before {
@@ -1085,7 +1094,7 @@ textarea.um-text-control {
 }
 
 .um-search-input::placeholder {
-  color: hsl(30 10% 55%);
+  color: hsl(var(--control-placeholder));
 }
 
 .um-filter-grid {
@@ -1164,7 +1173,7 @@ textarea.um-text-control {
 }
 
 .um-date-trigger.is-placeholder {
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--control-placeholder));
 }
 
 .um-table-tools {

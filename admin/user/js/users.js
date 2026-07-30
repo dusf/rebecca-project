@@ -344,8 +344,8 @@
     showToast('页面导航尚未加载，请刷新后台后重试。', 'error');
   }
 
-  function option(value, label) {
-    return { value: String(value), label: String(label) };
+  function option(value, label, placeholder) {
+    return { value: String(value), label: String(label), placeholder: Boolean(placeholder) };
   }
 
   function comboboxMarkup(name, value) {
@@ -538,20 +538,20 @@
         if (store && store.id) stores[store.id] = store.name || store.domain || store.id;
       });
     });
-    const storeOptions = [option('all', '全部关联店铺')].concat(
+    const storeOptions = [option('all', '关联店铺', true)].concat(
       Object.keys(stores).sort(function (a, b) {
         return stores[a].localeCompare(stores[b], 'zh-CN');
       }).map(function (id) { return option(id, stores[id]); })
     );
     return {
       accountStatus: [
-        option('all', '全部账号状态'),
+        option('all', '账号状态', true),
         option('registered', '已注册'),
         option('pending', '待激活'),
         option('disabled', '已禁用')
       ],
       marketingStatus: [
-        option('all', '全部营销状态'),
+        option('all', '营销状态', true),
         option('subscribed', '已订阅'),
         option('not_subscribed', '未订阅'),
         option('unsubscribed', '已退订'),
@@ -559,7 +559,7 @@
         option('invalid', '无效邮箱')
       ],
       source: [
-        option('all', '全部用户来源'),
+        option('all', '用户来源', true),
         option('storefront', '买家注册'),
         option('newsletter_footer', '页脚订阅'),
         option('newsletter_registration', '注册页订阅'),
@@ -569,7 +569,7 @@
         option('shopify_csv', 'Shopify CSV')
       ],
       authProvider: [
-        option('all', '全部登录方式'),
+        option('all', '登录方式', true),
         option('password', '邮箱'),
         option('google', 'Google'),
         option('facebook', 'Facebook'),

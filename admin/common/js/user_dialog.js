@@ -853,14 +853,19 @@
     var normalized = options.map(function (option) {
       var optionValue = String(option.value === undefined ? '' : option.value).trim();
       if (!optionValue) throw new Error('自绘下拉真实值不能为空');
-      return { value: optionValue, label: String(option.label || optionValue) };
+      return {
+        value: optionValue,
+        label: String(option.label || optionValue),
+        placeholder: Boolean(option.placeholder) || optionValue === 'all' || optionValue === 'none'
+      };
     });
     var selected = normalized.find(function (option) { return option.value === String(value); }) || normalized[0];
     var safeName = String(name).replace(/[^a-z0-9_-]/gi, '-');
     var listboxId = 'um-combo-list-' + safeName;
     return '<div class="um-dialog-combobox" data-dialog-combo="' + escapeHtml(name) +
       '" data-value="' + escapeHtml(selected.value) + '">' +
-      '<button class="um-dialog-combobox-trigger" type="button" data-dialog-action="combo-toggle" ' +
+      '<button class="um-dialog-combobox-trigger' + (selected.placeholder ? ' is-placeholder' : '') +
+      '" type="button" data-dialog-action="combo-toggle" ' +
       'aria-haspopup="listbox" aria-controls="' + listboxId +
       '" aria-expanded="false" aria-label="' + escapeHtml(label || name) + '">' +
       '<span>' + escapeHtml(selected.label) + '</span></button>' +
@@ -1304,7 +1309,7 @@
         ], '档案范围') + '</div>' +
         '<div class="um-dialog-field"><span class="um-dialog-field-label">营销状态</span>' +
         comboMarkup('shopify-status', state.shopify.status, [
-          { value: 'all', label: '全部营销状态' },
+          { value: 'all', label: '营销状态' },
           { value: 'subscribed', label: '已订阅' },
           { value: 'not_subscribed', label: '未订阅' },
           { value: 'unsubscribed', label: '已退订' },

@@ -76,6 +76,7 @@
       
       /* 字体 */
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --control-placeholder: 30 10% 55%;
     }
 
     /* ==================== 基础样式 ==================== */
@@ -1171,7 +1172,7 @@
     }
 
     .search-input::placeholder {
-      color: hsl(30 10% 55%);
+      color: hsl(var(--control-placeholder));
       font-size: 14px;
     }
 
@@ -1185,6 +1186,14 @@
       background-repeat: no-repeat;
       background-position: right 12px center;
       background-size: 14px;
+    }
+
+    .filter-select.is-placeholder {
+      color: hsl(var(--control-placeholder));
+    }
+
+    .filter-select option {
+      color: hsl(var(--foreground));
     }
 
     /* ==================== 按钮 ==================== */
@@ -1793,7 +1802,16 @@
     }
 
     .form-input::placeholder, .form-select::placeholder {
-      color: hsl(var(--muted-foreground) / 0.6);
+      color: hsl(var(--control-placeholder));
+    }
+
+    .form-input.is-placeholder,
+    .form-select.is-placeholder {
+      color: hsl(var(--control-placeholder));
+    }
+
+    .form-select option {
+      color: hsl(var(--foreground));
     }
 
     .form-input:hover, .form-select:hover {
@@ -1824,7 +1842,7 @@
       transition: border-color 0.15s, box-shadow 0.15s;
       line-height: 1.5;
     }
-    .form-textarea::placeholder { color: hsl(var(--muted-foreground) / 0.6); }
+    .form-textarea::placeholder { color: hsl(var(--control-placeholder)); }
     .form-textarea:hover { border-color: hsl(30 20% 78%); }
     .form-textarea:focus {
       border-color: hsl(var(--primary));

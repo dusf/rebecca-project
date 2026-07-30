@@ -52,7 +52,10 @@ assert.match(js, /data-account-action=["']restore["']/);
 });
 
 assert.match(js, /user\.id/);
-assert.match(js, /um-user-id/);
+assert.match(js, /<div class="um-user-email"[\s\S]*<div class="um-user-id">/);
+assert.doesNotMatch(js, /um-avatar|um-user-name|编号：/);
+assert.match(html, /placeholder="搜索编号、邮箱、手机号或标签"/);
+assert.doesNotMatch(html, /id="userStoreFilter"/);
 
 assert.doesNotMatch(html, /class=["'][^"']*um-text-control[^"']*["'][^>]*type=["']date["']/);
 assert.match(js, /um-date-native/);
@@ -134,22 +137,22 @@ assert.match(css, /\.um-column-row\.is-drag-over/);
 assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
 assert.match(html, /id="userTotalCount">\(0位\)<\/span>/);
 assert.match(html, /href="\.\.\/common\/css\/commons\.css\?v=4"/);
-assert.match(html, /href="css\/users\.css\?v=11"/);
+assert.match(html, /href="css\/users\.css\?v=12"/);
 assert.match(html, /<h1 class="page-title">用户管理/);
 assert.match(html, /集中管理当前店铺的买家账号、邮件订阅者及从外部店铺导入的用户档案/);
 assert.match(html, /同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。/);
 assert.match(html, /src="\.\.\/common\/js\/commons\.js\?v=4"/);
 assert.match(html, /src="js\/user_components\.js\?v=3"/);
-assert.match(html, /src="js\/users\.js\?v=10"/);
-assert.match(userFormHtml, /href="css\/users\.css\?v=11"/);
+assert.match(html, /src="js\/users\.js\?v=11"/);
+assert.match(userFormHtml, /href="css\/users\.css\?v=12"/);
 assert.match(userFormHtml, /src="js\/user_components\.js\?v=3"/);
 assert.match(userFormHtml, /src="js\/user_form\.js\?v=2"/);
 assert.match(js, /option\('all', '账号状态', true\)/);
 assert.match(js, /option\('all', '营销状态', true\)/);
 assert.match(js, /option\('all', '用户来源', true\)/);
 assert.match(js, /option\('all', '登录方式', true\)/);
-assert.match(js, /option\('all', '关联店铺', true\)/);
-assert.doesNotMatch(js, /全部(?:账号状态|营销状态|用户来源|登录方式|关联店铺)/);
+assert.doesNotMatch(js, /\{ key: 'stores', label: '关联店铺' \}|option\('all', '关联店铺', true\)/);
+assert.doesNotMatch(js, /全部(?:账号状态|营销状态|用户来源|登录方式)/);
 assert.match(commonsCss, /--control-placeholder:\s*30 10% 55%;/);
 assert.match(css, /\.um-text-control::placeholder,[\s\S]*\.um-combobox-search::placeholder\s*\{[\s\S]*color:\s*hsl\(var\(--control-placeholder\)\);/);
 assert.match(css, /\.um-combobox-trigger\.is-placeholder\s*\{[\s\S]*color:\s*hsl\(var\(--control-placeholder\)\);/);
@@ -204,6 +207,14 @@ assert.match(componentsJs, /sequence\.textContent = option\.sequence \+ '\.'/);
 assert.match(css, /\.um-table th\s*\{[\s\S]*position:\s*sticky;[\s\S]*height:\s*46px;[\s\S]*background:\s*#F5F0EB;[\s\S]*font-size:\s*14px;/);
 assert.match(css, /\.um-table th \.um-checkbox\s*\{[\s\S]*min-height:\s*0;/);
 assert.match(css, /\.um-sort-button\s*\{[\s\S]*padding:\s*0;/);
+['orderCount', 'totalSpent', 'lastLoginAt', 'createdAt'].forEach((key) => {
+  assert.match(js, new RegExp(`\\{ key: '${key}',[^}]*sortable: true`));
+});
+['accountStatus', 'marketingStatus', 'authProviders', 'source'].forEach((key) => {
+  assert.doesNotMatch(js, new RegExp(`\\{ key: '${key}',[^}]*sortable: true`));
+});
+assert.match(js, /\(active \? \(state\.sort\.direction === 'asc' \? '▲' : '▼'\) : '↕'\)/);
+assert.match(css, /\.um-sort-indicator\s*\{[\s\S]*opacity:\s*\.65;/);
 assert.match(css, /\.um-operation-cell\s*\{[\s\S]*text-align:\s*left !important;/);
 assert.match(css, /\.um-row-actions\s*\{[\s\S]*justify-content:\s*flex-start;/);
 assert.match(css, /\.um-menu-panel\.is-viewport-layer,[\s\S]*position:\s*fixed;[\s\S]*z-index:\s*99999;/);
@@ -305,6 +316,19 @@ const second = { id: 'usr_b', lastLoginAt: null };
 assert.equal(utils.compareUsers(first, second, { key: 'lastLoginAt', direction: 'asc' }) < 0, true);
 assert.equal(utils.compareUsers(first, second, { key: 'lastLoginAt', direction: 'desc' }) < 0, true);
 assert.equal(utils.matchesSearchQuery({ id: 'USR-900', email: 'other@example.com' }, 'usr-900'), true);
+const searchTarget = {
+  id: 'USR-901',
+  email: 'buyer@example.com',
+  phone: '13800138000',
+  tags: ['高价值'],
+  firstName: '不应命中',
+  stores: [{ name: '不应命中店铺', domain: 'hidden.myshopify.com' }]
+};
+assert.equal(utils.matchesSearchQuery(searchTarget, 'buyer@example.com'), true);
+assert.equal(utils.matchesSearchQuery(searchTarget, '13800138000'), true);
+assert.equal(utils.matchesSearchQuery(searchTarget, '高价值'), true);
+assert.equal(utils.matchesSearchQuery(searchTarget, '不应命中'), false);
+assert.equal(utils.matchesSearchQuery(searchTarget, 'hidden.myshopify.com'), false);
 
 async function runLockedUiContract() {
   UserStore.resetForTests([]);

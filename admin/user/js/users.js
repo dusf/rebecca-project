@@ -7,7 +7,6 @@
     { key: 'marketingStatus', label: '邮件营销' },
     { key: 'authProviders', label: '登录方式' },
     { key: 'source', label: '用户来源' },
-    { key: 'stores', label: '关联店铺' },
     { key: 'orderCount', label: '订单数', sortable: true },
     { key: 'totalSpent', label: '累计消费', sortable: true },
     { key: 'lastLoginAt', label: '最后登录时间', sortable: true },
@@ -26,7 +25,6 @@
       marketingStatus: 'all',
       source: 'all',
       authProvider: 'all',
-      storeId: 'all',
       createdFrom: '',
       createdTo: ''
     },
@@ -206,12 +204,7 @@
   }
 
   function fullName(user) {
-    return [user.firstName, user.lastName].filter(Boolean).join(' ') || '未填写姓名';
-  }
-
-  function initials(user) {
-    const name = [user.firstName, user.lastName].filter(Boolean).join('');
-    return (name || user.email || '用').slice(0, 2).toUpperCase();
+    return [user.firstName, user.lastName].filter(Boolean).join(' ');
   }
 
   function formatDate(value, withTime) {
@@ -605,17 +598,6 @@
   }
 
   function filterOptions() {
-    const stores = {};
-    allUsers.forEach(function (user) {
-      (user.stores || []).forEach(function (store) {
-        if (store && store.id) stores[store.id] = store.name || store.domain || store.id;
-      });
-    });
-    const storeOptions = [option('all', '关联店铺', true)].concat(
-      Object.keys(stores).sort(function (a, b) {
-        return stores[a].localeCompare(stores[b], 'zh-CN');
-      }).map(function (id) { return option(id, stores[id]); })
-    );
     return {
       accountStatus: [
         option('all', '账号状态', true),
@@ -649,8 +631,7 @@
         option('tiktok', 'TikTok'),
         option('instagram', 'Instagram'),
         option('x', 'X')
-      ],
-      storeId: storeOptions
+      ]
     };
   }
 
@@ -660,8 +641,7 @@
       { host: elements.accountFilter, name: 'accountStatus' },
       { host: elements.marketingFilter, name: 'marketingStatus' },
       { host: elements.sourceFilter, name: 'source' },
-      { host: elements.providerFilter, name: 'authProvider' },
-      { host: elements.storeFilter, name: 'storeId' }
+      { host: elements.providerFilter, name: 'authProvider' }
     ];
     if (filterControlsReady && refresh) {
       definitions.forEach(function (definition) {
@@ -713,13 +693,9 @@
     if (!query) return true;
     const haystack = [
       user.id,
-      fullName(user),
       user.email,
       user.phone,
-      (user.tags || []).join(' '),
-      (user.stores || []).map(function (store) {
-        return [store.name, store.domain].filter(Boolean).join(' ');
-      }).join(' ')
+      (user.tags || []).join(' ')
     ].join(' ').toLocaleLowerCase();
     return haystack.indexOf(String(query).toLocaleLowerCase()) !== -1;
   }
@@ -746,15 +722,11 @@
     const marketingStatus = filters.marketingStatus || 'all';
     const source = filters.source || 'all';
     const authProvider = filters.authProvider || 'all';
-    const storeId = filters.storeId || 'all';
     if (accountStatus !== 'all' && user.accountStatus !== accountStatus) return false;
     if (marketingStatus !== 'all' && user.marketingStatus !== marketingStatus) return false;
     if (source !== 'all' && !matchesSource(user, source)) return false;
     if (authProvider !== 'all' && !(user.authProviders || []).some(function (provider) {
       return provider.type === authProvider;
-    })) return false;
-    if (storeId !== 'all' && !(user.stores || []).some(function (store) {
-      return store.id === storeId;
     })) return false;
     const created = user.createdAt ? String(user.createdAt).slice(0, 10) : '';
     if (filters.createdFrom && (!created || created < filters.createdFrom)) return false;
@@ -877,19 +849,6 @@
     return '<span class="um-badge' + (tone ? ' um-badge-' + tone : '') + '">' + escapeHtml(label) + '</span>';
   }
 
-  function storeDetail(user) {
-    const stores = user.stores || [];
-    if (!stores.length) return '<span class="um-muted">未关联</span>';
-    const rows = stores.map(function (store) {
-      return '<div class="um-detail-row"><strong>' + escapeHtml(store.name || '未命名店铺') + '</strong>' +
-        '<span class="um-muted">' + escapeHtml(store.domain || store.id || '—') + '</span></div>';
-    }).join('');
-    return '<button class="um-detail-anchor" type="button" aria-label="查看' + stores.length + '个关联店铺详情">' +
-      escapeHtml(stores[0].name || stores[0].domain || stores[0].id) +
-      (stores.length > 1 ? ' +' + (stores.length - 1) : '') +
-      '<span class="um-detail-card" role="tooltip"><strong>关联店铺</strong>' + rows + '</span></button>';
-  }
-
   function orderDetail(user) {
     return '<button class="um-detail-anchor" type="button" aria-label="查看订单详情">' +
       escapeHtml(user.orderCount || 0) +
@@ -902,11 +861,9 @@
 
   function renderCell(user, key) {
     if (key === 'user') {
-      return '<div class="um-user-main"><span class="um-avatar" aria-hidden="true">' +
-        escapeHtml(initials(user)) + '</span><div class="um-user-copy">' +
-        '<div class="um-user-name">' + escapeHtml(fullName(user)) + '</div>' +
+      return '<div class="um-user-main"><div class="um-user-copy">' +
         '<div class="um-user-email" title="' + escapeHtml(user.email) + '">' + escapeHtml(user.email) +
-        '</div><div class="um-user-id">编号：' + escapeHtml(user.id) + '</div></div></div>';
+        '</div><div class="um-user-id">' + escapeHtml(user.id) + '</div></div></div>';
     }
     if (key === 'accountStatus') {
       const tone = user.accountStatus === 'registered' ? 'success' :
@@ -925,7 +882,6 @@
       }).join('') + '</div>';
     }
     if (key === 'source') return escapeHtml(SOURCE_LABELS[user.source] || user.source || '—');
-    if (key === 'stores') return storeDetail(user);
     if (key === 'orderCount') return orderDetail(user);
     if (key === 'totalSpent') return escapeHtml(formatMoney(user.totalSpent));
     if (key === 'lastLoginAt') return escapeHtml(user.lastLoginAt ? formatDate(user.lastLoginAt) : '从未登录');
@@ -956,7 +912,7 @@
           '<button class="um-sort-button" type="button" data-sort="' + escapeHtml(column.key) +
           '">' + escapeHtml(column.label) +
           '<span class="um-sort-indicator" aria-hidden="true">' +
-          (active ? (state.sort.direction === 'asc' ? '▲' : '▼') : '') + '</span></button></th>';
+          (active ? (state.sort.direction === 'asc' ? '▲' : '▼') : '↕') + '</span></button></th>';
       }).join('') +
       '<th class="um-operation-cell um-frozen-right" scope="col">操作</th></tr>';
     const checkbox = elements.tableHead.querySelector('#userSelectPage');
@@ -970,7 +926,7 @@
     elements.tableBody.innerHTML = pageUsers.map(function (user) {
       return '<tr data-user-row="' + escapeHtml(user.id) + '">' +
         '<td class="um-select-cell um-frozen-left"><label class="um-checkbox" aria-label="选择' +
-        escapeHtml(fullName(user)) + '"><input class="um-checkbox-input" type="checkbox" data-select-user="' +
+        escapeHtml(user.email || user.id) + '"><input class="um-checkbox-input" type="checkbox" data-select-user="' +
         escapeHtml(user.id) + '"' + (state.selected.has(user.id) ? ' checked' : '') +
         '><span class="um-checkbox-box" aria-hidden="true"></span></label></td>' +
         columns.map(function (column) {
@@ -1121,7 +1077,6 @@
       marketingStatus: 'all',
       source: 'all',
       authProvider: 'all',
-      storeId: 'all',
       createdFrom: '',
       createdTo: ''
     };
@@ -1133,8 +1088,7 @@
       [elements.accountFilter, 'all'],
       [elements.marketingFilter, 'all'],
       [elements.sourceFilter, 'all'],
-      [elements.providerFilter, 'all'],
-      [elements.storeFilter, 'all']
+      [elements.providerFilter, 'all']
     ].forEach(function (entry) {
       const control = entry[0].querySelector('[data-um-combobox]');
       if (control) root.UserComponents.setValue(control, entry[1], false);
@@ -1491,7 +1445,6 @@
     elements.marketingFilter = root.document.getElementById('userMarketingFilter');
     elements.sourceFilter = root.document.getElementById('userSourceFilter');
     elements.providerFilter = root.document.getElementById('userProviderFilter');
-    elements.storeFilter = root.document.getElementById('userStoreFilter');
     elements.createdFrom = root.document.getElementById('userCreatedFrom');
     elements.createdTo = root.document.getElementById('userCreatedTo');
     elements.guidance = root.document.getElementById('userListGuidance');

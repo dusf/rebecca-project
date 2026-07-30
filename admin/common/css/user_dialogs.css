@@ -34,6 +34,40 @@ body.um-dialog-open {
   height: min(720px, calc(100vh - 48px));
 }
 
+.um-dialog-shopify {
+  width: min(720px, 94vw);
+  height: min(660px, calc(100vh - 48px));
+  max-height: calc(100vh - 48px);
+  box-sizing: border-box;
+  padding: 24px 24px 16px;
+  border: 0;
+  background: hsl(var(--card));
+  box-shadow: 0 16px 40px rgb(0 0 0 / 20%);
+}
+
+.um-dialog-shopify .um-dialog-header {
+  padding: 0 0 16px;
+  border-bottom: 0;
+}
+
+.um-dialog-shopify .um-dialog-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 22px;
+}
+
+.um-dialog-shopify .um-dialog-body {
+  padding: 0;
+}
+
+.um-dialog-shopify .um-dialog-footer {
+  gap: 8px;
+  padding: 16px 0 0;
+  border-top: 0;
+  background: transparent;
+}
+
 .um-dialog-compact {
   width: min(640px, calc(100vw - 48px));
 }
@@ -180,6 +214,84 @@ body.um-dialog-open {
   border-color: hsl(var(--primary));
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
+}
+
+.um-shopify-dialog-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0 0 24px;
+  padding: 16px 20px;
+  border-top: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.um-shopify-dialog-steps .um-dialog-step {
+  flex: 0 0 auto;
+  gap: 8px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.um-shopify-dialog-steps .um-dialog-step::before {
+  display: none;
+}
+
+.um-shopify-dialog-steps .um-dialog-step-num {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid hsl(var(--border));
+  border-radius: 50%;
+  background: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.um-shopify-dialog-steps .um-dialog-step-label {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.um-shopify-dialog-steps .um-dialog-step.is-active .um-dialog-step-num {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.um-shopify-dialog-steps .um-dialog-step.is-active .um-dialog-step-label {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.um-shopify-dialog-steps .um-dialog-step.is-complete .um-dialog-step-num {
+  border-color: hsl(var(--success));
+  background: hsl(var(--success));
+  color: white;
+}
+
+.um-shopify-dialog-steps .um-dialog-step.is-complete .um-dialog-step-label {
+  color: hsl(var(--success));
+}
+
+.um-shopify-dialog-steps .um-dialog-step-divider {
+  width: 40px;
+  height: 2px;
+  flex: 0 0 auto;
+  margin: 0 6px;
+  background: hsl(var(--border));
+}
+
+.um-shopify-dialog-steps .um-dialog-step-divider.is-complete {
+  background: hsl(var(--success));
 }
 
 .um-dialog-guidance,
@@ -674,5 +786,39 @@ body.um-dialog-open {
 
   .um-dialog-steps {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .um-dialog-shopify {
+    width: calc(100vw - 24px);
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 16px;
+  }
+
+  .um-shopify-dialog-steps {
+    display: flex;
+    padding: 12px 8px;
+    margin-bottom: 16px;
+  }
+
+  .um-shopify-dialog-steps .um-dialog-step {
+    gap: 5px;
+  }
+
+  .um-shopify-dialog-steps .um-dialog-step-num {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .um-shopify-dialog-steps .um-dialog-step-label {
+    font-size: 10px;
+  }
+
+  .um-shopify-dialog-steps .um-dialog-step-divider {
+    width: 20px;
+    margin: 0 4px;
   }
 }

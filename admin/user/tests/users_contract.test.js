@@ -72,13 +72,29 @@ assert.match(js, /window\.parent\.UserDialogs\.openBatchTag/);
 assert.match(js, /addTags:/);
 assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
 assert.match(dialogHtml, /data-user-dialog="csv"[\s\S]*class="um-dialog um-dialog-workflow"/);
-assert.match(dialogHtml, /data-user-dialog="shopify"[\s\S]*class="um-dialog um-dialog-workflow"/);
+assert.match(dialogHtml, /data-user-dialog="shopify"[\s\S]*class="um-dialog um-dialog-workflow um-dialog-shopify"/);
+assert.match(dialogJs, /function shopifyStepsMarkup\(labels, current\)/);
+assert.match(dialogJs, /class="um-dialog-step-divider/);
+assert.match(dialogJs, /step < current \? '✓' : step/);
+assert.equal(
+  (dialogJs.match(/shopifyStepsMarkup\(\['选择店铺', '选择用户', '导入结果'\], [123]\)/g) || []).length,
+  4
+);
 assert.match(dialogCss, /\.um-dialog-workflow\s*\{\s*height:\s*min\(720px,\s*calc\(100vh - 48px\)\);/);
 assert.match(dialogCss, /\.um-dialog-body\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*overflow:\s*auto;/);
 assert.match(dialogCss, /\.um-dialog-header h2\s*\{[\s\S]*font-size:\s*18px;[\s\S]*font-weight:\s*700;/);
-assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=9/);
-assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=9/);
-assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=9/);
+assert.match(dialogCss, /\.um-dialog-shopify\s*\{[\s\S]*width:\s*min\(720px,\s*94vw\);[\s\S]*height:\s*min\(660px,\s*calc\(100vh - 48px\)\);[\s\S]*padding:\s*24px 24px 16px;/);
+assert.match(dialogCss, /\.um-dialog-shopify \.um-dialog-header\s*\{[\s\S]*padding:\s*0 0 16px;[\s\S]*border-bottom:\s*0;/);
+assert.match(dialogCss, /\.um-dialog-shopify \.um-dialog-body\s*\{[\s\S]*padding:\s*0;/);
+assert.match(dialogCss, /\.um-dialog-shopify \.um-dialog-footer\s*\{[\s\S]*padding:\s*16px 0 0;[\s\S]*border-top:\s*0;/);
+assert.match(dialogCss, /\.um-shopify-dialog-steps\s*\{[\s\S]*display:\s*flex;[\s\S]*justify-content:\s*center;[\s\S]*padding:\s*16px 20px;[\s\S]*border-top:/);
+assert.match(dialogCss, /\.um-shopify-dialog-steps \.um-dialog-step-num\s*\{[\s\S]*width:\s*26px;[\s\S]*height:\s*26px;/);
+assert.match(dialogCss, /\.um-shopify-dialog-steps \.um-dialog-step-divider\s*\{[\s\S]*width:\s*40px;[\s\S]*height:\s*2px;/);
+assert.match(dialogCss, /\.um-shopify-dialog-steps \.um-dialog-step\.is-complete \.um-dialog-step-num[\s\S]*background:\s*hsl\(var\(--success\)\);/);
+assert.match(dialogCss, /@media \(max-width:\s*600px\)[\s\S]*\.um-shopify-dialog-steps \.um-dialog-step-num[\s\S]*width:\s*22px;/);
+assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=10/);
+assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=10/);
+assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=10/);
 assert.match(dialogJs, /MARKETING_STATUS_LABELS\[record\.marketingStatus\]\s*\|\|\s*'未知状态'/);
 assert.match(dialogJs, /subscribed:\s*'已订阅'[\s\S]*not_subscribed:\s*'未订阅'[\s\S]*unsubscribed:\s*'已退订'[\s\S]*pending:\s*'待确认'[\s\S]*invalid:\s*'无效邮箱'/);
 assert.match(dialogJs, /一个域名对应一个店铺，且必须单独完成授权/);

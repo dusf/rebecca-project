@@ -585,7 +585,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html?v=9')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=10')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
@@ -627,6 +627,22 @@
         var className = step === current ? ' is-active' : (step < current ? ' is-complete' : '');
         return '<div class="um-dialog-step' + className + '" data-step="' + step + '">' +
           escapeHtml(label) + '</div>';
+      }).join('') + '</div>';
+  }
+
+  function shopifyStepsMarkup(labels, current) {
+    return '<div class="um-dialog-steps um-shopify-dialog-steps">' +
+      labels.map(function (label, index) {
+        var step = index + 1;
+        var className = step === current ? ' is-active' : (step < current ? ' is-complete' : '');
+        var divider = index < labels.length - 1
+          ? '<span class="um-dialog-step-divider' + (step < current ? ' is-complete' : '') +
+            '" aria-hidden="true"></span>'
+          : '';
+        return '<div class="um-dialog-step' + className + '">' +
+          '<span class="um-dialog-step-num" aria-hidden="true">' +
+          (step < current ? '✓' : step) + '</span><span class="um-dialog-step-label">' +
+          escapeHtml(label) + '</span></div>' + divider;
       }).join('') + '</div>';
   }
 
@@ -1236,7 +1252,7 @@
     return {
       title: '连接新的 Shopify 店铺',
       subtitle: '一个域名对应一个店铺，且必须单独完成授权',
-      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
+      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
         '<div class="um-dialog-guidance"><strong>生产环境流程：</strong>输入域名仅用于定位店铺；点击后将跳转 Shopify 安装/授权页，商家确认权限并返回本系统、成功取得该店访问令牌后，才会建立连接。</div>' +
         '<div class="um-dialog-warning">当前页面是交互原型，因此下一步只模拟 OAuth 成功。每个 <code>*.myshopify.com</code> 域名只代表一家店，不能据此发现或读取同一商家的其他店铺。</div>' +
         '<div class="um-dialog-field"><label for="umShopifyDomain">Shopify 店铺域名</label>' +
@@ -1255,7 +1271,7 @@
     return {
       title: '选择已连接店铺',
       subtitle: '每个条目都已针对单个店铺分别完成授权',
-      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
+      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
         '<div class="um-dialog-guidance">以下店铺来自本系统保存的连接记录，不是根据某个域名从 Shopify 自动查出的店铺。要添加其他店铺，请逐店完成授权。</div>' +
         (state.shopify.connectionNotice ? '<div class="um-dialog-guidance">' +
           escapeHtml(state.shopify.connectionNotice) + '</div>' : '') +
@@ -1275,7 +1291,7 @@
     return {
       title: '选择 Shopify 客户档案',
       subtitle: selectedStore() ? selectedStore().name : '',
-      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 2) +
+      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 2) +
         '<div class="um-dialog-guidance">CSV/API 导入只创建或合并待激活档案，不迁移密码、社交绑定或登录会话。</div>' +
         '<div class="um-selection-toolbar"><div class="um-dialog-field"><label for="umShopifySearch">搜索用户</label>' +
         '<input class="um-dialog-input" id="umShopifySearch" type="search" value="' +
@@ -1315,7 +1331,7 @@
     return {
       title: 'Shopify 导入完成',
       subtitle: selectedStore() ? selectedStore().name : '',
-      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 3) +
+      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 3) +
         resultMarkup(state.shopify.result) +
         '<div class="um-dialog-guidance">所有新建档案均为待激活状态；相同邮箱已合并，未迁移 Shopify 密码、快捷登录绑定或会话。</div>',
       footer: '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'

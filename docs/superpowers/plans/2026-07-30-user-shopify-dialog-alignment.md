@@ -28,17 +28,17 @@
 - Consumes: existing `renderShopifyStep1/2/3()` state and labels.
 - Produces: `shopifyStepsMarkup(labels, current)` with `.um-shopify-dialog-steps`, `.um-dialog-step-num`, and `.um-dialog-step-divider`.
 
-- [ ] **Step 1: Add failing contracts**
+- [x] **Step 1: Add failing contracts**
 
-Assert that the Shopify dialog has `um-dialog-shopify`, that `shopifyStepsMarkup` renders divider elements and completed checkmarks, and that all Shopify steps call this renderer.
+Assert that the Shopify dialog has `um-dialog-shopify`, that `shopifyStepsMarkup` renders divider elements and completed checkmarks, and that all four Shopify render views (store list, new-store connection, customer selection, and result) call this renderer.
 
-- [ ] **Step 2: Run the contract test**
+- [x] **Step 2: Run the contract test**
 
 Run: `node admin/user/tests/users_contract.test.js`
 
 Expected: FAIL because the Shopify-only class and renderer do not exist.
 
-- [ ] **Step 3: Implement isolated markup**
+- [x] **Step 3: Implement isolated markup**
 
 Add `um-dialog-shopify` to the Shopify section. Add:
 
@@ -60,7 +60,7 @@ function shopifyStepsMarkup(labels, current) {
 
 Replace the three Shopify `stepsMarkup(...)` calls with `shopifyStepsMarkup(...)`.
 
-- [ ] **Step 4: Run the contract test**
+- [x] **Step 4: Run the contract test**
 
 Run: `node admin/user/tests/users_contract.test.js`
 
@@ -78,17 +78,17 @@ Expected: PASS.
 - Consumes: `.um-dialog-shopify` and `.um-shopify-dialog-steps` from Task 1.
 - Produces: Shopify-only `720px × 660px` shell, product-style title spacing, progress line, compact footer, and responsive sizing.
 
-- [ ] **Step 1: Add failing CSS contracts**
+- [x] **Step 1: Add failing CSS contracts**
 
 Assert scoped width/height, header/body/footer padding, horizontal progress layout, `26px` step circles, green completed state, and the `600px` responsive rules.
 
-- [ ] **Step 2: Run the contract test**
+- [x] **Step 2: Run the contract test**
 
 Run: `node admin/user/tests/users_contract.test.js`
 
 Expected: FAIL because the scoped product-style rules do not exist.
 
-- [ ] **Step 3: Implement scoped CSS**
+- [x] **Step 3: Implement scoped CSS**
 
 Add Shopify-only rules equivalent to the product dialog:
 
@@ -105,7 +105,7 @@ Add Shopify-only rules equivalent to the product dialog:
 
 Scope the header to `padding: 0 0 16px` without a divider, body to `padding: 0`, footer to `padding: 16px 0 0` without background/divider, and style the progress strip with centered flex layout, top/bottom borders, `26px` circles, `40px` connectors, theme-color active state, and green completed state.
 
-- [ ] **Step 4: Bump assets and run all checks**
+- [x] **Step 4: Bump assets and run all checks**
 
 Update dialog CSS, JS, and fetched HTML query versions from `v=9` to `v=10`.
 
@@ -119,7 +119,7 @@ git diff --check
 
 Expected: syntax succeeds, all five test files pass, and diff check reports no errors.
 
-- [ ] **Step 5: Verify preview resources**
+- [x] **Step 5: Verify preview resources**
 
 Request `http://127.0.0.1:8080/admin/index.html`, `user_dialogs.css?v=10`, and `user_dialog.js?v=10`.
 

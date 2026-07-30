@@ -127,7 +127,7 @@ assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
 assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
 assert.match(html, /id="userTotalCount">\(0位\)<\/span>/);
-assert.match(html, /href="css\/users\.css\?v=8"/);
+assert.match(html, /href="css\/users\.css\?v=9"/);
 assert.match(html, /<h1 class="page-title">用户管理/);
 assert.match(html, /集中管理当前店铺的买家账号、邮件订阅者及从外部店铺导入的用户档案/);
 assert.match(html, /同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。/);
@@ -157,7 +157,15 @@ assert.match(css, /\.um-list-page \.um-table-card\s*\{[\s\S]*flex:\s*1;[\s\S]*mi
 assert.match(css, /\.um-list-page \.um-table-scroll\s*\{[\s\S]*overflow:\s*auto;/);
 assert.match(css, /\.um-table-state\[hidden\]\s*\{[\s\S]*display:\s*none;/);
 assert.match(css, /\.um-search-input\s*\{[\s\S]*height:\s*38px;[\s\S]*border:\s*1\.5px solid[\s\S]*border-radius:\s*10px;/);
-assert.match(css, /\.um-table th\s*\{[\s\S]*position:\s*sticky;[\s\S]*background:\s*#F5F0EB;[\s\S]*font-size:\s*13px;/);
+assert.match(css, /\.um-view-tab\s*\{[\s\S]*font:\s*600 14px\/1\.4 var\(--font-sans\);/);
+assert.match(css, /\.um-combobox-trigger::after\s*\{[\s\S]*width:\s*14px;[\s\S]*height:\s*14px;[\s\S]*polyline points='6 9 12 15 18 9'/);
+assert.match(css, /\.um-combobox-options\s*\{[\s\S]*counter-reset:\s*um-combobox-option;/);
+assert.match(css, /\.um-combobox-option::before\s*\{[\s\S]*counter-increment:\s*um-combobox-option;[\s\S]*decimal-leading-zero/);
+assert.match(css, /\.um-table th\s*\{[\s\S]*position:\s*sticky;[\s\S]*height:\s*46px;[\s\S]*background:\s*#F5F0EB;[\s\S]*font-size:\s*14px;/);
+assert.match(
+  fs.readFileSync(path.join(adminRoot, 'product', 'product_list.html'), 'utf8'),
+  /\.table-card th\s*\{\s*height:\s*46px;\s*font-size:\s*14px;\s*\}/
+);
 assert.match(css, /\.um-pagination-button\s*\{[\s\S]*width:\s*40px;[\s\S]*height:\s*40px;[\s\S]*border-radius:\s*8px;/);
 assert.match(js, /ICONS\.edit/);
 assert.match(js, /ICONS\.mail/);

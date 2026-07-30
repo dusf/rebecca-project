@@ -63,6 +63,27 @@
   flex: 0 0 auto;
 }
 
+.um-guidance-trigger {
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: hsl(var(--primary-700));
+  font: 600 12px/1.5 var(--font-sans);
+  cursor: pointer;
+}
+
+.um-guidance-trigger:hover {
+  border-bottom-color: currentColor;
+}
+
+.um-guidance-trigger:focus-visible {
+  outline: 3px solid hsl(var(--ring) / .18);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .um-guidance {
   margin-bottom: 16px;
   padding: 12px 14px;
@@ -79,6 +100,66 @@
 
 .um-guidance-important {
   border-color: hsl(var(--primary) / .35);
+}
+
+.um-dismissible-guidance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.um-dismissible-guidance[hidden] {
+  display: none;
+}
+
+.um-dismissible-guidance > span {
+  min-width: 0;
+  line-height: 1.6;
+}
+
+.um-guidance-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.um-guidance-never-show,
+.um-guidance-close {
+  border: 0;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+
+.um-guidance-never-show {
+  min-height: 28px;
+  padding: 0 5px;
+  border-radius: 6px;
+  font: 500 12px/1.4 var(--font-sans);
+}
+
+.um-guidance-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.um-guidance-never-show:hover,
+.um-guidance-close:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.um-guidance-never-show:focus-visible,
+.um-guidance-close:focus-visible {
+  outline: 3px solid hsl(var(--ring) / .18);
+  outline-offset: 1px;
 }
 
 .um-view-tabs {
@@ -2101,6 +2182,16 @@ textarea.um-text-control {
 }
 
 @media (max-width: 640px) {
+  .um-dismissible-guidance {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .um-guidance-actions {
+    align-self: flex-end;
+  }
+
   .um-page-header,
   .um-form-header,
   .um-toolbar {

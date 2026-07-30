@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>用户管理</title>
   <link rel="stylesheet" href="../common/css/commons.css">
-  <link rel="stylesheet" href="css/users.css?v=7">
+  <link rel="stylesheet" href="css/users.css?v=8">
 </head>
 <body>
   <main class="um-page um-list-page" id="userListPage">
@@ -16,6 +16,7 @@
           <p class="um-page-subtitle">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <span>集中管理当前店铺的买家账号、邮件订阅者及从外部店铺导入的用户档案</span>
+            <button class="um-guidance-trigger" type="button" id="userGuidanceTrigger" aria-controls="userListGuidance" aria-expanded="true">查看用户规则</button>
           </p>
         </div>
         <div class="um-header-actions">
@@ -30,8 +31,14 @@
           <button class="um-button um-button-primary" type="button" id="userAddButton">添加用户</button>
         </div>
       </header>
-      <div class="um-guidance um-guidance-important" id="userListGuidance">
-        同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。
+      <div class="um-guidance um-guidance-important um-dismissible-guidance" id="userListGuidance" role="note" tabindex="-1">
+        <span>同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。</span>
+        <div class="um-guidance-actions">
+          <button class="um-guidance-never-show" type="button" data-guidance-action="never-show">不再展示</button>
+          <button class="um-guidance-close" type="button" data-guidance-action="close" aria-label="关闭用户规则提示" title="关闭">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
       </div>
       <nav class="um-view-tabs" id="userViewTabs" aria-label="用户快捷视图"></nav>
       <section class="um-toolbar" id="userToolbar" aria-label="用户筛选">
@@ -90,6 +97,6 @@
   <script src="../common/js/commons.js"></script>
   <script src="js/user_store.js"></script>
   <script src="js/user_components.js"></script>
-  <script src="js/users.js?v=7"></script>
+  <script src="js/users.js?v=8"></script>
 </body>
 </html>

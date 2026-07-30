@@ -16,6 +16,7 @@
 
   const VISIBLE_KEY = 'rebecca_user_columns_v1';
   const ORDER_KEY = 'rebecca_user_column_order_v1';
+  const GUIDANCE_PREF_KEY = 'rebecca_user_guidance_never_show_v1';
 
   const state = {
     view: 'all',
@@ -114,9 +115,57 @@
   function writeStorage(key, value) {
     try {
       if (root.localStorage) root.localStorage.setItem(key, JSON.stringify(value));
+      return true;
     } catch (error) {
-      showToast('当前浏览器无法保存列设置。', 'error');
+      showToast('当前浏览器无法保存页面偏好。', 'error');
+      return false;
     }
+  }
+
+  function setGuidanceVisible(visible, moveFocus) {
+    if (!elements.guidance || !elements.guidanceTrigger) return;
+    elements.guidance.hidden = !visible;
+    elements.guidanceTrigger.setAttribute('aria-expanded', visible ? 'true' : 'false');
+    if (!moveFocus) return;
+    if (visible) {
+      const closeButton = elements.guidance.querySelector('[data-guidance-action="close"]');
+      if (closeButton) closeButton.focus();
+    } else {
+      elements.guidanceTrigger.focus();
+    }
+  }
+
+  function setupGuidance() {
+    setGuidanceVisible(readStorage(GUIDANCE_PREF_KEY) !== true, false);
+  }
+
+  function setupGuidanceReentryObserver() {
+    const frame = root.frameElement;
+    if (!frame || typeof root.MutationObserver !== 'function') return;
+    const observer = new root.MutationObserver(function (records) {
+      const isActive = frame.classList.contains('active');
+      const becameActive = records.some(function (record) {
+        return !/(^|\s)active(\s|$)/.test(record.oldValue || '');
+      });
+      if (isActive && becameActive) setupGuidance();
+    });
+    observer.observe(frame, {
+      attributes: true,
+      attributeFilter: ['class'],
+      attributeOldValue: true
+    });
+  }
+
+  function handleGuidanceClick(event) {
+    const action = event.target.closest('[data-guidance-action]');
+    if (!action) return;
+    if (action.getAttribute('data-guidance-action') === 'never-show') {
+      const saved = writeStorage(GUIDANCE_PREF_KEY, true);
+      setGuidanceVisible(false, true);
+      if (saved) showToast('已设置为默认收起，可通过“查看用户规则”再次打开。', 'success');
+      return;
+    }
+    setGuidanceVisible(false, true);
   }
 
   function loadVisibleKeys() {
@@ -1134,6 +1183,10 @@
   }
 
   function handleHeaderClick(event) {
+    if (event.target.closest('#userGuidanceTrigger')) {
+      setGuidanceVisible(true, true);
+      return;
+    }
     const importButton = event.target.closest('[data-import]');
     if (importButton) {
       closeMenu(elements.importMenu);
@@ -1368,6 +1421,8 @@
     elements.storeFilter = root.document.getElementById('userStoreFilter');
     elements.createdFrom = root.document.getElementById('userCreatedFrom');
     elements.createdTo = root.document.getElementById('userCreatedTo');
+    elements.guidance = root.document.getElementById('userListGuidance');
+    elements.guidanceTrigger = root.document.getElementById('userGuidanceTrigger');
     elements.bulkBar = root.document.getElementById('userBulkBar');
     elements.selectedCount = root.document.getElementById('userSelectedCount');
     elements.bulkSelectionActions = root.document.getElementById('userBulkSelectionActions');
@@ -1386,6 +1441,7 @@
 
   function bindEvents() {
     root.document.getElementById('userListHeader').addEventListener('click', handleHeaderClick);
+    elements.guidance.addEventListener('click', handleGuidanceClick);
     elements.viewTabs.addEventListener('click', function (event) {
       const tab = event.target.closest('[data-view]');
       if (!tab) return;
@@ -1457,6 +1513,8 @@
 
   function initialize() {
     cacheElements();
+    setupGuidance();
+    setupGuidanceReentryObserver();
     setupDateControls();
     bindEvents();
     exposeHooks();

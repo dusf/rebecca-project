@@ -808,6 +808,31 @@
     return { ok: true, changed: changed };
   }
 
+  function setMarketingChannelStatus(ids, channel, enabled, consent) {
+    if (channel === 'email') {
+      return setMarketingStatus(ids, enabled ? 'subscribed' : 'unsubscribed', consent);
+    }
+    if (channel !== 'sms' && channel !== 'whatsapp') {
+      return { ok: false, error: '无效的营销渠道' };
+    }
+    const targetIds = new Set(Array.isArray(ids) ? ids : [ids]);
+    const users = list();
+    let changed = 0;
+    users.forEach(function (user) {
+      if (!targetIds.has(user.id)) return;
+      user.marketingChannels = user.marketingChannels || {
+        email: user.marketingStatus === 'subscribed',
+        sms: false,
+        whatsapp: false
+      };
+      user.marketingChannels[channel] = Boolean(enabled);
+      user.updatedAt = new Date().toISOString();
+      changed += 1;
+    });
+    if (changed) write(users);
+    return { ok: true, changed: changed };
+  }
+
   function profileRecord(profile, source) {
     return { externalId: profile.externalId || '', source: source, store: profile.store ? clone(profile.store) : null };
   }
@@ -1043,6 +1068,12 @@
     return withWriteLock(function () { return setMarketingStatus(ids, status, consent); });
   }
 
+  function setMarketingChannelStatusLocked(ids, channel, enabled, consent) {
+    return withWriteLock(function () {
+      return setMarketingChannelStatus(ids, channel, enabled, consent);
+    });
+  }
+
   function addTagToUsersLocked(ids, value) {
     return withWriteLock(function () { return addTagToUsers(ids, value); });
   }
@@ -1107,6 +1138,8 @@
     setAccountStatusLocked: setAccountStatusLocked,
     setMarketingStatus: setMarketingStatus,
     setMarketingStatusLocked: setMarketingStatusLocked,
+    setMarketingChannelStatus: setMarketingChannelStatus,
+    setMarketingChannelStatusLocked: setMarketingChannelStatusLocked,
     addTagToUsers: addTagToUsers,
     addTagToUsersLocked: addTagToUsersLocked,
     importProfiles: importProfiles,

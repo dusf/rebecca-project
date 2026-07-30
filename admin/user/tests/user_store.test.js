@@ -57,6 +57,14 @@ assert.deepEqual(UserStore.get(created.user.id).marketingChannels, { email: true
 assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).source, 'customer_service');
 assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).consentedAt, '2026-07-29T01:30:00.000Z');
 
+const smsDisabled = UserStore.setMarketingChannelStatus([created.user.id], 'sms', false);
+assert.deepEqual(smsDisabled, { ok: true, changed: 1 });
+assert.deepEqual(UserStore.get(created.user.id).marketingChannels, { email: true, sms: false, whatsapp: true });
+const whatsappDisabled = UserStore.setMarketingChannelStatus([created.user.id], 'whatsapp', false);
+assert.deepEqual(whatsappDisabled, { ok: true, changed: 1 });
+assert.deepEqual(UserStore.get(created.user.id).marketingChannels, { email: true, sms: false, whatsapp: false });
+assert.equal(UserStore.setMarketingChannelStatus([created.user.id], 'unknown', true).ok, false);
+
 const imported = UserStore.importProfiles([
   {
     externalId: 'gid://shopify/Customer/1001',

@@ -75,6 +75,23 @@
     { key: 'pending', label: '待激活' },
     { key: 'disabled', label: '已禁用' }
   ];
+  const EXPORT_FIELDS = [
+    { key: 'customerNumber', label: '客户编号' },
+    { key: 'name', label: '姓名' },
+    { key: 'email', label: '邮箱' },
+    { key: 'phone', label: '手机号' },
+    { key: 'tags', label: '标签' },
+    { key: 'accountStatus', label: '账号状态' },
+    { key: 'emailMarketing', label: '电子邮件营销' },
+    { key: 'smsMarketing', label: '短信营销' },
+    { key: 'whatsappMarketing', label: 'WhatsApp 营销' },
+    { key: 'authProviders', label: '登录方式' },
+    { key: 'source', label: '用户来源' },
+    { key: 'orderCount', label: '订单数', numeric: true },
+    { key: 'totalSpent', label: '累计消费', numeric: true },
+    { key: 'lastLoginAt', label: '最后登录时间' },
+    { key: 'createdAt', label: '创建时间' }
+  ];
 
   let allUsers = [];
   let visibleKeys = loadVisibleKeys();
@@ -251,7 +268,8 @@
   function usesViewportLayer(menu) {
     return Boolean(menu && (
       menu.id === 'userColumnMenu' ||
-      menu.classList.contains('um-row-menu')
+      menu.classList.contains('um-row-menu') ||
+      menu.classList.contains('um-viewport-menu')
     ));
   }
 
@@ -827,6 +845,33 @@
       }).join('') + '</div>';
   }
 
+  function exportScopeUsers(scope) {
+    if (scope === 'selected') {
+      const selected = state.selected;
+      return allUsers.filter(function (user) { return selected.has(user.id); });
+    }
+    if (scope === 'query') return filteredUsers();
+    if (scope === 'all') return allUsers.slice();
+    return [];
+  }
+
+  function exportScopeLabel(scope) {
+    if (scope === 'selected') return '选中用户';
+    if (scope === 'query') return '当前查询结果';
+    return '全部用户';
+  }
+
+  function renderExportMenu() {
+    if (!elements.exportMenu) return;
+    ['selected', 'query', 'all'].forEach(function (scope) {
+      const count = exportScopeUsers(scope).length;
+      const button = elements.exportMenu.querySelector('[data-export-scope="' + scope + '"]');
+      const countElement = elements.exportMenu.querySelector('[data-export-count="' + scope + '"]');
+      if (button) button.disabled = count === 0 || state.status !== 'ready';
+      if (countElement) countElement.textContent = count;
+    });
+  }
+
   function renderBulkBar() {
     const count = state.selected.size;
     const disabled = !count || state.status !== 'ready';
@@ -835,13 +880,11 @@
       '<button class="btn btn-secondary btn-sm" type="button" data-bulk="tag"' +
       (disabled ? ' disabled' : '') + '>添加标签</button>' +
       '<button class="btn btn-secondary btn-sm" type="button" data-bulk="marketing"' +
-      (disabled ? ' disabled' : '') + '>邮件营销</button>' +
-      '<details class="um-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
+      (disabled ? ' disabled' : '') + '>营销授权</button>' +
+      '<details class="um-menu um-viewport-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">账号状态</summary>' +
       '<div class="um-menu-panel"><button type="button" data-account-action="disabled">禁用所选账号</button>' +
       '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
-      '<button class="btn btn-secondary btn-sm" type="button" data-bulk="export"' +
-      (disabled ? ' disabled' : '') + '>导出所选</button>' +
       '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">' + ICONS.moreButton + '更多操作</summary>' +
       '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
@@ -941,11 +984,12 @@
         '<button class="um-row-action" type="button" data-row-action="edit" data-user-id="' +
         escapeHtml(user.id) + '" aria-label="编辑用户" title="编辑">' + ICONS.edit + '</button>' +
         '<button class="um-row-action" type="button" data-row-action="marketing" data-user-id="' +
-        escapeHtml(user.id) + '" aria-label="设置邮件营销" title="邮件营销">' + ICONS.mail + '</button>' +
-        '<details class="um-menu um-row-menu"><summary class="um-row-action" aria-label="更多用户操作" title="更多操作">' +
+        escapeHtml(user.id) + '" aria-label="设置营销授权" title="营销授权">' + ICONS.mail + '</button>' +
+        '<details class="um-menu um-row-menu um-viewport-menu"><summary class="um-row-action" aria-label="更多用户操作" title="更多操作">' +
         ICONS.more + '</summary>' +
         '<div class="um-menu-panel um-menu-panel-right">' +
         '<button type="button" data-row-action="copy-email" data-user-id="' + escapeHtml(user.id) + '">复制邮箱</button>' +
+        '<button type="button" data-row-action="tag" data-user-id="' + escapeHtml(user.id) + '">添加标签</button>' +
         '<button type="button" data-row-action="account" data-account-action="' +
         (user.accountStatus === 'disabled' ? 'restore' : 'disabled') + '" data-user-id="' +
         escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '恢复禁用前状态' : '禁用账号') + '</button>' +
@@ -1068,6 +1112,7 @@
       if (!validIds.has(id)) state.selected.delete(id);
     });
     renderViews();
+    renderExportMenu();
     renderBulkBar();
     renderColumnPanel();
     renderTable();
@@ -1147,12 +1192,12 @@
     showToast('已更新 ' + result.changed + ' 位用户的账号状态。', 'success');
   }
 
-  function addTagToSelected() {
+  function openTagDialog(ids) {
     if (state.status !== 'ready') return;
-    const ids = selectedIds();
+    const targetIds = Array.isArray(ids) && ids.length ? ids : selectedIds();
     try {
       if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openBatchTag === 'function') {
-        window.parent.UserDialogs.openBatchTag(ids);
+        window.parent.UserDialogs.openBatchTag(targetIds);
         return;
       }
     } catch (error) {
@@ -1172,35 +1217,48 @@
     return '"' + normalized.replace(/"/g, '""') + '"';
   }
 
-  function exportUsers(ids) {
-    if (state.status !== 'ready') return;
-    const idSet = ids && ids.length ? new Set(ids) : null;
-    const users = idSet ? allUsers.filter(function (user) { return idSet.has(user.id); }) : filteredUsers();
-    if (!users.length) {
-      showToast('当前没有可导出的用户。', 'error');
-      return;
+  function exportFieldValue(user, key) {
+    const channels = user.marketingChannels || {};
+    if (key === 'customerNumber') return user.customerNumber;
+    if (key === 'name') return fullName(user);
+    if (key === 'email') return user.email;
+    if (key === 'phone') return user.phone;
+    if (key === 'tags') return (user.tags || []).join('、');
+    if (key === 'accountStatus') return ACCOUNT_LABELS[user.accountStatus] || user.accountStatus;
+    if (key === 'emailMarketing') return MARKETING_LABELS[user.marketingStatus] || user.marketingStatus;
+    if (key === 'smsMarketing') return channels.sms ? '已同意' : '未同意';
+    if (key === 'whatsappMarketing') return channels.whatsapp ? '已同意' : '未同意';
+    if (key === 'authProviders') {
+      return (user.authProviders || []).map(function (provider) {
+        return PROVIDER_LABELS[provider.type] || provider.type;
+      }).join('、') || '未激活';
     }
+    if (key === 'source') return SOURCE_LABELS[user.source] || user.source || '';
+    if (key === 'orderCount') return Number(user.orderCount) || 0;
+    if (key === 'totalSpent') return Number(user.totalSpent) || 0;
+    if (key === 'lastLoginAt') return user.lastLoginAt || '';
+    if (key === 'createdAt') return user.createdAt || '';
+    return '';
+  }
+
+  function exportUsers(scope, fieldKeys) {
+    if (state.status !== 'ready') return { ok: false, error: '用户列表尚未就绪。' };
+    const users = exportScopeUsers(scope);
+    if (!users.length) {
+      return { ok: false, error: '当前范围没有可导出的用户。' };
+    }
+    const requested = new Set(Array.isArray(fieldKeys) ? fieldKeys : []);
+    const fields = EXPORT_FIELDS.filter(function (field) { return requested.has(field.key); });
+    if (!fields.length) return { ok: false, error: '请至少选择一个导出字段。' };
     const rows = [
-      ['客户编号', '姓名', '邮箱', '手机号', '账号状态', '邮件营销', '用户来源', '关联店铺', '订单数', '累计消费', '创建时间'],
+      fields.map(function (field) { return field.label; }),
       ...users.map(function (user) {
-        return [
-          user.customerNumber,
-          fullName(user),
-          user.email,
-          user.phone,
-          ACCOUNT_LABELS[user.accountStatus] || user.accountStatus,
-          MARKETING_LABELS[user.marketingStatus] || user.marketingStatus,
-          SOURCE_LABELS[user.source] || user.source,
-          (user.stores || []).map(function (store) { return store.name || store.domain || store.id; }).join('、'),
-          user.orderCount,
-          user.totalSpent,
-          user.createdAt
-        ];
+        return fields.map(function (field) { return exportFieldValue(user, field.key); });
       })
     ];
     const csv = '\uFEFF' + rows.map(function (row, rowIndex) {
       return row.map(function (value, columnIndex) {
-        return csvCell(value, rowIndex === 0 || (columnIndex !== 8 && columnIndex !== 9));
+        return csvCell(value, rowIndex === 0 || !fields[columnIndex].numeric);
       }).join(',');
     }).join('\r\n');
     const url = root.URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -1212,6 +1270,32 @@
     link.remove();
     root.URL.revokeObjectURL(url);
     showToast('已导出 ' + users.length + ' 位用户。', 'success');
+    return { ok: true, count: users.length };
+  }
+
+  function openExportDialog(scope) {
+    const users = exportScopeUsers(scope);
+    if (!users.length) {
+      showToast('当前范围没有可导出的用户。', 'error');
+      return;
+    }
+    try {
+      if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openExportUsers === 'function') {
+        window.parent.UserDialogs.openExportUsers({
+          scope: scope,
+          scopeLabel: exportScopeLabel(scope),
+          count: users.length,
+          fields: EXPORT_FIELDS.map(function (field) {
+            return { key: field.key, label: field.label };
+          })
+        });
+        return;
+      }
+    } catch (error) {
+      showToast('无法访问父页面的导出功能。', 'error');
+      return;
+    }
+    showToast('导出功能正在加载，请稍后再试。', 'error');
   }
 
   function handleHeaderClick(event) {
@@ -1226,8 +1310,13 @@
       else openCsvImport();
       return;
     }
+    const exportButton = event.target.closest('[data-export-scope]');
+    if (exportButton && !exportButton.disabled) {
+      closeMenu(elements.exportMenu);
+      openExportDialog(exportButton.getAttribute('data-export-scope'));
+      return;
+    }
     if (event.target.closest('#userAddButton')) navigateToAdd();
-    if (event.target.closest('#userExportButton')) exportUsers();
   }
 
   function fallbackCopyText(text) {
@@ -1285,6 +1374,7 @@
       const action = rowAction.getAttribute('data-row-action');
       if (action === 'edit') navigateToEdit(id);
       else if (action === 'copy-email') copyUserEmail(id);
+      else if (action === 'tag') openTagDialog([id]);
       else if (action === 'marketing') openMarketingDialog([id]);
       else if (action === 'account') updateSelectedAccountStatus(rowAction.getAttribute('data-account-action'), [id]);
       else if (action === 'delete') openDeleteDialog([id]);
@@ -1313,9 +1403,8 @@
     const button = event.target.closest('[data-bulk]');
     if (!button) return;
     const action = button.getAttribute('data-bulk');
-    if (action === 'tag') addTagToSelected();
+    if (action === 'tag') openTagDialog(selectedIds());
     else if (action === 'marketing') openMarketingDialog(selectedIds());
-    else if (action === 'export') exportUsers(selectedIds());
     else if (action === 'columns') {
       event.stopPropagation();
       elements.columnMenu.open = true;
@@ -1472,6 +1561,7 @@
     elements.pagination = root.document.getElementById('userPagination');
     elements.columnMenu = root.document.getElementById('userColumnMenu');
     elements.columnPanel = root.document.getElementById('userColumnPanel');
+    elements.exportMenu = root.document.getElementById('userExportMenu');
     elements.importMenu = root.document.getElementById('userImportMenu');
     elements.toastRegion = root.document.getElementById('userToastRegion');
   }
@@ -1517,9 +1607,19 @@
     root.document.addEventListener('click', function (event) {
       const portaledPanel = event.target.closest('.is-viewport-layer');
       const ownerMenu = portaledPanel && portaledPanel.__umViewportOwner;
+      if (ownerMenu === elements.exportMenu && event.target.closest('[data-export-scope]')) {
+        closeMenu(ownerMenu);
+        handleHeaderClick(event);
+        return;
+      }
       if (ownerMenu && ownerMenu.classList.contains('um-row-menu') && event.target.closest('[data-row-action]')) {
         closeMenu(ownerMenu);
         handleTableClick(event);
+        return;
+      }
+      if (ownerMenu && event.target.closest('[data-account-action]')) {
+        closeMenu(ownerMenu);
+        handleBulkClick(event);
         return;
       }
       Array.prototype.forEach.call(root.document.querySelectorAll('details.um-menu[open]'), function (menu) {
@@ -1547,6 +1647,9 @@
         return root.UserStore.addTagToUsersLocked(ids, tag);
       },
       updateMarketing: (ids, status, consent) => root.UserStore.setMarketingStatusLocked(ids, status, consent),
+      updateMarketingChannel: (ids, channel, enabled, consent) =>
+        root.UserStore.setMarketingChannelStatusLocked(ids, channel, enabled, consent),
+      exportUsers: (scope, fields) => exportUsers(scope, fields),
       disableUsers: (ids) => root.UserStore.setAccountStatusLocked(ids, 'disabled'),
       removeUsersIfRiskUnchanged: (ids, reviewedUsers) => {
         const expectedFingerprints = (Array.isArray(reviewedUsers) ? reviewedUsers : []).reduce((result, user) => {

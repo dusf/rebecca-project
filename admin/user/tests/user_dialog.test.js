@@ -254,6 +254,10 @@ async function run() {
   assert(!/type=["']checkbox["']/i.test(source), 'dialog manager must not render native checkboxes');
   assert(!/datetime-local/i.test(source), 'dialog manager must not render native datetime-local');
   assert(source.includes('role="checkbox"'), 'self-drawn checkbox semantics must exist');
+  assert(source.includes("openExportUsers: function"), 'export dialog API must exist');
+  assert(source.includes('data-dialog-action="export-confirm"'), 'export field confirmation must exist');
+  assert(source.includes("name === 'marketing-channel'"), 'marketing dialog must support channel switching');
+  assert(source.includes("invokeHookAsync('updateMarketingChannel'"), 'non-email marketing must use the channel hook');
   assert(source.includes('aria-activedescendant'), 'combobox active descendant semantics must exist');
   assert(source.includes('无匹配选项'), 'combobox no-match state must exist');
   assert(source.includes('isComposing') && source.includes('keyCode'), 'combobox must ignore IME commit keys');

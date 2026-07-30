@@ -100,6 +100,7 @@ assert.doesNotMatch(js, /\.prompt\s*\(/);
 assert.match(js, /window\.parent\.UserDialogs\.openBatchTag/);
 assert.match(js, /addTags:/);
 assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
+assert.match(dialogHtml, /data-user-dialog=["']export["']/);
 assert.match(dialogHtml, /data-user-dialog="csv"[\s\S]*class="um-dialog um-dialog-workflow"/);
 assert.match(dialogHtml, /data-user-dialog="shopify"[\s\S]*class="um-dialog um-dialog-workflow um-dialog-shopify"/);
 assert.match(dialogJs, /function shopifyStepsMarkup\(labels, current\)/);
@@ -122,9 +123,9 @@ assert.match(dialogCss, /\.um-shopify-dialog-steps \.um-dialog-step-divider\s*\{
 assert.match(dialogCss, /\.um-shopify-dialog-steps \.um-dialog-step\.is-complete \.um-dialog-step-num[\s\S]*background:\s*hsl\(var\(--success\)\);/);
 assert.match(dialogCss, /@media \(max-width:\s*600px\)[\s\S]*\.um-shopify-dialog-steps \.um-dialog-step-num[\s\S]*width:\s*22px;/);
 assert.match(adminIndex, /common\/css\/commons\.css\?v=4/);
-assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=11/);
-assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=11/);
-assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=10/);
+assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=12/);
+assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=12/);
+assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=11/);
 assert.match(dialogJs, /MARKETING_STATUS_LABELS\[record\.marketingStatus\]\s*\|\|\s*'未知状态'/);
 assert.match(dialogJs, /subscribed:\s*'已订阅'[\s\S]*not_subscribed:\s*'未订阅'[\s\S]*unsubscribed:\s*'已退订'[\s\S]*pending:\s*'待确认'[\s\S]*invalid:\s*'无效邮箱'/);
 assert.match(dialogJs, /一个域名对应一个店铺，且必须单独完成授权/);
@@ -132,8 +133,11 @@ assert.match(dialogJs, /输入域名仅用于定位店铺/);
 assert.match(dialogJs, /data-dialog-action="shopify-connect-new"/);
 assert.match(dialogJs, /shopifyStores\(\)\.find/);
 assert.match(dialogJs, /openBatchTag:/);
+assert.match(dialogJs, /openExportUsers:/);
 assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
+assert.match(dialogJs, /data-dialog-action=["']export-confirm["']/);
 assert.match(dialogJs, /await invokeHookAsync\(['"]addTags['"]/);
+assert.match(dialogJs, /await invokeHookAsync\(['"]exportUsers['"]/);
 assert.doesNotMatch(dialogJs, /revalidateDeletionRisk/);
 assert.match(dialogJs, /await invokeHookAsync\(['"]removeUsersIfRiskUnchanged['"]/);
 assert.match(js, /removeUsersIfRiskUnchanged:/);
@@ -141,6 +145,7 @@ assert.match(js, /getUsers:\s*\(ids\)/);
 assert.match(js, /UserStore\.importProfilesLocked/);
 assert.match(js, /UserStore\.addTagToUsersLocked/);
 assert.match(js, /UserStore\.setMarketingStatusLocked/);
+assert.match(js, /UserStore\.setMarketingChannelStatusLocked/);
 assert.match(js, /UserStore\.setAccountStatusLocked/);
 assert.match(js, /UserStore\.removeUsersIfRiskUnchangedLocked/);
 assert.match(userFormJs, /await root\.UserStore\.updateLocked/);
@@ -252,10 +257,24 @@ assert.match(js, /function positionViewportMenu\(menu\)/);
 assert.match(js, /root\.document\.body\.appendChild\(panel\)/);
 assert.match(js, /menu\.appendChild\(panel\)/);
 assert.match(js, /cell\.style\.zIndex = '9999'/);
-assert.match(html, /id="userExportButton"[^>]*class="btn btn-secondary"|class="btn btn-secondary"[^>]*id="userExportButton"/);
+assert.match(html, /id="userExportMenu"[\s\S]*class="btn btn-secondary"[\s\S]*data-export-scope="selected"[\s\S]*data-export-scope="query"[\s\S]*data-export-scope="all"/);
+assert.doesNotMatch(html, /id="userExportButton"/);
 assert.match(html, /class="btn btn-primary"[^>]*id="userAddButton"/);
 assert.match(html, /id="userColumnMenu"[\s\S]*class="btn btn-secondary btn-sm"/);
 assert.match(js, /class="btn btn-secondary btn-sm" type="button" data-bulk="tag"/);
+assert.match(js, />营销授权<\/button>/);
+assert.doesNotMatch(js, />导出所选<\/button>/);
+assert.match(js, /data-row-action="tag"/);
+assert.match(js, /class="um-menu um-viewport-menu/);
+assert.match(js, /const EXPORT_FIELDS = \[/);
+[
+  'customerNumber', 'name', 'email', 'phone', 'tags', 'accountStatus',
+  'emailMarketing', 'smsMarketing', 'whatsappMarketing', 'authProviders',
+  'source', 'orderCount', 'totalSpent', 'lastLoginAt', 'createdAt'
+].forEach((key) => {
+  assert.match(js, new RegExp(`\\{ key: '${key}', label:`));
+});
+assert.match(dialogCss, /\.um-export-field-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,/);
 assert.match(
   fs.readFileSync(path.join(adminRoot, 'product', 'product_list.html'), 'utf8'),
   /\.table-card th\s*\{\s*height:\s*46px;\s*font-size:\s*14px;\s*\}/

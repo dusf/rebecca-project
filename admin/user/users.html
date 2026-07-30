@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>用户管理</title>
   <link rel="stylesheet" href="../common/css/commons.css?v=5">
-  <link rel="stylesheet" href="css/users.css?v=15">
+  <link rel="stylesheet" href="css/users.css?v=16">
 </head>
 <body>
   <main class="um-page um-list-page" id="userListPage">
@@ -20,7 +20,14 @@
           </p>
         </div>
         <div class="um-header-actions">
-          <button class="btn btn-secondary" type="button" id="userExportButton">导出用户</button>
+          <details class="um-menu um-viewport-menu" id="userExportMenu">
+            <summary class="btn btn-secondary">导出用户</summary>
+            <div class="um-menu-panel um-menu-panel-right">
+              <button type="button" data-export-scope="selected" disabled>导出选中用户（<span data-export-count="selected">0</span>）</button>
+              <button type="button" data-export-scope="query" disabled>导出当前查询结果（<span data-export-count="query">0</span>）</button>
+              <button type="button" data-export-scope="all" disabled>导出全部用户（<span data-export-count="all">0</span>）</button>
+            </div>
+          </details>
           <details class="um-menu" id="userImportMenu">
             <summary class="btn btn-secondary">导入用户</summary>
             <div class="um-menu-panel um-menu-panel-right">
@@ -94,8 +101,8 @@
 
   <script>var CURRENT_PAGE = 'users';</script>
   <script src="../common/js/commons.js?v=5"></script>
-  <script src="js/user_store.js?v=3"></script>
+  <script src="js/user_store.js?v=4"></script>
   <script src="js/user_components.js?v=3"></script>
-  <script src="js/users.js?v=15"></script>
+  <script src="js/users.js?v=16"></script>
 </body>
 </html>

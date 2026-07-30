@@ -545,6 +545,7 @@
     shopify: null,
     marketing: null,
     batchTag: null,
+    exportUsers: null,
     deletion: null
   };
 
@@ -585,7 +586,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html?v=10')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=11')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
@@ -1388,23 +1389,25 @@
   }
 
   function marketingValid() {
-    if (!state.marketing || state.marketing.status !== 'subscribed') return true;
+    if (!state.marketing || state.marketing.channel !== 'email' || state.marketing.status !== 'subscribed') return true;
     return state.marketing.source !== 'none' && Boolean(parseConsentDateTime(state.marketing.consentedAt));
   }
 
   function renderMarketing() {
     var count = state.marketing.ids.length;
-    renderShell('marketing', {
-      title: count > 1 ? '批量更新邮件营销' : '更新邮件营销',
-      subtitle: '将更新 ' + count + ' 位用户并写入授权历史',
-      body: '<div class="um-dialog-guidance">只有在已取得明确同意时才能标记为已订阅；登录验证码和订单通知等服务邮件不受此状态影响。</div>' +
-        '<div class="um-dialog-form-grid"><div class="um-dialog-field"><span class="um-dialog-field-label">营销状态</span>' +
-        comboMarkup('marketing-status', state.marketing.status, [
+    var emailChannel = state.marketing.channel === 'email';
+    var statusOptions = emailChannel
+      ? [
           { value: 'subscribed', label: '已订阅' },
           { value: 'unsubscribed', label: '已退订' },
           { value: 'not_subscribed', label: '未订阅' }
-        ], '营销状态') + '</div>' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">同意来源' +
+        ]
+      : [
+          { value: 'enabled', label: '已同意' },
+          { value: 'disabled', label: '未同意' }
+        ];
+    var consentFields = emailChannel
+      ? '<div class="um-dialog-field"><span class="um-dialog-field-label">同意来源' +
         (state.marketing.status === 'subscribed' ? ' *' : '') + '</span>' +
         comboMarkup('marketing-source', state.marketing.source, [
           { value: 'none', label: '请选择同意来源' },
@@ -1415,13 +1418,33 @@
           { value: 'customer_service', label: '客服沟通' },
           { value: 'admin', label: '后台人工确认' },
           { value: 'other', label: '其他' }
-         ], '同意来源') + '</div>' +
+        ], '同意来源') + '</div>' +
         '<div class="um-dialog-field"><span class="um-dialog-field-label">同意时间' +
         (state.marketing.status === 'subscribed' ? ' *' : '') + '</span>' +
         marketingTimeMarkup() + '</div>' +
         '<div class="um-dialog-field" style="flex-basis:100%"><label for="umMarketingNote">授权备注</label>' +
         '<textarea class="um-dialog-input" id="umMarketingNote" rows="3" style="height:auto" placeholder="可填写授权场景或凭证说明">' +
-        escapeHtml(state.marketing.note) + '</textarea></div></div>' +
+        escapeHtml(state.marketing.note) + '</textarea></div>'
+      : '';
+    renderShell('marketing', {
+      title: count > 1 ? '批量更新营销授权' : '更新营销授权',
+      subtitle: '将更新 ' + count + ' 位用户的营销渠道状态',
+      body: '<div class="um-dialog-guidance">' +
+        (emailChannel
+          ? '电子邮件标记为已订阅时必须记录明确同意；登录验证码和订单通知等服务邮件不受此状态影响。'
+          : '请仅在已经取得客户明确同意后开启该营销渠道。') +
+        '</div><div class="um-dialog-form-grid">' +
+        '<div class="um-dialog-field"><span class="um-dialog-field-label">营销渠道</span>' +
+        comboMarkup('marketing-channel', state.marketing.channel, [
+          { value: 'email', label: '电子邮件' },
+          { value: 'sms', label: '短信' },
+          { value: 'whatsapp', label: 'WhatsApp' }
+        ], '营销渠道') + '</div>' +
+        '<div class="um-dialog-field"><span class="um-dialog-field-label">' +
+        (emailChannel ? '营销状态' : '授权状态') + '</span>' +
+        comboMarkup('marketing-status', state.marketing.status, statusOptions,
+          emailChannel ? '营销状态' : '授权状态') + '</div>' +
+        consentFields + '</div>' +
         (marketingValid() ? '' : '<div class="um-dialog-error" role="alert">标记为已订阅必须选择非空同意来源并填写有效同意时间。</div>') +
         (state.marketing.error ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.marketing.error) + '</div>' : ''),
@@ -1531,7 +1554,7 @@
     var tag = batchTagValue();
     var tooLong = tag.length > 40;
     renderShell('batch-tag', {
-      title: '为所选用户添加标签',
+      title: state.batchTag.ids.length === 1 ? '为用户添加标签' : '为所选用户添加标签',
       subtitle: state.batchTag.ids.length + ' 位用户',
       body: '<div class="um-dialog-field"><label for="umBatchTagInput">标签名称 *</label>' +
         '<input class="um-dialog-input" id="umBatchTagInput" type="text" maxlength="80" autocomplete="off" autofocus ' +
@@ -1545,6 +1568,46 @@
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="batch-tag-confirm"' +
         (tag && !tooLong && !state.batchTag.busy ? '' : ' disabled') + '>' +
         (state.batchTag.busy ? '正在添加…' : '添加标签') + '</button>'
+    });
+  }
+
+  function exportSelectedKeys() {
+    if (!state.exportUsers) return [];
+    return state.exportUsers.fields.filter(function (field) {
+      return state.exportUsers.selected.has(field.key);
+    }).map(function (field) { return field.key; });
+  }
+
+  function renderExportUsers() {
+    var selectedKeys = exportSelectedKeys();
+    var allSelected = selectedKeys.length === state.exportUsers.fields.length;
+    var fieldMarkup = state.exportUsers.fields.map(function (field) {
+      var checked = state.exportUsers.selected.has(field.key);
+      return '<button class="um-export-field" type="button" role="checkbox" aria-checked="' +
+        checked + '" data-dialog-action="export-toggle-field" data-export-field="' +
+        escapeHtml(field.key) + '"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
+        (checked ? '✓' : '') + '</span><span>' + escapeHtml(field.label) + '</span></button>';
+    }).join('');
+    renderShell('export', {
+      title: '导出用户',
+      subtitle: state.exportUsers.scopeLabel + ' · ' + state.exportUsers.count + ' 位用户',
+      body: '<div class="um-dialog-guidance">选择需要写入 CSV 的字段。内部主键、店铺标识和授权历史不会导出。</div>' +
+        '<div class="um-export-selection-meta"><span>已选 ' + selectedKeys.length + ' / ' +
+        state.exportUsers.fields.length + ' 个字段</span><span>' +
+        '<button type="button" data-dialog-action="export-select-all"' +
+        (allSelected ? ' disabled' : '') + '>全选</button>' +
+        '<button type="button" data-dialog-action="export-clear"' +
+        (selectedKeys.length ? '' : ' disabled') + '>清空</button></span></div>' +
+        '<div class="um-export-field-grid" role="group" aria-label="选择导出字段">' +
+        fieldMarkup + '</div>' +
+        (selectedKeys.length ? '' : '<div class="um-dialog-error" role="alert">请至少选择一个导出字段。</div>') +
+        (state.exportUsers.error ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.exportUsers.error) + '</div>' : ''),
+      footer: '<button class="um-dialog-button" type="button" data-dialog-action="close"' +
+        (state.exportUsers.busy ? ' disabled' : '') + '>取消</button>' +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="export-confirm"' +
+        (selectedKeys.length && !state.exportUsers.busy ? '' : ' disabled') + '>' +
+        (state.exportUsers.busy ? '正在导出…' : '导出 CSV') + '</button>'
     });
   }
 
@@ -1582,6 +1645,13 @@
     }
     if (name === 'marketing-status') {
       state.marketing.status = value;
+      renderMarketing();
+      return;
+    }
+    if (name === 'marketing-channel') {
+      state.marketing.channel = value;
+      state.marketing.status = value === 'email' ? 'subscribed' : 'enabled';
+      state.marketing.error = '';
       renderMarketing();
       return;
     }
@@ -1857,17 +1927,63 @@
       state.marketing.busy = true;
       state.marketing.error = '';
       renderMarketing();
-      var marketingCall = await invokeHookAsync('updateMarketing', [
-        state.marketing.ids,
-        state.marketing.status,
-        consent
-      ]);
+      var marketingCall = state.marketing.channel === 'email'
+        ? await invokeHookAsync('updateMarketing', [
+            state.marketing.ids,
+            state.marketing.status,
+            consent
+          ])
+        : await invokeHookAsync('updateMarketingChannel', [
+            state.marketing.ids,
+            state.marketing.channel,
+            state.marketing.status === 'enabled',
+            consent
+          ]);
       if (marketingOperationNonce !== openNonce) return;
       if (!marketingCall.ok) {
         operationFailed(state.marketing, renderMarketing, marketingCall.error);
         return;
       }
       await completeAndClose(marketingCall.value, state.marketing, renderMarketing);
+      return;
+    }
+    if (action === 'export-toggle-field') {
+      var exportField = actionTarget.getAttribute('data-export-field');
+      if (state.exportUsers.selected.has(exportField)) state.exportUsers.selected.delete(exportField);
+      else state.exportUsers.selected.add(exportField);
+      state.exportUsers.error = '';
+      renderExportUsers();
+      return;
+    }
+    if (action === 'export-select-all') {
+      state.exportUsers.selected = new Set(state.exportUsers.fields.map(function (field) { return field.key; }));
+      state.exportUsers.error = '';
+      renderExportUsers();
+      return;
+    }
+    if (action === 'export-clear') {
+      state.exportUsers.selected.clear();
+      state.exportUsers.error = '';
+      renderExportUsers();
+      return;
+    }
+    if (action === 'export-confirm') {
+      var selectedExportFields = exportSelectedKeys();
+      if (!selectedExportFields.length || state.exportUsers.busy) return;
+      var exportOperationNonce = openNonce;
+      state.exportUsers.busy = true;
+      state.exportUsers.error = '';
+      renderExportUsers();
+      var exportCall = await invokeHookAsync('exportUsers', [
+        state.exportUsers.scope,
+        selectedExportFields
+      ]);
+      if (exportOperationNonce !== openNonce) return;
+      if (!exportCall.ok) {
+        operationFailed(state.exportUsers, renderExportUsers, exportCall.error);
+        return;
+      }
+      closeActive(true);
       return;
     }
     if (action === 'batch-tag-confirm') {
@@ -2110,6 +2226,7 @@
       var normalizedIds = Array.isArray(ids) ? ids.filter(Boolean) : [ids].filter(Boolean);
       state.marketing = {
         ids: normalizedIds,
+        channel: 'email',
         status: 'subscribed',
         source: 'none',
         consentedAt: '',
@@ -2135,6 +2252,28 @@
         result: null
       };
       return openDialog('batch-tag', renderBatchTag, false).catch(function () { return false; });
+    },
+    openExportUsers: function (options) {
+      var settings = options || {};
+      var seen = Object.create(null);
+      var fields = (Array.isArray(settings.fields) ? settings.fields : []).filter(function (field) {
+        var key = String(field && field.key || '').trim();
+        if (!key || seen[key]) return false;
+        seen[key] = true;
+        field.key = key;
+        field.label = String(field.label || key);
+        return true;
+      });
+      state.exportUsers = {
+        scope: settings.scope === 'selected' || settings.scope === 'query' ? settings.scope : 'all',
+        scopeLabel: String(settings.scopeLabel || '全部用户'),
+        count: Math.max(0, Number(settings.count) || 0),
+        fields: fields,
+        selected: new Set(fields.map(function (field) { return field.key; })),
+        error: fields.length ? '' : '当前没有可导出的字段。',
+        busy: false
+      };
+      return openDialog('export', renderExportUsers, false).catch(function () { return false; });
     },
     openDeleteConfirm: function (options) {
       var settings = options || {};
@@ -2171,6 +2310,7 @@
         shopify: state.shopify,
         marketing: state.marketing,
         batchTag: state.batchTag,
+        exportUsers: state.exportUsers,
         deletion: state.deletion
       };
     }

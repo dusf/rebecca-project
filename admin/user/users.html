@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>用户管理</title>
   <link rel="stylesheet" href="../common/css/commons.css?v=4">
-  <link rel="stylesheet" href="css/users.css?v=10">
+  <link rel="stylesheet" href="css/users.css?v=11">
 </head>
 <body>
   <main class="um-page um-list-page" id="userListPage">
@@ -20,15 +20,15 @@
           </p>
         </div>
         <div class="um-header-actions">
-          <button class="um-button um-button-secondary" type="button" id="userExportButton">导出用户</button>
+          <button class="btn btn-secondary" type="button" id="userExportButton">导出用户</button>
           <details class="um-menu" id="userImportMenu">
-            <summary class="um-button um-button-secondary">导入用户</summary>
+            <summary class="btn btn-secondary">导入用户</summary>
             <div class="um-menu-panel um-menu-panel-right">
               <button type="button" data-import="shopify">从 Shopify 导入</button>
               <button type="button" data-import="csv">从 CSV 导入</button>
             </div>
           </details>
-          <button class="um-button um-button-primary" type="button" id="userAddButton">添加用户</button>
+          <button class="btn btn-primary" type="button" id="userAddButton">添加用户</button>
         </div>
       </header>
       <div class="um-guidance um-guidance-important um-dismissible-guidance" id="userListGuidance" role="note" tabindex="-1">
@@ -67,13 +67,13 @@
         <div class="um-bulk-actions">
           <div class="um-bulk-selection-actions" id="userBulkSelectionActions"></div>
           <details class="um-menu" id="userColumnMenu">
-            <summary class="um-button um-button-secondary um-button-sm">
+            <summary class="btn btn-secondary btn-sm">
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
               自定义列
             </summary>
             <div class="um-column-panel um-menu-panel-right" id="userColumnPanel"></div>
           </details>
-          <button class="um-icon-button um-button-sm" type="button" id="userRefreshButton" aria-label="按当前筛选条件刷新用户列表" title="按当前筛选条件刷新用户列表">
+          <button class="btn btn-secondary btn-sm" type="button" id="userRefreshButton" aria-label="按当前筛选条件刷新用户列表" title="按当前筛选条件刷新用户列表">
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
           </button>
         </div>
@@ -96,7 +96,7 @@
   <script>var CURRENT_PAGE = 'users';</script>
   <script src="../common/js/commons.js?v=4"></script>
   <script src="js/user_store.js"></script>
-  <script src="js/user_components.js?v=2"></script>
-  <script src="js/users.js?v=9"></script>
+  <script src="js/user_components.js?v=3"></script>
+  <script src="js/users.js?v=10"></script>
 </body>
 </html>

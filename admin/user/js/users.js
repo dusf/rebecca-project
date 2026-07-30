@@ -243,7 +243,80 @@
   }
 
   function closeMenu(menu) {
-    if (menu && menu.tagName === 'DETAILS') menu.open = false;
+    if (menu && menu.tagName === 'DETAILS') {
+      menu.open = false;
+      resetViewportMenu(menu);
+    }
+  }
+
+  function viewportMenuPanel(menu) {
+    if (!menu) return null;
+    return menu.__umViewportPanel || menu.querySelector('.um-menu-panel, .um-column-panel');
+  }
+
+  function usesViewportLayer(menu) {
+    return Boolean(menu && (
+      menu.id === 'userColumnMenu' ||
+      menu.classList.contains('um-row-menu')
+    ));
+  }
+
+  function resetViewportMenu(menu) {
+    const panel = viewportMenuPanel(menu);
+    if (panel) {
+      panel.classList.remove('is-viewport-layer');
+      panel.style.top = '';
+      panel.style.left = '';
+      panel.style.visibility = '';
+      panel.__umViewportOwner = null;
+      if (menu.__umViewportPanel === panel) menu.appendChild(panel);
+    }
+    menu.__umViewportPanel = null;
+    const cell = menu && menu.closest ? menu.closest('td') : null;
+    if (cell) cell.style.zIndex = '';
+  }
+
+  function positionViewportMenu(menu) {
+    if (!usesViewportLayer(menu) || !menu.open) return;
+    const summary = menu.querySelector('summary');
+    const panel = viewportMenuPanel(menu);
+    if (!summary || !panel) return;
+
+    const triggerRect = summary.getBoundingClientRect();
+    if (panel.parentNode !== root.document.body) {
+      menu.__umViewportPanel = panel;
+      panel.__umViewportOwner = menu;
+      root.document.body.appendChild(panel);
+    }
+    panel.classList.add('is-viewport-layer');
+    panel.style.visibility = 'hidden';
+    panel.style.top = '0px';
+    panel.style.left = '0px';
+
+    const panelRect = panel.getBoundingClientRect();
+    const viewportWidth = root.innerWidth || root.document.documentElement.clientWidth;
+    const viewportHeight = root.innerHeight || root.document.documentElement.clientHeight;
+    const gap = menu.classList.contains('um-row-menu') ? 4 : 6;
+    const edge = 8;
+    let left = triggerRect.right - panelRect.width;
+    let top = triggerRect.bottom + gap;
+
+    left = Math.max(edge, Math.min(left, viewportWidth - panelRect.width - edge));
+    if (top + panelRect.height > viewportHeight - edge && triggerRect.top - panelRect.height - gap >= edge) {
+      top = triggerRect.top - panelRect.height - gap;
+    }
+    panel.style.left = Math.round(left) + 'px';
+    panel.style.top = Math.round(Math.max(edge, top)) + 'px';
+    panel.style.visibility = '';
+
+    const cell = menu.closest('td');
+    if (cell) cell.style.zIndex = '9999';
+  }
+
+  function closeViewportMenus() {
+    Array.prototype.forEach.call(root.document.querySelectorAll('details.um-menu[open]'), function (menu) {
+      if (usesViewportLayer(menu)) closeMenu(menu);
+    });
   }
 
   function showToast(message, tone) {
@@ -783,17 +856,17 @@
     const disabled = !count || state.status !== 'ready';
     elements.selectedCount.textContent = count;
     elements.bulkSelectionActions.innerHTML =
-      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="tag"' +
+      '<button class="btn btn-secondary btn-sm" type="button" data-bulk="tag"' +
       (disabled ? ' disabled' : '') + '>添加标签</button>' +
-      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="marketing"' +
+      '<button class="btn btn-secondary btn-sm" type="button" data-bulk="marketing"' +
       (disabled ? ' disabled' : '') + '>邮件营销</button>' +
-      '<details class="um-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="um-button um-button-secondary um-button-sm" aria-disabled="' +
+      '<details class="um-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">账号状态</summary>' +
       '<div class="um-menu-panel"><button type="button" data-account-action="disabled">禁用所选账号</button>' +
       '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
-      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="export"' +
+      '<button class="btn btn-secondary btn-sm" type="button" data-bulk="export"' +
       (disabled ? ' disabled' : '') + '>导出所选</button>' +
-      '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="um-button um-button-secondary um-button-sm" aria-disabled="' +
+      '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">' + ICONS.more + '更多操作</summary>' +
       '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
       '<button type="button" data-bulk="clear">取消选择</button></div></details>' +
@@ -1460,6 +1533,7 @@
     });
     elements.tableCard.addEventListener('click', handleTableClick);
     elements.tableCard.addEventListener('change', handleTableChange);
+    elements.tableScroll.addEventListener('scroll', closeViewportMenus);
     elements.bulkBar.addEventListener('click', handleBulkClick);
     elements.columnPanel.addEventListener('change', handleColumnChange);
     elements.columnPanel.addEventListener('click', handleColumnClick);
@@ -1476,10 +1550,25 @@
       else clearFilters();
     });
     root.document.addEventListener('click', function (event) {
+      const portaledPanel = event.target.closest('.is-viewport-layer');
+      const ownerMenu = portaledPanel && portaledPanel.__umViewportOwner;
+      if (ownerMenu && ownerMenu.classList.contains('um-row-menu') && event.target.closest('[data-row-action]')) {
+        closeMenu(ownerMenu);
+        handleTableClick(event);
+        return;
+      }
       Array.prototype.forEach.call(root.document.querySelectorAll('details.um-menu[open]'), function (menu) {
-        if (!menu.contains(event.target)) menu.open = false;
+        const panel = viewportMenuPanel(menu);
+        if (!menu.contains(event.target) && !(panel && panel.contains(event.target))) closeMenu(menu);
       });
     });
+    root.document.addEventListener('toggle', function (event) {
+      const menu = event.target;
+      if (!usesViewportLayer(menu)) return;
+      if (menu.open) positionViewportMenu(menu);
+      else resetViewportMenu(menu);
+    }, true);
+    root.addEventListener('resize', closeViewportMenus);
   }
 
   function exposeHooks() {

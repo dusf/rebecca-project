@@ -30,7 +30,7 @@
       throw new Error('UserComponents: "' + name + '" requires at least one option.');
     }
     var seenValues = new Set();
-    var normalized = options.map(function (option) {
+    var normalized = options.map(function (option, index) {
       var value = option && option.value !== null && option.value !== undefined
         ? String(option.value).trim()
         : '';
@@ -45,6 +45,7 @@
       return {
         value: value,
         label: label,
+        sequence: index + 1,
         disabled: Boolean(option.disabled),
         placeholder: Boolean(option.placeholder)
       };
@@ -172,7 +173,15 @@
         optionButton.setAttribute('aria-selected', option.value === value ? 'true' : 'false');
         optionButton.tabIndex = -1;
         optionButton.disabled = option.disabled;
-        optionButton.textContent = option.label;
+        var sequence = getDocument(element).createElement('span');
+        sequence.className = 'um-combobox-option-sequence';
+        sequence.setAttribute('aria-hidden', 'true');
+        sequence.textContent = option.sequence + '.';
+        var label = getDocument(element).createElement('span');
+        label.className = 'um-combobox-option-label';
+        label.textContent = option.label;
+        optionButton.appendChild(sequence);
+        optionButton.appendChild(label);
         if (index === activeIndex) optionButton.classList.add('is-active');
         optionButton.addEventListener('mouseenter', function () {
           if (!option.disabled) {
@@ -290,7 +299,8 @@
       var query = search.value.trim().toLocaleLowerCase();
       filtered = options.filter(function (option) {
         return option.label.toLocaleLowerCase().indexOf(query) !== -1 ||
-          option.value.toLocaleLowerCase().indexOf(query) !== -1;
+          option.value.toLocaleLowerCase().indexOf(query) !== -1 ||
+          String(option.sequence).indexOf(query) !== -1;
       });
       activeIndex = filtered.findIndex(function (option) { return option.value === value && !option.disabled; });
       renderOptions();

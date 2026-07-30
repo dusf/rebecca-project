@@ -241,6 +241,25 @@ function buildCombobox(value = 'active') {
 }
 
 {
+  const fixture = buildCombobox('all');
+  const controller = UserComponents.mountCombobox(fixture.host);
+  controller.open(false);
+  assert.equal(fixture.options.children[0].children[0].textContent, '1.');
+  assert.equal(fixture.options.children[2].children[0].textContent, '3.');
+
+  fixture.search.value = '3';
+  fixture.search.dispatchEvent({ type: 'input' });
+  assert.equal(fixture.options.children.length, 1, 'a numeric query must match the stable option sequence');
+  assert.equal(fixture.options.children[0].getAttribute('data-value'), 'pending');
+  assert.equal(
+    fixture.options.children[0].children[0].textContent,
+    '3.',
+    'filtered results must preserve their original natural-number sequence'
+  );
+  controller.destroy();
+}
+
+{
   const fixture = buildCombobox();
   const changes = [];
   fixture.host.addEventListener('um:change', (event) => changes.push(event.detail));

@@ -16,6 +16,8 @@ assert.equal(created.ok, true);
 assert.equal(created.user.email, 'buyer@example.com');
 assert.equal(created.user.accountStatus, 'pending');
 assert.equal(created.user.source, 'admin');
+assert.equal(created.user.customerNumber, 'CUS-000001');
+assert.equal(created.user.shopId, 'shop-qvr');
 
 const duplicate = UserStore.createManual({
   email: 'buyer@example.com',
@@ -73,6 +75,7 @@ const imported = UserStore.importProfiles([
 assert.deepEqual(imported.counts, { created: 1, merged: 1, skipped: 0, failed: 0 });
 assert.equal(UserStore.list().length, 2);
 assert.equal(UserStore.findByEmail('new@example.com').accountStatus, 'pending');
+assert.equal(UserStore.findByEmail('new@example.com').customerNumber, 'CUS-000002');
 const mergedUnsubscribed = UserStore.get(created.user.id);
 assert.equal(mergedUnsubscribed.marketingStatus, 'unsubscribed');
 assert.deepEqual(mergedUnsubscribed.consentHistory[0], {

@@ -692,7 +692,7 @@
   function matchesSearchQuery(user, query) {
     if (!query) return true;
     const haystack = [
-      user.id,
+      user.customerNumber,
       user.email,
       user.phone,
       (user.tags || []).join(' ')
@@ -866,7 +866,7 @@
     if (key === 'user') {
       return '<div class="um-user-main"><div class="um-user-copy">' +
         '<div class="um-user-email" title="' + escapeHtml(user.email) + '">' + escapeHtml(user.email) +
-        '</div><div class="um-user-id">' + escapeHtml(user.id) + '</div></div></div>';
+        '</div><div class="um-user-id">' + escapeHtml(user.customerNumber) + '</div></div></div>';
     }
     if (key === 'accountStatus') {
       const tone = user.accountStatus === 'registered' ? 'success' :
@@ -1105,7 +1105,7 @@
     render();
     root.setTimeout(function () {
       try {
-        allUsers = root.UserStore.list();
+        allUsers = root.UserStore.listForShop();
         errorMessage = '';
         setupFilterControls(true);
         state.status = 'ready';
@@ -1140,7 +1140,7 @@
       showToast(result.error || '账号状态更新失败。', 'error');
       return;
     }
-    allUsers = root.UserStore.list();
+    allUsers = root.UserStore.listForShop();
     state.selected.clear();
     render();
     showToast('已更新 ' + result.changed + ' 位用户的账号状态。', 'success');
@@ -1180,9 +1180,10 @@
       return;
     }
     const rows = [
-      ['姓名', '邮箱', '手机号', '账号状态', '邮件营销', '用户来源', '关联店铺', '订单数', '累计消费', '创建时间'],
+      ['客户编号', '姓名', '邮箱', '手机号', '账号状态', '邮件营销', '用户来源', '关联店铺', '订单数', '累计消费', '创建时间'],
       ...users.map(function (user) {
         return [
+          user.customerNumber,
           fullName(user),
           user.email,
           user.phone,
@@ -1198,7 +1199,7 @@
     ];
     const csv = '\uFEFF' + rows.map(function (row, rowIndex) {
       return row.map(function (value, columnIndex) {
-        return csvCell(value, rowIndex === 0 || (columnIndex !== 7 && columnIndex !== 8));
+        return csvCell(value, rowIndex === 0 || (columnIndex !== 8 && columnIndex !== 9));
       }).join(',');
     }).join('\r\n');
     const url = root.URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -1555,7 +1556,7 @@
       },
       onDialogComplete: () => {
         state.selected.clear();
-        allUsers = root.UserStore.list();
+        allUsers = root.UserStore.listForShop();
         setupFilterControls(true);
         state.status = 'ready';
         render();

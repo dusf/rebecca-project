@@ -523,7 +523,7 @@
       '<p>' + escapeHtml(accountStatusDescription(user)) + '</p></div>') +
       cardMarkup('用户摘要', '<dl class="um-summary-list">' +
         summaryRow('姓名', escapeHtml(fullName(user))) +
-        summaryRow('用户 ID', '<code>' + escapeHtml(user.id) + '</code>') +
+        summaryRow('客户编号', '<code>' + escapeHtml(user.customerNumber) + '</code>') +
         summaryRow('来源', escapeHtml(sourceLabel(user.source))) +
         summaryRow('创建时间', escapeHtml(formatDate(user.createdAt))) +
         summaryRow('最近登录', escapeHtml(user.lastLoginAt ? formatDate(user.lastLoginAt) : '从未登录')) +
@@ -925,7 +925,7 @@
       });
     }
     if (marketingResult && !marketingResult.ok) return marketingResult;
-    return { ok: true, user: root.UserStore.get(state.user.id) };
+    return { ok: true, user: root.UserStore.getForShop(state.user.id) };
   }
 
   async function handleSubmit(event) {
@@ -951,7 +951,7 @@
       showToast(result.error || '账号状态更新失败。', 'error');
       return;
     }
-    state.user = root.UserStore.get(state.user.id);
+    state.user = root.UserStore.getForShop(state.user.id);
     renderSidebar();
     showToast(action === 'disabled' ? '账号已禁用。' : '账号已恢复到禁用前状态。', 'success');
   }
@@ -1004,13 +1004,13 @@
   function exposeHooks() {
     root.UserPageHooks = {
       getUser: function () {
-        return state.user ? root.UserStore.get(state.user.id) : null;
+        return state.user ? root.UserStore.getForShop(state.user.id) : null;
       },
       getUsers: function (ids) {
         const targetIds = new Set((Array.isArray(ids) ? ids : []).map(function (id) {
           return String(id || '').trim();
         }));
-        return root.UserStore.list().filter(function (user) {
+        return root.UserStore.listForShop().filter(function (user) {
           return targetIds.has(user.id);
         });
       },
@@ -1029,7 +1029,7 @@
       },
       onConsentComplete: function () {
         if (state.mode !== 'edit') return;
-        const current = state.user && root.UserStore.get(state.user.id);
+        const current = state.user && root.UserStore.getForShop(state.user.id);
         if (!current) {
           returnToList();
           return;
@@ -1047,7 +1047,7 @@
   function renderMissingUser() {
     elements.guidance.innerHTML = '';
     elements.main.innerHTML = cardMarkup('未找到用户',
-      '<div class="um-empty-inline">链接中的用户 ID 不存在，用户可能已被删除。</div>' +
+      '<div class="um-empty-inline">链接对应的用户档案不存在，用户可能已被删除。</div>' +
       '<button class="um-button um-button-secondary um-empty-action" id="userBackButton" type="button">返回用户列表</button>');
     elements.sidebar.innerHTML = '';
     const saveButton = root.document.getElementById('userSaveButton');
@@ -1070,7 +1070,7 @@
       return;
     }
     if (state.mode === 'edit') {
-      state.user = state.userId ? root.UserStore.get(state.userId) : null;
+      state.user = state.userId ? root.UserStore.getForShop(state.userId) : null;
       if (!state.user) {
         renderMissingUser();
         elements.form.addEventListener('click', handleClick);

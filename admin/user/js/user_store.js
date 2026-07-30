@@ -6,6 +6,8 @@
   'use strict';
 
   const STORAGE_KEY = 'rebecca_users_v1';
+  const CUSTOMER_SEQUENCE_KEY = 'rebecca_customer_number_sequence_v1';
+  const DEFAULT_SHOP_ID = 'shop-qvr';
   const WRITE_LOCK_NAME = 'rbk-user-store-write';
   const ACCOUNT_STATUSES = new Set(['registered', 'pending', 'disabled']);
   const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed', 'pending', 'invalid']);
@@ -17,6 +19,8 @@
   let lastStorageSnapshot = null;
   let lastSynchronizedUsers = [];
   let storageDirty = false;
+  const customerSequences = new Map();
+  let customerSequencesDirty = false;
   const listeners = new Set();
   const reservedIds = new Set();
 
@@ -63,6 +67,121 @@
       // A malformed snapshot cannot contribute a trustworthy identifier.
     }
     return ids;
+  }
+
+  function normalizeShopId(value) {
+    return String(value || DEFAULT_SHOP_ID).trim() || DEFAULT_SHOP_ID;
+  }
+
+  function parseCustomerNumber(value) {
+    const match = /^CUS-(\d{6,})$/.exec(String(value || '').trim());
+    if (!match) return 0;
+    const sequence = Number(match[1]);
+    return Number.isSafeInteger(sequence) && sequence > 0 ? sequence : 0;
+  }
+
+  function formatCustomerNumber(sequence) {
+    return 'CUS-' + String(sequence).padStart(6, '0');
+  }
+
+  function syncCustomerSequencesFromStorage() {
+    const store = storage();
+    if (!store) return;
+    try {
+      const saved = JSON.parse(store.getItem(CUSTOMER_SEQUENCE_KEY));
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+      Object.keys(saved).forEach(function (shopId) {
+        const sequence = Number(saved[shopId]);
+        if (!Number.isSafeInteger(sequence) || sequence < 0) return;
+        const normalizedShopId = normalizeShopId(shopId);
+        customerSequences.set(
+          normalizedShopId,
+          Math.max(customerSequences.get(normalizedShopId) || 0, sequence)
+        );
+      });
+    } catch (error) {
+      // Keep the highest valid in-memory sequence if stored metadata is malformed.
+    }
+  }
+
+  function persistCustomerSequences() {
+    if (!customerSequencesDirty) return true;
+    const store = storage();
+    if (!store) return false;
+    const payload = {};
+    Array.from(customerSequences.keys()).sort().forEach(function (shopId) {
+      payload[shopId] = customerSequences.get(shopId) || 0;
+    });
+    try {
+      store.setItem(CUSTOMER_SEQUENCE_KEY, JSON.stringify(payload));
+      customerSequencesDirty = false;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function customerMigrationOrder(first, second) {
+    const createdComparison = String(first.user.createdAt || '').localeCompare(String(second.user.createdAt || ''));
+    if (createdComparison) return createdComparison;
+    const idComparison = String(first.user.id || '').localeCompare(String(second.user.id || ''));
+    if (idComparison) return idComparison;
+    return first.index - second.index;
+  }
+
+  function ensureCustomerNumbers(users) {
+    syncCustomerSequencesFromStorage();
+    let changed = false;
+    let sequenceChanged = false;
+    const recordsByShop = new Map();
+
+    users.forEach(function (user, index) {
+      const shopId = normalizeShopId(user.shopId);
+      if (user.shopId !== shopId) {
+        user.shopId = shopId;
+        changed = true;
+      }
+      if (!recordsByShop.has(shopId)) recordsByShop.set(shopId, []);
+      recordsByShop.get(shopId).push({ user: user, index: index });
+    });
+
+    recordsByShop.forEach(function (records, shopId) {
+      const recordsBySequence = new Map();
+      let highWater = customerSequences.get(shopId) || 0;
+
+      records.forEach(function (record) {
+        const sequence = parseCustomerNumber(record.user.customerNumber);
+        if (!sequence) return;
+        highWater = Math.max(highWater, sequence);
+        if (!recordsBySequence.has(sequence)) recordsBySequence.set(sequence, []);
+        recordsBySequence.get(sequence).push(record);
+      });
+
+      const needsNumber = [];
+      records.forEach(function (record) {
+        const sequence = parseCustomerNumber(record.user.customerNumber);
+        if (!sequence) {
+          needsNumber.push(record);
+          return;
+        }
+        const duplicates = recordsBySequence.get(sequence).slice().sort(customerMigrationOrder);
+        if (duplicates[0] !== record) needsNumber.push(record);
+      });
+
+      needsNumber.sort(customerMigrationOrder).forEach(function (record) {
+        highWater += 1;
+        record.user.customerNumber = formatCustomerNumber(highWater);
+        changed = true;
+      });
+
+      if ((customerSequences.get(shopId) || 0) !== highWater) {
+        customerSequences.set(shopId, highWater);
+        customerSequencesDirty = true;
+        sequenceChanged = true;
+      }
+    });
+
+    return { users: users, changed: changed, sequenceChanged: sequenceChanged };
   }
 
   function fallbackId() {
@@ -189,6 +308,8 @@
     }
     return {
       id: id,
+      shopId: normalizeShopId(input.shopId),
+      customerNumber: String(input.customerNumber || '').trim(),
       email: normalizeEmail(input.email),
       firstName: String(input.firstName || '').trim(),
       lastName: String(input.lastName || '').trim(),
@@ -243,17 +364,19 @@
         const snapshot = store.getItem(STORAGE_KEY);
         const saved = JSON.parse(snapshot);
         if (Array.isArray(saved)) {
-          memory = ensureUniqueUserIds(saved.map(buildUser));
+          const normalized = ensureCustomerNumbers(ensureUniqueUserIds(saved.map(buildUser)));
+          memory = normalized.users;
           lastStorageSnapshot = snapshot;
           lastSynchronizedUsers = clone(memory);
           storageDirty = false;
+          if (normalized.changed || normalized.sequenceChanged) persist();
           return;
         }
       } catch (error) {
         // A corrupt cache is replaced with the documented sample records.
       }
     }
-    memory = ensureUniqueUserIds(seedUsers());
+    memory = ensureCustomerNumbers(ensureUniqueUserIds(seedUsers())).users;
     persist();
   }
 
@@ -263,10 +386,11 @@
     const snapshot = JSON.stringify(memory);
     try {
       store.setItem(STORAGE_KEY, snapshot);
+      const sequencePersisted = persistCustomerSequences();
       lastStorageSnapshot = snapshot;
       lastSynchronizedUsers = clone(memory);
-      storageDirty = false;
-      return true;
+      storageDirty = !sequencePersisted;
+      return sequencePersisted;
     } catch (error) {
       // Browsers may deny storage; the in-memory store remains usable.
       storageDirty = true;
@@ -352,8 +476,9 @@
     const winnersByEmail = new Map();
     mergedById.forEach(function (candidate) {
       const email = normalizeEmail(candidate.user.email);
-      const current = winnersByEmail.get(email);
-      winnersByEmail.set(email, current ? preferredCandidate(current, candidate) : candidate);
+      const scopedEmail = normalizeShopId(candidate.user.shopId) + '\0' + email;
+      const current = winnersByEmail.get(scopedEmail);
+      winnersByEmail.set(scopedEmail, current ? preferredCandidate(current, candidate) : candidate);
     });
 
     return Array.from(winnersByEmail.values())
@@ -367,6 +492,7 @@
   function syncFromStorage() {
     const store = storage();
     if (!store) return;
+    syncCustomerSequencesFromStorage();
     if (storageDirty) {
       try {
         const snapshot = store.getItem(STORAGE_KEY);
@@ -374,7 +500,9 @@
           const saved = JSON.parse(snapshot);
           if (Array.isArray(saved)) {
             const externalUsers = ensureUniqueUserIds(saved.map(buildUser));
-            memory = mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers);
+            memory = ensureCustomerNumbers(
+              mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers)
+            ).users;
             lastStorageSnapshot = snapshot;
             lastSynchronizedUsers = clone(externalUsers);
           }
@@ -390,9 +518,11 @@
       if (snapshot === lastStorageSnapshot) return;
       const saved = JSON.parse(snapshot);
       if (Array.isArray(saved)) {
-        memory = ensureUniqueUserIds(saved.map(buildUser));
+        const normalized = ensureCustomerNumbers(ensureUniqueUserIds(saved.map(buildUser)));
+        memory = normalized.users;
         lastStorageSnapshot = snapshot;
         lastSynchronizedUsers = clone(memory);
+        if (normalized.changed || normalized.sequenceChanged) persist();
       }
     } catch (error) {
       // Keep the last valid in-memory snapshot if another frame writes malformed data.
@@ -400,7 +530,7 @@
   }
 
   function write(users) {
-    memory = ensureUniqueUserIds(users.map(buildUser));
+    memory = ensureCustomerNumbers(ensureUniqueUserIds(users.map(buildUser))).users;
     loaded = true;
     const persisted = persist();
     const writtenUsers = clone(memory);
@@ -417,25 +547,41 @@
     return clone(memory);
   }
 
+  function listForShop(shopId) {
+    const normalizedShopId = normalizeShopId(shopId);
+    return list().filter(function (user) { return user.shopId === normalizedShopId; });
+  }
+
   function get(id) {
     return list().find(function (user) { return user.id === id; }) || null;
   }
 
-  function findByEmail(email) {
+  function getForShop(id, shopId) {
+    const normalizedShopId = normalizeShopId(shopId);
+    return list().find(function (user) {
+      return user.id === id && user.shopId === normalizedShopId;
+    }) || null;
+  }
+
+  function findByEmail(email, shopId) {
     const normalized = normalizeEmail(email);
-    return list().find(function (user) { return user.email === normalized; }) || null;
+    const normalizedShopId = normalizeShopId(shopId);
+    return list().find(function (user) {
+      return user.shopId === normalizedShopId && user.email === normalized;
+    }) || null;
   }
 
   function createManual(payload) {
     payload = payload || {};
+    const shopId = normalizeShopId(payload.shopId);
     const email = normalizeEmail(payload.email);
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: '请输入有效邮箱地址' };
-    const existing = findByEmail(email);
+    const existing = findByEmail(email, shopId);
     if (existing) return { ok: false, existing: existing, error: '该邮箱已经存在用户档案' };
     const consentValidation = payload.marketingOptIn ? validateConsent(payload.consent) : null;
     if (payload.marketingOptIn && !consentValidation.ok) return { ok: false, error: consentValidation.error };
     const user = buildUser({
-      email: email, firstName: payload.firstName, lastName: payload.lastName, phone: payload.phone,
+      shopId: shopId, email: email, firstName: payload.firstName, lastName: payload.lastName, phone: payload.phone,
       preferredLanguage: payload.preferredLanguage, tags: payload.tags, note: payload.note,
       accountStatus: 'pending', marketingStatus: payload.marketingOptIn ? 'subscribed' : 'not_subscribed',
       authProviders: [], source: 'admin',
@@ -470,7 +616,9 @@
     if (Object.prototype.hasOwnProperty.call(changes, 'email')) {
       next.email = normalizeEmail(changes.email);
       if (!next.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next.email)) return { ok: false, error: '请输入有效邮箱地址' };
-      const duplicate = users.find(function (user) { return user.id !== id && user.email === next.email; });
+      const duplicate = users.find(function (user) {
+        return user.id !== id && user.shopId === next.shopId && user.email === next.email;
+      });
       if (duplicate) return { ok: false, existing: duplicate, error: '该邮箱已经存在用户档案' };
     }
     next.updatedAt = new Date().toISOString();
@@ -479,8 +627,8 @@
     return { ok: true, user: get(id) };
   }
 
-  function activateByEmail(email, provider) {
-    const existing = findByEmail(email);
+  function activateByEmail(email, provider, shopId) {
+    const existing = findByEmail(email, shopId);
     if (!existing) return { ok: false, error: '未找到可认领的用户档案' };
     if (existing.accountStatus === 'disabled') {
       return { ok: false, error: '该用户账号已禁用，无法完成登录验证' };
@@ -544,9 +692,9 @@
         return { ok: false, error: '最新用户数据格式错误' };
       }
       const externalUsers = ensureUniqueUserIds(saved.map(buildUser));
-      memory = storageDirty
+      memory = ensureCustomerNumbers(storageDirty
         ? mergeDirtySnapshots(lastSynchronizedUsers, memory, externalUsers)
-        : externalUsers;
+        : externalUsers).users;
       lastStorageSnapshot = snapshot;
       lastSynchronizedUsers = clone(externalUsers);
       return { ok: true, users: clone(memory) };
@@ -721,7 +869,8 @@
     if (!user.stores.some(function (item) { return item.id === store.id; })) user.stores.push(clone(store));
   }
 
-  function importProfiles(profiles, source) {
+  function importProfiles(profiles, source, shopId) {
+    const targetShopId = normalizeShopId(shopId);
     const users = list();
     const counts = { created: 0, merged: 0, skipped: 0, failed: 0 };
     const warnings = { consentDowngraded: 0 };
@@ -749,7 +898,9 @@
             warning: '缺少有效订阅授权，已按未订阅导入'
           });
         }
-        let user = users.find(function (item) { return item.email === email; });
+        let user = users.find(function (item) {
+          return item.shopId === targetShopId && item.email === email;
+        });
         if (user) {
           counts.merged += 1;
           user.firstName = String(profile.firstName || user.firstName || '').trim();
@@ -782,7 +933,7 @@
           }];
         }
         user = buildUser({
-          email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
+          shopId: targetShopId, email: email, firstName: profile.firstName, lastName: profile.lastName, phone: profile.phone,
           accountStatus: 'pending', marketingStatus: initialMarketingStatus,
           source: source || 'import', externalProfiles: externalId ? [profileRecord(profile, source)] : [], stores: profile.store ? [profile.store] : [],
           consentHistory: initialConsentHistory
@@ -805,10 +956,11 @@
 
   function subscribe(payload) {
     payload = typeof payload === 'string' ? { email: payload } : (payload || {});
-    const existing = findByEmail(payload.email);
+    const shopId = normalizeShopId(payload.shopId);
+    const existing = findByEmail(payload.email, shopId);
     if (existing) return setMarketingStatus([existing.id], 'subscribed', payload.consent || payload);
     return createManual({
-      email: payload.email, firstName: payload.firstName, lastName: payload.lastName,
+      shopId: shopId, email: payload.email, firstName: payload.firstName, lastName: payload.lastName,
       marketingOptIn: true, consent: payload.consent || payload
     });
   }
@@ -834,7 +986,7 @@
       if (config.requireLock) {
         return Promise.resolve(lockFailure(
           'LOCK_UNAVAILABLE',
-          '当前浏览器无法取得安全写锁，未执行永久删除。请改为禁用账号或重试。'
+          config.lockUnavailableError || '当前浏览器无法取得安全写锁，未执行此次操作，请重试。'
         ));
       }
       // Reversible mutations retain an explicit compatibility fallback.
@@ -860,15 +1012,18 @@
   }
 
   function createManualLocked(payload) {
-    return withWriteLock(function () { return createManual(payload); });
+    return withWriteLock(function () { return createManual(payload); }, {
+      requireLock: true,
+      lockUnavailableError: '当前浏览器无法取得客户编号写锁，未创建用户，请重试。'
+    });
   }
 
   function updateLocked(id, changes) {
     return withWriteLock(function () { return update(id, changes); });
   }
 
-  function activateByEmailLocked(email, provider) {
-    return withWriteLock(function () { return activateByEmail(email, provider); });
+  function activateByEmailLocked(email, provider, shopId) {
+    return withWriteLock(function () { return activateByEmail(email, provider, shopId); });
   }
 
   function setAccountStatusLocked(ids, status) {
@@ -883,12 +1038,18 @@
     return withWriteLock(function () { return addTagToUsers(ids, value); });
   }
 
-  function importProfilesLocked(profiles, source) {
-    return withWriteLock(function () { return importProfiles(profiles, source); });
+  function importProfilesLocked(profiles, source, shopId) {
+    return withWriteLock(function () { return importProfiles(profiles, source, shopId); }, {
+      requireLock: true,
+      lockUnavailableError: '当前浏览器无法取得客户编号写锁，未导入用户，请重试。'
+    });
   }
 
   function subscribeLocked(payload) {
-    return withWriteLock(function () { return subscribe(payload); });
+    return withWriteLock(function () { return subscribe(payload); }, {
+      requireLock: true,
+      lockUnavailableError: '当前浏览器无法取得客户编号写锁，未创建订阅用户，请重试。'
+    });
   }
 
   function removeUsersIfRiskUnchangedLocked(ids, expectedFingerprints) {
@@ -899,20 +1060,29 @@
 
   function resetForTests(users) {
     reservedIds.clear();
-    memory = Array.isArray(users) ? ensureUniqueUserIds(users.map(buildUser)) : [];
+    customerSequences.clear();
+    customerSequencesDirty = false;
+    const store = storage();
+    if (store) {
+      try {
+        store.removeItem(STORAGE_KEY);
+        store.removeItem(CUSTOMER_SEQUENCE_KEY);
+      } catch (error) { /* ignored for tests */ }
+    }
+    memory = Array.isArray(users)
+      ? ensureCustomerNumbers(ensureUniqueUserIds(users.map(buildUser))).users
+      : [];
     loaded = true;
     lastStorageSnapshot = null;
     lastSynchronizedUsers = clone(memory);
     storageDirty = false;
-    const store = storage();
-    if (store) {
-      try { store.removeItem(STORAGE_KEY); } catch (error) { /* ignored for tests */ }
-    }
   }
 
   return {
     list: list,
+    listForShop: listForShop,
     get: get,
+    getForShop: getForShop,
     findByEmail: findByEmail,
     createManual: createManual,
     createManualLocked: createManualLocked,

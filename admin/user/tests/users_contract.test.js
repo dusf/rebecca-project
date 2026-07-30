@@ -127,18 +127,38 @@ assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
 assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
 assert.match(html, /id="userTotalCount">\(0位\)<\/span>/);
-assert.match(html, /href="css\/users\.css\?v=6"/);
+assert.match(html, /href="css\/users\.css\?v=7"/);
 assert.match(html, /<h1 class="page-title">用户管理/);
 assert.match(html, /集中管理当前店铺的买家账号、邮件订阅者及从外部店铺导入的用户档案/);
 assert.match(html, /同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。/);
-assert.match(html, /src="js\/users\.js\?v=6"/);
+assert.match(html, /src="js\/users\.js\?v=7"/);
 assert.match(css, /\.um-title-count\s*\{[\s\S]*margin-left:\s*8px;[\s\S]*font-size:\s*13px;[\s\S]*font-weight:\s*400;/);
 assert.match(css, /\.um-list-page \.um-page-subtitle\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*gap:\s*3px;[\s\S]*font-size:\s*12px;/);
 assert.match(js, /totalCount\.textContent = '\(' \+ allUsers\.length \+ '位\)'/);
+assert.match(html, /id="userSelectedCount">0<\/span> 条/);
+assert.match(html, /id="userColumnMenu"[\s\S]*自定义列/);
+assert.match(html, /id="userRefreshButton"[\s\S]*<svg/);
+assert.doesNotMatch(html, /class="um-table-tools"/);
+assert.match(css, /\.um-list-page\s*\{[\s\S]*overflow:\s*hidden;/);
+assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*height:\s*100%;[\s\S]*display:\s*flex;[\s\S]*overflow:\s*hidden;/);
+assert.match(css, /\.um-list-page \.um-table-card\s*\{[\s\S]*flex:\s*1;[\s\S]*min-height:\s*0;[\s\S]*border-top:\s*0;/);
+assert.match(css, /\.um-list-page \.um-table-scroll\s*\{[\s\S]*overflow:\s*auto;/);
+assert.match(css, /\.um-table-state\[hidden\]\s*\{[\s\S]*display:\s*none;/);
+assert.match(css, /\.um-search-input\s*\{[\s\S]*height:\s*38px;[\s\S]*border:\s*1\.5px solid[\s\S]*border-radius:\s*10px;/);
+assert.match(css, /\.um-table th\s*\{[\s\S]*position:\s*sticky;[\s\S]*background:\s*#F5F0EB;[\s\S]*font-size:\s*13px;/);
+assert.match(css, /\.um-pagination-button\s*\{[\s\S]*width:\s*40px;[\s\S]*height:\s*40px;[\s\S]*border-radius:\s*8px;/);
+assert.match(js, /ICONS\.edit/);
+assert.match(js, /ICONS\.mail/);
+assert.match(js, /ICONS\.more/);
+assert.match(js, /aria-current="page"/);
 
 const utils = require('../js/users.js');
 const UserStore = require('../js/user_store.js');
 const dialogRuntime = require('../../common/js/user_dialog.js');
+
+assert.deepEqual(utils.paginationItems(1, 13), [1, 2, 3, 4, 5, 'ellipsis-right', 13]);
+assert.deepEqual(utils.paginationItems(7, 13), [1, 'ellipsis-left', 6, 7, 8, 'ellipsis-right', 13]);
+assert.deepEqual(utils.paginationItems(13, 13), [1, 'ellipsis-left', 9, 10, 11, 12, 13]);
 
 UserStore.resetForTests([]);
 UserStore.resetForTests([

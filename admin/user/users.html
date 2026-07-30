@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>用户管理</title>
   <link rel="stylesheet" href="../common/css/commons.css">
-  <link rel="stylesheet" href="css/users.css?v=6">
+  <link rel="stylesheet" href="css/users.css?v=7">
 </head>
 <body>
   <main class="um-page um-list-page" id="userListPage">
@@ -46,28 +46,33 @@
           <div id="userProviderFilter"></div>
           <div id="userStoreFilter"></div>
           <div class="um-date-filter">
-            <span>创建日期从</span>
             <div id="userCreatedFrom"></div>
           </div>
+          <span class="um-date-filter-separator" aria-hidden="true">至</span>
           <div class="um-date-filter">
-            <span>至</span>
             <div id="userCreatedTo"></div>
           </div>
           <button class="um-button um-button-ghost" type="button" id="userClearFilters">清除筛选</button>
         </div>
       </section>
-      <section class="um-bulk-bar" id="userBulkBar" hidden aria-live="polite"></section>
-      <section class="um-table-card" id="userTableCard" aria-busy="false">
-        <div class="um-table-tools">
-          <span id="userResultSummary">0 个结果</span>
-          <div class="um-table-tool-actions">
-            <details class="um-menu" id="userColumnMenu">
-              <summary class="um-button um-button-secondary">自定义列</summary>
-              <div class="um-column-panel um-menu-panel-right" id="userColumnPanel"></div>
-            </details>
-            <button class="um-icon-button" type="button" id="userRefreshButton" aria-label="刷新用户列表" title="刷新用户列表">↻</button>
-          </div>
+      <section class="um-bulk-bar" id="userBulkBar" aria-live="polite">
+        <div class="um-bulk-selected-count">已选 <span class="um-bulk-count" id="userSelectedCount">0</span> 条</div>
+        <div class="um-bulk-actions">
+          <div class="um-bulk-selection-actions" id="userBulkSelectionActions"></div>
+          <details class="um-menu" id="userColumnMenu">
+            <summary class="um-button um-button-secondary um-button-sm">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              自定义列
+            </summary>
+            <div class="um-column-panel um-menu-panel-right" id="userColumnPanel"></div>
+          </details>
+          <button class="um-icon-button um-button-sm" type="button" id="userRefreshButton" aria-label="按当前筛选条件刷新用户列表" title="按当前筛选条件刷新用户列表">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </button>
         </div>
+      </section>
+      <section class="um-table-card" id="userTableCard" aria-busy="false">
+        <span class="um-visually-hidden" id="userResultSummary" aria-live="polite">0 个结果</span>
         <div class="um-table-scroll" id="userTableScroll">
           <table class="um-table" aria-label="用户列表">
             <thead id="userTableHead"></thead>
@@ -85,6 +90,6 @@
   <script src="../common/js/commons.js"></script>
   <script src="js/user_store.js"></script>
   <script src="js/user_components.js"></script>
-  <script src="js/users.js?v=6"></script>
+  <script src="js/users.js?v=7"></script>
 </body>
 </html>

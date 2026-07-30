@@ -97,6 +97,12 @@
       .replace(/'/g, '&#039;');
   }
 
+  const ICONS = {
+    edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+    mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+    more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>'
+  };
+
   function readStorage(key) {
     try {
       return root.localStorage ? JSON.parse(root.localStorage.getItem(key)) : null;
@@ -352,7 +358,7 @@
 
     function syncValue() {
       input.value = selectedValue;
-      trigger.textContent = selectedValue || '选择日期';
+      trigger.textContent = selectedValue || label;
       trigger.classList.toggle('is-placeholder', !selectedValue);
     }
 
@@ -456,7 +462,7 @@
       elements.createdFrom,
       'userCreatedFrom',
       state.filters.createdFrom,
-      '创建日期从',
+      '开始日期',
       function (value) {
         state.filters.createdFrom = value;
         state.page = 1;
@@ -467,7 +473,7 @@
       elements.createdTo,
       'userCreatedTo',
       state.filters.createdTo,
-      '创建日期至',
+      '结束日期',
       function (value) {
         state.filters.createdTo = value;
         state.page = 1;
@@ -725,26 +731,24 @@
 
   function renderBulkBar() {
     const count = state.selected.size;
-    elements.bulkBar.hidden = count === 0 || state.status !== 'ready';
-    if (!count || state.status !== 'ready') {
-      elements.bulkBar.innerHTML = '';
-      return;
-    }
-    elements.bulkBar.innerHTML =
-      '<strong>已选择 ' + count + ' 位用户</strong>' +
-      '<div class="um-bulk-actions">' +
-      '<button class="um-button um-button-secondary" type="button" data-bulk="tag">添加标签</button>' +
-      '<button class="um-button um-button-secondary" type="button" data-bulk="marketing">邮件营销</button>' +
-      '<details class="um-menu"><summary class="um-button um-button-secondary">账号状态</summary>' +
+    const disabled = !count || state.status !== 'ready';
+    elements.selectedCount.textContent = count;
+    elements.bulkSelectionActions.innerHTML =
+      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="tag"' +
+      (disabled ? ' disabled' : '') + '>添加标签</button>' +
+      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="marketing"' +
+      (disabled ? ' disabled' : '') + '>邮件营销</button>' +
+      '<details class="um-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="um-button um-button-secondary um-button-sm" aria-disabled="' +
+      (disabled ? 'true' : 'false') + '">账号状态</summary>' +
       '<div class="um-menu-panel"><button type="button" data-account-action="disabled">禁用所选账号</button>' +
       '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
-      '<button class="um-button um-button-secondary" type="button" data-bulk="export">导出所选</button>' +
-      '<button class="um-button um-button-secondary" type="button" data-bulk="columns">自定义列</button>' +
-      '<button class="um-icon-button" type="button" data-bulk="refresh" aria-label="刷新列表" title="刷新列表">↻</button>' +
-      '<details class="um-menu"><summary class="um-button um-button-secondary">更多</summary>' +
+      '<button class="um-button um-button-secondary um-button-sm" type="button" data-bulk="export"' +
+      (disabled ? ' disabled' : '') + '>导出所选</button>' +
+      '<details class="um-menu um-more-actions' + (disabled ? ' is-disabled' : '') + '"><summary class="um-button um-button-secondary um-button-sm" aria-disabled="' +
+      (disabled ? 'true' : 'false') + '">' + ICONS.more + '更多操作</summary>' +
       '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
       '<button type="button" data-bulk="clear">取消选择</button></div></details>' +
-      '</div>';
+      '';
   }
 
   function badge(label, tone) {
@@ -830,7 +834,7 @@
           '<button class="um-sort-button" type="button" data-sort="' + escapeHtml(column.key) +
           '">' + escapeHtml(column.label) +
           '<span class="um-sort-indicator" aria-hidden="true">' +
-          (active ? (state.sort.direction === 'asc' ? '▲' : '▼') : '↕') + '</span></button></th>';
+          (active ? (state.sort.direction === 'asc' ? '▲' : '▼') : '') + '</span></button></th>';
       }).join('') +
       '<th class="um-operation-cell um-frozen-right" scope="col">操作</th></tr>';
     const checkbox = elements.tableHead.querySelector('#userSelectPage');
@@ -853,11 +857,13 @@
         }).join('') +
         '<td class="um-operation-cell um-frozen-right"><div class="um-row-actions">' +
         '<button class="um-row-action" type="button" data-row-action="edit" data-user-id="' +
-        escapeHtml(user.id) + '">编辑</button>' +
-        '<details class="um-menu um-row-menu"><summary class="um-row-action" aria-label="更多用户操作">•••</summary>' +
+        escapeHtml(user.id) + '" aria-label="编辑用户" title="编辑">' + ICONS.edit + '</button>' +
+        '<button class="um-row-action" type="button" data-row-action="marketing" data-user-id="' +
+        escapeHtml(user.id) + '" aria-label="设置邮件营销" title="邮件营销">' + ICONS.mail + '</button>' +
+        '<details class="um-menu um-row-menu"><summary class="um-row-action" aria-label="更多用户操作" title="更多操作">' +
+        ICONS.more + '</summary>' +
         '<div class="um-menu-panel um-menu-panel-right">' +
         '<button type="button" data-row-action="copy-email" data-user-id="' + escapeHtml(user.id) + '">复制邮箱</button>' +
-        '<button type="button" data-row-action="marketing" data-user-id="' + escapeHtml(user.id) + '">邮件营销</button>' +
         '<button type="button" data-row-action="account" data-account-action="' +
         (user.accountStatus === 'disabled' ? 'restore' : 'disabled') + '" data-user-id="' +
         escapeHtml(user.id) + '">' + (user.accountStatus === 'disabled' ? '恢复禁用前状态' : '禁用账号') + '</button>' +
@@ -895,6 +901,17 @@
       '<button class="um-button um-button-secondary" type="button" data-state-action="clear">清除筛选</button></div>';
   }
 
+  function paginationItems(current, total) {
+    if (total <= 7) {
+      return Array.from({ length: total }, function (_, index) { return index + 1; });
+    }
+    if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis-right', total];
+    if (current >= total - 3) {
+      return [1, 'ellipsis-left', total - 4, total - 3, total - 2, total - 1, total];
+    }
+    return [1, 'ellipsis-left', current - 1, current, current + 1, 'ellipsis-right', total];
+  }
+
   function renderPagination(total, pageCount) {
     if (pageSizeController) {
       pageSizeController.destroy();
@@ -908,16 +925,22 @@
     elements.pagination.hidden = false;
     const start = (state.page - 1) * state.pageSize + 1;
     const end = Math.min(total, state.page * state.pageSize);
+    const pageButtons = paginationItems(state.page, pageCount).map(function (item) {
+      if (typeof item !== 'number') {
+        return '<span class="um-pagination-button is-ellipsis" aria-hidden="true">…</span>';
+      }
+      return '<button class="um-pagination-button' + (item === state.page ? ' is-active' : '') +
+        '" type="button" data-page="' + item + '"' +
+        (item === state.page ? ' aria-current="page"' : '') + ' aria-label="第 ' + item + ' 页">' + item + '</button>';
+    }).join('');
     elements.pagination.innerHTML =
-      '<div class="um-pagination-size"><span>每页显示</span><div data-page-size-host></div></div>' +
-      '<span>第 ' + start + '–' + end + ' 条，共 ' + total + ' 条</span>' +
+      '<span class="um-pagination-info">显示 ' + start + '–' + end + ' 条，共 ' + total + ' 条</span>' +
       '<div class="um-pagination-actions">' +
-      '<button class="um-pagination-button" type="button" data-page="prev"' +
-      (state.page <= 1 ? ' disabled' : '') + '>上一页</button>' +
-      '<span class="um-pagination-current">' + state.page + ' / ' + pageCount + '</span>' +
-      '<button class="um-pagination-button" type="button" data-page="next"' +
-      (state.page >= pageCount ? ' disabled' : '') + '>下一页</button></div>';
-    setupPageSizeControl();
+      '<button class="um-pagination-button" type="button" data-page="prev" aria-label="上一页"' +
+      (state.page <= 1 ? ' disabled' : '') + '>‹</button>' +
+      pageButtons +
+      '<button class="um-pagination-button" type="button" data-page="next" aria-label="下一页"' +
+      (state.page >= pageCount ? ' disabled' : '') + '>›</button></div>';
   }
 
   function renderTable() {
@@ -1325,10 +1348,13 @@
     const button = event.target.closest('[data-page]');
     if (!button || button.disabled) return;
     const pageCount = Math.max(1, Math.ceil(filteredUsers().length / state.pageSize));
-    if (button.getAttribute('data-page') === 'prev') state.page = Math.max(1, state.page - 1);
-    else state.page = Math.min(pageCount, state.page + 1);
+    const targetPage = button.getAttribute('data-page');
+    if (targetPage === 'prev') state.page = Math.max(1, state.page - 1);
+    else if (targetPage === 'next') state.page = Math.min(pageCount, state.page + 1);
+    else state.page = Math.max(1, Math.min(pageCount, Number(targetPage) || state.page));
     render();
     elements.tableScroll.scrollLeft = 0;
+    elements.tableScroll.scrollTop = 0;
   }
 
   function cacheElements() {
@@ -1343,6 +1369,8 @@
     elements.createdFrom = root.document.getElementById('userCreatedFrom');
     elements.createdTo = root.document.getElementById('userCreatedTo');
     elements.bulkBar = root.document.getElementById('userBulkBar');
+    elements.selectedCount = root.document.getElementById('userSelectedCount');
+    elements.bulkSelectionActions = root.document.getElementById('userBulkSelectionActions');
     elements.tableCard = root.document.getElementById('userTableCard');
     elements.tableScroll = root.document.getElementById('userTableScroll');
     elements.tableHead = root.document.getElementById('userTableHead');
@@ -1443,7 +1471,8 @@
     matchesSearchQuery: matchesSearchQuery,
     matchesUserFilters: matchesUserFilters,
     getUsersForIds: getUsersForIds,
-    reorderColumns: reorderColumns
+    reorderColumns: reorderColumns,
+    paginationItems: paginationItems
   };
   if (typeof module === 'object' && module.exports) module.exports = userListUtils;
   root.UserListUtils = userListUtils;

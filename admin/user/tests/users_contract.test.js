@@ -75,9 +75,14 @@ assert.match(dialogHtml, /data-user-dialog="csv"[\s\S]*class="um-dialog um-dialo
 assert.match(dialogHtml, /data-user-dialog="shopify"[\s\S]*class="um-dialog um-dialog-workflow"/);
 assert.match(dialogCss, /\.um-dialog-workflow\s*\{\s*height:\s*min\(720px,\s*calc\(100vh - 48px\)\);/);
 assert.match(dialogCss, /\.um-dialog-body\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*overflow:\s*auto;/);
-assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=7/);
-assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=7/);
-assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=7/);
+assert.match(dialogCss, /\.um-dialog-header h2\s*\{[\s\S]*font-size:\s*18px;[\s\S]*font-weight:\s*700;/);
+assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=8/);
+assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=8/);
+assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=8/);
+assert.match(dialogJs, /一个域名对应一个店铺，且必须单独完成授权/);
+assert.match(dialogJs, /输入域名仅用于定位店铺/);
+assert.match(dialogJs, /data-dialog-action="shopify-connect-new"/);
+assert.match(dialogJs, /shopifyStores\(\)\.find/);
 assert.match(dialogJs, /openBatchTag:/);
 assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
 assert.match(dialogJs, /await invokeHookAsync\(['"]addTags['"]/);

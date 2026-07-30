@@ -577,7 +577,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html?v=7')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=8')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
@@ -1154,8 +1154,11 @@
   function shopifyDefaultState() {
     return {
       step: 1,
+      connectionView: 'list',
       domain: '',
       domainError: '',
+      connectionNotice: '',
+      newlyConnectedStore: null,
       selectedStoreId: '',
       selected: new Set(),
       search: '',
@@ -1167,8 +1170,18 @@
     };
   }
 
+  function shopifyStores() {
+    var newlyConnectedStore = state.shopify && state.shopify.newlyConnectedStore;
+    if (!newlyConnectedStore) return CONNECTED_STORES;
+    return [newlyConnectedStore].concat(CONNECTED_STORES.filter(function (store) {
+      return store.domain !== newlyConnectedStore.domain;
+    }));
+  }
+
   function selectedStore() {
-    return CONNECTED_STORES.find(function (store) { return store.id === state.shopify.selectedStoreId; }) || null;
+    return shopifyStores().find(function (store) {
+      return store.id === state.shopify.selectedStoreId;
+    }) || null;
   }
 
   function currentShopifyRecords() {
@@ -1180,7 +1193,7 @@
   }
 
   function storeListMarkup() {
-    return '<div class="um-store-list">' + CONNECTED_STORES.map(function (store) {
+    return '<div class="um-store-list">' + shopifyStores().map(function (store) {
       var selected = store.id === state.shopify.selectedStoreId;
       var connected = store.connectionState === 'connected';
       return '<button class="um-store-row' + (selected ? ' is-selected' : '') +
@@ -1211,39 +1224,42 @@
     }).join('') + '</div>';
   }
 
-  function renderShopifyStep1() {
+  function renderShopifyConnectForm() {
     return {
-      title: '从 Shopify 导入用户',
-      subtitle: '授权单个店铺读取客户资料',
-      body: stepsMarkup(['连接店铺', '选择连接', '选择用户', '导入结果'], 1) +
-        '<div class="um-dialog-guidance"><strong>授权边界：</strong>Shopify 授权用于读取店铺客户资料，不会取得买家密码或登录会话。相同邮箱将合并到现有用户档案。</div>' +
-        '<div class="um-dialog-warning">每个 <code>*.myshopify.com</code> 店铺都需要单独安装并授权。本系统不会通过一次 OAuth 枚举你的全部店铺。</div>' +
+      title: '连接新的 Shopify 店铺',
+      subtitle: '一个域名对应一个店铺，且必须单独完成授权',
+      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
+        '<div class="um-dialog-guidance"><strong>生产环境流程：</strong>输入域名仅用于定位店铺；点击后将跳转 Shopify 安装/授权页，商家确认权限并返回本系统、成功取得该店访问令牌后，才会建立连接。</div>' +
+        '<div class="um-dialog-warning">当前页面是交互原型，因此下一步只模拟 OAuth 成功。每个 <code>*.myshopify.com</code> 域名只代表一家店，不能据此发现或读取同一商家的其他店铺。</div>' +
         '<div class="um-dialog-field"><label for="umShopifyDomain">Shopify 店铺域名</label>' +
         '<input class="um-dialog-input" id="umShopifyDomain" type="text" value="' +
         escapeHtml(state.shopify.domain) + '" placeholder="your-store.myshopify.com" autocomplete="off" autofocus>' +
         (state.shopify.domainError ? '<div class="um-dialog-error" role="alert">' +
           escapeHtml(state.shopify.domainError) + '</div>' : '') + '</div>',
-      footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-connect">模拟授权并继续</button>'
+      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-connect">返回店铺列表</button>' +
+        '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-connect">模拟 Shopify 授权</button>'
     };
   }
 
-  function renderShopifyStep2() {
+  function renderShopifyStep1() {
+    if (state.shopify.connectionView === 'connect') return renderShopifyConnectForm();
     return {
       title: '选择已连接店铺',
-      subtitle: '列表仅展示本系统已分别保存的 Shopify 连接',
-      body: stepsMarkup(['连接店铺', '选择连接', '选择用户', '导入结果'], 2) +
-        '<div class="um-dialog-guidance">已完成 <strong>' + escapeHtml(state.shopify.domain) +
-        '</strong> 的模拟授权。以下三个店铺是本系统既有连接记录，并非本次 OAuth 自动发现的店铺。</div>' +
+      subtitle: '每个条目都已针对单个店铺分别完成授权',
+      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
+        '<div class="um-dialog-guidance">以下店铺来自本系统保存的连接记录，不是根据某个域名从 Shopify 自动查出的店铺。要添加其他店铺，请逐店完成授权。</div>' +
+        (state.shopify.connectionNotice ? '<div class="um-dialog-guidance">' +
+          escapeHtml(state.shopify.connectionNotice) + '</div>' : '') +
         storeListMarkup(),
-      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-connect">上一步</button>' +
+      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-connect-new">连接新店铺</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-records"' +
         (state.shopify.selectedStoreId ? '' : ' disabled') + '>选择客户档案</button>'
     };
   }
 
-  function renderShopifyStep3() {
+  function renderShopifyStep2() {
     var records = currentShopifyRecords();
     var allCurrentSelected = records.length && records.every(function (record) {
       return state.shopify.selected.has(record.id);
@@ -1251,7 +1267,7 @@
     return {
       title: '选择 Shopify 客户档案',
       subtitle: selectedStore() ? selectedStore().name : '',
-      body: stepsMarkup(['连接店铺', '选择连接', '选择用户', '导入结果'], 3) +
+      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 2) +
         '<div class="um-dialog-guidance">CSV/API 导入只创建或合并待激活档案，不迁移密码、社交绑定或登录会话。</div>' +
         '<div class="um-selection-toolbar"><div class="um-dialog-field"><label for="umShopifySearch">搜索用户</label>' +
         '<input class="um-dialog-input" id="umShopifySearch" type="search" value="' +
@@ -1287,11 +1303,11 @@
     };
   }
 
-  function renderShopifyStep4() {
+  function renderShopifyStep3() {
     return {
       title: 'Shopify 导入完成',
       subtitle: selectedStore() ? selectedStore().name : '',
-      body: stepsMarkup(['连接店铺', '选择连接', '选择用户', '导入结果'], 4) +
+      body: stepsMarkup(['选择店铺', '选择用户', '导入结果'], 3) +
         resultMarkup(state.shopify.result) +
         '<div class="um-dialog-guidance">所有新建档案均为待激活状态；相同邮箱已合并，未迁移 Shopify 密码、快捷登录绑定或会话。</div>',
       footer: '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
@@ -1302,8 +1318,7 @@
     var renderers = [
       renderShopifyStep1,
       renderShopifyStep2,
-      renderShopifyStep3,
-      renderShopifyStep4
+      renderShopifyStep3
     ];
     renderShell('shopify', renderers[state.shopify.step - 1]());
   }
@@ -1629,6 +1644,12 @@
       renderCsv();
       return;
     }
+    if (action === 'shopify-connect-new') {
+      state.shopify.connectionView = 'connect';
+      state.shopify.domainError = '';
+      renderShopify();
+      return;
+    }
     if (action === 'shopify-connect') {
       var domainInput = root.document.getElementById('umShopifyDomain');
       var domain = String(domainInput && domainInput.value || '').trim().toLocaleLowerCase();
@@ -1639,17 +1660,36 @@
         return;
       }
       state.shopify.domainError = '';
-      state.shopify.step = 2;
+      var existingStore = CONNECTED_STORES.find(function (store) {
+        return store.domain === domain;
+      });
+      if (existingStore) {
+        state.shopify.selectedStoreId = existingStore.id;
+      } else {
+        state.shopify.newlyConnectedStore = {
+          id: 'store-newly-connected',
+          name: domain.split('.')[0] + '（新连接）',
+          domain: domain,
+          state: '已连接',
+          connectionState: 'connected',
+          lastSyncAt: '尚未同步'
+        };
+        state.shopify.selectedStoreId = state.shopify.newlyConnectedStore.id;
+      }
+      state.shopify.connectionNotice = '已模拟完成 ' + domain +
+        ' 的单店授权；生产环境须在 Shopify 授权回调成功后才可保存该连接。';
+      state.shopify.connectionView = 'list';
       renderShopify();
       return;
     }
     if (action === 'shopify-back-connect') {
-      state.shopify.step = 1;
+      state.shopify.connectionView = 'list';
+      state.shopify.domainError = '';
       renderShopify();
       return;
     }
     if (action === 'shopify-store') {
-      var chosenStore = CONNECTED_STORES.find(function (store) {
+      var chosenStore = shopifyStores().find(function (store) {
         return store.id === actionTarget.getAttribute('data-store-id');
       });
       if (!chosenStore || chosenStore.connectionState !== 'connected') return;
@@ -1659,12 +1699,13 @@
       return;
     }
     if (action === 'shopify-records') {
-      state.shopify.step = 3;
+      state.shopify.step = 2;
       renderShopify();
       return;
     }
     if (action === 'shopify-back-stores') {
-      state.shopify.step = 2;
+      state.shopify.step = 1;
+      state.shopify.connectionView = 'list';
       renderShopify();
       return;
     }
@@ -1725,7 +1766,7 @@
       }
       state.shopify.busy = false;
       state.shopify.result = shopifyImport.value;
-      state.shopify.step = 4;
+      state.shopify.step = 3;
       renderShopify();
       return;
     }

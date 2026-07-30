@@ -259,8 +259,8 @@ async function run() {
   assert(source.includes('isComposing') && source.includes('keyCode'), 'combobox must ignore IME commit keys');
   assert.strictEqual(
     (source.match(/connectionState: 'connected'/g) || []).length,
-    3,
-    'three saved Shopify stores must be connected'
+    4,
+    'three saved connections plus one newly authorized single-store result must be modeled'
   );
   assert(
     (source.match(/csvSessionGate\.next\(\)/g) || []).length >= 3,

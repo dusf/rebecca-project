@@ -1467,6 +1467,11 @@ textarea.um-text-control {
   color: hsl(30 75% 34%);
 }
 
+.um-badge-provider {
+  background: hsl(var(--primary) / .1);
+  color: hsl(var(--primary-700));
+}
+
 .um-badge-danger {
   background: hsl(var(--error) / .1);
   color: hsl(var(--error));

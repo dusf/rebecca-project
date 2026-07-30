@@ -878,7 +878,7 @@
     if (key === 'authProviders') {
       if (!user.authProviders || !user.authProviders.length) return '<span class="um-muted">未激活</span>';
       return '<div class="um-badge-row">' + user.authProviders.map(function (provider) {
-        return badge(PROVIDER_LABELS[provider.type] || provider.type);
+        return badge(PROVIDER_LABELS[provider.type] || provider.type, 'provider');
       }).join('') + '</div>';
     }
     if (key === 'source') return escapeHtml(SOURCE_LABELS[user.source] || user.source || '—');

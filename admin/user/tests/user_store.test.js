@@ -10,7 +10,8 @@ const created = UserStore.createManual({
   email: '  Buyer@Example.COM ',
   firstName: 'Amy',
   lastName: 'Lee',
-  marketingOptIn: false
+  marketingOptIn: false,
+  marketingChannels: { sms: true, whatsapp: true }
 });
 assert.equal(created.ok, true);
 assert.equal(created.user.email, 'buyer@example.com');
@@ -18,6 +19,7 @@ assert.equal(created.user.accountStatus, 'pending');
 assert.equal(created.user.source, 'admin');
 assert.equal(created.user.customerNumber, 'CUS-000001');
 assert.equal(created.user.shopId, 'shop-qvr');
+assert.deepEqual(created.user.marketingChannels, { email: false, sms: true, whatsapp: true });
 
 const duplicate = UserStore.createManual({
   email: 'buyer@example.com',
@@ -51,6 +53,7 @@ const consented = UserStore.setMarketingStatus(
 );
 assert.equal(consented.ok, true);
 assert.equal(UserStore.get(created.user.id).marketingStatus, 'subscribed');
+assert.deepEqual(UserStore.get(created.user.id).marketingChannels, { email: true, sms: true, whatsapp: true });
 assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).source, 'customer_service');
 assert.equal(UserStore.get(created.user.id).consentHistory.at(-1).consentedAt, '2026-07-29T01:30:00.000Z');
 

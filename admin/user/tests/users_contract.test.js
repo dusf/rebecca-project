@@ -61,6 +61,10 @@ assert.match(storeJs, /customerNumber:/);
 assert.match(js, /\['客户编号', '姓名', '邮箱'/);
 assert.match(userFormJs, /summaryRow\('客户编号'/);
 assert.doesNotMatch(userFormJs, /summaryRow\('用户 ID'/);
+assert.match(userFormJs, /客户同意接收营销电子邮件。/);
+assert.match(userFormJs, /客户同意接收营销短信。/);
+assert.match(userFormJs, /客户同意接收 WhatsApp 营销消息。/);
+assert.match(userFormJs, /marketingChannels:\s*\{[\s\S]*sms:\s*state\.smsMarketing,[\s\S]*whatsapp:\s*state\.whatsappMarketing/);
 assert.doesNotMatch(html, /id="userStoreFilter"/);
 
 assert.doesNotMatch(html, /class=["'][^"']*um-text-control[^"']*["'][^>]*type=["']date["']/);

@@ -65,6 +65,8 @@
     user: null,
     tags: [],
     marketing: false,
+    smsMarketing: false,
+    whatsappMarketing: false,
     marketingTouched: false,
     consentTouched: false,
     saving: false,
@@ -273,9 +275,12 @@
   function initializeMarketingState(user) {
     const current = user || {};
     const subscribed = current.marketingStatus === 'subscribed';
+    const channels = current.marketingChannels || {};
     const latestConsent = subscribed ? latestSubscribedConsent(current) : null;
     return {
       enabled: subscribed,
+      sms: Boolean(channels.sms),
+      whatsapp: Boolean(channels.whatsapp),
       consent: {
         source: latestConsent ? latestConsent.source || '' : '',
         consentedAt: latestConsent ? latestConsent.consentedAt || '' : '',
@@ -390,16 +395,34 @@
     const current = state.user || {};
     const initial = initializeMarketingState(current);
     state.marketing = initial.enabled;
+    state.smsMarketing = initial.sms;
+    state.whatsappMarketing = initial.whatsapp;
     state.marketingTouched = false;
     state.consentTouched = false;
     const consentSource = initial.consent.source || 'none';
     const consentedAt = initial.consent.consentedAt;
     const consentNote = initial.consent.note;
-    const body =
+    const addChannelOptions =
+      '<div class="um-marketing-channel-list" role="group" aria-label="营销渠道授权">' +
+      '<label class="um-checkbox um-marketing-channel-option" for="emailMarketingConsent">' +
+      '<input class="um-checkbox-input" id="emailMarketingConsent" type="checkbox"' +
+      (state.marketing ? ' checked' : '') + '><span class="um-checkbox-box" aria-hidden="true"></span>' +
+      '<span>客户同意接收营销电子邮件。</span></label>' +
+      '<label class="um-checkbox um-marketing-channel-option" for="smsMarketingConsent">' +
+      '<input class="um-checkbox-input" id="smsMarketingConsent" type="checkbox"' +
+      (state.smsMarketing ? ' checked' : '') + '><span class="um-checkbox-box" aria-hidden="true"></span>' +
+      '<span>客户同意接收营销短信。</span></label>' +
+      '<label class="um-checkbox um-marketing-channel-option" for="whatsappMarketingConsent">' +
+      '<input class="um-checkbox-input" id="whatsappMarketingConsent" type="checkbox"' +
+      (state.whatsappMarketing ? ' checked' : '') + '><span class="um-checkbox-box" aria-hidden="true"></span>' +
+      '<span>客户同意接收 WhatsApp 营销消息。</span></label></div>';
+    const editEmailOption =
       '<div class="um-switch-row"><div><div class="um-switch-title">接收邮件营销</div>' +
       '<p>请仅在已经取得用户明确同意后开启。登录验证码、订单通知等服务邮件不受营销订阅状态影响。</p></div>' +
       '<button class="um-switch" id="marketingSwitch" type="button" role="switch" aria-checked="' +
-      String(state.marketing) + '" aria-label="接收邮件营销"></button></div>' +
+      String(state.marketing) + '" aria-label="接收邮件营销"></button></div>';
+    const body =
+      (state.mode === 'add' ? addChannelOptions : editEmailOption) +
       '<div class="um-consent-fields" id="marketingConsentFields"' + (state.marketing ? '' : ' hidden') + '>' +
       '<div class="um-guidance um-compliance-guidance"><strong>合规提示：</strong>请记录可核验的同意来源和时间。后台代录不应替代用户主动授权。</div>' +
       '<div class="um-form-grid">' +
@@ -409,7 +432,8 @@
       fieldMarkup('consentNote', '授权备注', '<textarea class="um-text-control" id="consentNote" maxlength="500" placeholder="可填写授权场景、凭证或补充说明">' +
         escapeHtml(consentNote) + '</textarea>', { forId: 'consentNote', full: true }) +
       '</div></div>';
-    return cardMarkup('邮件营销', body, '营销同意会记录进授权历史，退订不会删除历史记录。');
+    return cardMarkup(state.mode === 'add' ? '营销同意' : '邮件营销', body,
+      '请仅在已经取得客户明确同意后选择对应渠道。邮件营销同意会记录进授权历史。');
   }
 
   function tagsAndNoteCard() {
@@ -583,6 +607,26 @@
       root.document.getElementById('consentedAtControl'),
       function () { state.consentTouched = true; }
     );
+    const emailMarketingConsent = root.document.getElementById('emailMarketingConsent');
+    if (emailMarketingConsent) {
+      emailMarketingConsent.addEventListener('change', function () {
+        state.marketing = emailMarketingConsent.checked;
+        state.marketingTouched = true;
+        syncMarketingVisibility();
+      });
+    }
+    const smsMarketingConsent = root.document.getElementById('smsMarketingConsent');
+    if (smsMarketingConsent) {
+      smsMarketingConsent.addEventListener('change', function () {
+        state.smsMarketing = smsMarketingConsent.checked;
+      });
+    }
+    const whatsappMarketingConsent = root.document.getElementById('whatsappMarketingConsent');
+    if (whatsappMarketingConsent) {
+      whatsappMarketingConsent.addEventListener('change', function () {
+        state.whatsappMarketing = whatsappMarketingConsent.checked;
+      });
+    }
     syncMarketingVisibility();
   }
 
@@ -753,8 +797,10 @@
 
   function syncMarketingVisibility() {
     const button = root.document.getElementById('marketingSwitch');
+    const checkbox = root.document.getElementById('emailMarketingConsent');
     const fields = root.document.getElementById('marketingConsentFields');
     if (button) button.setAttribute('aria-checked', String(state.marketing));
+    if (checkbox) checkbox.checked = state.marketing;
     if (fields) fields.hidden = !state.marketing;
   }
 
@@ -889,6 +935,10 @@
       tags: state.tags.slice(),
       note: readText('internalNote'),
       marketingOptIn: state.marketing,
+      marketingChannels: {
+        sms: state.smsMarketing,
+        whatsapp: state.whatsappMarketing
+      },
       consent: state.marketing ? {
         source: getConsentSource(),
         consentedAt: getDateValue(),

@@ -306,6 +306,9 @@
     if (marketingStatus === 'subscribed' && !consentHistory.some(function (entry) { return entry.status === 'subscribed'; })) {
       marketingStatus = 'not_subscribed';
     }
+    const marketingChannels = input.marketingChannels && typeof input.marketingChannels === 'object'
+      ? input.marketingChannels
+      : {};
     return {
       id: id,
       shopId: normalizeShopId(input.shopId),
@@ -322,6 +325,11 @@
         ? input.previousAccountStatus
         : null,
       marketingStatus: marketingStatus,
+      marketingChannels: {
+        email: marketingStatus === 'subscribed',
+        sms: Boolean(marketingChannels.sms),
+        whatsapp: Boolean(marketingChannels.whatsapp)
+      },
       authProviders: normalizeAuthProviders(input.authProviders),
       source: input.source || 'admin',
       externalProfiles: Array.isArray(input.externalProfiles) ? clone(input.externalProfiles) : [],
@@ -584,6 +592,7 @@
       shopId: shopId, email: email, firstName: payload.firstName, lastName: payload.lastName, phone: payload.phone,
       preferredLanguage: payload.preferredLanguage, tags: payload.tags, note: payload.note,
       accountStatus: 'pending', marketingStatus: payload.marketingOptIn ? 'subscribed' : 'not_subscribed',
+      marketingChannels: payload.marketingChannels,
       authProviders: [], source: 'admin',
       consentHistory: payload.marketingOptIn ? [Object.assign({ status: 'subscribed' }, consentValidation.consent)] : []
     });

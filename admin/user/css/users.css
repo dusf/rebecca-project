@@ -1794,6 +1794,19 @@ textarea.um-text-control {
   line-height: 1.6;
 }
 
+.um-marketing-channel-list {
+  display: grid;
+  gap: 2px;
+}
+
+.um-marketing-channel-option {
+  width: fit-content;
+  min-height: 36px;
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .um-consent-fields {
   margin-top: 16px;
   padding-top: 16px;

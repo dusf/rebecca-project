@@ -30,6 +30,10 @@ body.um-dialog-open {
   color: hsl(var(--foreground));
 }
 
+.um-dialog-workflow {
+  height: min(720px, calc(100vh - 48px));
+}
+
 .um-dialog-compact {
   width: min(640px, calc(100vw - 48px));
 }
@@ -655,6 +659,10 @@ body.um-dialog-open {
   .um-dialog-compact {
     width: calc(100vw - 24px);
     max-height: calc(100vh - 24px);
+  }
+
+  .um-dialog-workflow {
+    height: calc(100vh - 24px);
   }
 
   .um-dialog-header,

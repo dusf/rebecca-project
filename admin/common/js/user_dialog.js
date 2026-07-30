@@ -577,7 +577,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=7')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();

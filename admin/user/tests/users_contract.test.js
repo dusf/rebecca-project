@@ -13,6 +13,7 @@ const commonsCss = fs.readFileSync(path.join(adminRoot, 'common', 'css', 'common
 const adminIndex = fs.readFileSync(path.join(adminRoot, 'index.html'), 'utf8');
 const dialogJs = fs.readFileSync(path.join(adminRoot, 'common', 'js', 'user_dialog.js'), 'utf8');
 const dialogHtml = fs.readFileSync(path.join(adminRoot, 'common', 'html', 'user_dialogs.html'), 'utf8');
+const dialogCss = fs.readFileSync(path.join(adminRoot, 'common', 'css', 'user_dialogs.css'), 'utf8');
 const userFormJs = fs.readFileSync(path.join(userRoot, 'js', 'user_form.js'), 'utf8');
 
 assert.match(commonsJs, /class="sidebar-item\$\{activeClass\}"[^>]*role="link"[^>]*tabindex="0"/);
@@ -70,6 +71,13 @@ assert.doesNotMatch(js, /\.prompt\s*\(/);
 assert.match(js, /window\.parent\.UserDialogs\.openBatchTag/);
 assert.match(js, /addTags:/);
 assert.match(dialogHtml, /data-user-dialog=["']batch-tag["']/);
+assert.match(dialogHtml, /data-user-dialog="csv"[\s\S]*class="um-dialog um-dialog-workflow"/);
+assert.match(dialogHtml, /data-user-dialog="shopify"[\s\S]*class="um-dialog um-dialog-workflow"/);
+assert.match(dialogCss, /\.um-dialog-workflow\s*\{\s*height:\s*min\(720px,\s*calc\(100vh - 48px\)\);/);
+assert.match(dialogCss, /\.um-dialog-body\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*overflow:\s*auto;/);
+assert.match(adminIndex, /common\/css\/user_dialogs\.css\?v=7/);
+assert.match(adminIndex, /common\/js\/user_dialog\.js\?v=7/);
+assert.match(dialogJs, /common\/html\/user_dialogs\.html\?v=7/);
 assert.match(dialogJs, /openBatchTag:/);
 assert.match(dialogJs, /data-dialog-action=["']batch-tag-confirm["']/);
 assert.match(dialogJs, /await invokeHookAsync\(['"]addTags['"]/);

@@ -42,6 +42,18 @@
   font-size: 13px;
 }
 
+.um-list-page .um-page-subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.um-list-page .um-page-subtitle svg {
+  flex: 0 0 auto;
+}
+
 .um-guidance {
   margin-bottom: 16px;
   padding: 12px 14px;

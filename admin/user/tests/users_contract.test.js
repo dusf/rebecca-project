@@ -111,10 +111,13 @@ assert.match(css, /\.um-column-row\.is-dragging/);
 assert.match(css, /\.um-column-row\.is-drag-over/);
 assert.match(css, /\.um-list-page \.um-page-container\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*none;[\s\S]*padding:\s*16px 24px 24px;/);
 assert.match(html, /id="userTotalCount">\(0位用户\)<\/span>/);
-assert.match(html, /href="css\/users\.css\?v=5"/);
+assert.match(html, /href="css\/users\.css\?v=6"/);
 assert.match(html, /<h1 class="page-title">用户管理/);
+assert.match(html, /集中管理当前店铺的买家账号、邮件订阅者及从外部店铺导入的用户档案/);
+assert.match(html, /同一邮箱只保留一条用户档案。邮件订阅与账号注册相互独立；仅订阅用户后续注册或快捷登录时会激活原档案。/);
 assert.match(html, /src="js\/users\.js\?v=5"/);
 assert.match(css, /\.um-title-count\s*\{[\s\S]*margin-left:\s*8px;[\s\S]*font-size:\s*13px;[\s\S]*font-weight:\s*400;/);
+assert.match(css, /\.um-list-page \.um-page-subtitle\s*\{[\s\S]*display:\s*inline-flex;[\s\S]*gap:\s*3px;[\s\S]*font-size:\s*12px;/);
 assert.match(js, /totalCount\.textContent = '\(' \+ allUsers\.length \+ '位用户\)'/);
 
 const utils = require('../js/users.js');

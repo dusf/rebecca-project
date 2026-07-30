@@ -1003,15 +1003,48 @@ function navigateToPage(url) {
         var disabled = c.alwaysShow ? 'disabled' : '';
         var active = visibleCols.indexOf(c.key) !== -1 ? 'active' : '';
         var draggable = c.alwaysShow ? '' : 'draggable="true"';
-        var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">\u22EE\u22EE</span>';
+        var dragAccessibility = c.alwaysShow
+          ? ' aria-hidden="true"'
+          : ' role="button" tabindex="0" data-column-drag="' + c.key + '" aria-label="调整' + c.label + '列顺序"';
+        var dragIcon = '<span class="drag-handle' + (c.alwaysShow ? ' drag-disabled' : '') + '" title="' + (c.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '"' + dragAccessibility + '>\u22EE\u22EE</span>';
         return '<div class="custom-col-item ' + active + ' ' + disabled + '" data-key="' + c.key + '" ' + draggable + '>' +
           dragIcon +
           '<div class="col-check" onclick="' + (c.alwaysShow ? '' : 'toggleCol(this.parentElement, event)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
-          '<span style="flex:1">' + c.label + '</span>' +
+          '<span class="custom-col-label">' + c.label + '</span>' +
         '</div>';
       }).join('');
 
       initDragEvents(body);
+      body.onkeydown = handleCustomColKeydown;
+    }
+
+    function moveCustomColByKeyboard(key, delta) {
+      var movableKeys = columnOrder.filter(function(columnKey) {
+        var column = columnConfig.find(function(item) { return item.key === columnKey; });
+        return column && !column.alwaysShow && !column.fixed && !column.isCheckbox && !column.isAction;
+      });
+      var movableIndex = movableKeys.indexOf(key);
+      var targetKey = movableKeys[movableIndex + delta];
+      if (movableIndex === -1 || !targetKey) return;
+      var currentIndex = columnOrder.indexOf(key);
+      var targetIndex = columnOrder.indexOf(targetKey);
+      columnOrder[currentIndex] = targetKey;
+      columnOrder[targetIndex] = key;
+      buildCustomColPanel();
+      renderTableHead();
+      renderProducts(getCurrentFilter());
+      window.requestAnimationFrame(function() {
+        var handle = document.querySelector('#customColBody [data-column-drag="' + key + '"]');
+        if (handle) handle.focus();
+      });
+    }
+
+    function handleCustomColKeydown(event) {
+      var handle = event.target.closest('[data-column-drag]');
+      if (!handle || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      moveCustomColByKeyboard(handle.dataset.columnDrag, event.key === 'ArrowUp' ? -1 : 1);
     }
 
     function initDragEvents(body) {

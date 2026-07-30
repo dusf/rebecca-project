@@ -800,27 +800,30 @@
 
   function renderColumnPanel() {
     elements.columnPanel.innerHTML =
-      '<div class="um-column-heading"><div class="um-column-title">自定义列</div>' +
-      '<button type="button" class="um-column-reset" data-column-reset>恢复默认</button></div>' +
-      '<p class="um-column-hint">拖拽字段或使用箭头调整列顺序。用户信息始终固定在左侧。</p>' +
-      columnOrder.map(function (key, index) {
+      '<div class="custom-col-header"><span>选择显示列</span>' +
+      '<button type="button" class="custom-col-reset" data-column-reset>恢复默认</button></div>' +
+      '<p class="custom-col-hint">拖拽字段调整列顺序。用户信息始终固定在左侧。</p>' +
+      '<div class="custom-col-body">' +
+      columnOrder.map(function (key) {
         const column = COLUMNS.find(function (item) { return item.key === key; });
         if (!column) return '';
         const checked = column.alwaysShow || visibleKeys.has(key);
-        return '<div class="um-column-row" data-column="' + escapeHtml(key) + '"' +
+        const dragAccessibility = column.alwaysShow
+          ? ' aria-hidden="true"'
+          : ' role="button" tabindex="0" data-column-drag="' + escapeHtml(key) +
+            '" aria-label="调整' + escapeHtml(column.label) + '列顺序"';
+        return '<div class="custom-col-item ' + (checked ? 'active ' : '') +
+          (column.alwaysShow ? 'disabled' : '') + '" data-column="' + escapeHtml(key) + '"' +
           (column.alwaysShow ? '' : ' draggable="true"') + '>' +
-          '<span class="um-column-drag' + (column.alwaysShow ? ' is-disabled' : '') +
-          '" aria-hidden="true" title="' + (column.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '">⋮⋮</span>' +
-          '<label class="um-checkbox">' +
-          '<input class="um-checkbox-input" type="checkbox" data-column-visible="' + escapeHtml(key) +
+          '<span class="drag-handle' + (column.alwaysShow ? ' drag-disabled' : '') +
+          '" title="' + (column.alwaysShow ? '固定列不可拖动' : '拖拽排序') + '"' + dragAccessibility + '>⋮⋮</span>' +
+          '<label class="custom-col-option">' +
+          '<input class="custom-col-input" type="checkbox" data-column-visible="' + escapeHtml(key) +
           '" ' + (checked ? 'checked' : '') + (column.alwaysShow ? ' disabled' : '') + '>' +
-          '<span class="um-checkbox-box" aria-hidden="true"></span><span>' + escapeHtml(column.label) + '</span></label>' +
-          '<button class="um-column-move" type="button" data-column-move="up" aria-label="上移' +
-          escapeHtml(column.label) + '"' + (index === 0 || column.alwaysShow ? ' disabled' : '') + '>↑</button>' +
-          '<button class="um-column-move" type="button" data-column-move="down" aria-label="下移' +
-          escapeHtml(column.label) + '"' + (index === columnOrder.length - 1 || column.alwaysShow ? ' disabled' : '') + '>↓</button>' +
+          '<span class="col-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' +
+          '<span class="custom-col-label">' + escapeHtml(column.label) + '</span></label>' +
           '</div>';
-      }).join('');
+      }).join('') + '</div>';
   }
 
   function renderBulkBar() {
@@ -1347,22 +1350,28 @@
       elements.columnMenu.open = true;
       return;
     }
-    const button = event.target.closest('[data-column-move]');
-    if (!button) return;
-    event.stopPropagation();
-    const row = button.closest('[data-column]');
-    const key = row && row.getAttribute('data-column');
+  }
+
+  function handleColumnKeydown(event) {
+    const handle = event.target.closest('[data-column-drag]');
+    if (!handle || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+    const key = handle.getAttribute('data-column-drag');
     const index = columnOrder.indexOf(key);
-    const targetIndex = button.getAttribute('data-column-move') === 'up' ? index - 1 : index + 1;
-    if (key === 'user' || index < 0 || targetIndex < 1 || targetIndex >= columnOrder.length) return;
+    const targetIndex = event.key === 'ArrowUp' ? index - 1 : index + 1;
+    if (key === 'user' || index < 1 || targetIndex < 1 || targetIndex >= columnOrder.length) return;
+    event.preventDefault();
+    event.stopPropagation();
     const next = columnOrder.slice();
-    const swap = next[targetIndex];
+    next[index] = next[targetIndex];
     next[targetIndex] = key;
-    next[index] = swap;
     columnOrder = next;
     writeStorage(ORDER_KEY, columnOrder);
     render();
     elements.columnMenu.open = true;
+    root.requestAnimationFrame(function () {
+      const nextHandle = elements.columnPanel.querySelector('[data-column-drag="' + key + '"]');
+      if (nextHandle) nextHandle.focus();
+    });
   }
 
   function reorderColumns(order, sourceKey, targetKey, fixedKey) {
@@ -1386,32 +1395,32 @@
 
   function clearColumnDragState() {
     columnDragKey = '';
-    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.um-column-row'), function (row) {
-      row.classList.remove('is-dragging', 'is-drag-over');
+    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.custom-col-item'), function (row) {
+      row.classList.remove('dragging', 'drag-over');
     });
   }
 
   function handleColumnDragStart(event) {
-    const row = event.target.closest('.um-column-row[draggable="true"]');
+    const row = event.target.closest('.custom-col-item[draggable="true"]');
     if (!row) return;
     columnDragKey = row.getAttribute('data-column');
-    row.classList.add('is-dragging');
+    row.classList.add('dragging');
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', columnDragKey);
   }
 
   function handleColumnDragOver(event) {
-    const row = event.target.closest('.um-column-row[draggable="true"]');
+    const row = event.target.closest('.custom-col-item[draggable="true"]');
     if (!row || !columnDragKey || row.getAttribute('data-column') === columnDragKey) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.um-column-row'), function (item) {
-      item.classList.toggle('is-drag-over', item === row);
+    Array.prototype.forEach.call(elements.columnPanel.querySelectorAll('.custom-col-item'), function (item) {
+      item.classList.toggle('drag-over', item === row);
     });
   }
 
   function handleColumnDrop(event) {
-    const row = event.target.closest('.um-column-row[draggable="true"]');
+    const row = event.target.closest('.custom-col-item[draggable="true"]');
     if (!row || !columnDragKey) return;
     event.preventDefault();
     event.stopPropagation();
@@ -1490,6 +1499,7 @@
     elements.bulkBar.addEventListener('click', handleBulkClick);
     elements.columnPanel.addEventListener('change', handleColumnChange);
     elements.columnPanel.addEventListener('click', handleColumnClick);
+    elements.columnPanel.addEventListener('keydown', handleColumnKeydown);
     elements.columnPanel.addEventListener('dragstart', handleColumnDragStart);
     elements.columnPanel.addEventListener('dragover', handleColumnDragOver);
     elements.columnPanel.addEventListener('drop', handleColumnDrop);

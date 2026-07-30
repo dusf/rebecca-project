@@ -922,8 +922,7 @@ textarea.um-text-control {
 .um-sort-button:focus-visible,
 .um-row-action:focus-visible,
 .um-detail-anchor:focus-visible,
-.um-pagination-button:focus-visible,
-.um-column-move:focus-visible {
+.um-pagination-button:focus-visible {
   outline: 3px solid hsl(var(--ring) / .18);
   outline-offset: 2px;
 }
@@ -1192,103 +1191,14 @@ textarea.um-text-control {
 }
 
 .um-column-panel {
-  width: 300px;
-  max-height: min(520px, 70vh);
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.um-column-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.um-column-title {
-  margin: 2px 4px 8px;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.um-column-reset {
-  padding: 4px;
-  border: 0;
-  background: transparent;
-  color: hsl(var(--primary-700));
-  font: 600 12px/1.4 var(--font-sans);
-  cursor: pointer;
-}
-
-.um-column-hint {
-  margin: 0 4px 9px;
-  color: hsl(var(--muted-foreground));
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.um-column-row {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 30px 30px;
-  align-items: center;
-  gap: 4px;
-  min-height: 42px;
-  padding: 3px 4px;
-  border-radius: 7px;
-}
-
-.um-column-row[draggable="true"] {
-  cursor: grab;
-}
-
-.um-column-row.is-dragging {
-  opacity: .48;
-  cursor: grabbing;
-}
-
-.um-column-row.is-drag-over {
-  box-shadow: inset 0 2px hsl(var(--primary));
-  background: hsl(var(--primary-50));
-}
-
-.um-column-drag {
-  color: hsl(var(--muted-foreground));
-  font-size: 13px;
-  letter-spacing: -3px;
-  user-select: none;
-}
-
-.um-column-drag.is-disabled {
-  opacity: .3;
-}
-
-.um-column-row:hover {
-  background: hsl(var(--accent));
-}
-
-.um-column-row .um-checkbox {
-  min-height: 34px;
-}
-
-.um-column-move {
-  width: 28px;
-  height: 28px;
+  width: 240px;
+  max-height: min(420px, 70vh);
+  overflow: hidden;
   padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: hsl(var(--muted-foreground));
-  cursor: pointer;
 }
 
-.um-column-move:hover:not(:disabled) {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-.um-column-move:disabled {
-  cursor: not-allowed;
-  opacity: .3;
+.um-column-panel .custom-col-body {
+  max-height: min(300px, calc(70vh - 92px));
 }
 
 .um-list-page .um-table-card {

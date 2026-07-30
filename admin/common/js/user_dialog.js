@@ -31,6 +31,14 @@
     }
   ];
 
+  var MARKETING_STATUS_LABELS = {
+    subscribed: '已订阅',
+    not_subscribed: '未订阅',
+    unsubscribed: '已退订',
+    pending: '待确认',
+    invalid: '无效邮箱'
+  };
+
   var CONNECTED_STORES = [
     {
       id: 'store-north',
@@ -577,7 +585,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html?v=8')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=9')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
@@ -1220,7 +1228,7 @@
         escapeHtml(record.email) + (record.phone ? ' · ' + escapeHtml(record.phone) : '') +
         '</span></span><span class="um-dialog-muted">' +
         escapeHtml(record.profileKind === 'subscriber' ? '邮件订阅者' : '客户档案') + '<br>' +
-        escapeHtml(record.marketingStatus) + '</span></button>';
+        escapeHtml(MARKETING_STATUS_LABELS[record.marketingStatus] || '未知状态') + '</span></button>';
     }).join('') + '</div>';
   }
 

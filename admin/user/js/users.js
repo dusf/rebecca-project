@@ -35,7 +35,22 @@
     selected: new Set(),
     page: 1,
     pageSize: 10,
-    status: 'ready'
+    status: 'ready',
+    shopifySync: {
+      status: 'idle',
+      processed: 0,
+      total: 0
+    },
+    csvImport: {
+      status: 'idle',
+      processed: 0,
+      total: 0
+    },
+    exportTask: {
+      status: 'idle',
+      processed: 0,
+      total: 0
+    }
   };
 
   const ACCOUNT_LABELS = {
@@ -359,8 +374,14 @@
 
   function openShopifyImport() {
     try {
-      if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openShopifyImport === 'function') {
-        window.parent.UserDialogs.openShopifyImport();
+      const dialogs = window.parent.UserDialogs;
+      const hasSyncTask = state.shopifySync.status !== 'idle';
+      if (hasSyncTask && dialogs && typeof dialogs.openShopifySyncProgress === 'function') {
+        dialogs.openShopifySyncProgress();
+        return;
+      }
+      if (dialogs && typeof dialogs.openShopifyImport === 'function') {
+        dialogs.openShopifyImport();
         return;
       }
     } catch (error) {
@@ -370,10 +391,205 @@
     showToast('Shopify 导入功能正在加载，请稍后再试。', 'error');
   }
 
+  function normalizeShopifySyncState(detail) {
+    const source = detail && typeof detail === 'object' ? detail : {};
+    const allowed = ['idle', 'queued', 'running', 'completed', 'failed'];
+    const status = allowed.indexOf(source.status) === -1 ? 'idle' : source.status;
+    return {
+      status: status,
+      processed: Math.max(0, Number(source.processed) || 0),
+      total: Math.max(0, Number(source.total) || 0)
+    };
+  }
+
+  function renderImportTaskIndicator() {
+    const indicator = elements.importTaskIndicator;
+    const trigger = elements.importTrigger;
+    if (!indicator || !trigger) return;
+    const statuses = [state.shopifySync.status, state.csvImport.status];
+    let visualStatus = 'idle';
+    if (statuses.some((status) => status === 'queued' || status === 'running')) visualStatus = 'running';
+    else if (statuses.indexOf('failed') !== -1) visualStatus = 'failed';
+    else if (statuses.indexOf('completed') !== -1) visualStatus = 'completed';
+    indicator.classList.remove('is-running', 'is-completed', 'is-failed');
+    indicator.hidden = visualStatus === 'idle';
+    if (visualStatus !== 'idle') indicator.classList.add('is-' + visualStatus);
+    if (visualStatus === 'running') trigger.setAttribute('aria-label', '导入任务正在后台处理');
+    else if (visualStatus === 'completed') trigger.setAttribute('aria-label', '导入任务已完成');
+    else if (visualStatus === 'failed') trigger.setAttribute('aria-label', '导入任务失败，点击查看');
+    else trigger.removeAttribute('aria-label');
+  }
+
+  function renderShopifySyncState(detail) {
+    state.shopifySync = normalizeShopifySyncState(detail);
+    const sync = state.shopifySync;
+    const icon = elements.shopifySyncIcon;
+    const label = elements.shopifySyncLabel;
+    const action = elements.shopifyImportAction;
+    if (!icon || !label || !action) return;
+
+    icon.classList.remove('is-running', 'is-completed', 'is-failed');
+
+    const activeStatus = sync.status === 'queued' ? 'running' : sync.status;
+    if (activeStatus !== 'idle') icon.classList.add('is-' + activeStatus);
+
+    if (activeStatus === 'running') {
+      label.textContent = '同步中…（' + sync.processed + '/' + sync.total + ' 位用户）';
+      action.setAttribute('aria-label', '查看 Shopify 用户同步进度');
+    } else if (activeStatus === 'completed') {
+      label.textContent = '同步完成（' + sync.processed + '/' + sync.total + ' 位用户）';
+      action.setAttribute('aria-label', '查看 Shopify 用户同步结果');
+    } else if (activeStatus === 'failed') {
+      label.textContent = '同步失败，点击查看';
+      action.setAttribute('aria-label', '查看 Shopify 用户同步失败详情');
+    } else {
+      label.textContent = '从 Shopify 导入';
+      action.removeAttribute('aria-label');
+    }
+    renderImportTaskIndicator();
+  }
+
+  function hydrateShopifySyncState() {
+    try {
+      const dialogs = window.parent && window.parent.UserDialogs;
+      if (dialogs && typeof dialogs.getShopifySyncState === 'function') {
+        renderShopifySyncState(dialogs.getShopifySyncState());
+        return;
+      }
+    } catch (error) {}
+    renderShopifySyncState(null);
+  }
+
+  function normalizeCsvImportState(detail) {
+    const source = detail && typeof detail === 'object' ? detail : {};
+    const allowed = ['idle', 'queued', 'running', 'completed', 'failed'];
+    return {
+      status: allowed.indexOf(source.status) === -1 ? 'idle' : source.status,
+      processed: Math.max(0, Number(source.processed) || 0),
+      total: Math.max(0, Number(source.total) || 0)
+    };
+  }
+
+  function renderCsvImportState(detail) {
+    state.csvImport = normalizeCsvImportState(detail);
+    const task = state.csvImport;
+    const icon = elements.csvImportIcon;
+    const label = elements.csvImportLabel;
+    const action = elements.csvImportAction;
+    if (!icon || !label || !action) return;
+    icon.classList.remove('is-running', 'is-completed', 'is-failed');
+    const visualStatus = task.status === 'queued' ? 'running' : task.status;
+    if (visualStatus !== 'idle') icon.classList.add('is-' + visualStatus);
+    if (visualStatus === 'running') {
+      label.textContent = '导入中…（' + task.processed + '/' + task.total + ' 位用户）';
+      action.setAttribute('aria-label', '查看 CSV 用户导入进度');
+    } else if (visualStatus === 'completed') {
+      label.textContent = '导入完成（' + task.processed + '/' + task.total + ' 位用户）';
+      action.setAttribute('aria-label', '查看 CSV 用户导入结果');
+    } else if (visualStatus === 'failed') {
+      label.textContent = '导入失败，点击查看';
+      action.setAttribute('aria-label', '查看 CSV 用户导入失败详情');
+    } else {
+      label.textContent = '从 CSV 导入';
+      action.removeAttribute('aria-label');
+    }
+    renderImportTaskIndicator();
+  }
+
+  function hydrateCsvImportState() {
+    try {
+      const dialogs = window.parent && window.parent.UserDialogs;
+      if (dialogs && typeof dialogs.getCsvImportState === 'function') {
+        renderCsvImportState(dialogs.getCsvImportState());
+        return;
+      }
+    } catch (error) {}
+    renderCsvImportState(null);
+  }
+
+  function normalizeExportTaskState(detail) {
+    const source = detail && typeof detail === 'object' ? detail : {};
+    const allowed = ['idle', 'queued', 'running', 'ready', 'failed'];
+    return {
+      status: allowed.indexOf(source.status) === -1 ? 'idle' : source.status,
+      processed: Math.max(0, Number(source.processed) || 0),
+      total: Math.max(0, Number(source.total) || 0)
+    };
+  }
+
+  function renderExportTaskState(detail) {
+    state.exportTask = normalizeExportTaskState(detail);
+    const task = state.exportTask;
+    const indicator = elements.exportTaskIndicator;
+    const icon = elements.exportTaskIcon;
+    const label = elements.exportTaskLabel;
+    const action = elements.exportTaskAction;
+    const trigger = elements.exportTrigger;
+    if (!indicator || !icon || !label || !action || !trigger) return;
+
+    [indicator, icon].forEach(function (node) {
+      node.classList.remove('is-running', 'is-completed', 'is-failed');
+    });
+    const visualStatus = task.status === 'queued' || task.status === 'running'
+      ? 'running'
+      : (task.status === 'ready' ? 'completed' : task.status);
+    const visible = visualStatus !== 'idle';
+    indicator.hidden = !visible;
+    action.hidden = !visible;
+    if (visible) {
+      indicator.classList.add('is-' + visualStatus);
+      icon.classList.add('is-' + visualStatus);
+    }
+    if (visualStatus === 'running') {
+      label.textContent = '正在生成…（' + task.processed + '/' + task.total + ' 位用户）';
+      trigger.setAttribute('aria-label', '导出文件生成中，已处理 ' + task.processed + ' / ' + task.total + ' 位用户');
+      return;
+    }
+    if (visualStatus === 'completed') {
+      label.textContent = '文件已生成，点击下载';
+      trigger.setAttribute('aria-label', '导出文件已生成');
+      return;
+    }
+    if (visualStatus === 'failed') {
+      label.textContent = '导出失败，点击查看';
+      trigger.setAttribute('aria-label', '导出文件生成失败');
+      return;
+    }
+    trigger.removeAttribute('aria-label');
+  }
+
+  function hydrateExportTaskState() {
+    try {
+      const dialogs = window.parent && window.parent.UserDialogs;
+      if (dialogs && typeof dialogs.getExportTaskState === 'function') {
+        renderExportTaskState(dialogs.getExportTaskState());
+        return;
+      }
+    } catch (error) {}
+    renderExportTaskState(null);
+  }
+
+  function openExportTaskProgress() {
+    try {
+      const dialogs = window.parent && window.parent.UserDialogs;
+      if (dialogs && typeof dialogs.openExportProgress === 'function') {
+        dialogs.openExportProgress();
+        return;
+      }
+    } catch (error) {}
+    showToast('导出进度功能正在加载，请稍后再试。', 'error');
+  }
+
   function openCsvImport() {
     try {
-      if (window.parent.UserDialogs && typeof window.parent.UserDialogs.openCsvImport === 'function') {
-        window.parent.UserDialogs.openCsvImport();
+      const dialogs = window.parent.UserDialogs;
+      const hasImportTask = state.csvImport.status !== 'idle';
+      if (hasImportTask && dialogs && typeof dialogs.openCsvImportProgress === 'function') {
+        dialogs.openCsvImportProgress();
+        return;
+      }
+      if (dialogs && typeof dialogs.openCsvImport === 'function') {
+        dialogs.openCsvImport();
         return;
       }
     } catch (error) {
@@ -905,11 +1121,13 @@
 
   function renderExportMenu() {
     if (!elements.exportMenu) return;
+    renderExportTaskState(state.exportTask);
+    const taskActive = ['queued', 'running'].indexOf(state.exportTask.status) !== -1;
     ['selected', 'query', 'all'].forEach(function (scope) {
       const count = exportScopeUsers(scope).length;
       const button = elements.exportMenu.querySelector('[data-export-scope="' + scope + '"]');
       const countElement = elements.exportMenu.querySelector('[data-export-count="' + scope + '"]');
-      if (button) button.disabled = count === 0 || state.status !== 'ready';
+      if (button) button.disabled = taskActive || count === 0 || state.status !== 'ready';
       if (countElement) countElement.textContent = '（' + count + '）';
     });
   }
@@ -1368,7 +1586,7 @@
     return '';
   }
 
-  function exportUsers(scope, fieldKeys) {
+  function prepareExportUsers(scope, fieldKeys) {
     if (state.status !== 'ready') return { ok: false, error: '用户列表尚未就绪。' };
     const users = exportScopeUsers(scope);
     if (!users.length) {
@@ -1388,16 +1606,37 @@
         return csvCell(value, rowIndex === 0 || !fields[columnIndex].numeric);
       }).join(',');
     }).join('\r\n');
-    const url = root.URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    return {
+      ok: true,
+      count: users.length,
+      fileName: 'users-' + new Date().toISOString().slice(0, 10) + '.csv',
+      mimeType: 'text/csv;charset=utf-8',
+      content: csv
+    };
+  }
+
+  function downloadPreparedExport(file) {
+    if (!file || file.ok === false || !file.content || !file.fileName) {
+      return { ok: false, error: '导出文件不存在或已失效，请重新生成。' };
+    }
+    const url = root.URL.createObjectURL(new Blob([file.content], {
+      type: file.mimeType || 'text/csv;charset=utf-8'
+    }));
     const link = root.document.createElement('a');
     link.href = url;
-    link.download = 'users-' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.download = file.fileName;
     root.document.body.appendChild(link);
     link.click();
     link.remove();
     root.URL.revokeObjectURL(url);
-    showToast('已导出 ' + users.length + ' 位用户。', 'success');
-    return { ok: true, count: users.length };
+    showToast('导出文件下载成功。', 'success');
+    return { ok: true, count: Number(file.count) || 0 };
+  }
+
+  function exportUsers(scope, fieldKeys) {
+    const prepared = prepareExportUsers(scope, fieldKeys);
+    if (!prepared.ok) return prepared;
+    return downloadPreparedExport(prepared);
   }
 
   function openExportDialog(scope) {
@@ -1435,6 +1674,12 @@
       closeMenu(elements.importMenu);
       if (importButton.getAttribute('data-import') === 'shopify') openShopifyImport();
       else openCsvImport();
+      return;
+    }
+    const exportTaskButton = event.target.closest('[data-export-task]');
+    if (exportTaskButton && !exportTaskButton.hidden) {
+      closeMenu(elements.exportMenu);
+      openExportTaskProgress();
       return;
     }
     const exportButton = event.target.closest('[data-export-scope]');
@@ -1711,7 +1956,20 @@
     elements.columnMenu = root.document.getElementById('userColumnMenu');
     elements.columnPanel = root.document.getElementById('userColumnPanel');
     elements.exportMenu = root.document.getElementById('userExportMenu');
+    elements.exportTrigger = root.document.getElementById('userExportTrigger');
+    elements.exportTaskAction = root.document.getElementById('userExportTaskAction');
+    elements.exportTaskIndicator = root.document.querySelector('[data-export-task-indicator]');
+    elements.exportTaskIcon = root.document.querySelector('[data-export-task-icon]');
+    elements.exportTaskLabel = root.document.querySelector('[data-export-task-label]');
     elements.importMenu = root.document.getElementById('userImportMenu');
+    elements.importTrigger = root.document.getElementById('userImportTrigger');
+    elements.importTaskIndicator = root.document.querySelector('[data-import-task-indicator]');
+    elements.shopifyImportAction = root.document.getElementById('userShopifyImportAction');
+    elements.shopifySyncIcon = root.document.querySelector('[data-shopify-sync-icon]');
+    elements.shopifySyncLabel = root.document.querySelector('[data-shopify-sync-label]');
+    elements.csvImportAction = root.document.getElementById('userCsvImportAction');
+    elements.csvImportIcon = root.document.querySelector('[data-csv-import-icon]');
+    elements.csvImportLabel = root.document.querySelector('[data-csv-import-label]');
     elements.toastRegion = root.document.getElementById('userToastRegion');
   }
 
@@ -1763,7 +2021,7 @@
     root.document.addEventListener('click', function (event) {
       const portaledPanel = event.target.closest('.is-viewport-layer');
       const ownerMenu = portaledPanel && portaledPanel.__umViewportOwner;
-      if (ownerMenu === elements.exportMenu && event.target.closest('[data-export-scope]')) {
+      if (ownerMenu === elements.exportMenu && event.target.closest('[data-export-scope], [data-export-task]')) {
         closeMenu(ownerMenu);
         handleHeaderClick(event);
         return;
@@ -1802,6 +2060,8 @@
       updateMarketingChannel: (ids, channel, enabled, consent) =>
         root.UserStore.setMarketingChannelStatusLocked(ids, channel, enabled, consent),
       exportUsers: (scope, fields) => exportUsers(scope, fields),
+      prepareExportUsers: (scope, fields) => prepareExportUsers(scope, fields),
+      downloadPreparedExport: (file) => downloadPreparedExport(file),
       disableUsers: (ids) => root.UserStore.setAccountStatusLocked(ids, 'disabled'),
       removeUsersIfRiskUnchanged: (ids, reviewedUsers) => {
         const expectedFingerprints = (Array.isArray(reviewedUsers) ? reviewedUsers : []).reduce((result, user) => {
@@ -1816,6 +2076,12 @@
         setupFilterControls(true);
         state.status = 'ready';
         render();
+      },
+      onShopifySyncProgress: (detail) => renderShopifySyncState(detail),
+      onCsvImportProgress: (detail) => renderCsvImportState(detail),
+      onExportProgress: (detail) => {
+        renderExportTaskState(detail);
+        renderExportMenu();
       }
     };
   }
@@ -1827,6 +2093,9 @@
     setupDateControls();
     bindEvents();
     exposeHooks();
+    hydrateShopifySyncState();
+    hydrateCsvImportState();
+    hydrateExportTaskState();
     state.status = 'loading';
     render();
     refreshUsers(false);

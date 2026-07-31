@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>用户管理</title>
   <link rel="stylesheet" href="../common/css/commons.css?v=9">
-  <link rel="stylesheet" href="css/users.css?v=23">
+  <link rel="stylesheet" href="css/users.css?v=28">
 </head>
 <body>
   <main class="um-page um-list-page" id="userListPage">
@@ -21,18 +21,34 @@
         </div>
         <div class="um-header-actions">
           <details class="um-menu um-viewport-menu" id="userExportMenu">
-            <summary class="btn btn-secondary um-file-action">导出</summary>
+            <summary class="btn btn-secondary um-file-action" id="userExportTrigger">
+              <span>导出</span>
+              <span class="um-import-sync-indicator" data-export-task-indicator hidden aria-hidden="true"></span>
+            </summary>
             <div class="um-menu-panel um-menu-panel-right">
+              <button type="button" data-export-task id="userExportTaskAction" hidden>
+                <span class="um-export-task-icon" data-export-task-icon aria-hidden="true"></span>
+                <span data-export-task-label>正在生成导出文件</span>
+              </button>
               <button type="button" data-export-scope="selected" disabled>导出选中用户<span data-export-count="selected">（0）</span></button>
               <button type="button" data-export-scope="query" disabled>导出当前查询结果<span data-export-count="query">（0）</span></button>
               <button type="button" data-export-scope="all" disabled>导出全部用户<span data-export-count="all">（0）</span></button>
             </div>
           </details>
           <details class="um-menu" id="userImportMenu">
-            <summary class="btn btn-secondary um-file-action">导入</summary>
+            <summary class="btn btn-secondary um-file-action" id="userImportTrigger">
+              <span>导入</span>
+              <span class="um-import-sync-indicator" data-import-task-indicator hidden aria-hidden="true"></span>
+            </summary>
             <div class="um-menu-panel um-menu-panel-right">
-              <button type="button" data-import="shopify">从 Shopify 导入</button>
-              <button type="button" data-import="csv">从 CSV 导入</button>
+              <button type="button" data-import="shopify" id="userShopifyImportAction">
+                <span class="um-shopify-sync-icon" data-shopify-sync-icon aria-hidden="true"></span>
+                <span data-shopify-sync-label>从 Shopify 导入</span>
+              </button>
+              <button type="button" data-import="csv" id="userCsvImportAction">
+                <span class="um-csv-import-icon" data-csv-import-icon aria-hidden="true"></span>
+                <span data-csv-import-label>从 CSV 导入</span>
+              </button>
             </div>
           </details>
           <button class="btn btn-primary" type="button" id="userAddButton">添加用户</button>
@@ -104,6 +120,6 @@
   <script src="../common/js/commons.js?v=8"></script>
   <script src="js/user_store.js?v=6"></script>
   <script src="js/user_components.js?v=6"></script>
-  <script src="js/users.js?v=25"></script>
+  <script src="js/users.js?v=30"></script>
 </body>
 </html>

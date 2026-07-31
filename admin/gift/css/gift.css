@@ -520,7 +520,7 @@
   border-bottom: 1px solid hsl(var(--border));
   flex-shrink: 0;
 }
-.dialog-overlay .dialog-title { font-size: 17px; font-weight: 600; margin-bottom: 0; display: block; }
+.dialog-overlay .dialog-title { font-size: 16px; font-weight: 600; margin-bottom: 0; display: block; }
 .dialog-overlay .dialog-close {
   position: static;
   width: 32px;

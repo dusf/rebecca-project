@@ -43,32 +43,14 @@
     invalid: '无效邮箱'
   };
 
-  var CONNECTED_STORES = [
-    {
-      id: 'store-north',
-      name: 'Rebecca 北美旗舰店',
-      domain: 'rebecca-north.myshopify.com',
-      state: '已连接',
-      connectionState: 'connected',
-      lastSyncAt: '2026-07-29 09:18'
-    },
-    {
-      id: 'store-eu',
-      name: 'Rebecca 欧洲站',
-      domain: 'rebecca-eu.myshopify.com',
-      state: '已连接',
-      connectionState: 'connected',
-      lastSyncAt: '2026-07-28 21:06'
-    },
-    {
-      id: 'store-outlet',
-      name: 'Rebecca Outlet',
-      domain: 'rebecca-outlet.myshopify.com',
-      state: '已连接',
-      connectionState: 'connected',
-      lastSyncAt: '2026-07-29 08:42'
+  var SHOPIFY_AUTH_CONTEXT = {
+    accountEmail: 'owner@qvr.com',
+    store: {
+      id: 'store-qvr',
+      name: 'QVR 官方商店',
+      domain: 'qvr-official.myshopify.com'
     }
-  ];
+  };
 
   var SHOPIFY_RECORDS = [
     {
@@ -210,7 +192,7 @@
         matchedIndex = normalized.indexOf(alias.toLocaleLowerCase());
         return matchedIndex !== -1;
       });
-      mapping[field.key] = matchedIndex === -1 ? (field.required ? '0' : 'skip') : String(matchedIndex);
+      mapping[field.key] = matchedIndex === -1 ? 'skip' : String(matchedIndex);
     });
     return mapping;
   }
@@ -541,6 +523,12 @@
   var focusRestoreTimer = null;
   var csvSessionGate = createSessionGate();
   var active = null;
+  var csvJobSequence = 0;
+  var csvJob = null;
+  var shopifyJobSequence = 0;
+  var shopifyJob = null;
+  var exportJobSequence = 0;
+  var exportJob = null;
   var state = {
     csv: null,
     shopify: null,
@@ -587,7 +575,7 @@
   function ensureDialogs() {
     if (loaded) return Promise.resolve();
     if (loadPromise) return loadPromise;
-    loadPromise = root.fetch('common/html/user_dialogs.html?v=11')
+    loadPromise = root.fetch('common/html/user_dialogs.html?v=14')
       .then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
@@ -658,6 +646,11 @@
   function renderShell(type, config) {
     var overlay = overlayFor(type);
     if (!overlay) return;
+    var dialog = overlay.querySelector('.um-dialog');
+    if (type === 'shopify' && dialog) {
+      dialog.setAttribute('data-shopify-step', String(config.shopifyStep || 1));
+      dialog.setAttribute('data-shopify-view', String(config.shopifyView || 'default'));
+    }
     overlay.querySelector('.um-dialog-header').innerHTML = headerMarkup(
       type,
       config.title,
@@ -823,6 +816,466 @@
       return Promise.resolve({ ok: true, error: '', value: null });
     }
     return invokeHookAsync('onDialogComplete', [result], true);
+  }
+
+  function shopifyJobSnapshot(job) {
+    if (!job) {
+      return {
+        status: 'idle',
+        processed: 0,
+        total: 0,
+        result: null,
+        error: ''
+      };
+    }
+    return {
+      id: job.id,
+      status: job.status,
+      processed: job.processed,
+      total: job.total,
+      store: Object.assign({}, job.store),
+      result: job.result ? {
+        ok: job.result.ok,
+        counts: Object.assign({}, job.result.counts),
+        warnings: Object.assign({}, job.result.warnings)
+      } : null,
+      error: job.error || ''
+    };
+  }
+
+  function currentPageHooks() {
+    var frame = activeFrame();
+    try {
+      return frame && frame.contentWindow && frame.contentWindow.UserPageHooks;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function csvJobSnapshot(job) {
+    if (!job) {
+      return {
+        status: 'idle',
+        processed: 0,
+        total: 0,
+        fileName: '',
+        result: null,
+        error: ''
+      };
+    }
+    return {
+      id: job.id,
+      status: job.status,
+      processed: job.processed,
+      total: job.total,
+      fileName: job.fileName,
+      result: job.result ? {
+        ok: job.result.ok,
+        counts: Object.assign({}, job.result.counts),
+        warnings: Object.assign({}, job.result.warnings)
+      } : null,
+      error: job.error || ''
+    };
+  }
+
+  function notifyCsvJob(job) {
+    var snapshot = csvJobSnapshot(job);
+    var targets = [];
+    if (job && job.hooks) targets.push(job.hooks);
+    var currentHooks = currentPageHooks();
+    if (currentHooks && targets.indexOf(currentHooks) === -1) targets.push(currentHooks);
+    targets.forEach(function (hooks) {
+      if (hooks && typeof hooks.onCsvImportProgress === 'function') {
+        try {
+          hooks.onCsvImportProgress(snapshot);
+        } catch (error) {
+          // 页面状态提示失败不应中断后台导入任务。
+        }
+      }
+    });
+  }
+
+  function emptyCsvJobResult() {
+    return {
+      ok: true,
+      counts: { created: 0, merged: 0, skipped: 0, failed: 0 },
+      warnings: { consentDowngraded: 0 }
+    };
+  }
+
+  function clearCsvJob(job) {
+    if (!job || csvJob !== job) return;
+    if (job.timer) root.clearTimeout(job.timer);
+    if (job.dismissTimer) root.clearTimeout(job.dismissTimer);
+    csvJob = null;
+    notifyCsvJob(null);
+  }
+
+  function scheduleCsvJobDismiss(job) {
+    if (!job || csvJob !== job || job.status !== 'completed') return;
+    if (job.dismissTimer) root.clearTimeout(job.dismissTimer);
+    job.dismissTimer = root.setTimeout(function () {
+      if (csvJob !== job) return;
+      if (active && active.type === 'csv-progress') {
+        job.dismissWhenClosed = true;
+        return;
+      }
+      clearCsvJob(job);
+    }, 6000);
+  }
+
+  function finishCsvJob(job) {
+    if (!job || csvJob !== job) return;
+    job.status = job.systemFailure && job.result.counts.created + job.result.counts.merged === 0
+      ? 'failed'
+      : 'completed';
+    job.finishedAt = Date.now();
+    settleShopifyJobHook(job, 'onDialogComplete', [job.result], true).then(function () {
+      if (csvJob !== job) return;
+      notifyCsvJob(job);
+      if (typeof root.showToast === 'function') {
+        root.showToast(
+          job.status === 'completed' ? 'success' : 'error',
+          job.status === 'completed' ? 'CSV 用户导入完成' : 'CSV 用户导入失败'
+        );
+      }
+      if (active && active.type === 'csv-progress') renderCsvProgress();
+      scheduleCsvJobDismiss(job);
+    });
+  }
+
+  async function processNextCsvRecord(job) {
+    if (!job || csvJob !== job || ['queued', 'running'].indexOf(job.status) === -1) return;
+    job.status = 'running';
+    notifyCsvJob(job);
+    if (job.processed >= job.total) {
+      finishCsvJob(job);
+      return;
+    }
+
+    var record = job.records[job.processed];
+    var email = String(record && record.email || '').trim();
+    if (!email) {
+      job.result.counts.skipped += 1;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      job.result.counts.failed += 1;
+    } else {
+      var imported = await settleShopifyJobHook(job, 'importUsers', [[record], 'shopify_csv']);
+      if (csvJob !== job) return;
+      if (imported.ok) {
+        mergeShopifyJobResult(job.result, imported.value);
+      } else {
+        job.result.counts.failed += 1;
+        job.systemFailure = true;
+        job.error = imported.error;
+      }
+    }
+    job.processed += 1;
+    notifyCsvJob(job);
+
+    if (job.processed >= job.total) {
+      finishCsvJob(job);
+      return;
+    }
+    job.timer = root.setTimeout(function () {
+      processNextCsvRecord(job);
+    }, 320);
+  }
+
+  function startCsvJob(records, fileName, hooks) {
+    csvJob = {
+      id: 'csv-import-' + Date.now() + '-' + (++csvJobSequence),
+      status: 'queued',
+      processed: 0,
+      total: records.length,
+      records: records.slice(),
+      fileName: fileName,
+      hooks: hooks,
+      result: emptyCsvJobResult(),
+      error: '',
+      systemFailure: false,
+      startedAt: Date.now(),
+      finishedAt: null,
+      timer: null,
+      dismissTimer: null,
+      dismissWhenClosed: false
+    };
+    notifyCsvJob(csvJob);
+    csvJob.timer = root.setTimeout(function () {
+      processNextCsvRecord(csvJob);
+    }, 180);
+    return csvJob;
+  }
+
+  function notifyShopifyJob(job) {
+    var snapshot = shopifyJobSnapshot(job);
+    var targets = [];
+    if (job && job.hooks) targets.push(job.hooks);
+    var currentHooks = currentPageHooks();
+    if (currentHooks && targets.indexOf(currentHooks) === -1) targets.push(currentHooks);
+    targets.forEach(function (hooks) {
+      if (hooks && typeof hooks.onShopifySyncProgress === 'function') {
+        try {
+          hooks.onShopifySyncProgress(snapshot);
+        } catch (error) {
+          // 页面状态提示失败不应中断后台同步任务。
+        }
+      }
+    });
+  }
+
+  function settleShopifyJobHook(job, method, args, allowVoid) {
+    if (!job || !job.hooks || typeof job.hooks[method] !== 'function') {
+      return Promise.resolve({
+        ok: false,
+        error: '当前页面未提供“' + method + '”操作，请刷新后重试。',
+        value: null
+      });
+    }
+    var task;
+    try {
+      task = job.hooks[method].apply(job.hooks, args || []);
+    } catch (error) {
+      return Promise.resolve({
+        ok: false,
+        error: error && error.message ? error.message : '操作执行失败，请重试。',
+        value: null
+      });
+    }
+    return settleHookResult(task, allowVoid);
+  }
+
+  function emptyShopifyJobResult() {
+    return {
+      ok: true,
+      counts: { created: 0, merged: 0, skipped: 0, failed: 0 },
+      warnings: { consentDowngraded: 0 }
+    };
+  }
+
+  function mergeShopifyJobResult(target, source) {
+    var result = source || {};
+    var counts = result.counts || {};
+    var warnings = result.warnings || {};
+    ['created', 'merged', 'skipped', 'failed'].forEach(function (key) {
+      target.counts[key] += Number(counts[key]) || 0;
+    });
+    target.warnings.consentDowngraded += Number(warnings.consentDowngraded) || 0;
+    return target;
+  }
+
+  function finishShopifyJob(job) {
+    if (!job || shopifyJob !== job) return;
+    var counts = job.result.counts;
+    job.status = counts.failed >= job.total && job.total > 0 ? 'failed' : 'completed';
+    job.finishedAt = Date.now();
+    if (job.status === 'failed' && !job.error) {
+      job.error = '所选用户均未同步成功，请检查连接后重试。';
+    }
+    settleShopifyJobHook(job, 'onDialogComplete', [job.result], true).then(function () {
+      if (shopifyJob !== job) return;
+      notifyShopifyJob(job);
+      if (typeof root.showToast === 'function') {
+        root.showToast(
+          job.status === 'completed' ? 'success' : 'error',
+          job.status === 'completed' ? 'Shopify 用户同步完成' : 'Shopify 用户同步失败'
+        );
+      }
+      if (active && active.type === 'shopify-progress') {
+        renderShopifyProgress();
+      }
+      scheduleShopifyJobDismiss(job);
+    });
+  }
+
+  function clearShopifyJob(job) {
+    if (!job || shopifyJob !== job) return;
+    if (job.timer) root.clearTimeout(job.timer);
+    if (job.dismissTimer) root.clearTimeout(job.dismissTimer);
+    shopifyJob = null;
+    notifyShopifyJob(null);
+  }
+
+  function scheduleShopifyJobDismiss(job) {
+    if (!job || shopifyJob !== job || job.status !== 'completed') return;
+    if (job.dismissTimer) root.clearTimeout(job.dismissTimer);
+    job.dismissTimer = root.setTimeout(function () {
+      if (shopifyJob !== job) return;
+      if (active && active.type === 'shopify-progress') {
+        job.dismissWhenClosed = true;
+        return;
+      }
+      clearShopifyJob(job);
+    }, 6000);
+  }
+
+  async function processNextShopifyRecord(job) {
+    if (!job || shopifyJob !== job || ['queued', 'running'].indexOf(job.status) === -1) return;
+    job.status = 'running';
+    notifyShopifyJob(job);
+    if (job.processed >= job.total) {
+      finishShopifyJob(job);
+      return;
+    }
+
+    var record = job.records[job.processed];
+    var imported = await settleShopifyJobHook(job, 'importUsers', [[record], 'shopify_api']);
+    if (shopifyJob !== job) return;
+    if (imported.ok) {
+      mergeShopifyJobResult(job.result, imported.value);
+    } else {
+      job.result.counts.failed += 1;
+      job.error = imported.error;
+    }
+    job.processed += 1;
+    notifyShopifyJob(job);
+
+    if (job.processed >= job.total) {
+      finishShopifyJob(job);
+      return;
+    }
+    job.timer = root.setTimeout(function () {
+      processNextShopifyRecord(job);
+    }, 280);
+  }
+
+  function startShopifyJob(records, store, hooks) {
+    shopifyJob = {
+      id: 'shopify-sync-' + Date.now() + '-' + (++shopifyJobSequence),
+      status: 'queued',
+      processed: 0,
+      total: records.length,
+      records: records.slice(),
+      store: Object.assign({}, store),
+      hooks: hooks,
+      result: emptyShopifyJobResult(),
+      error: '',
+      startedAt: Date.now(),
+      finishedAt: null,
+      timer: null,
+      dismissTimer: null,
+      dismissWhenClosed: false
+    };
+    notifyShopifyJob(shopifyJob);
+    shopifyJob.timer = root.setTimeout(function () {
+      processNextShopifyRecord(shopifyJob);
+    }, 180);
+    return shopifyJob;
+  }
+
+  function exportJobSnapshot(job) {
+    if (!job) {
+      return { status: 'idle', processed: 0, total: 0, scopeLabel: '', error: '' };
+    }
+    return {
+      id: job.id,
+      status: job.status,
+      processed: job.processed,
+      total: job.total,
+      scopeLabel: job.scopeLabel,
+      fileName: job.file ? job.file.fileName : '',
+      error: job.error || ''
+    };
+  }
+
+  function notifyExportJob(job) {
+    var snapshot = exportJobSnapshot(job);
+    var targets = [];
+    if (job && job.hooks) targets.push(job.hooks);
+    var currentHooks = currentPageHooks();
+    if (currentHooks && targets.indexOf(currentHooks) === -1) targets.push(currentHooks);
+    targets.forEach(function (hooks) {
+      if (hooks && typeof hooks.onExportProgress === 'function') {
+        try {
+          hooks.onExportProgress(snapshot);
+        } catch (error) {
+          // 页面状态提示失败不应中断后台导出任务。
+        }
+      }
+    });
+  }
+
+  function settleExportJobHook(job, method, args, allowVoid) {
+    if (!job || !job.hooks || typeof job.hooks[method] !== 'function') {
+      return Promise.resolve({
+        ok: false,
+        error: '当前页面未提供“' + method + '”操作，请刷新后重试。',
+        value: null
+      });
+    }
+    var task;
+    try {
+      task = job.hooks[method].apply(job.hooks, args || []);
+    } catch (error) {
+      return Promise.resolve({
+        ok: false,
+        error: error && error.message ? error.message : '导出文件生成失败，请重试。',
+        value: null
+      });
+    }
+    return settleHookResult(task, allowVoid);
+  }
+
+  function finishExportJob(job) {
+    if (!job || exportJob !== job) return;
+    job.processed = job.total;
+    notifyExportJob(job);
+    settleExportJobHook(job, 'prepareExportUsers', [job.scope, job.fields]).then(function (prepared) {
+      if (exportJob !== job) return;
+      if (!prepared.ok) {
+        job.status = 'failed';
+        job.error = prepared.error;
+      } else {
+        job.status = 'ready';
+        job.file = prepared.value;
+        job.error = '';
+      }
+      notifyExportJob(job);
+      if (typeof root.showToast === 'function') {
+        root.showToast(
+          job.status === 'ready' ? 'success' : 'error',
+          job.status === 'ready' ? '导出文件已生成，可以下载' : '导出文件生成失败'
+        );
+      }
+      if (active && active.type === 'export-progress') renderExportProgress();
+    });
+  }
+
+  function processExportJob(job) {
+    if (!job || exportJob !== job || ['queued', 'running'].indexOf(job.status) === -1) return;
+    job.status = 'running';
+    job.tick += 1;
+    job.processed = Math.min(job.total, Math.round(job.total * Math.min(job.tick, 10) / 10));
+    notifyExportJob(job);
+    if (job.tick >= 10) {
+      finishExportJob(job);
+      return;
+    }
+    job.timer = root.setTimeout(function () {
+      processExportJob(job);
+    }, 520);
+  }
+
+  function startExportJob(settings, hooks) {
+    exportJob = {
+      id: 'user-export-' + Date.now() + '-' + (++exportJobSequence),
+      status: 'queued',
+      processed: 0,
+      total: Math.max(0, Number(settings.count) || 0),
+      scope: settings.scope,
+      scopeLabel: settings.scopeLabel,
+      fields: settings.fields.slice(),
+      hooks: hooks,
+      tick: 0,
+      timer: null,
+      file: null,
+      error: ''
+    };
+    notifyExportJob(exportJob);
+    exportJob.timer = root.setTimeout(function () {
+      processExportJob(exportJob);
+    }, 300);
+    return exportJob;
   }
 
   function resultCounts(result) {
@@ -1003,7 +1456,12 @@
   }
 
   function csvTemplateText() {
-    return '\uFEFF邮箱（必填）,名字,姓氏,手机号,标签,订阅状态,短信营销授权,WhatsApp 营销授权\r\n';
+    return [
+      '\uFEFF邮箱（必填）,名字,姓氏,手机号,标签,订阅状态,短信营销授权,WhatsApp 营销授权',
+      'mia.chen@example.com,Mia,Chen,13800001001,VIP|高价值客户,已订阅,是,否',
+      'leo.wang@example.com,Leo,Wang,13800001002,批发客户,未订阅,否,是',
+      "ava.oconnor@example.com,Ava,O'Connor,,新品关注,待确认,,"
+    ].join('\r\n') + '\r\n';
   }
 
   function downloadCsvTemplate() {
@@ -1047,6 +1505,19 @@
     state.csv.headers = parsed[0].map(function (header) { return String(header || '').trim(); });
     state.csv.rows = parsed.slice(1);
     state.csv.mapping = autoCsvMapping(state.csv.headers);
+    if (state.csv.mapping.email === 'skip') {
+      state.csv.fileName = '';
+      state.csv.rows = [];
+      state.csv.headers = [];
+      state.csv.mapping = {};
+      state.csv.records = [];
+      state.csv.validation = null;
+      state.csv.step = 1;
+      state.csv.busy = false;
+      state.csv.error = '未识别到邮箱列，请使用系统模板整理数据后重新上传。';
+      renderCsv();
+      return false;
+    }
     state.csv.step = 2;
     state.csv.error = '';
     state.csv.busy = false;
@@ -1085,19 +1556,6 @@
     state.csv.validation = validateCsvRecords(state.csv.records);
   }
 
-  function csvMappingMarkup() {
-    var headerOptions = state.csv.headers.map(function (header, index) {
-      return { value: String(index), label: header || ('第 ' + (index + 1) + ' 列') };
-    });
-    return '<div class="um-dialog-form-grid">' + CSV_FIELDS.map(function (field) {
-      var options = field.required ? headerOptions : [{ value: 'skip', label: '不导入此字段' }].concat(headerOptions);
-      return '<div class="um-dialog-field"><span class="um-dialog-field-label">' +
-        escapeHtml(field.label) + (field.required ? ' *' : '') + '</span>' +
-        comboMarkup('csv-' + field.key, state.csv.mapping[field.key], options, field.label + '字段映射') +
-        '</div>';
-    }).join('') + '</div>';
-  }
-
   function csvPreviewMarkup() {
     var preview = state.csv.records.slice(0, 5);
     return '<div class="um-dialog-table-wrap"><table class="um-dialog-table"><thead><tr>' +
@@ -1116,10 +1574,11 @@
 
   function renderCsvStep1() {
     return {
-      title: 'CSV 导入用户',
-      subtitle: '上传 Shopify 客户 CSV 或本系统模板',
-      body: stepsMarkup(['上传文件', '校验与映射', '确认结果'], 1) +
-        '<div class="um-dialog-guidance"><strong>身份边界：</strong>CSV 只能导入客户资料、标签、订阅状态和营销授权，不能迁移 Shopify 密码或快捷登录绑定。导入用户将以待激活状态保存。</div>' +
+      title: '从 CSV 导入',
+      subtitle: '上传 Shopify 客户 CSV 或系统模板',
+      body: shopifyStepsMarkup(['上传文件', '数据预览'], 1) +
+        '<div class="um-csv-step-content um-csv-step-upload">' +
+        '<p class="um-csv-step-note">系统会自动识别模板字段；CSV 只创建或合并待激活档案，不迁移密码、社交绑定或登录会话。</p>' +
         '<div class="um-upload-zone" data-csv-drop-zone>' +
         '<div><span class="um-upload-icon" aria-hidden="true">⇧</span><strong>拖放 CSV 文件到这里</strong>' +
         '<p class="um-dialog-muted">支持 UTF-8 CSV、Shopify Customer CSV 和系统模板</p>' +
@@ -1130,82 +1589,44 @@
         (state.csv.busy ? ' disabled' : '') + '>使用示例文件体验</button></div>' +
         '<input class="um-screenreader-only" id="umCsvFileInput" type="file" accept=".csv,text/csv"></div></div>' +
         (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '') +
-        '<p class="um-dialog-section-copy">邮箱为必填字段；模板同时支持名字、姓氏、手机号、标签、订阅状态、短信营销授权和 WhatsApp 营销授权。多个标签使用“|”分隔；订阅状态支持已订阅、未订阅、待确认、已退订和无效邮箱，营销授权填写“是”或“否”；邮件渠道授权由订阅状态表达。</p>',
+        '<p class="um-csv-template-note">邮箱为必填字段；模板内含 3 行虚构示例，请删除示例后填写真实数据。多个标签使用“|”分隔，营销授权填写“是”或“否”。</p></div>',
       footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>'
     };
   }
 
   function renderCsvStep2() {
-    var validation = state.csv.validation;
     return {
-      title: '校验并映射字段',
+      title: '从 CSV 导入',
       subtitle: state.csv.fileName,
-      body: stepsMarkup(['上传文件', '校验与映射', '确认结果'], 2) +
+      body: shopifyStepsMarkup(['上传文件', '数据预览'], 2) +
+        '<div class="um-csv-step-content um-csv-step-preview">' +
         '<div class="um-file-summary"><strong>' + escapeHtml(state.csv.fileName) +
-        '</strong><p class="um-dialog-muted">已读取 ' + state.csv.rows.length + ' 行数据；下方仅预览前 5 行。</p></div>' +
-        '<div class="um-summary-grid">' +
-        '<div class="um-summary-card"><span>有效邮箱</span><strong>' + validation.valid + '</strong></div>' +
-        '<div class="um-summary-card"><span>缺失邮箱</span><strong>' + validation.missingEmail + '</strong></div>' +
-        '<div class="um-summary-card"><span>无效邮箱</span><strong>' + validation.invalidEmail + '</strong></div>' +
-        '<div class="um-summary-card"><span>文件内重复</span><strong>' + validation.duplicates + '</strong></div>' +
-        '</div>' +
-        '<div class="um-dialog-guidance">邮箱是唯一必填字段。订阅状态与短信、WhatsApp 营销授权留空时，不覆盖现有用户的对应状态；系统自动记录 CSV 导入来源和操作时间。</div>' +
-        '<h3>字段映射</h3><p class="um-dialog-section-copy">每个下拉都可以搜索 CSV 列名。</p>' +
-        csvMappingMarkup() + '<h3>数据预览</h3>' + csvPreviewMarkup(),
+        '</strong><p class="um-dialog-muted">共 ' + state.csv.rows.length + ' 行数据，系统已自动识别字段；下方预览前 5 行。</p></div>' +
+        '<h3>数据预览</h3>' + csvPreviewMarkup() +
+        '<p class="um-csv-template-note">逐行校验、重复合并和失败统计会在后台导入完成后统一展示。</p>' +
+        (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '') +
+        '</div>',
       footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-back">上一步</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-review"' +
-        (validation.valid ? '' : ' disabled') + '>继续确认</button>'
-    };
-  }
-
-  function renderCsvStep3() {
-    var result = state.csv.result;
-    return {
-      title: result ? 'CSV 导入完成' : '确认 CSV 导入',
-      subtitle: state.csv.fileName,
-      body: stepsMarkup(['上传文件', '校验与映射', '确认结果'], 3) +
-        (result
-          ? resultMarkup(result) +
-            '<div class="um-dialog-guidance">导入只创建或合并待激活客户档案；现有本地登录身份、社交绑定和会话均未改变。</div>'
-          : '<div class="um-rule-card"><strong>合并规则</strong><ul class="um-risk-list">' +
-            '<li>按标准化邮箱匹配，相同邮箱合并到一条用户档案。</li>' +
-            '<li>新用户以待激活状态保存，不创建或迁移密码。</li>' +
-            '<li>订阅状态和营销授权按模板值导入，来源与操作时间由系统自动记录。</li>' +
-            '<li>客户编号、账号状态、登录方式、用户来源和交易数据均不允许通过 CSV 覆盖。</li>' +
-            '<li>无效邮箱会计入失败，缺失邮箱会计入跳过。</li></ul></div>' +
-            '<div class="um-summary-grid"><div class="um-summary-card"><span>准备导入</span><strong>' +
-            state.csv.records.length + '</strong></div><div class="um-summary-card"><span>有效邮箱</span><strong>' +
-            state.csv.validation.valid + '</strong></div><div class="um-summary-card"><span>预计跳过</span><strong>' +
-            state.csv.validation.missingEmail +
-            '</strong></div><div class="um-summary-card"><span>预计失败</span><strong>' +
-            state.csv.validation.invalidEmail + '</strong></div></div>' +
-            (state.csv.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(state.csv.error) + '</div>' : '')),
-      footer: result
-        ? '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
-        : '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-edit">返回映射</button>' +
-          '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-          '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-import"' +
-          (state.csv.busy ? ' disabled' : '') + '>' + (state.csv.busy ? '正在导入…' : '开始导入') + '</button>'
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="csv-import"' +
+        (state.csv.records.length && !state.csv.busy ? '' : ' disabled') + '>' +
+        (state.csv.busy ? '正在创建导入任务…' : '开始导入') + '</button>'
     };
   }
 
   function renderCsv() {
-    var config = state.csv.step === 1
-      ? renderCsvStep1()
-      : (state.csv.step === 2 ? renderCsvStep2() : renderCsvStep3());
-    renderShell('csv', config);
+    renderShell('csv', state.csv.step === 1 ? renderCsvStep1() : renderCsvStep2());
   }
 
   function shopifyDefaultState() {
     return {
       step: 1,
-      connectionView: 'list',
-      domain: '',
-      domainError: '',
-      connectionNotice: '',
-      newlyConnectedStore: null,
-      selectedStoreId: '',
+      authView: 'consent',
+      accountEmail: SHOPIFY_AUTH_CONTEXT.accountEmail,
+      loginEmail: '',
+      authError: '',
+      authorized: false,
+      store: Object.assign({}, SHOPIFY_AUTH_CONTEXT.store),
       selected: new Set(),
       search: '',
       kind: 'all',
@@ -1216,18 +1637,10 @@
     };
   }
 
-  function shopifyStores() {
-    var newlyConnectedStore = state.shopify && state.shopify.newlyConnectedStore;
-    if (!newlyConnectedStore) return CONNECTED_STORES;
-    return [newlyConnectedStore].concat(CONNECTED_STORES.filter(function (store) {
-      return store.domain !== newlyConnectedStore.domain;
-    }));
-  }
-
-  function selectedStore() {
-    return shopifyStores().find(function (store) {
-      return store.id === state.shopify.selectedStoreId;
-    }) || null;
+  function selectedShopifyStore() {
+    return state.shopify && state.shopify.store
+      ? state.shopify.store
+      : SHOPIFY_AUTH_CONTEXT.store;
   }
 
   function currentShopifyRecords() {
@@ -1236,21 +1649,6 @@
       kind: state.shopify.kind,
       status: state.shopify.status
     });
-  }
-
-  function storeListMarkup() {
-    return '<div class="um-store-list">' + shopifyStores().map(function (store) {
-      var selected = store.id === state.shopify.selectedStoreId;
-      var connected = store.connectionState === 'connected';
-      return '<button class="um-store-row' + (selected ? ' is-selected' : '') +
-        '" type="button" data-dialog-action="shopify-store" data-store-id="' + escapeHtml(store.id) +
-        '" aria-pressed="' + selected + '"' + (connected ? '' : ' disabled') +
-        '><span class="um-status-dot' + (connected ? '' : ' is-warning') +
-        '" aria-hidden="true"></span><span class="um-store-row-copy"><strong>' +
-        escapeHtml(store.name) + '</strong><span>' + escapeHtml(store.domain) +
-        '</span></span><span class="um-dialog-muted">' + escapeHtml(store.state) +
-        '<br>上次同步 ' + escapeHtml(store.lastSyncAt) + '</span></button>';
-    }).join('') + '</div>';
   }
 
   function shopifyRecordListMarkup() {
@@ -1262,46 +1660,63 @@
         checked + '" data-dialog-action="shopify-toggle-record" data-shopify-record="' +
         escapeHtml(record.id) + '"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
         (checked ? '✓' : '') + '</span><span class="um-shopify-record-copy"><strong>' +
-        escapeHtml(record.firstName + ' ' + record.lastName) + '</strong><span>' +
-        escapeHtml(record.email) + (record.phone ? ' · ' + escapeHtml(record.phone) : '') +
-        '</span></span><span class="um-dialog-muted">' +
+        escapeHtml(record.email) +
+        '</strong></span><span class="um-dialog-muted um-shopify-record-state">' +
         escapeHtml(record.profileKind === 'subscriber' ? '邮件订阅者' : '客户档案') + '<br>' +
         escapeHtml(MARKETING_STATUS_LABELS[record.marketingStatus] || '未知状态') + '</span></button>';
     }).join('') + '</div>';
   }
 
-  function renderShopifyConnectForm() {
+  function renderShopifyLogin() {
     return {
-      title: '连接新的 Shopify 店铺',
-      subtitle: '一个域名对应一个店铺，且必须单独完成授权',
-      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
-        '<div class="um-dialog-guidance"><strong>生产环境流程：</strong>输入域名仅用于定位店铺；点击后将跳转 Shopify 安装/授权页，商家确认权限并返回本系统、成功取得该店访问令牌后，才会建立连接。</div>' +
-        '<div class="um-dialog-warning">当前页面是交互原型，因此下一步只模拟 OAuth 成功。每个 <code>*.myshopify.com</code> 域名只代表一家店，不能据此发现或读取同一商家的其他店铺。</div>' +
-        '<div class="um-dialog-field"><label for="umShopifyDomain">Shopify 店铺域名</label>' +
-        '<input class="um-dialog-input" id="umShopifyDomain" type="text" value="' +
-        escapeHtml(state.shopify.domain) + '" placeholder="your-store.myshopify.com" autocomplete="off" autofocus>' +
-        (state.shopify.domainError ? '<div class="um-dialog-error" role="alert">' +
-          escapeHtml(state.shopify.domainError) + '</div>' : '') + '</div>',
-      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-connect">返回店铺列表</button>' +
-        '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-connect">模拟 Shopify 授权</button>'
+      title: '从 Shopify 导入',
+      subtitle: '使用 Shopify 账号继续授权',
+      shopifyStep: 1,
+      shopifyView: 'auth',
+      body: shopifyStepsMarkup(['Shopify 授权', '选择用户'], 1) +
+        '<div class="um-shopify-step-content um-shopify-step-auth"><div class="um-shopify-auth-card"><div class="um-shopify-auth-brand">' +
+        '<span class="um-shopify-auth-logo" aria-hidden="true">S</span><div><strong>登录 Shopify</strong>' +
+        '<span>继续连接 ' + escapeHtml(selectedShopifyStore().name) + '</span></div></div>' +
+        '<div class="um-dialog-field"><label for="umShopifyAccount">邮箱</label>' +
+        '<input class="um-dialog-input" id="umShopifyAccount" type="email" value="' +
+        escapeHtml(state.shopify.loginEmail) + '" ' +
+        'placeholder="Shopify 账号邮箱" autocomplete="username" autofocus></div>' +
+        '<div class="um-dialog-field"><label for="umShopifyPassword">密码</label>' +
+        '<input class="um-dialog-input" id="umShopifyPassword" type="password" value="" ' +
+        'placeholder="Shopify 账号密码" autocomplete="current-password"></div>' +
+        (state.shopify.authError ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.shopify.authError) + '</div>' : '') +
+        '<p class="um-shopify-security-note">实际接入时会跳转到 Shopify 官方登录页，账号和密码不会提交或保存到本系统。</p></div></div>',
+      footer: '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-login">登录并继续</button>'
     };
   }
 
   function renderShopifyStep1() {
-    if (state.shopify.connectionView === 'connect') return renderShopifyConnectForm();
+    if (state.shopify.authView === 'login') return renderShopifyLogin();
+    var store = selectedShopifyStore();
     return {
-      title: '选择已连接店铺',
-      subtitle: '每个条目都已针对单个店铺分别完成授权',
-      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 1) +
-        '<div class="um-dialog-guidance">以下店铺来自本系统保存的连接记录，不是根据某个域名从 Shopify 自动查出的店铺。要添加其他店铺，请逐店完成授权。</div>' +
-        (state.shopify.connectionNotice ? '<div class="um-dialog-guidance">' +
-          escapeHtml(state.shopify.connectionNotice) + '</div>' : '') +
-        storeListMarkup(),
-      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-connect-new">连接新店铺</button>' +
+      title: '从 Shopify 导入',
+      subtitle: '已登录 ' + state.shopify.accountEmail,
+      shopifyStep: 1,
+      shopifyView: 'auth',
+      body: shopifyStepsMarkup(['Shopify 授权', '选择用户'], 1) +
+        '<div class="um-shopify-step-content um-shopify-step-auth"><div class="um-shopify-auth-card"><div class="um-shopify-auth-brand">' +
+        '<span class="um-shopify-auth-logo" aria-hidden="true">S</span><div><strong>QVR商城后台</strong>' +
+        '<span>请求连接你的 Shopify 商店</span></div></div>' +
+        '<div class="um-shopify-auth-account"><span class="um-status-dot" aria-hidden="true"></span>' +
+        '<div><strong>' + escapeHtml(state.shopify.accountEmail) + '</strong><span>Shopify 已登录</span></div></div>' +
+        '<div class="um-shopify-store-summary"><span>授权商店</span><strong>' +
+        escapeHtml(store.name) + '</strong><small>' + escapeHtml(store.domain) + '</small></div>' +
+        '<div class="um-shopify-permissions"><strong>授权后，本系统可以：</strong><ul>' +
+        '<li>读取客户基本资料与联系方式</li><li>读取邮件、短信及 WhatsApp 营销授权状态</li>' +
+        '<li>同步所选用户并按邮箱合并已有档案</li></ul></div>' +
+        '<p class="um-shopify-security-note">不会读取客户密码、Shopify 登录会话或支付信息。一个授权会话只连接当前商店。</p>' +
+        (state.shopify.authError ? '<div class="um-dialog-error" role="alert">' +
+          escapeHtml(state.shopify.authError) + '</div>' : '') + '</div></div>',
+      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-other-account">使用其他账号</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
-        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-records"' +
-        (state.shopify.selectedStoreId ? '' : ' disabled') + '>选择客户档案</button>'
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-authorize">确认授权并继续</button>'
     };
   }
 
@@ -1311,20 +1726,23 @@
       return state.shopify.selected.has(record.id);
     });
     return {
-      title: '选择 Shopify 客户档案',
-      subtitle: selectedStore() ? selectedStore().name : '',
-      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 2) +
-        '<div class="um-dialog-guidance">CSV/API 导入只创建或合并待激活档案，不迁移密码、社交绑定或登录会话。</div>' +
-        '<div class="um-selection-toolbar"><div class="um-dialog-field"><label for="umShopifySearch">搜索用户</label>' +
+      title: '从 Shopify 导入',
+      subtitle: selectedShopifyStore().name,
+      shopifyStep: 2,
+      shopifyView: 'selection',
+      body: shopifyStepsMarkup(['Shopify 授权', '选择用户'], 2) +
+        '<div class="um-shopify-step-content um-shopify-step-selection">' +
+        '<p class="um-shopify-selection-note">API 导入只创建或合并待激活档案，不迁移密码、社交绑定或登录会话。</p>' +
+        '<div class="um-selection-toolbar um-shopify-selection-toolbar"><div class="um-dialog-field"><label class="um-dialog-visually-hidden" for="umShopifySearch">搜索用户</label>' +
         '<input class="um-dialog-input" id="umShopifySearch" type="search" value="' +
-        escapeHtml(state.shopify.search) + '" placeholder="姓名、邮箱或手机号"></div>' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">档案范围</span>' +
+        escapeHtml(state.shopify.search) + '" placeholder="搜索姓名、邮箱或手机号"></div>' +
+        '<div class="um-dialog-field">' +
         comboMarkup('shopify-kind', state.shopify.kind, [
           { value: 'all', label: '全部档案' },
           { value: 'customer', label: '客户档案' },
           { value: 'subscriber', label: '邮件订阅者' }
         ], '档案范围') + '</div>' +
-        '<div class="um-dialog-field"><span class="um-dialog-field-label">营销状态</span>' +
+        '<div class="um-dialog-field">' +
         comboMarkup('shopify-status', state.shopify.status, [
           { value: 'all', label: '营销状态' },
           { value: 'subscribed', label: '已订阅' },
@@ -1335,36 +1753,114 @@
         ], '营销状态') + '</div></div>' +
         '<div class="um-selection-meta"><button class="um-dialog-check-action" type="button" role="checkbox" aria-checked="' +
         Boolean(allCurrentSelected) + '" data-dialog-action="shopify-select-current"><span class="um-dialog-checkbox-box" aria-hidden="true">' +
-        (allCurrentSelected ? '✓' : '') + '</span> 全选当前筛选结果（' + records.length + '）</button>' +
-        '<span>已选 ' + state.shopify.selected.size +
-        ' 项 <button type="button" data-dialog-action="shopify-clear">清空全部</button></span></div>' +
+        (allCurrentSelected ? '✓' : '') + '</span>全选（' + records.length + '）</button>' +
+        '<span class="um-selection-selected">已选 ' + state.shopify.selected.size + ' 项</span>' +
+        '<button class="um-selection-clear" type="button" data-dialog-action="shopify-clear"' +
+        (state.shopify.selected.size ? '' : ' disabled') + '>清空</button></div>' +
         shopifyRecordListMarkup() +
         (state.shopify.error ? '<div class="um-dialog-error" role="alert">' +
-          escapeHtml(state.shopify.error) + '</div>' : ''),
-      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-stores">上一步</button>' +
+          escapeHtml(state.shopify.error) + '</div>' : '') + '</div>',
+      footer: '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-back-auth">上一步</button>' +
         '<button class="um-dialog-button" type="button" data-dialog-action="close">取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="shopify-import"' +
         (state.shopify.selected.size && !state.shopify.busy ? '' : ' disabled') + '>' +
-        (state.shopify.busy ? '正在导入…' : '导入所选用户') + '</button>'
+        (state.shopify.busy ? '正在创建同步任务…' : '同步所选用户') + '</button>'
     };
   }
 
-  function renderShopifyStep3() {
-    return {
-      title: 'Shopify 导入完成',
-      subtitle: selectedStore() ? selectedStore().name : '',
-      body: shopifyStepsMarkup(['选择店铺', '选择用户', '导入结果'], 3) +
-        resultMarkup(state.shopify.result) +
-        '<div class="um-dialog-guidance">所有新建档案均为待激活状态；相同邮箱已合并，未迁移 Shopify 密码、快捷登录绑定或会话。</div>',
-      footer: '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">完成</button>'
-    };
+  function progressStatusIconMarkup(statusClass) {
+    if (statusClass === 'is-completed') {
+      return '<span class="um-shopify-progress-icon" aria-hidden="true">' +
+        '<img src="common/vendor/fontawesome-free/solid/check.svg" alt=""></span>';
+    }
+    if (statusClass === 'is-failed') {
+      return '<span class="um-shopify-progress-icon" aria-hidden="true">' +
+        '<img src="common/vendor/fontawesome-free/solid/exclamation.svg" alt=""></span>';
+    }
+    return '<span class="um-shopify-progress-icon" aria-hidden="true"></span>';
+  }
+
+  function renderCsvProgress() {
+    var task = csvJobSnapshot(csvJob);
+    var running = task.status === 'queued' || task.status === 'running';
+    var completed = task.status === 'completed';
+    var statusClass = completed ? 'is-completed' : (task.status === 'failed' ? 'is-failed' : 'is-running');
+    var statusTitle = completed ? '导入完成' : (task.status === 'failed' ? '导入失败' : '正在后台导入');
+    var statusCopy = completed
+      ? 'CSV 用户已处理完成，用户列表已经更新。'
+      : (task.status === 'failed'
+        ? '导入任务未能完成，请查看失败原因后重新发起。'
+        : '你可以关闭此窗口继续其他操作，任务会在后台持续处理。');
+    var percent = task.total ? Math.min(100, Math.round(task.processed / task.total * 100)) : 0;
+    renderShell('csv-progress', {
+      title: 'CSV 导入进度',
+      subtitle: task.fileName || 'CSV 文件',
+      body: '<div class="um-shopify-step-content um-shopify-step-progress">' +
+        '<div class="um-shopify-progress-status ' + statusClass + '">' +
+        progressStatusIconMarkup(statusClass) + '<div><strong>' +
+        statusTitle + '</strong><span>' + statusCopy + '</span></div></div>' +
+        '<div class="um-shopify-progress-count"><strong>' + task.processed + ' / ' + task.total +
+        '</strong><span>位用户</span></div>' +
+        '<div class="um-shopify-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="' +
+        task.total + '" aria-valuenow="' + task.processed + '" aria-label="CSV 用户导入进度">' +
+        '<span style="width:' + percent + '%"></span></div>' +
+        (running ? '<p class="um-shopify-progress-note">关闭对话框不会中断导入；可从“导入”菜单再次查看进度。</p>' : '') +
+        (!running && task.result ? resultMarkup(task.result) : '') +
+        (task.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(task.error) + '</div>' : '') +
+        '</div>',
+      footer: (running ? '' :
+        '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="csv-start-new">再次导入</button>') +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">' +
+        (running ? '关闭' : '完成') + '</button>'
+    });
+  }
+
+  function shopifyProgressMarkup() {
+    var sync = shopifyJobSnapshot(shopifyJob);
+    var running = sync.status === 'queued' || sync.status === 'running';
+    var completed = sync.status === 'completed';
+    var statusClass = completed ? 'is-completed' : (sync.status === 'failed' ? 'is-failed' : 'is-running');
+    var title = completed ? '同步完成' : (sync.status === 'failed' ? '同步失败' : '正在后台同步');
+    var description = completed
+      ? '所选 Shopify 用户已处理完成，用户列表已更新。'
+      : (sync.status === 'failed'
+        ? '同步任务未能完成，请查看失败原因后重新发起。'
+        : '你可以关闭此窗口继续其他操作，任务会在后台持续处理。');
+    var percent = sync.total ? Math.min(100, Math.round(sync.processed / sync.total * 100)) : 0;
+    return '<div class="um-shopify-step-content um-shopify-step-progress">' +
+      '<div class="um-shopify-progress-status ' + statusClass + '">' +
+      progressStatusIconMarkup(statusClass) + '<div><strong>' +
+      title + '</strong><span>' + description + '</span></div></div>' +
+      '<div class="um-shopify-progress-count"><strong>' + sync.processed + ' / ' + sync.total +
+      '</strong><span>位用户</span></div>' +
+      '<div class="um-shopify-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="' +
+      sync.total + '" aria-valuenow="' + sync.processed + '" aria-label="Shopify 用户同步进度">' +
+      '<span style="width:' + percent + '%"></span></div>' +
+      (running ? '<p class="um-shopify-progress-note">同步任务已在后台运行，关闭对话框不会中断任务；可从“导入”菜单再次查看进度。</p>' : '') +
+      (!running && sync.result ? resultMarkup(sync.result) : '') +
+      (sync.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(sync.error) + '</div>' : '') +
+      '</div>';
+  }
+
+  function renderShopifyProgress() {
+    var sync = shopifyJobSnapshot(shopifyJob);
+    var running = sync.status === 'queued' || sync.status === 'running';
+    var storeName = shopifyJob && shopifyJob.store ? shopifyJob.store.name : SHOPIFY_AUTH_CONTEXT.store.name;
+    renderShell('shopify-progress', {
+      title: 'Shopify 同步进度',
+      subtitle: storeName,
+      body: shopifyProgressMarkup(),
+      footer: (running ? '' :
+        '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="shopify-start-new">再次导入</button>') +
+        '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="close">' +
+        (running ? '关闭' : '完成') + '</button>'
+    });
   }
 
   function renderShopify() {
     var renderers = [
       renderShopifyStep1,
-      renderShopifyStep2,
-      renderShopifyStep3
+      renderShopifyStep2
     ];
     renderShell('shopify', renderers[state.shopify.step - 1]());
   }
@@ -1618,7 +2114,44 @@
         (state.exportUsers.busy ? ' disabled' : '') + '>取消</button>' +
         '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="export-confirm"' +
         (selectedKeys.length && !state.exportUsers.busy ? '' : ' disabled') + '>' +
-        (state.exportUsers.busy ? '正在导出…' : '导出 CSV') + '</button>'
+        (state.exportUsers.busy ? '正在创建任务…' : '生成导出文件') + '</button>'
+    });
+  }
+
+  function renderExportProgress() {
+    var task = exportJobSnapshot(exportJob);
+    var running = task.status === 'queued' || task.status === 'running';
+    var ready = task.status === 'ready';
+    var statusClass = ready ? 'is-completed' : (task.status === 'failed' ? 'is-failed' : 'is-running');
+    var statusTitle = ready ? '文件已生成' : (task.status === 'failed' ? '生成失败' : '正在生成导出文件');
+    var statusCopy = ready
+      ? 'CSV 文件已经准备完成，请点击下载。'
+      : (task.status === 'failed'
+        ? '导出任务未能完成，请关闭后重新生成。'
+        : '任务正在后台处理，你可以关闭窗口继续其他操作。');
+    var percent = task.total ? Math.min(100, Math.round(task.processed / task.total * 100)) : 0;
+    renderShell('export-progress', {
+      title: '导出进度',
+      subtitle: (task.scopeLabel || '用户数据') + ' · ' + task.total + ' 位用户',
+      body: '<div class="um-shopify-step-content um-shopify-step-progress">' +
+        '<div class="um-shopify-progress-status ' + statusClass + '">' +
+        progressStatusIconMarkup(statusClass) + '<div><strong>' +
+        statusTitle + '</strong><span>' + statusCopy + '</span></div></div>' +
+        '<div class="um-shopify-progress-count"><strong>' + task.processed + ' / ' + task.total +
+        '</strong><span>位用户</span></div>' +
+        '<div class="um-shopify-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="' +
+        task.total + '" aria-valuenow="' + task.processed + '" aria-label="用户数据导出进度">' +
+        '<span style="width:' + percent + '%"></span></div>' +
+        (running ? '<p class="um-shopify-progress-note">这是交互原型，为方便查看动画，本次固定模拟约 6 秒；正式环境由服务端按实际任务进度更新。</p>' : '') +
+        (task.error ? '<div class="um-dialog-error" role="alert">' + escapeHtml(task.error) + '</div>' : '') +
+        '</div>',
+      footer: (task.status === 'failed'
+        ? '<button class="um-dialog-button um-dialog-button-quiet" type="button" data-dialog-action="export-reset">重新导出</button>'
+        : '') +
+        '<button class="um-dialog-button" type="button" data-dialog-action="close">关闭</button>' +
+        (ready
+          ? '<button class="um-dialog-button um-dialog-button-primary" type="button" data-dialog-action="export-download">下载文件</button>'
+          : '')
     });
   }
 
@@ -1638,12 +2171,6 @@
   }
 
   function handleComboChange(name, value) {
-    if (name.indexOf('csv-') === 0) {
-      state.csv.mapping[name.slice(4)] = value;
-      refreshCsvRecords();
-      renderCsv();
-      return;
-    }
     if (name === 'shopify-kind') {
       state.shopify.kind = value;
       renderShopify();
@@ -1666,6 +2193,12 @@
     if (!actionTarget) return;
     var action = actionTarget.getAttribute('data-dialog-action');
     if (action === 'close') {
+      if (active.type === 'csv-progress' && csvJob && csvJob.status === 'completed') {
+        clearCsvJob(csvJob);
+      }
+      if (active.type === 'shopify-progress' && shopifyJob && shopifyJob.status === 'completed') {
+        clearShopifyJob(shopifyJob);
+      }
       closeActive(true);
       return;
     }
@@ -1706,104 +2239,59 @@
       renderCsv();
       return;
     }
-    if (action === 'csv-review') {
-      state.csv.step = 3;
-      renderCsv();
-      return;
-    }
-    if (action === 'csv-edit') {
-      state.csv.step = 2;
-      renderCsv();
-      return;
-    }
     if (action === 'csv-import') {
-      var csvOperationNonce = openNonce;
+      if (!state.csv.records.length || state.csv.busy) return;
       state.csv.busy = true;
       state.csv.error = '';
       renderCsv();
-      var importableRecords = state.csv.records.filter(function (record) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email || '');
-      });
-      var csvImport = await invokeHookAsync('importUsers', [importableRecords, 'shopify_csv']);
-      if (csvOperationNonce !== openNonce) return;
-      if (!csvImport.ok) {
-        operationFailed(state.csv, renderCsv, csvImport.error);
-        return;
-      }
-      var csvResult = mergeCsvImportResult(csvImport.value, state.csv.validation);
-      var csvCompletion = await completeHookAsync(csvResult);
-      if (csvOperationNonce !== openNonce) return;
-      if (!csvCompletion.ok) {
-        operationFailed(state.csv, renderCsv, csvCompletion.error);
-        return;
-      }
-      state.csv.busy = false;
-      state.csv.result = csvResult;
-      renderCsv();
+      startCsvJob(state.csv.records, state.csv.fileName, active && active.hooks);
+      closeActive(true);
       return;
     }
-    if (action === 'shopify-connect-new') {
-      state.shopify.connectionView = 'connect';
-      state.shopify.domainError = '';
+    if (action === 'csv-start-new') {
+      if (csvJob && ['queued', 'running'].indexOf(csvJob.status) !== -1) return;
+      clearCsvJob(csvJob);
+      state.csv = csvDefaultState();
+      closeActive(false);
+      root.UserDialogs.openCsvImport();
+      return;
+    }
+    if (action === 'shopify-other-account') {
+      state.shopify.authView = 'login';
+      state.shopify.authError = '';
+      state.shopify.authorized = false;
       renderShopify();
       return;
     }
-    if (action === 'shopify-connect') {
-      var domainInput = root.document.getElementById('umShopifyDomain');
-      var domain = String(domainInput && domainInput.value || '').trim().toLocaleLowerCase();
-      state.shopify.domain = domain;
-      if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(domain)) {
-        state.shopify.domainError = '请输入有效的 *.myshopify.com 店铺域名。';
+    if (action === 'shopify-login') {
+      var accountInput = root.document.getElementById('umShopifyAccount');
+      var passwordInput = root.document.getElementById('umShopifyPassword');
+      var accountEmail = String(accountInput && accountInput.value || '').trim().toLocaleLowerCase();
+      var password = String(passwordInput && passwordInput.value || '');
+      state.shopify.loginEmail = accountEmail;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail) || !password) {
+        state.shopify.authError = '请输入有效的 Shopify 账号邮箱和密码。';
         renderShopify();
         return;
       }
-      state.shopify.domainError = '';
-      var existingStore = CONNECTED_STORES.find(function (store) {
-        return store.domain === domain;
-      });
-      if (existingStore) {
-        state.shopify.selectedStoreId = existingStore.id;
-      } else {
-        state.shopify.newlyConnectedStore = {
-          id: 'store-newly-connected',
-          name: domain.split('.')[0] + '（新连接）',
-          domain: domain,
-          state: '已连接',
-          connectionState: 'connected',
-          lastSyncAt: '尚未同步'
-        };
-        state.shopify.selectedStoreId = state.shopify.newlyConnectedStore.id;
-      }
-      state.shopify.connectionNotice = '已模拟完成 ' + domain +
-        ' 的单店授权；生产环境须在 Shopify 授权回调成功后才可保存该连接。';
-      state.shopify.connectionView = 'list';
+      state.shopify.accountEmail = accountEmail;
+      state.shopify.authError = '';
+      state.shopify.authView = 'consent';
       renderShopify();
       return;
     }
-    if (action === 'shopify-back-connect') {
-      state.shopify.connectionView = 'list';
-      state.shopify.domainError = '';
-      renderShopify();
-      return;
-    }
-    if (action === 'shopify-store') {
-      var chosenStore = shopifyStores().find(function (store) {
-        return store.id === actionTarget.getAttribute('data-store-id');
-      });
-      if (!chosenStore || chosenStore.connectionState !== 'connected') return;
-      state.shopify.selectedStoreId = chosenStore.id;
+    if (action === 'shopify-authorize') {
+      state.shopify.authError = '';
+      state.shopify.authorized = true;
+      state.shopify.step = 2;
       state.shopify.selected = new Set();
       renderShopify();
       return;
     }
-    if (action === 'shopify-records') {
-      state.shopify.step = 2;
-      renderShopify();
-      return;
-    }
-    if (action === 'shopify-back-stores') {
+    if (action === 'shopify-back-auth') {
       state.shopify.step = 1;
-      state.shopify.connectionView = 'list';
+      state.shopify.authView = 'consent';
+      state.shopify.authorized = false;
       renderShopify();
       return;
     }
@@ -1832,9 +2320,23 @@
       renderShopify();
       return;
     }
+    if (action === 'shopify-start-new') {
+      if (shopifyJob && ['queued', 'running'].indexOf(shopifyJob.status) !== -1) return;
+      clearShopifyJob(shopifyJob);
+      state.shopify = shopifyDefaultState();
+      closeActive(false);
+      root.UserDialogs.openShopifyImport();
+      return;
+    }
     if (action === 'shopify-import') {
-      var shopifyOperationNonce = openNonce;
-      var store = selectedStore();
+      if (!state.shopify.authorized) {
+        state.shopify.step = 1;
+        state.shopify.authView = 'consent';
+        state.shopify.authError = 'Shopify 授权已失效，请重新确认授权。';
+        renderShopify();
+        return;
+      }
+      var store = selectedShopifyStore();
       var selectedRecords = SHOPIFY_RECORDS.filter(function (record) {
         return state.shopify.selected.has(record.id);
       }).map(function (record) {
@@ -1847,25 +2349,16 @@
         };
         return profile;
       });
+      if (!selectedRecords.length) {
+        state.shopify.error = '请至少选择一位需要同步的 Shopify 用户。';
+        renderShopify();
+        return;
+      }
       state.shopify.busy = true;
       state.shopify.error = '';
       renderShopify();
-      var shopifyImport = await invokeHookAsync('importUsers', [selectedRecords, 'shopify_api']);
-      if (shopifyOperationNonce !== openNonce) return;
-      if (!shopifyImport.ok) {
-        operationFailed(state.shopify, renderShopify, shopifyImport.error);
-        return;
-      }
-      var shopifyCompletion = await completeHookAsync(shopifyImport.value);
-      if (shopifyOperationNonce !== openNonce) return;
-      if (!shopifyCompletion.ok) {
-        operationFailed(state.shopify, renderShopify, shopifyCompletion.error);
-        return;
-      }
-      state.shopify.busy = false;
-      state.shopify.result = shopifyImport.value;
-      state.shopify.step = 3;
-      renderShopify();
+      startShopifyJob(selectedRecords, store, active && active.hooks);
+      closeActive(true);
       return;
     }
     if (action === 'marketing-toggle-channel') {
@@ -1942,22 +2435,40 @@
       renderExportUsers();
       return;
     }
+    if (action === 'export-download') {
+      if (!exportJob || exportJob.status !== 'ready' || !exportJob.file) return;
+      var downloadCall = await settleExportJobHook(exportJob, 'downloadPreparedExport', [exportJob.file]);
+      if (!downloadCall.ok) {
+        exportJob.status = 'failed';
+        exportJob.error = downloadCall.error;
+        notifyExportJob(exportJob);
+        renderExportProgress();
+        return;
+      }
+      exportJob = null;
+      notifyExportJob(null);
+      closeActive(true);
+      return;
+    }
+    if (action === 'export-reset') {
+      if (exportJob && exportJob.timer) root.clearTimeout(exportJob.timer);
+      exportJob = null;
+      notifyExportJob(null);
+      closeActive(true);
+      return;
+    }
     if (action === 'export-confirm') {
       var selectedExportFields = exportSelectedKeys();
       if (!selectedExportFields.length || state.exportUsers.busy) return;
-      var exportOperationNonce = openNonce;
       state.exportUsers.busy = true;
       state.exportUsers.error = '';
       renderExportUsers();
-      var exportCall = await invokeHookAsync('exportUsers', [
-        state.exportUsers.scope,
-        selectedExportFields
-      ]);
-      if (exportOperationNonce !== openNonce) return;
-      if (!exportCall.ok) {
-        operationFailed(state.exportUsers, renderExportUsers, exportCall.error);
-        return;
-      }
+      startExportJob({
+        scope: state.exportUsers.scope,
+        scopeLabel: state.exportUsers.scopeLabel,
+        count: state.exportUsers.count,
+        fields: selectedExportFields
+      }, active && active.hooks);
       closeActive(true);
       return;
     }
@@ -2197,9 +2708,23 @@
       state.csv.sessionToken = csvSessionGate.current();
       return openDialog('csv', renderCsv, false).catch(function () { return false; });
     },
+    openCsvImportProgress: function () {
+      if (!csvJob) return this.openCsvImport();
+      return openDialog('csv-progress', renderCsvProgress, false).catch(function () { return false; });
+    },
+    getCsvImportState: function () {
+      return csvJobSnapshot(csvJob);
+    },
     openShopifyImport: function () {
       state.shopify = shopifyDefaultState();
       return openDialog('shopify', renderShopify, false).catch(function () { return false; });
+    },
+    openShopifySyncProgress: function () {
+      if (!shopifyJob) return this.openShopifyImport();
+      return openDialog('shopify-progress', renderShopifyProgress, false).catch(function () { return false; });
+    },
+    getShopifySyncState: function () {
+      return shopifyJobSnapshot(shopifyJob);
     },
     openMarketingConsent: function (ids) {
       var normalizedIds = Array.isArray(ids) ? ids.filter(Boolean) : [ids].filter(Boolean);
@@ -2250,6 +2775,13 @@
         busy: false
       };
       return openDialog('export', renderExportUsers, false).catch(function () { return false; });
+    },
+    openExportProgress: function () {
+      if (!exportJob) return Promise.resolve(false);
+      return openDialog('export-progress', renderExportProgress, false).catch(function () { return false; });
+    },
+    getExportTaskState: function () {
+      return exportJobSnapshot(exportJob);
     },
     openDeleteConfirm: function (options) {
       var settings = options || {};

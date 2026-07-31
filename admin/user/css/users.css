@@ -940,6 +940,114 @@ textarea.um-text-control {
   background: hsl(var(--background));
 }
 
+.um-import-sync-indicator,
+.um-shopify-sync-icon,
+.um-csv-import-icon,
+.um-export-task-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.um-import-sync-indicator:not([hidden]) {
+  display: inline-block;
+}
+
+.um-import-sync-indicator.is-running,
+.um-shopify-sync-icon.is-running,
+.um-csv-import-icon.is-running,
+.um-export-task-icon.is-running {
+  border: 2px solid hsl(var(--primary) / .2);
+  border-top-color: hsl(var(--primary));
+  animation: um-shopify-sync-spin .8s linear infinite;
+}
+
+.um-import-sync-indicator.is-completed,
+.um-shopify-sync-icon.is-completed,
+.um-csv-import-icon.is-completed,
+.um-export-task-icon.is-completed {
+  display: inline-grid;
+  place-items: center;
+  background: hsl(var(--success));
+  color: #fff;
+}
+
+.um-import-sync-indicator.is-completed::after,
+.um-shopify-sync-icon.is-completed::after,
+.um-csv-import-icon.is-completed::after,
+.um-export-task-icon.is-completed::after {
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: #fff;
+  -webkit-mask: url("../../common/vendor/fontawesome-free/solid/check.svg") center / 12px 12px no-repeat;
+  mask: url("../../common/vendor/fontawesome-free/solid/check.svg") center / 12px 12px no-repeat;
+}
+
+.um-import-sync-indicator.is-failed,
+.um-shopify-sync-icon.is-failed,
+.um-csv-import-icon.is-failed,
+.um-export-task-icon.is-failed {
+  display: inline-grid;
+  place-items: center;
+  background: hsl(var(--destructive));
+  color: #fff;
+}
+
+.um-import-sync-indicator.is-failed::after,
+.um-shopify-sync-icon.is-failed::after,
+.um-csv-import-icon.is-failed::after,
+.um-export-task-icon.is-failed::after {
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: #fff;
+  -webkit-mask: url("../../common/vendor/fontawesome-free/solid/exclamation.svg") center / 12px 12px no-repeat;
+  mask: url("../../common/vendor/fontawesome-free/solid/exclamation.svg") center / 12px 12px no-repeat;
+}
+
+.um-shopify-sync-icon.is-running,
+.um-shopify-sync-icon.is-completed,
+.um-shopify-sync-icon.is-failed,
+.um-csv-import-icon.is-running,
+.um-csv-import-icon.is-completed,
+.um-csv-import-icon.is-failed,
+.um-export-task-icon.is-running,
+.um-export-task-icon.is-completed,
+.um-export-task-icon.is-failed {
+  display: inline-grid;
+}
+
+#userShopifyImportAction,
+#userCsvImportAction {
+  gap: 8px;
+}
+
+#userExportTaskAction {
+  gap: 8px;
+}
+
+#userShopifyImportAction [data-shopify-sync-label],
+#userCsvImportAction [data-csv-import-label] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#userExportTaskAction [data-export-task-label] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes um-shopify-sync-spin {
+  to { transform: rotate(360deg); }
+}
+
 .um-button,
 .um-icon-button {
   display: inline-flex;

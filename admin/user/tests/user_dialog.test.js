@@ -249,6 +249,13 @@ async function run() {
   assert(source.includes("label: '短信营销授权'"), 'CSV mapping must include SMS marketing authorization');
   assert(source.includes("label: 'WhatsApp 营销授权'"), 'CSV mapping must include WhatsApp marketing authorization');
   assert(source.includes('data-dialog-action="csv-template"'), 'CSV dialog must provide a downloadable current template');
+  assert(source.includes("shopifyStepsMarkup(['上传文件', '数据预览']"), 'CSV dialog must reuse the Shopify two-step navigation');
+  assert(!source.includes('function csvMappingMarkup'), 'CSV dialog must auto-recognize fields instead of exposing mapping controls');
+  assert(!source.includes('renderCsvStep3'), 'CSV result must live in a separate progress dialog');
+  assert(source.includes('openCsvImportProgress: function'), 'CSV async progress dialog API must exist');
+  assert(source.includes('mia.chen@example.com,Mia,Chen,13800001001'), 'CSV template must include a complete subscribed example row');
+  assert(source.includes('leo.wang@example.com,Leo,Wang,13800001002'), 'CSV template must include a second marketing authorization example row');
+  assert(source.includes("ava.oconnor@example.com,Ava,O'Connor"), 'CSV template must include an optional-field example row');
   assert(source.includes('邮箱（必填）'), 'CSV template must identify the required email column');
   assert(source.includes('data-dialog-action="marketing-toggle-channel"'), 'marketing dialog must support selecting multiple channels');
   assert(source.includes('客户同意接收营销电子邮件。'), 'marketing dialog must align with the add-user email consent wording');
@@ -262,11 +269,7 @@ async function run() {
   assert(source.includes('aria-activedescendant'), 'combobox active descendant semantics must exist');
   assert(source.includes('无匹配选项'), 'combobox no-match state must exist');
   assert(source.includes('isComposing') && source.includes('keyCode'), 'combobox must ignore IME commit keys');
-  assert.strictEqual(
-    (source.match(/connectionState: 'connected'/g) || []).length,
-    4,
-    'three saved connections plus one newly authorized single-store result must be modeled'
-  );
+  assert(!source.includes("connectionState: 'connected'"), 'Shopify OAuth must not expose a saved-store chooser');
   assert(
     (source.match(/csvSessionGate\.next\(\)/g) || []).length >= 3,
     'CSV open, close, and reads must invalidate prior sessions'

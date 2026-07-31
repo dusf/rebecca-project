@@ -1373,14 +1373,24 @@ textarea.um-text-control {
 }
 
 .um-column-panel {
+  display: flex;
+  flex-direction: column;
   width: 240px;
   max-height: min(420px, 70vh);
   overflow: hidden;
   padding: 0;
 }
 
+.um-column-panel .custom-col-header,
+.um-column-panel .custom-col-hint {
+  flex: 0 0 auto;
+}
+
 .um-column-panel .custom-col-body {
-  max-height: min(300px, calc(70vh - 92px));
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
 }
 
 .um-list-page .um-table-card {
@@ -1517,6 +1527,13 @@ textarea.um-text-control {
 }
 
 .um-user-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.um-list-cell-ellipsis {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1975,25 +1992,10 @@ textarea.um-text-control {
   width: min(100%, 1260px);
 }
 
-.um-back-button {
-  min-height: 30px;
-  padding: 0;
-  margin-bottom: 5px;
-  border: 0;
-  background: transparent;
-  color: hsl(var(--primary-700));
-  font: 600 12px/1.4 var(--font-sans);
-  cursor: pointer;
-}
-
-.um-back-button:hover,
-.um-back-button:focus-visible {
-  text-decoration: underline;
-  outline: none;
-}
-
 .um-form-header .um-page-title {
   margin: 0;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .um-form-error-summary {
@@ -2152,6 +2154,48 @@ textarea.um-text-control {
 .um-tag-editor {
   display: grid;
   gap: 12px;
+}
+
+.um-address-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.um-address-empty {
+  padding: 12px 14px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 9px;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+}
+
+.um-address-item {
+  padding: 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--muted) / .35);
+}
+
+.um-address-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.um-address-item-header strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.um-address-item-header .um-button {
+  color: hsl(var(--muted-foreground));
+}
+
+.um-address-grid {
+  gap: 12px 16px;
 }
 
 .um-tag-input-row {

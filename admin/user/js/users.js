@@ -3,12 +3,17 @@
 
   const COLUMNS = [
     { key: 'user', label: '用户信息', fixed: 'left', alwaysShow: true, width: 260 },
+    { key: 'name', label: '姓名', width: 160, defaultVisible: false },
+    { key: 'phone', label: '手机号', width: 180, defaultVisible: false },
+    { key: 'preferredLanguage', label: '首选语言', width: 140, defaultVisible: false },
     { key: 'accountStatus', label: '账号状态' },
     { key: 'marketingStatus', label: '订阅状态' },
     { key: 'marketingAuthorization', label: '营销授权', width: 220 },
     { key: 'authProviders', label: '登录方式' },
     { key: 'source', label: '用户来源' },
     { key: 'tags', label: '标签', width: 200 },
+    { key: 'addresses', label: '地址', width: 300, defaultVisible: false },
+    { key: 'note', label: '备注', width: 240, defaultVisible: false },
     { key: 'orderCount', label: '订单数', sortable: true },
     { key: 'totalSpent', label: '累计消费', sortable: true },
     { key: 'lastLoginAt', label: '最后登录时间', sortable: true },
@@ -85,6 +90,15 @@
     instagram: 'Instagram',
     x: 'X',
     shop: 'Shop'
+  };
+  const ADDRESS_COUNTRY_LABELS = {
+    CN: '中国', US: '美国', CA: '加拿大', GB: '英国', AU: '澳大利亚', JP: '日本', SG: '新加坡', HK: '中国香港'
+  };
+  const LANGUAGE_LABELS = {
+    'zh-CN': '简体中文',
+    'zh-TW': '繁體中文',
+    'en-US': 'English',
+    'ja-JP': '日本語'
   };
   const VIEW_DEFINITIONS = [
     { key: 'all', label: '全部用户' },
@@ -208,7 +222,7 @@
     const stored = readStorage(VISIBLE_KEY);
     const keys = Array.isArray(stored)
       ? stored.filter(function (key) { return valid.has(key); })
-      : COLUMNS.map(function (column) { return column.key; });
+      : COLUMNS.filter(function (column) { return column.defaultVisible !== false; }).map(function (column) { return column.key; });
     if (keys.indexOf('user') === -1) keys.unshift('user');
     return new Set(keys);
   }
@@ -298,6 +312,7 @@
       panel.classList.remove('is-viewport-layer');
       panel.style.top = '';
       panel.style.left = '';
+      panel.style.maxHeight = '';
       panel.style.visibility = '';
       panel.__umViewportOwner = null;
       if (menu.__umViewportPanel === panel) menu.appendChild(panel);
@@ -324,13 +339,24 @@
     panel.style.top = '0px';
     panel.style.left = '0px';
 
-    const panelRect = panel.getBoundingClientRect();
+    let panelRect = panel.getBoundingClientRect();
     const viewportWidth = root.innerWidth || root.document.documentElement.clientWidth;
     const viewportHeight = root.innerHeight || root.document.documentElement.clientHeight;
     const gap = menu.classList.contains('um-row-menu') ? 4 : 6;
     const edge = 8;
     let left = triggerRect.right - panelRect.width;
     let top = triggerRect.bottom + gap;
+
+    if (menu.id === 'userColumnMenu') {
+      const availableBelow = viewportHeight - triggerRect.bottom - gap - edge;
+      const availableAbove = triggerRect.top - gap - edge;
+      const openAbove = panelRect.height > availableBelow && availableAbove > availableBelow;
+      const availableHeight = Math.max(160, Math.floor(openAbove ? availableAbove : availableBelow));
+      panel.style.maxHeight = availableHeight + 'px';
+      const constrainedPanelRect = panel.getBoundingClientRect();
+      if (openAbove) top = triggerRect.top - constrainedPanelRect.height - gap;
+      panelRect = constrainedPanelRect;
+    }
 
     left = Math.max(edge, Math.min(left, viewportWidth - panelRect.width - edge));
     if (top + panelRect.height > viewportHeight - edge && triggerRect.top - panelRect.height - gap >= edge) {
@@ -1147,8 +1173,7 @@
       '<button type="button" data-account-action="restore">恢复禁用前状态</button></div></details>' +
       '<details class="um-menu um-more-actions um-viewport-menu' + (disabled ? ' is-disabled' : '') + '"><summary class="btn btn-secondary btn-sm" aria-disabled="' +
       (disabled ? 'true' : 'false') + '">' + ICONS.moreButton + '更多操作</summary>' +
-      '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">删除所选</button>' +
-      '<button type="button" data-bulk="clear">取消选择</button></div></details>' +
+      '<div class="um-menu-panel um-menu-panel-right"><button class="um-button-danger" type="button" data-bulk="delete">批量删除</button></div></details>' +
       '';
   }
 
@@ -1197,6 +1222,32 @@
           escapeHtml(fullLabel) + '">+' + hiddenCount + '</span>'
         : '') +
       '</div>';
+  }
+
+  function formatAddress(address) {
+    const item = address && typeof address === 'object' ? address : {};
+    return [
+      ADDRESS_COUNTRY_LABELS[item.country] || item.country,
+      item.region,
+      item.city,
+      item.address1,
+      item.postalCode
+    ].filter(Boolean).join(' ');
+  }
+
+  function renderAddressCell(user) {
+    const addresses = (Array.isArray(user.addresses) ? user.addresses : []).map(formatAddress).filter(Boolean);
+    if (!addresses.length) return '<span class="um-muted">-</span>';
+    const fullAddress = addresses.join('；');
+    const label = addresses[0] + (addresses.length > 1 ? ' +' + (addresses.length - 1) : '');
+    return '<span class="um-list-cell-ellipsis" title="' + escapeHtml(fullAddress) + '" aria-label="' +
+      escapeHtml('地址：' + fullAddress) + '">' + escapeHtml(label) + '</span>';
+  }
+
+  function renderNoteCell(user) {
+    const note = String(user.note || '').trim();
+    if (!note) return '<span class="um-muted">-</span>';
+    return '<span class="um-list-cell-ellipsis" title="' + escapeHtml(note) + '">' + escapeHtml(note) + '</span>';
   }
 
   function tagTooltip() {
@@ -1253,7 +1304,12 @@
         escapeHtml(user.id) + '" title="复制编号" aria-label="复制客户编号 ' +
         escapeHtml(user.customerNumber) + '">' + ICONS.copy + '</button></div></div></div>';
     }
+    if (key === 'name') return user.firstName || user.lastName ? escapeHtml(fullName(user)) : '<span class="um-muted">-</span>';
+    if (key === 'phone') return user.phone ? escapeHtml(user.phone) : '<span class="um-muted">-</span>';
+    if (key === 'preferredLanguage') return escapeHtml(LANGUAGE_LABELS[user.preferredLanguage] || user.preferredLanguage || '—');
     if (key === 'tags') return renderUserTags(user);
+    if (key === 'addresses') return renderAddressCell(user);
+    if (key === 'note') return renderNoteCell(user);
     if (key === 'accountStatus') {
       const tone = user.accountStatus === 'registered' ? 'success' :
         (user.accountStatus === 'disabled' ? 'danger' : 'warning');
@@ -1817,16 +1873,17 @@
     if (checkbox.checked) visibleKeys.add(key);
     else visibleKeys.delete(key);
     visibleKeys.add('user');
+    const item = checkbox.closest('.custom-col-item');
+    if (item) item.classList.toggle('active', checkbox.checked);
     writeStorage(VISIBLE_KEY, Array.from(visibleKeys));
-    render();
-    elements.columnMenu.open = true;
+    renderTable();
   }
 
   function handleColumnClick(event) {
     const reset = event.target.closest('[data-column-reset]');
     if (reset) {
       event.stopPropagation();
-      visibleKeys = new Set(COLUMNS.map(function (column) { return column.key; }));
+      visibleKeys = new Set(COLUMNS.filter(function (column) { return column.defaultVisible !== false; }).map(function (column) { return column.key; }));
       columnOrder = COLUMNS.map(function (column) { return column.key; });
       writeStorage(VISIBLE_KEY, Array.from(visibleKeys));
       writeStorage(ORDER_KEY, columnOrder);

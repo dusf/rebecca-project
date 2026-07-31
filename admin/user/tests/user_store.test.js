@@ -10,6 +10,7 @@ const created = UserStore.createManual({
   email: '  Buyer@Example.COM ',
   firstName: 'Amy',
   lastName: 'Lee',
+  addresses: [{ country: 'US', region: 'California', city: 'Los Angeles', address1: '100 Main St', postalCode: '90001' }],
   marketingOptIn: false,
   marketingChannels: { sms: true, whatsapp: true }
 });
@@ -20,6 +21,7 @@ assert.equal(created.user.source, 'admin');
 assert.equal(created.user.customerNumber, 'CUS-000001');
 assert.equal(created.user.shopId, 'shop-qvr');
 assert.deepEqual(created.user.marketingChannels, { email: false, sms: true, whatsapp: true });
+assert.deepEqual(created.user.addresses, [{ country: 'US', region: 'California', city: 'Los Angeles', address1: '100 Main St', postalCode: '90001' }]);
 
 const duplicate = UserStore.createManual({
   email: 'buyer@example.com',
@@ -200,9 +202,14 @@ assert.deepEqual(UserStore.get(first.user.id).tags, ['VIP 客户', '高价值'])
 assert.equal(UserStore.addTagsToUsers([first.user.id], ['']).ok, false);
 assert.equal(UserStore.addTagsToUsers([first.user.id], Array.from({ length: 21 }, (_, index) => '标签' + index)).ok, false);
 
-const updated = UserStore.update(first.user.id, { firstName: 'Updated', note: 'VIP buyer' });
+const updated = UserStore.update(first.user.id, {
+  firstName: 'Updated',
+  note: 'VIP buyer',
+  addresses: [{ country: 'CN', region: '上海市', city: '上海市', address1: '南京西路 100 号', postalCode: '200040' }]
+});
 assert.equal(updated.ok, true);
 assert.equal(UserStore.get(first.user.id).firstName, 'Updated');
+assert.deepEqual(UserStore.get(first.user.id).addresses, [{ country: 'CN', region: '上海市', city: '上海市', address1: '南京西路 100 号', postalCode: '200040' }]);
 [
   { id: 'replaced-id' },
   { authProviders: [{ type: 'google' }] },

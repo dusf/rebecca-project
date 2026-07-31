@@ -11,7 +11,7 @@
   const WRITE_LOCK_NAME = 'rbk-user-store-write';
   const ACCOUNT_STATUSES = new Set(['registered', 'pending', 'disabled']);
   const MARKETING_STATUSES = new Set(['subscribed', 'unsubscribed', 'not_subscribed', 'pending', 'invalid']);
-  const EDITABLE_PROFILE_FIELDS = new Set(['email', 'firstName', 'lastName', 'phone', 'preferredLanguage', 'tags', 'note']);
+  const EDITABLE_PROFILE_FIELDS = new Set(['email', 'firstName', 'lastName', 'phone', 'preferredLanguage', 'addresses', 'tags', 'note']);
   const AUTH_PROVIDER_TYPES = new Set(['email', 'password', 'google', 'facebook', 'tiktok', 'instagram', 'x', 'shop']);
   let memory = [];
   let loaded = false;
@@ -282,6 +282,25 @@
     }, []);
   }
 
+  function normalizeAddressText(value, maxLength) {
+    return String(value || '').trim().slice(0, maxLength);
+  }
+
+  function normalizeAddresses(addresses) {
+    return (Array.isArray(addresses) ? addresses : []).reduce(function (result, address) {
+      if (!address || typeof address !== 'object' || result.length >= 20) return result;
+      const normalized = {
+        country: normalizeAddressText(address.country, 64),
+        region: normalizeAddressText(address.region, 120),
+        city: normalizeAddressText(address.city, 120),
+        address1: normalizeAddressText(address.address1, 240),
+        postalCode: normalizeAddressText(address.postalCode, 32)
+      };
+      if (Object.keys(normalized).some(function (key) { return normalized[key]; })) result.push(normalized);
+      return result;
+    }, []);
+  }
+
   function ensureUniqueUserIds(users) {
     const seen = new Set();
     return users.map(function (user) {
@@ -318,6 +337,7 @@
       lastName: String(input.lastName || '').trim(),
       phone: String(input.phone || '').trim(),
       preferredLanguage: input.preferredLanguage || 'zh-CN',
+      addresses: normalizeAddresses(input.addresses),
       tags: Array.isArray(input.tags) ? input.tags.slice() : [],
       note: input.note || '',
       accountStatus: ACCOUNT_STATUSES.has(input.accountStatus) ? input.accountStatus : 'pending',
@@ -590,7 +610,7 @@
     if (payload.marketingOptIn && !consentValidation.ok) return { ok: false, error: consentValidation.error };
     const user = buildUser({
       shopId: shopId, email: email, firstName: payload.firstName, lastName: payload.lastName, phone: payload.phone,
-      preferredLanguage: payload.preferredLanguage, tags: payload.tags, note: payload.note,
+      preferredLanguage: payload.preferredLanguage, addresses: payload.addresses, tags: payload.tags, note: payload.note,
       accountStatus: 'pending', marketingStatus: payload.marketingOptIn ? 'subscribed' : 'not_subscribed',
       marketingChannels: payload.marketingChannels,
       authProviders: [], source: 'admin',

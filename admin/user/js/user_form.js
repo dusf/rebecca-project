@@ -44,6 +44,27 @@
     { value: '+65', label: '新加坡 +65' },
     { value: '+61', label: '澳大利亚 +61' }
   ];
+  const ADDRESS_COUNTRY_OPTIONS = [
+    { value: 'none', label: '请选择国家/地区', placeholder: true },
+    { value: 'CN', label: '中国' },
+    { value: 'US', label: '美国' },
+    { value: 'CA', label: '加拿大' },
+    { value: 'GB', label: '英国' },
+    { value: 'AU', label: '澳大利亚' },
+    { value: 'JP', label: '日本' },
+    { value: 'SG', label: '新加坡' },
+    { value: 'HK', label: '中国香港' }
+  ];
+  const ADDRESS_REGION_OPTIONS = {
+    CN: ['北京市', '天津市', '河北省', '山西省', '内蒙古自治区', '辽宁省', '吉林省', '黑龙江省', '上海市', '江苏省', '浙江省', '安徽省', '福建省', '江西省', '山东省', '河南省', '湖北省', '湖南省', '广东省', '广西壮族自治区', '海南省', '重庆市', '四川省', '贵州省', '云南省', '西藏自治区', '陕西省', '甘肃省', '青海省', '宁夏回族自治区', '新疆维吾尔自治区', '台湾省'],
+    US: ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'],
+    CA: ['Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec', 'Saskatchewan', 'Yukon'],
+    GB: ['England', 'Northern Ireland', 'Scotland', 'Wales'],
+    AU: ['Australian Capital Territory', 'New South Wales', 'Northern Territory', 'Queensland', 'South Australia', 'Tasmania', 'Victoria', 'Western Australia'],
+    JP: ['北海道', '青森县', '岩手县', '宫城县', '秋田县', '山形县', '福岛县', '茨城县', '栃木县', '群马县', '埼玉县', '千叶县', '东京都', '神奈川县', '新潟县', '富山县', '石川县', '福井县', '山梨县', '长野县', '岐阜县', '静冈县', '爱知县', '三重县', '滋贺县', '京都府', '大阪府', '兵库县', '奈良县', '和歌山县', '鸟取县', '岛根县', '冈山县', '广岛县', '山口县', '德岛县', '香川县', '爱媛县', '高知县', '福冈县', '佐贺县', '长崎县', '熊本县', '大分县', '宫崎县', '鹿儿岛县', '冲绳县'],
+    SG: ['Singapore'],
+    HK: ['香港特别行政区']
+  };
   const CONSENT_OPTIONS = [
     { value: 'none', label: '请选择同意来源', placeholder: true },
     { value: 'registration', label: '注册页面' },
@@ -71,7 +92,8 @@
     consentTouched: false,
     saving: false,
     countryCode: '+86',
-    phone: ''
+    phone: '',
+    addresses: []
   };
   const elements = {};
   const comboboxControllers = {};
@@ -352,14 +374,13 @@
   function renderHeader() {
     const isEdit = state.mode === 'edit';
     elements.header.innerHTML =
-      '<div><button class="um-back-button" id="userBackButton" type="button">← 返回用户列表</button>' +
-      '<h1 class="um-page-title">' + (isEdit ? '编辑用户' : '添加用户') + '</h1>' +
+      '<div><h1 class="um-page-title">' + (isEdit ? '编辑用户' : '添加用户') + '</h1>' +
       '<p class="um-page-subtitle">' +
       (isEdit ? '更新用户基本资料和营销授权，不会改变其登录身份。' : '创建统一用户档案，后续由用户完成可信验证激活账号。') +
       '</p></div>' +
-      '<div class="um-header-actions"><button class="um-button um-button-secondary" id="userCancelButton" type="button">取消</button>' +
+      '<div class="um-header-actions"><button class="um-button um-button-secondary" id="userCancelButton" type="button">返回</button>' +
       '<button class="um-button um-button-primary" id="userSaveButton" type="submit" form="userForm">' +
-      (isEdit ? '保存更改' : '保存用户') + '</button></div>';
+      (isEdit ? '保存修改' : '保存') + '</button></div>';
   }
 
   function basicCard() {
@@ -379,10 +400,73 @@
         forId: 'phone'
       }) +
       fieldMarkup('preferredLanguage', '首选语言', '<div id="preferredLanguageHost">' +
-        comboboxMarkup('preferredLanguage', user.preferredLanguage || 'zh-CN') + '</div>', { full: true }) +
+        comboboxMarkup('preferredLanguage', user.preferredLanguage || 'zh-CN') + '</div>', {
+          full: true,
+          help: '用于向该用户发送邮件、短信和 WhatsApp 消息时的默认内容语言；不影响后台操作语言。'
+        }) +
       '<div class="um-duplicate-card um-field-full" id="duplicateUserCard" hidden></div>' +
       '</div>';
     return cardMarkup('基本资料', body, '后台可维护联系资料，但不能人工把账号设为已注册。');
+  }
+
+  function emptyAddress() {
+    return { country: 'none', region: '', city: '', address1: '', postalCode: '' };
+  }
+
+  function normalizeAddress(address) {
+    const source = address && typeof address === 'object' ? address : {};
+    return {
+      country: String(source.country || '').trim() || 'none',
+      region: String(source.region || '').trim() || 'none',
+      city: String(source.city || '').trim(),
+      address1: String(source.address1 || '').trim(),
+      postalCode: String(source.postalCode || '').trim()
+    };
+  }
+
+  function addressIsEmpty(address) {
+    return !address || ![address.country === 'none' ? '' : address.country, address.region === 'none' ? '' : address.region, address.city,
+      address.address1, address.postalCode].some(Boolean);
+  }
+
+  function regionOptionsForAddress(address) {
+    const country = address && address.country || 'none';
+    const options = [{ value: 'none', label: country === 'none' ? '请先选择国家/地区' : '请选择省/州', placeholder: true }];
+    (ADDRESS_REGION_OPTIONS[country] || []).forEach(function (region) {
+      options.push({ value: region, label: region });
+    });
+    const selected = address && address.region && address.region !== 'none' ? address.region : '';
+    if (selected && !options.some(function (option) { return option.value === selected; })) {
+      options.push({ value: selected, label: selected });
+    }
+    return options;
+  }
+
+  function addressFieldsMarkup(address, index) {
+    const item = normalizeAddress(address);
+    const prefix = 'address-' + index;
+    return '<article class="um-address-item" data-address-index="' + index + '">' +
+      '<div class="um-address-item-header"><strong>地址 ' + (index + 1) + '</strong>' +
+      '<button class="um-button um-button-secondary um-button-sm" type="button" data-remove-address="' + index + '">删除</button></div>' +
+      '<div class="um-form-grid um-address-grid">' +
+      fieldMarkup(prefix + '-country', '国家/地区', '<div id="' + prefix + '-country-host">' +
+        comboboxMarkup(prefix + '-country', item.country) + '</div>') +
+      fieldMarkup(prefix + '-region', '省/州', '<div id="' + prefix + '-region-host">' +
+        comboboxMarkup(prefix + '-region', item.region) + '</div>') +
+      fieldMarkup(prefix + '-city', '城市', textInput(prefix + '-city', item.city,
+        'data-address-field="city" data-address-index="' + index + '" autocomplete="address-level2" maxlength="120"'), { forId: prefix + '-city' }) +
+      fieldMarkup(prefix + '-postal-code', '邮政编码', textInput(prefix + '-postal-code', item.postalCode,
+        'data-address-field="postalCode" data-address-index="' + index + '" autocomplete="postal-code" maxlength="32"'), { forId: prefix + '-postal-code' }) +
+      fieldMarkup(prefix + '-address1', '详细地址', textInput(prefix + '-address1', item.address1,
+        'data-address-field="address1" data-address-index="' + index + '" autocomplete="street-address" maxlength="240"'), { forId: prefix + '-address1', full: true }) +
+      '</div></article>';
+  }
+
+  function addressesCard() {
+    return cardMarkup('地址', '<div class="um-address-list" id="userAddressList"></div>' +
+      '<button class="um-button um-button-secondary um-button-sm" id="addAddressButton" type="button">' +
+      '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>添加地址</button>',
+    '可添加多个地址；未填写的空白地址不会保存。');
   }
 
   function dateControlMarkup(value) {
@@ -429,13 +513,8 @@
       '<input class="um-checkbox-input" id="whatsappMarketingConsent" type="checkbox"' +
       (state.whatsappMarketing ? ' checked' : '') + '><span class="um-checkbox-box" aria-hidden="true"></span>' +
       '<span>客户同意接收 WhatsApp 营销消息。</span></label></div>';
-    const editEmailOption =
-      '<div class="um-switch-row"><div><div class="um-switch-title">接收邮件营销</div>' +
-      '<p>请仅在已经取得用户明确同意后开启。登录验证码、订单通知等服务邮件不受营销订阅状态影响。</p></div>' +
-      '<button class="um-switch" id="marketingSwitch" type="button" role="switch" aria-checked="' +
-      String(state.marketing) + '" aria-label="接收邮件营销"></button></div>';
     const body =
-      (state.mode === 'add' ? addChannelOptions : editEmailOption) +
+      addChannelOptions +
       '<div class="um-consent-fields" id="marketingConsentFields"' + (state.marketing ? '' : ' hidden') + '>' +
       '<div class="um-guidance um-compliance-guidance"><strong>合规提示：</strong>请记录可核验的同意来源和时间。后台代录不应替代用户主动授权。</div>' +
       '<div class="um-form-grid">' +
@@ -445,13 +524,12 @@
       fieldMarkup('consentNote', '授权备注', '<textarea class="um-text-control" id="consentNote" maxlength="500" placeholder="可填写授权场景、凭证或补充说明">' +
         escapeHtml(consentNote) + '</textarea>', { forId: 'consentNote', full: true }) +
       '</div></div>';
-    return cardMarkup(state.mode === 'add' ? '营销同意' : '邮件营销', body,
+    return cardMarkup('营销同意', body,
       '请仅在已经取得客户明确同意后选择对应渠道。邮件营销同意会记录进授权历史。');
   }
 
   function tagsAndNoteCard() {
     const user = state.user || {};
-    state.tags = Array.isArray(user.tags) ? user.tags.slice() : [];
     const body = '<div class="um-form-grid">' +
       fieldMarkup('tags', '标签', '<div class="um-tag-editor"><div class="um-tag-input-row">' +
         '<input class="um-text-control" id="tagInput" type="text" maxlength="40" placeholder="输入标签后添加">' +
@@ -459,7 +537,7 @@
         '<div class="um-tag-list" id="userTagList"></div></div>', {
         full: true, help: '标签仅供后台筛选和运营管理使用。'
       }) +
-      fieldMarkup('internalNote', '内部备注', '<textarea class="um-text-control" id="internalNote" maxlength="2000" placeholder="仅后台可见">' +
+      fieldMarkup('internalNote', '备注', '<textarea class="um-text-control" id="internalNote" maxlength="2000" placeholder="仅后台可见">' +
         escapeHtml(user.note || '') + '</textarea>', { forId: 'internalNote', full: true }) +
       '</div>';
     return cardMarkup('标签与备注', body);
@@ -515,11 +593,10 @@
   }
 
   function renderMain() {
-    let markup = basicCard() + marketingCard() + tagsAndNoteCard();
-    if (state.mode === 'edit') markup += identityCard() + shopifyCard() + consentHistoryCard();
+    let markup = basicCard() + addressesCard() + marketingCard();
     elements.main.innerHTML = markup;
     mountFormControls();
-    renderTags();
+    renderAddresses();
   }
 
   function summaryRow(label, value) {
@@ -545,15 +622,14 @@
         cardMarkup('创建来源', '<dl class="um-summary-list">' +
           summaryRow('来源', escapeHtml(sourceLabel('admin'))) +
           summaryRow('登录身份', '<span class="um-muted">保存时不创建</span>') +
-          '</dl>');
+          '</dl>') + tagsAndNoteCard();
+      renderTags();
       return;
     }
     const user = state.user;
     const statusAction = user.accountStatus === 'disabled' ? 'restore' : 'disabled';
-    const importedFromShopify = ['shopify_api', 'shopify_csv', 'csv'].indexOf(user.source) !== -1;
     elements.sidebar.innerHTML = cardMarkup('状态摘要',
       '<div class="um-sidebar-status">' + statusBadge(user.accountStatus, 'account') +
-      '<div>' + statusBadge(user.marketingStatus, 'marketing') + '</div>' +
       '<button class="um-button ' + (statusAction === 'disabled' ? 'um-button-danger um-button-secondary' : 'um-button-secondary') +
       '" id="accountStatusButton" type="button" data-status-action="' + statusAction + '">' +
       (statusAction === 'disabled' ? '禁用账号' : '恢复账号') + '</button>' +
@@ -566,14 +642,8 @@
         summaryRow('最近登录', escapeHtml(user.lastLoginAt ? formatDate(user.lastLoginAt) : '从未登录')) +
         summaryRow('订单数', escapeHtml(user.orderCount || 0)) +
         summaryRow('累计消费', escapeHtml(formatMoney(user.totalSpent))) +
-        '</dl>' + (importedFromShopify
-          ? '<div class="um-sidebar-notice">导入不会迁移 Shopify 原密码；用户需在本商城首次验证后激活。</div>'
-          : '')) +
-      cardMarkup('更多操作',
-        '<div class="um-sidebar-status">' +
-        '<button class="um-button um-button-secondary" id="openMarketingDialogButton" type="button">更新营销授权</button>' +
-        '<button class="um-button um-button-danger um-button-secondary" id="openDeleteDialogButton" type="button">删除用户档案</button>' +
-        '<p>营销与删除确认会在父页面全屏对话框中完成，覆盖侧栏和顶栏。</p></div>');
+        '</dl>') + tagsAndNoteCard();
+    renderTags();
   }
 
   function renderGuidance() {
@@ -590,6 +660,38 @@
         '<button class="um-tag-remove" type="button" data-remove-tag="' + index +
         '" aria-label="移除标签 ' + escapeHtml(tag) + '">×</button></span>';
     }).join('') : '<span class="um-muted">暂未添加标签</span>';
+  }
+
+  function renderAddresses() {
+    const host = root.document.getElementById('userAddressList');
+    if (!host) return;
+    host.innerHTML = state.addresses.length
+      ? state.addresses.map(addressFieldsMarkup).join('')
+      : '<div class="um-address-empty">暂未添加地址</div>';
+    state.addresses.forEach(function (address, index) {
+      const countryName = 'address-' + index + '-country';
+      mountCombobox(countryName, ADDRESS_COUNTRY_OPTIONS);
+      const countryControl = root.document.querySelector('[data-um-combobox="' + countryName + '"]');
+      if (countryControl) {
+        countryControl.addEventListener('um:change', function (event) {
+          if (!state.addresses[index]) return;
+          const country = event.detail && event.detail.value || 'none';
+          if (state.addresses[index].country === country) return;
+          state.addresses[index].country = country;
+          state.addresses[index].region = 'none';
+          renderAddresses();
+        });
+      }
+      const regionName = 'address-' + index + '-region';
+      mountCombobox(regionName, regionOptionsForAddress(address));
+      const regionControl = root.document.querySelector('[data-um-combobox="' + regionName + '"]');
+      if (regionControl) {
+        regionControl.addEventListener('um:change', function (event) {
+          if (!state.addresses[index]) return;
+          state.addresses[index].region = event.detail && event.detail.value || 'none';
+        });
+      }
+    });
   }
 
   function mountCombobox(name, options) {
@@ -934,8 +1036,19 @@
     const saveButton = root.document.getElementById('userSaveButton');
     if (saveButton) {
       saveButton.disabled = saving;
-      saveButton.textContent = saving ? '保存中…' : (state.mode === 'edit' ? '保存更改' : '保存用户');
+      saveButton.textContent = saving ? '保存中…' : (state.mode === 'edit' ? '保存修改' : '保存');
     }
+  }
+
+  function addressesForSave() {
+    return state.addresses.map(normalizeAddress).filter(function (address) {
+      return !addressIsEmpty(address);
+    }).map(function (address) {
+      return Object.assign({}, address, {
+        country: address.country === 'none' ? '' : address.country,
+        region: address.region === 'none' ? '' : address.region
+      });
+    });
   }
 
   function saveAdd() {
@@ -945,6 +1058,7 @@
       lastName: readText('lastName'),
       phone: phoneForSave(),
       preferredLanguage: getComboboxValue('preferredLanguage'),
+      addresses: addressesForSave(),
       tags: state.tags.slice(),
       note: readText('internalNote'),
       marketingOptIn: state.marketing,
@@ -967,6 +1081,7 @@
       lastName: readText('lastName'),
       phone: phoneForSave(),
       preferredLanguage: getComboboxValue('preferredLanguage'),
+      addresses: addressesForSave(),
       tags: state.tags.slice(),
       note: readText('internalNote')
     });
@@ -988,6 +1103,17 @@
       });
     }
     if (marketingResult && !marketingResult.ok) return marketingResult;
+    const originalChannels = state.user.marketingChannels || {};
+    const channelChanges = [
+      ['sms', state.smsMarketing],
+      ['whatsapp', state.whatsappMarketing]
+    ];
+    for (let index = 0; index < channelChanges.length; index += 1) {
+      const change = channelChanges[index];
+      if (Boolean(originalChannels[change[0]]) === Boolean(change[1])) continue;
+      const channelResult = await root.UserStore.setMarketingChannelStatusLocked([state.user.id], change[0], change[1]);
+      if (!channelResult.ok) return channelResult;
+    }
     return { ok: true, user: root.UserStore.getForShop(state.user.id) };
   }
 
@@ -1020,7 +1146,7 @@
   }
 
   function handleClick(event) {
-    if (event.target.closest('#userBackButton, #userCancelButton')) {
+    if (event.target.closest('#userCancelButton, [data-return-to-list]')) {
       returnToList();
       return;
     }
@@ -1032,6 +1158,17 @@
     }
     if (event.target.closest('#addTagButton')) {
       addTag();
+      return;
+    }
+    if (event.target.closest('#addAddressButton')) {
+      state.addresses.push(emptyAddress());
+      renderAddresses();
+      return;
+    }
+    const removeAddress = event.target.closest('[data-remove-address]');
+    if (removeAddress) {
+      state.addresses.splice(Number(removeAddress.getAttribute('data-remove-address')), 1);
+      renderAddresses();
       return;
     }
     const removeTag = event.target.closest('[data-remove-tag]');
@@ -1062,6 +1199,15 @@
       event.preventDefault();
       addTag();
     }
+  }
+
+  function handleInput(event) {
+    const field = event.target.closest('[data-address-field]');
+    if (!field) return;
+    const index = Number(field.getAttribute('data-address-index'));
+    const key = field.getAttribute('data-address-field');
+    if (!Number.isInteger(index) || !state.addresses[index] || !key) return;
+    state.addresses[index][key] = field.value;
   }
 
   function exposeHooks() {
@@ -1114,7 +1260,7 @@
     elements.guidance.innerHTML = '';
     elements.main.innerHTML = cardMarkup('未找到用户',
       '<div class="um-empty-inline">链接对应的用户档案不存在，用户可能已被删除。</div>' +
-      '<button class="um-button um-button-secondary um-empty-action" id="userBackButton" type="button">返回用户列表</button>');
+      '<button class="um-button um-button-secondary um-empty-action" data-return-to-list type="button">返回</button>');
     elements.sidebar.innerHTML = '';
     const saveButton = root.document.getElementById('userSaveButton');
     if (saveButton) saveButton.hidden = true;
@@ -1130,6 +1276,7 @@
     elements.toastRegion = root.document.getElementById('userFormToastRegion');
 
     renderHeader();
+    elements.header.addEventListener('click', handleClick);
     if (!root.UserStore || !root.UserComponents) {
       elements.main.innerHTML = cardMarkup('页面加载失败',
         '<div class="um-empty-inline">用户数据或系统控件未能加载，请刷新页面后重试。</div>');
@@ -1143,6 +1290,12 @@
         return;
       }
     }
+    state.addresses = Array.isArray(state.user && state.user.addresses)
+      ? state.user.addresses.map(normalizeAddress)
+      : [];
+    state.tags = Array.isArray(state.user && state.user.tags)
+      ? state.user.tags.slice()
+      : [];
     renderGuidance();
     renderMain();
     renderSidebar();
@@ -1150,6 +1303,7 @@
     elements.form.addEventListener('submit', handleSubmit);
     elements.form.addEventListener('click', handleClick);
     elements.form.addEventListener('keydown', handleKeydown);
+    elements.form.addEventListener('input', handleInput);
   }
 
   if (typeof module === 'object' && module.exports) {

@@ -206,6 +206,15 @@
     window.handleSidebarNav = function(page) {
       if (!page) return;
 
+      // 尚未配置正式页面的入口保持当前页面，并给出明确反馈，避免出现空白或错误的选中态。
+      var url = PAGE_CONFIG[page];
+      if (!url) {
+        var pendingItem = document.querySelector('#sidebarContainer .sidebar-item[data-page="' + page + '"]');
+        var pendingLabel = pendingItem ? pendingItem.textContent.trim() : '该';
+        if (typeof showToast === 'function') showToast('info', pendingLabel + ' 页面开发中...');
+        return;
+      }
+
       // 更新侧边栏选中状态
       var items = document.querySelectorAll('#sidebarContainer .sidebar-item');
       items.forEach(function(item) {
@@ -217,11 +226,8 @@
       updateBreadcrumb(page);
 
       // 获取目标 URL
-      var url = PAGE_CONFIG[page];
-      if (url) {
-        loadIframe(url);
-        currentActivePage = page;
-      }
+      loadIframe(url);
+      currentActivePage = page;
     };
 
     // 被 iframe 中的页面调用：直接通过 URL 加载
@@ -356,7 +362,7 @@
     // DOM 就绪后初始化
     document.addEventListener('DOMContentLoaded', adminInit);
   </script>
-  <script src="common/js/commons.js?v=9"></script>
+  <script src="common/js/commons.js?v=10"></script>
 </head>
 <body>
   <div class="app-layout">

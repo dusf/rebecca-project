@@ -1,484 +1,494 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>店铺配置</title>
+  <title>配置</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css">
+  <link rel="stylesheet" href="../common/css/commons.css?v=10">
   <style>
-    .settings-container {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 8px 0 40px;
-    }
-
-    .settings-card {
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid hsl(var(--border));
-      border-radius: 12px;
-      padding: 28px 32px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(8px);
-    }
-
-    .settings-card-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: hsl(var(--foreground));
-      margin-bottom: 4px;
-    }
-
-    .settings-card-desc {
-      font-size: 13px;
-      color: hsl(var(--muted-foreground));
-      margin-bottom: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: hsl(var(--foreground));
-      margin-bottom: 6px;
-    }
-
-    .form-label-required {
-      color: hsl(var(--error));
-    }
-
-    .form-input {
-      width: 100%;
-      height: 40px;
-      padding: 0 14px;
-      font-size: 14px;
-      font-family: var(--font-sans);
-      border: 1.5px solid hsl(30 15% 88%);
-      border-radius: 10px;
-      color: hsl(var(--foreground));
-      background: #FFFFFF;
-      outline: none;
-      transition: all 0.2s;
-      box-sizing: border-box;
-    }
-
-    .form-input:focus {
-      border-color: hsl(var(--primary));
-      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
-    }
-
-    .form-input:disabled {
-      background: hsl(var(--muted));
-      color: hsl(var(--muted-foreground));
-      cursor: not-allowed;
-    }
-
-    .form-textarea {
-      width: 100%;
-      min-height: 80px;
-      padding: 12px 14px;
-      font-size: 14px;
-      font-family: var(--font-sans);
-      border: 1.5px solid hsl(30 15% 88%);
-      border-radius: 10px;
-      color: hsl(var(--foreground));
-      background: #FFFFFF;
-      outline: none;
-      transition: all 0.2s;
-      box-sizing: border-box;
-      resize: vertical;
-    }
-
-    .form-textarea:focus {
-      border-color: hsl(var(--primary));
-      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
-    }
-
-    .form-hint {
-      font-size: 12px;
-      color: hsl(var(--muted-foreground));
-      margin-top: 4px;
-    }
-
-    .form-char-count {
-      font-size: 12px;
-      color: hsl(var(--muted-foreground));
-      text-align: right;
-      margin-top: 4px;
-    }
-
-    .logo-upload-area {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .logo-preview {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      background: hsl(var(--muted));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 28px;
-      font-weight: 700;
-      flex-shrink: 0;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .logo-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .logo-preview.uploaded {
-      background: none;
-    }
-
-    .logo-upload-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border: 1.5px dashed hsl(var(--primary));
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      color: hsl(var(--primary));
-      cursor: pointer;
-      transition: all 0.15s;
-      background: transparent;
-    }
-
-    .logo-upload-btn:hover {
-      background: hsl(var(--primary-50));
-    }
-
-    .logo-upload-hint {
-      font-size: 12px;
-      color: hsl(var(--muted-foreground));
-      margin-top: 6px;
-    }
-
-    .domain-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .domain-prefix {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-
-    .domain-suffix {
-      padding: 0 14px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      background: hsl(var(--muted));
-      border: 1.5px solid hsl(30 15% 88%);
-      border-left: none;
-      border-radius: 0 10px 10px 0;
-      font-size: 14px;
-      color: hsl(var(--muted-foreground));
-      white-space: nowrap;
-    }
-
-    .domain-input {
-      flex: 1;
-      height: 40px;
-      padding: 0 14px;
-      font-size: 14px;
-      border: 1.5px solid hsl(30 15% 88%);
-      border-right: none;
-      border-radius: 10px 0 0 10px;
-      outline: none;
-      background: #FFFFFF;
-    }
-
-    .domain-input:focus {
-      border-color: hsl(var(--primary));
-      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
-    }
-
-    .domain-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-left: 10px;
-      white-space: nowrap;
-    }
-
-    .domain-status.active {
-      background: hsl(142 50% 92%);
-      color: hsl(var(--success));
-    }
-
-    .domain-status.disabled {
-      background: hsl(0 70% 92%);
-      color: hsl(var(--error));
-    }
-
-    .custom-domain-section {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid hsl(var(--border));
-    }
-
-    .custom-domain-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .save-bar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    .save-status {
-      font-size: 13px;
-      color: hsl(var(--success));
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .save-status.visible {
-      opacity: 1;
-    }
+    .main-area > .content { align-items: center; overflow-x: auto; }
+    .settings-page { width: 1100px; flex: 0 0 1100px; margin: 0 auto; padding: 8px 0 40px; }
+    .settings-heading { margin-bottom: 20px; }
+    .settings-heading h1 { margin: 0; color: hsl(var(--foreground)); font-size: 18px; font-weight: 700; line-height: 1.4; }
+    .settings-heading p { margin: 6px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .settings-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); align-items: start; gap: 24px; }
+    .settings-nav { position: sticky; top: 16px; padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); box-shadow: 0 8px 24px hsl(var(--shadow-color) / .06); }
+    .settings-nav-title { padding: 8px 10px 10px; color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 600; }
+    .settings-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: hsl(var(--foreground)); font: 500 14px/1.4 var(--font-sans); text-align: left; cursor: pointer; transition: background .15s, color .15s; }
+    .settings-nav-item:hover { background: hsl(var(--accent)); }
+    .settings-nav-item.active { background: hsl(var(--primary-50)); color: hsl(var(--primary-700)); font-weight: 600; }
+    .settings-nav-item:focus-visible { outline: 3px solid hsl(var(--ring) / .18); outline-offset: 2px; }
+    .settings-nav-icon { display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; }
+    .settings-nav-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .settings-workspace { min-width: 0; }
+    .settings-panel { overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); box-shadow: 0 8px 24px hsl(var(--shadow-color) / .06); }
+    .settings-panel-header { padding: 24px 28px 20px; border-bottom: 1px solid hsl(var(--border)); }
+    .payment-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .settings-panel-title { margin: 0; color: hsl(var(--foreground)); font-size: 18px; font-weight: 700; line-height: 1.4; }
+    .settings-panel-desc { margin: 6px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .settings-form { padding: 0 28px; }
+    .settings-section { padding: 24px 0; border-bottom: 1px solid hsl(var(--border)); }
+    .settings-section:last-of-type { border-bottom: 0; }
+    .settings-section-title { margin: 0; color: hsl(var(--foreground)); font-size: 16px; font-weight: 600; line-height: 1.5; }
+    .settings-section-desc { margin: 4px 0 20px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+    .settings-grid.address-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .settings-field { min-width: 0; }
+    .settings-field.span-2 { grid-column: span 2; }
+    .settings-field.span-3 { grid-column: span 3; }
+    .settings-label { display: block; margin-bottom: 8px; color: hsl(var(--foreground)); font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .settings-required { color: hsl(var(--error)); }
+    .settings-input, .settings-select { box-sizing: border-box; width: 100%; height: 40px; padding: 0 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; outline: none; background: hsl(var(--background)); color: hsl(var(--foreground)); font: 400 14px/1.4 var(--font-sans); transition: border-color .15s, box-shadow .15s; }
+    .settings-select { appearance: none; -webkit-appearance: none; padding-right: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m7 10 5 5 5-5' fill='none' stroke='%235b5652' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/%3E%3C/svg%3E"); background-position: right 14px center; background-repeat: no-repeat; background-size: 16px; }
+    .settings-field > .settings-select, .settings-field > .searchable-select, .settings-field > .searchable-select .searchable-select-trigger { width: 100% !important; min-width: 0; }
+    .settings-input::placeholder { color: hsl(var(--control-placeholder)); }
+    .settings-input:focus, .settings-select:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--ring) / .14); }
+    .settings-hint { margin: 6px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+    .settings-logo-row { display: flex; align-items: center; gap: 16px; }
+    .settings-logo-preview { display: grid; width: 72px; height: 72px; flex: 0 0 72px; overflow: hidden; border-radius: 12px; place-items: center; color: #fff; font-size: 24px; font-weight: 700; }
+    .settings-logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .settings-logo-copy { min-width: 0; }
+    .settings-logo-action { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: #fff; color: hsl(var(--foreground)); font: 500 14px/1 var(--font-sans); cursor: pointer; }
+    .settings-logo-action:hover { background: hsl(var(--accent)); }
+    .settings-logo-action svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .settings-save-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 18px 28px; border-top: 1px solid hsl(var(--border)); background: hsl(var(--background)); }
+    .settings-save-status { margin-right: auto; color: hsl(var(--success)); font-size: 14px; }
+    .settings-empty { display: grid; min-height: 360px; padding: 32px; place-items: center; text-align: center; }
+    .settings-empty-icon { display: grid; width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 12px; place-items: center; background: hsl(var(--primary-50)); color: hsl(var(--primary)); }
+    .settings-empty-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .settings-empty h2 { margin: 0; color: hsl(var(--foreground)); font-size: 16px; font-weight: 600; }
+    .settings-empty p { max-width: 360px; margin: 8px auto 0; color: hsl(var(--muted-foreground)); font-size: 14px; line-height: 1.6; }
+    .messaging-provider-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .messaging-provider-card { display: flex; min-height: 120px; flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 14px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--background)); color: hsl(var(--foreground)); font: 400 14px/1.5 var(--font-sans); text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s, background .15s; }
+    .messaging-provider-card:hover { border-color: hsl(var(--primary) / .55); background: hsl(var(--primary-50)); }
+    .messaging-provider-card.active { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--ring) / .12); }
+    .messaging-provider-card:disabled { cursor: not-allowed; opacity: .58; }
+    .messaging-provider-card:focus-visible, .messaging-choice:focus-visible { outline: 3px solid hsl(var(--ring) / .18); outline-offset: 2px; }
+    .messaging-provider-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .messaging-provider-brand { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+    .messaging-provider-logo { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; }
+    .messaging-provider-logo svg, .messaging-provider-logo img { width: 36px; height: 36px; object-fit: contain; }
+    .messaging-provider-logo.is-more { border-radius: 10px; background: hsl(var(--primary-50)); color: hsl(var(--primary-700)); }
+    .messaging-provider-name { font-size: 14px; font-weight: 600; }
+    .messaging-provider-desc { margin: 10px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .messaging-status { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; color: hsl(var(--muted-foreground)); font-size: 12px; white-space: nowrap; }
+    .messaging-status-dot { width: 6px; height: 6px; border-radius: 999px; background: hsl(var(--muted-foreground) / .6); }
+    .messaging-status.connected { color: hsl(var(--success)); }
+    .messaging-status.connected .messaging-status-dot { background: hsl(var(--success)); }
+    .messaging-layout { display: grid; grid-template-columns: minmax(0, 1fr) 264px; align-items: start; gap: 20px; }
+    .messaging-connection { padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--background)); }
+    .messaging-connection-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .messaging-connection-title { margin: 0; color: hsl(var(--foreground)); font-size: 16px; font-weight: 600; line-height: 1.5; }
+    .messaging-connection-copy { margin: 4px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .messaging-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .messaging-field-grid .settings-field.span-full { grid-column: span 2; }
+    .messaging-connection-meta { margin: 6px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+    .messaging-connection-actions { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+    .messaging-link-action { padding: 0; border: 0; background: transparent; color: hsl(var(--primary-700)); font: 500 12px/1.5 var(--font-sans); cursor: pointer; }
+    .messaging-link-action:hover { color: hsl(var(--primary)); text-decoration: underline; }
+    .messaging-placeholder { display: grid; min-height: 196px; padding: 20px; border: 1px dashed hsl(var(--border)); border-radius: 10px; place-items: center; color: hsl(var(--muted-foreground)); font-size: 14px; text-align: center; }
+    .messaging-choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .messaging-choice { min-height: 36px; padding: 0 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--background)); color: hsl(var(--foreground)); font: 500 14px/1 var(--font-sans); cursor: pointer; }
+    .messaging-choice[aria-pressed="true"] { border-color: hsl(var(--primary)); background: hsl(var(--primary-50)); color: hsl(var(--primary-700)); }
+    .messaging-choice:disabled { cursor: not-allowed; opacity: .55; }
+    .messaging-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid hsl(var(--border)); }
+    .messaging-switch-row:last-child { border-bottom: 0; }
+    .messaging-switch-title { display: block; color: hsl(var(--foreground)); font-size: 14px; font-weight: 600; line-height: 1.5; }
+    .messaging-switch-copy { display: block; margin-top: 2px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+    .messaging-switch input { width: 18px; height: 18px; margin: 0; accent-color: hsl(var(--primary)); }
+    .messaging-preview { overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--background)); }
+    .messaging-preview-heading { padding: 14px 16px; border-bottom: 1px solid hsl(var(--border)); }
+    .messaging-preview-title { margin: 0; color: hsl(var(--foreground)); font-size: 14px; font-weight: 600; }
+    .messaging-preview-copy { margin: 4px 0 0; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+    .messaging-preview-stage { position: relative; min-height: 292px; padding: 20px; background: linear-gradient(145deg, hsl(var(--primary-50)), hsl(var(--background))); }
+    .messaging-preview-store { padding: 14px; border-radius: 8px; background: hsl(var(--background)); box-shadow: 0 6px 14px hsl(var(--shadow-color) / .06); }
+    .messaging-preview-store strong { display: block; color: hsl(var(--foreground)); font-size: 14px; }
+    .messaging-preview-store span { display: block; margin-top: 6px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.5; }
+    .messaging-preview-launcher { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; max-width: calc(100% - 32px); padding: 0 14px; border: 0; border-radius: 999px; background: hsl(var(--primary)); box-shadow: 0 8px 18px hsl(var(--primary) / .28); color: #fff; font: 600 14px/1 var(--font-sans); }
+    .messaging-preview-launcher.is-left { right: auto; left: 16px; }
+    .messaging-preview-launcher-mark { display: grid; width: 20px; height: 20px; border-radius: 50%; place-items: center; background: hsl(0 0% 100% / .18); font-size: 12px; }
+    .messaging-preview-placeholder { position: absolute; right: 16px; bottom: 16px; left: 16px; padding: 10px; border: 1px dashed hsl(var(--border)); border-radius: 8px; color: hsl(var(--muted-foreground)); font-size: 12px; text-align: center; }
+    .messaging-notice { margin: 16px 0 0; padding: 12px 14px; border: 1px solid hsl(var(--primary) / .2); border-radius: 8px; background: hsl(var(--primary-50)); color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
+    .messaging-current { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px; border:1px solid hsl(var(--primary) / .28); border-radius:10px; background:hsl(var(--primary-50)); }
+    .messaging-current-main { display:flex; align-items:center; gap:12px; min-width:0; }
+    .messaging-current-copy strong { display:block; color:hsl(var(--foreground)); font-size:14px; }
+    .messaging-current-copy span { display:block; margin-top:3px; color:hsl(var(--muted-foreground)); font-size:12px; }
+    .messaging-center-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; }
+    .messaging-center-search { width:240px; }
+    .messaging-provider-table { overflow:hidden; border:1px solid hsl(var(--border)); border-radius:10px; }
+    .messaging-provider-row { display:grid; grid-template-columns:minmax(180px,1.3fr) minmax(84px,.7fr) minmax(120px,.8fr) auto; align-items:center; gap:12px; min-height:60px; padding:10px 14px; border-top:1px solid hsl(var(--border)); }
+    .messaging-provider-row:first-child { border-top:0; }
+    .messaging-provider-row.is-managing { background:hsl(var(--primary-50)); }
+    .messaging-provider-row.is-header { min-height:38px; padding-top:0; padding-bottom:0; background:hsl(var(--muted)); color:hsl(var(--muted-foreground)); font-size:12px; font-weight:600; }
+    .messaging-provider-identity { display:flex; align-items:center; gap:10px; min-width:0; }
+    .messaging-provider-identity strong { display:block; color:hsl(var(--foreground)); font-size:14px; }
+    .messaging-provider-identity span { display:block; margin-top:2px; color:hsl(var(--muted-foreground)); font-size:12px; }
+    .messaging-row-actions { display:flex; justify-content:flex-end; gap:8px; }
+    .messaging-mini-button { min-height:32px; padding:0 10px; border:1px solid hsl(var(--border)); border-radius:7px; background:hsl(var(--background)); color:hsl(var(--foreground)); font:500 12px/1 var(--font-sans); cursor:pointer; }
+    .messaging-mini-button:hover { background:hsl(var(--accent)); }
+    .messaging-mini-button:disabled { cursor:not-allowed; opacity:.5; }
+    .messaging-mount-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
+    .messaging-mount-option { min-height:92px; padding:14px; border:1px solid hsl(var(--border)); border-radius:10px; background:hsl(var(--background)); color:hsl(var(--foreground)); font:400 12px/1.6 var(--font-sans); text-align:left; cursor:pointer; }
+    .messaging-mount-option[aria-pressed="true"] { border-color:hsl(var(--primary)); background:hsl(var(--primary-50)); box-shadow:0 0 0 3px hsl(var(--ring) / .12); }
+    .messaging-mount-option strong { display:block; font-size:14px; }
+    .messaging-mount-option span { display:block; margin-top:4px; color:hsl(var(--muted-foreground)); }
+    .messaging-inline-slot { margin-top:16px; padding:14px; border:1px dashed hsl(var(--border)); border-radius:8px; background:hsl(var(--muted)); }
+    .messaging-inline-slot strong { display:block; font-size:14px; }
+    .messaging-inline-slot p { margin:4px 0 10px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.6; }
+    .messaging-preview-inline { margin-top:14px; padding:10px; border:1px solid hsl(var(--primary) / .25); border-radius:8px; background:hsl(var(--primary-50)); color:hsl(var(--primary-700)); font-size:12px; font-weight:600; }
+    .messaging-current-provider { margin-bottom:14px; }
+    .messaging-config-actions { margin-top:16px; }
+    .messaging-subsection-title { margin:20px 0 10px; color:hsl(var(--foreground)); font-size:14px; font-weight:600; line-height:1.5; }
+    .messaging-install-note { margin:12px 0 0; padding:10px 12px; border:1px solid hsl(var(--primary) / .2); border-radius:8px; background:hsl(var(--primary-50)); color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.6; }
+    .messaging-context-card { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:20px; padding-top:18px; border-top:1px solid hsl(var(--border)); }
+    .messaging-context-card h4 { grid-column:1 / -1; margin:0; color:hsl(var(--foreground)); font-size:14px; font-weight:600; }
+    .messaging-context-card > div { padding:10px 12px; border:1px solid hsl(var(--border)); border-radius:8px; background:hsl(var(--muted)); }
+    .messaging-context-card strong,.messaging-context-card span { display:block; }
+    .messaging-context-card strong { color:hsl(var(--foreground)); font-size:14px; }
+    .messaging-context-card span { margin-top:4px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.6; }
+    .payment-method-summary { overflow:hidden; border:1px solid hsl(var(--border)); border-radius:10px; }
+    .payment-method-summary-row { display:grid; grid-template-columns:36px 30px minmax(0,1fr) auto auto auto 18px; align-items:center; gap:12px; min-height:62px; padding:10px 14px; border-top:1px solid hsl(var(--border)); cursor:grab; }
+    .payment-method-summary-row:active { cursor:grabbing; }
+    .payment-method-summary-row:first-child { border-top:0; }
+    .payment-method-order { display:flex; width:24px; height:24px; align-items:center; justify-content:center; align-self:center; justify-self:center; padding:0; border-radius:50%; background:hsl(var(--primary-50)); color:hsl(var(--primary-700)); font-size:12px; font-weight:600; line-height:1; text-align:center; }
+    .payment-method-manager { margin-right:0; }
+    .payment-method-choice-spacer { width:0; height:1px; }
+    .payment-method-logo { display:grid; width:28px; height:28px; overflow:hidden; border:1px solid hsl(var(--border)); border-radius:7px; place-items:center; background:hsl(var(--background)); }
+    .payment-method-logo img { display:block; width:20px; height:20px; object-fit:contain; }
+    .payment-method-drag-handle { display:grid; width:18px; height:24px; place-items:center; color:hsl(var(--muted-foreground)); }
+    .payment-method-drag-handle svg { width:16px; height:16px; fill:currentColor; }
+    .payment-method-summary-row strong { display:block; font-size:14px; }
+    .payment-method-summary-row span { display:block; margin-top:2px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.5; }
+    .payment-method-summary-row .messaging-status { display:inline-flex; align-items:center; justify-self:end; gap:5px; margin:0; line-height:1; white-space:nowrap; }
+    .payment-method-summary-row .messaging-status span { display:block; flex:0 0 auto; margin:0; }
+    .payment-method-summary-empty { padding:20px 14px; color:hsl(var(--muted-foreground)); font-size:12px; text-align:center; }
+    .payment-provider-list { overflow:hidden; border:1px solid hsl(var(--border)); border-radius:10px; }
+    .payment-provider-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:16px; min-height:64px; padding:10px 14px; border-top:1px solid hsl(var(--border)); }
+    .payment-provider-row:first-child { border-top:0; }
+    .payment-provider-name { display:flex; align-items:center; gap:10px; min-width:0; }
+    .payment-provider-mark { display:grid; width:32px; height:32px; flex:0 0 32px; overflow:hidden; border:1px solid hsl(var(--border)); border-radius:8px; place-items:center; background:hsl(var(--background)); }
+    .payment-provider-mark img { display:block; width:24px; height:24px; object-fit:contain; }
+    .payment-provider-mark.is-oceanpayment img { width:26px; height:26px; }
+    .payment-provider-mark.is-fallback::before { width:16px; height:12px; border:2px solid hsl(var(--primary-700)); border-radius:3px; content:''; box-sizing:border-box; }
+    .payment-provider-name strong { display:block; font-size:14px; }
+    .payment-provider-name span { display:block; margin-top:2px; color:hsl(var(--muted-foreground)); font-size:12px; }
+    .payment-route-summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px; border:1px solid hsl(var(--border)); border-radius:10px; background:hsl(var(--muted)); }
+    .payment-route-summary strong { display:block; font-size:14px; }
+    .payment-route-summary span { display:block; margin-top:3px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.5; }
+    @media (max-width:760px) { .payment-provider-row { grid-template-columns:minmax(0,1fr) auto; } .payment-provider-row .messaging-status { grid-column:1; } .payment-route-summary { align-items:flex-start; flex-direction:column; } }
+    @media (max-width:760px) { .messaging-provider-row { grid-template-columns:minmax(0,1fr) auto; } .messaging-provider-row > :nth-child(2),.messaging-provider-row > :nth-child(3),.messaging-provider-row.is-header { display:none; } .messaging-center-toolbar,.messaging-current { align-items:flex-start; flex-direction:column; } .messaging-center-search { width:100%; } .messaging-context-card { grid-template-columns:1fr; } .messaging-dialog-row { grid-template-columns:minmax(0,1fr) auto; } .messaging-dialog-row .messaging-status { grid-column:1; } }
+    @media (max-width: 860px) { .settings-layout { grid-template-columns: 1fr; } .settings-nav { position: static; display: flex; gap: 4px; overflow-x: auto; } .settings-nav-title { display: none; } .settings-nav-item { width: auto; flex: 0 0 auto; white-space: nowrap; } .settings-grid.address-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .settings-field.span-3 { grid-column: span 2; } .messaging-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .main-area > .content { align-items: stretch; overflow-x: visible; } .settings-page { width: 100%; flex-basis: 100%; padding-bottom: 24px; } .settings-panel-header, .settings-form, .settings-save-bar { padding-left: 16px; padding-right: 16px; } .settings-grid, .settings-grid.address-grid { grid-template-columns: 1fr; } .settings-field.span-2, .settings-field.span-3 { grid-column: span 1; } .settings-save-bar { flex-wrap: wrap; } .settings-save-status { width: 100%; margin-right: 0; } }
   </style>
 </head>
 <body>
   <div class="app-layout">
-    <!-- 侧边栏 -->
     <aside class="sidebar" id="sidebarContainer"></aside>
-
-    <!-- 主内容区 -->
     <div class="main-area">
-      <header class="header">
-        <div class="header-left">
-          <div class="breadcrumb">
-            <span>店铺</span>
-            <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-current">店铺配置</span>
+      <main class="content">
+        <div class="settings-page">
+          <div class="settings-heading"><h1>配置</h1><p>管理商店资料、支付、配送、国际化和营销技术配置。</p></div>
+          <div class="settings-layout">
+            <nav class="settings-nav" id="settingsNav" aria-label="配置项"></nav>
+            <section class="settings-workspace" id="settingsWorkspace" aria-live="polite"></section>
           </div>
         </div>
-      </header>
-
-      <div class="content" id="mainContent">
-        <div class="settings-container" id="settingsContainer">
-          <!-- 由JS动态生成 -->
-        </div>
-      </div>
+      </main>
     </div>
   </div>
-
-  <!-- Toast 容器 -->
   <div class="toast-container" id="toastContainer"></div>
-
-  <!-- 隐藏的文件上传input -->
-  <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
-
+  <input type="file" id="shopLogoInput" accept="image/png,image/jpeg,image/webp" hidden>
   <script>var CURRENT_PAGE = 'settings';</script>
-  <script src="../common/js/commons.js"></script>
+  <script src="../common/js/commons.js?v=10"></script>
   <script>
-    // ==================== 初始化 ====================
-    var currentShop = getCurrentShop();
-    var tempLogoData = null;
+    (function () {
+      var sections = [
+        { key: 'basic', label: '基本信息', desc: '商店资料、经营区域与所在地', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>' },
+        { key: 'whatsapp', label: '即时通讯', desc: '接入客服工具并设置买家端聊天入口', icon: '<svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z"/><path d="M9 9.5c.5 2 2 3.5 4 4"/></svg>' },
+        { key: 'payments', label: '支付配置', desc: '多服务商与买家端支付方式', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></svg>' },
+        { key: 'shipping', label: '发货和配送', desc: '发货地点、配送方式与履约', icon: '<svg viewBox="0 0 24 24"><path d="M3 6h12v11H3z"/><path d="M15 10h4l2 3v4h-6z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>' },
+        { key: 'international', label: '国际化', desc: '语言、市场与本地化内容', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>' },
+        { key: 'shipping-rates', label: '运费', desc: '运费规则与配送区域', icon: '<svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>' },
+        { key: 'duties', label: '关税', desc: '进口税费与结算规则', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>' },
+        { key: 'domain', label: '域名与 SSL', desc: '自定义域名、SSL 与解析状态', icon: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg>' },
+        { key: 'short-links', label: '短链接', desc: '为商店页面生成可追踪短链接', icon: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/><path d="M12 7h5M17 7v5"/></svg>' },
+        { key: 'pixels', label: '广告像素', desc: '管理广告平台像素代码与页面事件', icon: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="m8 12 3 3 5-6"/></svg>' }
+      ];
+      var activeSection = 'basic';
+      var currentShop = getCurrentShop();
+      var pendingLogo = '';
+      var messagingDraft = null;
+      var paymentDraft = null;
+      var activePaymentProviderConfig = '';
+      var messagingManagingProvider = '';
+      var nav = document.getElementById('settingsNav');
+      var workspace = document.getElementById('settingsWorkspace');
 
-    function renderSettingsPage() {
-      var container = document.getElementById('settingsContainer');
-      if (!container) return;
-      if (!currentShop) {
-        container.innerHTML = '<div style="text-align:center;padding:60px;color:hsl(var(--muted-foreground));">暂无店铺数据，请先创建店铺</div>';
-        return;
+      function escapeHtml(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function escapeAttribute(value) { return escapeHtml(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+      function selected(value, option) { return value === option ? ' selected' : ''; }
+      function shopSettings() {
+        var saved = currentShop && currentShop.settings && currentShop.settings.basic ? currentShop.settings.basic : {};
+        return {
+          email: saved.email || ('support@' + (currentShop.domain || 'example.com')),
+          phone: saved.phone || '', serviceEmail: saved.serviceEmail || '', country: saved.country || 'CN', timezone: saved.timezone || 'Asia/Shanghai', currency: saved.currency || 'CNY',
+          companyName: saved.companyName || '', province: saved.province || '', city: saved.city || '', address: saved.address || '', postalCode: saved.postalCode || ''
+        };
       }
-
-      var nameLen = currentShop.name.length;
-      var descLen = (currentShop.description || '').length;
-
-      container.innerHTML = 
-        '<div class="settings-card">' +
-          '<div class="settings-card-title">基本信息</div>' +
-          '<div class="settings-card-desc">设置店铺的 Logo、名称和描述</div>' +
-
-          // Logo 上传
-          '<div class="form-group">' +
-            '<div class="form-label">店铺 Logo</div>' +
-            '<div class="logo-upload-area">' +
-              ('<div class="logo-preview' + (currentShop.logo ? ' uploaded' : '') + '" id="logoPreview" style="background:' + (currentShop.logo ? '' : currentShop.color) + ';">' +
-                (currentShop.logo ? '<img src="' + currentShop.logo + '" alt="logo">' : currentShop.name.charAt(0)) +
-              '</div>') +
-              '<div>' +
-                '<button class="logo-upload-btn" onclick="triggerLogoUpload()">' +
-                  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
-                  '上传图片' +
-                '</button>' +
-                '<div class="logo-upload-hint">建议尺寸 200×200，支持 PNG / JPEG</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-
-          // 店铺名称
-          '<div class="form-group">' +
-            '<div class="form-label"><span class="form-label-required">*</span> 店铺名称</div>' +
-            '<input class="form-input" id="shopName" value="' + escapeHtml(currentShop.name) + '" maxlength="50" placeholder="请输入店铺名称">' +
-            '<div class="form-char-count"><span id="shopNameCount">' + nameLen + '</span>/50</div>' +
-          '</div>' +
-
-          // 店铺描述
-          '<div class="form-group">' +
-            '<div class="form-label">店铺描述</div>' +
-            '<textarea class="form-textarea" id="shopDesc" maxlength="200" placeholder="简单描述店铺定位">' + escapeHtml(currentShop.description || '') + '</textarea>' +
-            '<div class="form-char-count"><span id="shopDescCount">' + descLen + '</span>/200</div>' +
-          '</div>' +
-        '</div>' +
-
-        // 域名配置
-        '<div class="settings-card">' +
-          '<div class="settings-card-title">域名设置</div>' +
-          '<div class="settings-card-desc">管理店铺的预览域名和自定义域名</div>' +
-
-          '<div class="form-group">' +
-            '<div class="form-label">预览域名</div>' +
-            '<div class="domain-section">' +
-              '<div class="domain-prefix">' +
-                '<input class="domain-input" id="shopSlug" value="' + escapeHtml(currentShop.slug) + '" disabled>' +
-                '<span class="domain-suffix">.rebeccashop.com</span>' +
-              '</div>' +
-              '<span class="domain-status ' + (currentShop.domainStatus === 'active' ? 'active' : 'disabled') + '">' +
-                (currentShop.domainStatus === 'active' ? '✓ 已生效' : '✕ 未生效') +
-              '</span>' +
-            '</div>' +
-            '<div class="form-hint">预览域名由店铺名称自动生成，不可修改</div>' +
-          '</div>' +
-
-          '<div class="custom-domain-section">' +
-            '<div class="form-group">' +
-              '<div class="form-label">自定义域名</div>' +
-              '<div class="custom-domain-row">' +
-                '<input class="form-input" id="shopCustomDomain" value="' + escapeHtml(currentShop.customDomain || '') + '" placeholder="例如：www.myshop.com" style="flex:1;">' +
-              '</div>' +
-              '<div class="form-hint">绑定你的自有域名，需要将域名 CNAME 解析到 rebeccashop.com</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        // 保存按钮
-        '<div class="save-bar">' +
-          '<span class="save-status" id="saveStatus">✓ 已保存</span>' +
-          '<button class="btn btn-secondary" onclick="resetForm()">重置</button>' +
-          '<button class="btn btn-primary" onclick="saveShopSettings()">保存设置</button>' +
-        '</div>';
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function triggerLogoUpload() {
-      document.getElementById('logoFileInput').click();
-    }
-
-    document.getElementById('logoFileInput').addEventListener('change', function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-
-      // 模拟: 用FileReader读取并显示
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        tempLogoData = ev.target.result;
-        var preview = document.getElementById('logoPreview');
-        preview.classList.add('uploaded');
-        preview.style.background = '';
-        preview.innerHTML = '<img src="' + tempLogoData + '" alt="logo">';
-      };
-      reader.readAsDataURL(file);
-    });
-
-    function resetForm() {
-      currentShop = getCurrentShop();
-      tempLogoData = null;
-      renderSettingsPage();
-      bindEvents();
-    }
-
-    function saveShopSettings() {
-      var nameEl = document.getElementById('shopName');
-      var descEl = document.getElementById('shopDesc');
-      var customDomainEl = document.getElementById('shopCustomDomain');
-
-      var name = nameEl.value.trim();
-      if (!name) {
-        showToast('error', '请输入店铺名称');
-        nameEl.focus();
-        return;
+      function messagingConnection() { return { connected: false, workspace: '', widgetId: '', publicKey: '', allowedDomain: '', verifiedAt: '' }; }
+      function normalizeMessagingConnection(saved) {
+        var connection = Object.assign(messagingConnection(), saved || {});
+        connection.widgetId = connection.widgetId || connection.appId || '';
+        connection.publicKey = connection.publicKey || connection.installId || '';
+        connection.allowedDomain = connection.allowedDomain || (currentShop && currentShop.domain) || '';
+        return connection;
       }
-
-      currentShop.name = name;
-      currentShop.slug = generateShopSlug(name);
-      currentShop.domain = currentShop.slug + '.rebeccashop.com';
-      currentShop.description = descEl.value.trim();
-      currentShop.customDomain = customDomainEl.value.trim();
-      if (tempLogoData) {
-        currentShop.logo = tempLogoData;
+      function messagingSettings() {
+        var saved = currentShop && currentShop.settings && currentShop.settings.messaging ? currentShop.settings.messaging : {};
+        var connections = saved.connections || {};
+        var display = Object.assign({ enabled: false, mode: 'floating', position: 'right', desktop: true, mobile: true, pageScopes: ['home'], launcherText: '在线咨询', builderOverride: true }, saved.display || {});
+        if (!Array.isArray(display.pageScopes) || !display.pageScopes.length) display.pageScopes = ['home'];
+        return {
+          provider: 'salesmartly',
+          connections: { salesmartly: normalizeMessagingConnection(connections.salesmartly) },
+          display: display
+        };
       }
-
-      var shops = loadShops();
-      var index = shops.findIndex(function(s) { return s.id === currentShop.id; });
-      if (index !== -1) {
-        shops[index] = currentShop;
-        saveShops(shops);
+      function currentMessagingSettings() { if (!messagingDraft) messagingDraft = messagingSettings(); return messagingDraft; }
+      function messagingProvider() { return { key: 'salesmartly', name: 'Salesmartly', description: '为跨境独立站提供多渠道即时通讯能力。' }; }
+      function messagingProviderCard(key, data) {
+        var provider = messagingProvider(key);
+        var connection = data.connections[key];
+        var active = data.provider === key;
+        var status = connection.connected ? '<span class="messaging-status connected"><span class="messaging-status-dot"></span>已连接</span>' : '<span class="messaging-status"><span class="messaging-status-dot"></span>未连接</span>';
+        return '<button class="messaging-provider-card' + (active ? ' active' : '') + '" type="button" data-messaging-provider="' + key + '" aria-pressed="' + active + '"><span class="messaging-provider-top"><span class="messaging-provider-brand">' + messagingProviderLogo(provider.key, provider.name) + '<span class="messaging-provider-name">' + provider.name + '</span></span>' + status + '</span><span class="messaging-provider-desc">' + provider.description + '</span></button>';
       }
-
-      // 显示已保存状态
-      var statusEl = document.getElementById('saveStatus');
-      statusEl.classList.add('visible');
-      setTimeout(function() { statusEl.classList.remove('visible'); }, 2000);
-
-      // 更新侧边栏
-      renderSidebar('settings');
-
-      showToast('success', '店铺设置已保存');
-    }
-
-    function bindEvents() {
-      var nameEl = document.getElementById('shopName');
-      var descEl = document.getElementById('shopDesc');
-      if (nameEl) {
-        nameEl.addEventListener('input', function() {
-          document.getElementById('shopNameCount').textContent = this.value.length;
-        });
+      function renderMessagingSettings() {
+        if (!currentShop) { workspace.innerHTML = '<div class="settings-panel"><div class="settings-empty"><div><h2>暂无可配置的商店</h2><p>请先创建或选择一个商店，再完成即时通讯配置。</p></div></div></div>'; return; }
+        var data = currentMessagingSettings();
+        var provider = data.provider ? messagingProvider(data.provider) : null;
+        var connection = provider ? data.connections[provider.key] : null;
+        var isConnected = !!(connection && connection.connected);
+        var displayDisabled = isConnected ? '' : ' disabled';
+        var connectionMarkup = provider
+          ? '<div class="messaging-connection"><div class="messaging-connection-header"><div><h3 class="messaging-connection-title">连接 ' + provider.name + '</h3><p class="messaging-connection-copy">请在 ' + provider.name + ' 控制台的 Web 渠道设置中获取以下信息。密钥在正式版由服务端加密保存。</p>' + (isConnected ? '<p class="messaging-connection-meta">最近验证：' + escapeHtml(connection.verifiedAt || '已验证，等待下一次更新') + '</p>' : '<p class="messaging-connection-meta">完成验证后，才可向买家端展示聊天入口。</p>') + '</div><div class="messaging-connection-actions">' + (isConnected ? '<span class="messaging-status connected"><span class="messaging-status-dot"></span>已验证</span><button class="messaging-link-action" type="button" id="disconnectMessaging">断开连接</button>' : '<span class="messaging-status"><span class="messaging-status-dot"></span>未验证</span>') + '</div></div><div class="messaging-field-grid"><div class="settings-field"><label class="settings-label" for="messagingWorkspace"><span class="settings-required">*</span> 客服工作区</label><input class="settings-input" id="messagingWorkspace" maxlength="120" placeholder="例如：my-workspace" value="' + escapeAttribute(connection.workspace) + '"></div><div class="settings-field"><label class="settings-label" for="messagingWidgetId"><span class="settings-required">*</span> Web 渠道 ID</label><input class="settings-input" id="messagingWidgetId" maxlength="80" placeholder="例如：widget_123456" value="' + escapeAttribute(connection.widgetId) + '"></div><div class="settings-field"><label class="settings-label" for="messagingPublicKey"><span class="settings-required">*</span> 买家端公钥</label><input class="settings-input" id="messagingPublicKey" type="password" autocomplete="off" maxlength="160" placeholder="例如：pk_live_••••••••" value="' + escapeAttribute(connection.publicKey) + '"></div><div class="settings-field"><label class="settings-label" for="messagingAllowedDomain"><span class="settings-required">*</span> 已授权域名</label><input class="settings-input" id="messagingAllowedDomain" maxlength="120" placeholder="例如：shop.example.com" value="' + escapeAttribute(connection.allowedDomain) + '"></div></div><div style="margin-top:16px;"><button class="btn btn-secondary" type="button" id="validateMessagingConfig">验证配置</button></div></div>'
+          : '<div class="messaging-placeholder">先选择一个服务商，再填写连接信息。</div>';
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><h2 class="settings-panel-title">即时通讯</h2><p class="settings-panel-desc">连接一个客服服务商，并配置买家端显示的唯一聊天入口。</p></div><form id="messagingSettingsForm"><div class="settings-form"><section class="settings-section"><h3 class="settings-section-title">服务商</h3><p class="settings-section-desc">一个店铺同时只能启用一个服务商，切换前请确认买家端客服承接安排。</p><div class="messaging-provider-grid">' + messagingProviderCard('jishi', data) + messagingProviderCard('salesmartly', data) + '<button class="messaging-provider-card" type="button" disabled><span class="messaging-provider-top"><span class="messaging-provider-brand"><span class="messaging-provider-logo is-more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg></span><span class="messaging-provider-name">更多服务商</span></span><span class="messaging-status">即将支持</span></span><span class="messaging-provider-desc">后续将支持更多第三方即时通讯平台。</span></button></div></section><section class="settings-section"><h3 class="settings-section-title">连接配置</h3><p class="settings-section-desc">此原型仅模拟本地完整性校验，不会调用第三方接口或加载买家端脚本。</p>' + connectionMarkup + '</section><section class="settings-section"><div class="messaging-layout"><div><h3 class="settings-section-title">买家端展示</h3><p class="settings-section-desc">连接成功后可开启聊天入口；买家端仅会显示一个聊天入口。</p><div class="messaging-switch-row"><div><span class="messaging-switch-title">启用买家端即时通讯</span><span class="messaging-switch-copy">未连接服务商时不可开启。</span></div><label class="messaging-switch"><input id="messagingEnabled" type="checkbox"' + (data.display.enabled ? ' checked' : '') + displayDisabled + ' aria-label="启用买家端即时通讯"></label></div><div class="messaging-switch-row"><div><span class="messaging-switch-title">显示位置</span><span class="messaging-switch-copy">聊天入口固定在买家端页面的一侧底部。</span></div><div class="messaging-choice-row"><button class="messaging-choice" type="button" data-messaging-position="left" aria-pressed="' + (data.display.position === 'left') + '"' + displayDisabled + '>左下</button><button class="messaging-choice" type="button" data-messaging-position="right" aria-pressed="' + (data.display.position !== 'left') + '"' + displayDisabled + '>右下</button></div></div><div class="messaging-switch-row"><div><span class="messaging-switch-title">展示设备</span><span class="messaging-switch-copy">可分别控制桌面端和移动端。</span></div><div class="messaging-choice-row"><label class="messaging-switch-copy"><input id="messagingDesktop" type="checkbox"' + (data.display.desktop ? ' checked' : '') + displayDisabled + '> 桌面端</label><label class="messaging-switch-copy"><input id="messagingMobile" type="checkbox"' + (data.display.mobile ? ' checked' : '') + displayDisabled + '> 移动端</label></div></div><div class="settings-field" style="margin-top:18px;"><label class="settings-label" for="messagingLauncherText">入口文案</label><input class="settings-input" id="messagingLauncherText" maxlength="16" value="' + escapeAttribute(data.display.launcherText) + '"' + displayDisabled + '></div><p class="messaging-notice">正式发布时，系统仅会在服务商已连接、买家端展示已启用且设备条件满足时加载该服务商的官方脚本；此原型不会加载任何第三方脚本。</p></div><aside class="messaging-preview" aria-label="买家端预览"><div class="messaging-preview-heading"><h3 class="messaging-preview-title">买家端预览</h3><p class="messaging-preview-copy" id="messagingPreviewProvider">' + (provider ? provider.name : '暂未选择服务商') + '</p></div><div class="messaging-preview-stage"><div class="messaging-preview-store"><strong>' + escapeHtml(currentShop.name) + '</strong><span>这是买家看到的店铺页面示意。</span></div><button class="messaging-preview-launcher' + (data.display.position === 'left' ? ' is-left' : '') + '" id="messagingPreviewLauncher" type="button"' + (data.display.enabled && isConnected ? '' : ' hidden') + '><span class="messaging-preview-launcher-mark">聊</span><span>' + escapeHtml(data.display.launcherText || '在线咨询') + '</span></button><div class="messaging-preview-placeholder" id="messagingPreviewPlaceholder"' + (data.display.enabled && isConnected ? ' hidden' : '') + '>连接服务商并启用展示后，聊天入口将在这里显示。</div></div></aside></div></section></div><div class="settings-save-bar"><span class="settings-save-status" id="messagingSaveStatus" hidden>即时通讯配置已保存</span><button class="btn btn-secondary" type="button" id="resetMessagingSettings">重置</button><button class="btn btn-primary" type="submit">保存</button></div></form></div>';
+        bindMessagingEvents();
       }
-      if (descEl) {
-        descEl.addEventListener('input', function() {
-          document.getElementById('shopDescCount').textContent = this.value.length;
-        });
+      function collectMessagingSettings() {
+        var data = currentMessagingSettings();
+        var provider = data.provider;
+        if (provider) {
+          var workspaceInput = document.getElementById('messagingWorkspace'); var widgetIdInput = document.getElementById('messagingWidgetId'); var publicKeyInput = document.getElementById('messagingPublicKey'); var allowedDomainInput = document.getElementById('messagingAllowedDomain');
+          if (workspaceInput) data.connections[provider].workspace = workspaceInput.value.trim();
+          if (widgetIdInput) data.connections[provider].widgetId = widgetIdInput.value.trim();
+          if (publicKeyInput) data.connections[provider].publicKey = publicKeyInput.value.trim();
+          if (allowedDomainInput) data.connections[provider].allowedDomain = allowedDomainInput.value.trim();
+        }
+        var enabled = document.getElementById('messagingEnabled'); var desktop = document.getElementById('messagingDesktop'); var mobile = document.getElementById('messagingMobile'); var launcherText = document.getElementById('messagingLauncherText');
+        if (enabled) data.display.enabled = enabled.checked;
+        if (desktop) data.display.desktop = desktop.checked;
+        if (mobile) data.display.mobile = mobile.checked;
+        if (launcherText) data.display.launcherText = launcherText.value.trim() || '在线咨询';
+        return data;
       }
-    }
-
-    renderSettingsPage();
-    bindEvents();
+      function persistCurrentShop() {
+        var shops = loadShops(); var index = shops.findIndex(function (shop) { return shop.id === currentShop.id; });
+        if (index !== -1) { shops[index] = currentShop; saveShops(shops); }
+      }
+      function updateMessagingPreview() {
+        var data = currentMessagingSettings();
+        var connection = data.provider ? data.connections[data.provider] : null;
+        var visible = !!(data.display.enabled && connection && connection.connected);
+        var provider = data.provider ? messagingProvider(data.provider) : null;
+        var launcher = document.getElementById('messagingPreviewLauncher'); var placeholder = document.getElementById('messagingPreviewPlaceholder'); var providerLabel = document.getElementById('messagingPreviewProvider');
+        if (providerLabel) providerLabel.textContent = provider ? provider.name : '暂未选择服务商';
+        if (launcher) { launcher.hidden = !visible; launcher.classList.toggle('is-left', data.display.position === 'left'); launcher.innerHTML = '<span class="messaging-preview-launcher-mark">聊</span><span>' + escapeHtml(data.display.launcherText || '在线咨询') + '</span>'; }
+        if (placeholder) placeholder.hidden = visible;
+      }
+      function saveMessagingSettings(event) {
+        event.preventDefault();
+        var data = collectMessagingSettings();
+        var connection = data.provider ? data.connections[data.provider] : null;
+        if (data.display.enabled && !(connection && connection.connected)) { showToast('error', '请先连接并选择一个服务商'); return; }
+        if (data.display.enabled && !data.display.desktop && !data.display.mobile) { showToast('error', '请至少选择一个展示设备'); return; }
+        currentShop.settings = currentShop.settings || {};
+        currentShop.settings.messaging = JSON.parse(JSON.stringify(data));
+        messagingDraft = messagingSettings();
+        persistCurrentShop();
+        var status = document.getElementById('messagingSaveStatus'); status.hidden = false; setTimeout(function () { status.hidden = true; }, 2400); showToast('success', '即时通讯配置已保存');
+      }
+      function bindMessagingEvents() {
+        document.querySelectorAll('[data-messaging-provider]').forEach(function (button) { button.addEventListener('click', function () { var data = collectMessagingSettings(); data.provider = button.getAttribute('data-messaging-provider'); messagingDraft = data; renderMessagingSettings(); }); });
+        var validateButton = document.getElementById('validateMessagingConfig');
+        if (validateButton) validateButton.addEventListener('click', function () { var data = collectMessagingSettings(); var connection = data.connections[data.provider]; var fields = ['messagingWorkspace', 'messagingWidgetId', 'messagingPublicKey', 'messagingAllowedDomain']; var missing = fields.filter(function (id) { return !document.getElementById(id).value.trim(); })[0]; if (missing) { showToast('error', '请填写完整的接入信息'); document.getElementById(missing).focus(); return; } connection.connected = true; connection.verifiedAt = new Date().toLocaleString('zh-CN', { hour12: false }); messagingDraft = data; renderMessagingSettings(); showToast('success', '配置验证成功（原型）'); });
+        var disconnectButton = document.getElementById('disconnectMessaging');
+        if (disconnectButton) disconnectButton.addEventListener('click', function () { var data = collectMessagingSettings(); var connection = data.connections[data.provider]; connection.connected = false; connection.verifiedAt = ''; data.display.enabled = false; messagingDraft = data; renderMessagingSettings(); showToast('success', '已断开 ' + messagingProvider(data.provider).name); });
+        var enabled = document.getElementById('messagingEnabled'); if (enabled) enabled.addEventListener('change', function () { currentMessagingSettings().display.enabled = enabled.checked; updateMessagingPreview(); });
+        document.querySelectorAll('[data-messaging-position]').forEach(function (button) { button.addEventListener('click', function () { currentMessagingSettings().display.position = button.getAttribute('data-messaging-position'); document.querySelectorAll('[data-messaging-position]').forEach(function (item) { item.setAttribute('aria-pressed', item === button ? 'true' : 'false'); }); updateMessagingPreview(); }); });
+        ['messagingDesktop', 'messagingMobile'].forEach(function (id) { var control = document.getElementById(id); if (control) control.addEventListener('change', function () { currentMessagingSettings().display[id === 'messagingDesktop' ? 'desktop' : 'mobile'] = control.checked; }); });
+        var launcherText = document.getElementById('messagingLauncherText'); if (launcherText) launcherText.addEventListener('input', function () { currentMessagingSettings().display.launcherText = launcherText.value.trim() || '在线咨询'; updateMessagingPreview(); });
+        document.getElementById('resetMessagingSettings').addEventListener('click', function () { messagingDraft = messagingSettings(); renderMessagingSettings(); });
+        document.getElementById('messagingSettingsForm').addEventListener('submit', saveMessagingSettings);
+      }
+      function messagingCatalog() { return [
+        { key: 'salesmartly', name: 'Salesmartly', supported: true }, { key: 'intercom', name: 'Intercom' }, { key: 'zendesk', name: 'Zendesk' }, { key: 'crisp', name: 'Crisp' }, { key: 'livechat', name: 'LiveChat' }, { key: 'gorgias', name: 'Gorgias' }, { key: 'tidio', name: 'Tidio' }, { key: 'sobot', name: '智齿客服' }, { key: 'more', name: '更多服务商' }
+      ]; }
+      function messagingProviderLogo(key, name) { var sources = { salesmartly:'https://www.salesmartly.com/favicon.ico', intercom:'https://cdn.simpleicons.org/intercom/286EFA?viewbox=auto', zendesk:'https://cdn.simpleicons.org/zendesk/03363D?viewbox=auto', crisp:'https://cdn.simpleicons.org/crisp/1976D2?viewbox=auto', livechat:'https://cdn.simpleicons.org/livechat/FF5100?viewbox=auto', gorgias:'https://cdn.simpleicons.org/gorgias/000000?viewbox=auto', tidio:'https://cdn.simpleicons.org/tidio/3B5BDB?viewbox=auto', sobot:'https://www.sobot.com/favicon.ico' }; var src = sources[key]; if (!src) return '<span class="messaging-provider-logo is-more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5a5 5 0 0 1 9.6-1.8M17 14.5a5 5 0 0 1-9.6 1.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg></span>'; return '<span class="messaging-provider-logo" aria-label="' + escapeAttribute(name) + ' Logo"><img src="' + src + '" alt="" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.classList.add(\'is-more\');this.parentElement.innerHTML=\'<svg viewBox=\\\'0 0 24 24\\\' aria-hidden=\\\'true\\\'><path d=\\\'M7 9.5a5 5 0 0 1 9.6-1.8M17 14.5a5 5 0 0 1-9.6 1.8\\\' fill=\\\'none\\\' stroke=\\\'currentColor\\\' stroke-linecap=\\\'round\\\' stroke-width=\\\'2\\\'/></svg>\';"></span>'; }
+      function messagingCatalogItem(key) { return messagingCatalog().filter(function (item) { return item.key === key; })[0]; }
+      function messagingConnectionFields(connection) {
+        return '<div class="messaging-field-grid"><div class="settings-field"><label class="settings-label" for="messagingWorkspace"><span class="settings-required">*</span> 客服工作区</label><input class="settings-input" id="messagingWorkspace" maxlength="120" placeholder="例如：my-workspace" value="' + escapeAttribute(connection.workspace) + '"></div><div class="settings-field"><label class="settings-label" for="messagingWidgetId"><span class="settings-required">*</span> Web 渠道 ID</label><input class="settings-input" id="messagingWidgetId" maxlength="80" placeholder="例如：widget_123456" value="' + escapeAttribute(connection.widgetId) + '"></div><div class="settings-field"><label class="settings-label" for="messagingPublicKey"><span class="settings-required">*</span> 买家端公钥</label><input class="settings-input" id="messagingPublicKey" type="password" autocomplete="off" maxlength="160" placeholder="例如：pk_live_••••••••" value="' + escapeAttribute(connection.publicKey) + '"></div><div class="settings-field"><label class="settings-label" for="messagingAllowedDomain"><span class="settings-required">*</span> 已授权域名</label><input class="settings-input" id="messagingAllowedDomain" maxlength="120" placeholder="例如：shop.example.com" value="' + escapeAttribute(connection.allowedDomain || currentShop.domain) + '"></div></div>';
+      }
+      function openMessagingProviderDialog() {
+        var data = collectMessagingSettings();
+        window.parent.postMessage({ type:'rbk-messaging-provider-dialog', currentProvider:data.provider, providers:messagingCatalog().map(function (item) { return { key:item.key, name:item.name, supported:!!item.supported, connected:!!(data.connections[item.key] && data.connections[item.key].connected) }; }) }, '*');
+      }
+      window.addEventListener('message', function (event) { if (event.source !== window.parent) return; var message = event.data || {}; if (message.type === 'rbk-messaging-provider-selected') { var provider = messagingCatalogItem(message.providerKey); if (!provider || !provider.supported) return; var selectedData = currentMessagingSettings(); selectedData.provider = provider.key; selectedData.display.enabled = false; messagingDraft = selectedData; renderMessagingCenter(); showToast('info', '已选择 ' + provider.name + '，请完成配置验证后启用展示'); return; } if (message.type === 'rbk-messaging-provider-config-saved') { var configProvider = messagingCatalogItem(message.providerKey); if (!configProvider || !configProvider.supported || !message.connection) return; var configData = currentMessagingSettings(); configData.connections[configProvider.key] = Object.assign(normalizeMessagingConnection(configData.connections[configProvider.key]), message.connection); messagingDraft = configData; renderMessagingCenter(); showToast('success', configProvider.name + ' 配置验证成功（原型）'); } });
+      function renderMessagingCenter() {
+        if (!currentShop) { workspace.innerHTML = '<div class="settings-panel"><div class="settings-empty"><div><h2>暂无可配置的商店</h2><p>请先创建或选择一个商店，再完成即时通讯配置。</p></div></div></div>'; return; }
+        var data = currentMessagingSettings(); var provider = messagingCatalogItem(data.provider); var connection = provider && data.connections[provider.key] ? data.connections[provider.key] : null; var connected = !!(connection && connection.connected); var displayDisabled = connected ? '' : ' disabled'; var builderOnly = data.display.mode === 'builder';
+        var summaryStatus = !provider ? '暂未选择服务商' : !connected ? '待配置，买家端展示已关闭' : data.display.enabled ? '已验证 · 买家端正在展示' : '已验证 · 买家端展示已关闭';
+        var summary = '<div class="messaging-current messaging-current-provider"><div class="messaging-current-main">' + (provider ? messagingProviderLogo(provider.key, provider.name) : '') + '<div class="messaging-current-copy"><strong>当前服务商：' + (provider ? escapeHtml(provider.name) : '未选择') + '</strong><span>' + summaryStatus + '</span></div></div><div style="display:flex;gap:8px;"><button class="messaging-mini-button" type="button" id="configureMessagingProvider"' + (provider ? '' : ' disabled') + '>配置</button><button class="messaging-mini-button" type="button" id="manageMessagingProviders">选择服务商</button></div></div>';
+        var config = provider ? '<div class="messaging-connection"><div class="messaging-connection-header"><div><h3 class="messaging-connection-title">' + escapeHtml(provider.name) + ' 配置</h3><p class="messaging-connection-copy">在 ' + escapeHtml(provider.name) + ' 控制台获取 Web 渠道接入信息；系统会在服务端安全保存并托管买家端安装。</p><p class="messaging-connection-meta">' + (connected ? '已验证：' + escapeHtml(connection.verifiedAt || '等待下一次验证') : '完成验证后，才能启用买家端展示。') + '</p></div><span class="messaging-status' + (connected ? ' connected' : '') + '"><span class="messaging-status-dot"></span>' + (connected ? '已验证' : '待验证') + '</span></div>' + messagingConnectionFields(connection) + '<div class="messaging-connection-actions messaging-config-actions"><button class="btn btn-secondary" type="button" id="centerValidate">' + (connected ? '重新验证配置' : '验证配置') + '</button>' + (connected ? '<button class="messaging-link-action" type="button" id="centerDisconnect">移除配置</button>' : '') + '</div></div>' : '';
+        var modeMarkup = '<div class="messaging-mount-options"><button class="messaging-mount-option" type="button" data-mount-mode="floating" aria-pressed="' + (!builderOnly) + '"' + displayDisabled + '><strong>全站悬浮入口</strong><span>默认在全站页面底部显示聊天入口。</span></button><button class="messaging-mount-option" type="button" data-mount-mode="builder" aria-pressed="' + builderOnly + '"' + displayDisabled + '><strong>仅使用装修页区块</strong><span>仅在装修页放置“即时通讯”区块的页面展示。</span></button></div>';
+        var positionMarkup = !builderOnly ? '<div class="messaging-switch-row"><div><span class="messaging-switch-title">悬浮入口位置</span><span class="messaging-switch-copy">显示在买家端页面底部的一侧。</span></div><div class="messaging-choice-row"><button class="messaging-choice" type="button" data-messaging-position="left" aria-pressed="' + (data.display.position === 'left') + '"' + displayDisabled + '>左下</button><button class="messaging-choice" type="button" data-messaging-position="right" aria-pressed="' + (data.display.position !== 'left') + '"' + displayDisabled + '>右下</button></div></div><div class="messaging-switch-row"><div><span class="messaging-switch-title">装修页优先规则</span><span class="messaging-switch-copy">页面放置“即时通讯”区块时，优先显示区块并隐藏该页悬浮入口。</span></div><input id="messagingBuilderOverride" type="checkbox"' + (data.display.builderOverride ? ' checked' : '') + displayDisabled + ' aria-label="启用装修页优先规则"></div>' : '<div class="messaging-inline-slot"><strong>装修页 · 应用区块 > 即时通讯</strong><p>装修器上线后，在首页、商品详情页或自定义页面放入该区块。系统会自动挂载当前服务商，无需复制脚本。</p></div>';
+        var previewCopy = builderOnly ? '装修页已放置即时通讯区块时显示。' : '全站悬浮入口；装修页区块可按优先规则替代。';
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><h2 class="settings-panel-title">即时通讯</h2><p class="settings-panel-desc">配置当前服务商，并设置买家端唯一聊天入口的展示方式。</p></div><form id="messagingSettingsForm"><div class="settings-form"><section class="settings-section"><h3 class="settings-section-title">当前服务商</h3><p class="settings-section-desc">买家端同一时刻只使用一家服务商；服务商选择集中在管理列表中。</p>' + summary + '</section><section class="settings-section"><div class="messaging-layout"><div><h3 class="settings-section-title">买家端展示</h3><p class="settings-section-desc">系统托管安装：系统统一加载服务商 SDK、控制入口唯一性与页面上下文，不需要复制第三方代码。</p><div class="messaging-switch-row"><div><span class="messaging-switch-title">启用买家端展示</span><span class="messaging-switch-copy">当前服务商未验证时不能开启。</span></div><input id="messagingEnabled" type="checkbox"' + (data.display.enabled ? ' checked' : '') + displayDisabled + ' aria-label="启用买家端展示"></div><div class="messaging-install-note">当前状态：' + (connected && data.display.enabled ? '买家端正在展示 ' + escapeHtml(provider.name) : '买家端未展示') + '。系统始终保证每个页面仅会显示一个聊天入口。</div><h4 class="messaging-subsection-title">默认入口</h4>' + modeMarkup + positionMarkup + '<div class="settings-field" style="margin-top:18px;"><label class="settings-label" for="messagingLauncherText">入口文案</label><input class="settings-input" id="messagingLauncherText" maxlength="16" value="' + escapeAttribute(data.display.launcherText) + '"' + displayDisabled + '></div><div class="messaging-context-card"><h4>会话上下文</h4><div><strong>首页</strong><span>传递页面来源，不附带商品信息。</span></div><div><strong>商品详情页</strong><span>商品详情页：自动传递商品链接、主图、当前 SKU/变体、价格和可售状态。</span></div></div></div><aside class="messaging-preview" aria-label="买家端预览"><div class="messaging-preview-heading"><h3 class="messaging-preview-title">买家端预览</h3><p class="messaging-preview-copy">' + (provider ? escapeHtml(provider.name) : '暂未选择服务商') + '</p></div><div class="messaging-preview-stage"><div class="messaging-preview-store"><strong>' + escapeHtml(currentShop.name) + '</strong><span>' + previewCopy + '</span>' + (builderOnly ? '<div class="messaging-preview-inline">即时通讯 · ' + escapeHtml(data.display.launcherText) + '</div>' : '') + '</div>' + (!builderOnly ? '<button class="messaging-preview-launcher' + (data.display.position === 'left' ? ' is-left' : '') + '" id="messagingPreviewLauncher" type="button"' + (data.display.enabled && connected ? '' : ' hidden') + '><span class="messaging-preview-launcher-mark">聊</span><span>' + escapeHtml(data.display.launcherText) + '</span></button>' : '') + '<div class="messaging-preview-placeholder" id="messagingPreviewPlaceholder"' + (data.display.enabled && connected ? ' hidden' : '') + '>验证当前服务商并启用展示后，聊天入口将在这里显示。</div></div></aside></div></section></div><div class="settings-save-bar"><span class="settings-save-status" id="messagingSaveStatus" hidden>即时通讯配置已保存</span><button class="btn btn-secondary" type="button" id="resetMessagingSettings">重置</button><button class="btn btn-primary" type="submit">保存</button></div></form></div>';
+        bindMessagingCenterEvents();
+      }
+      function bindMessagingCenterEvents() {
+        var manage = document.getElementById('manageMessagingProviders'); if (manage) manage.addEventListener('click', function () { collectMessagingSettings(); openMessagingProviderDialog(); });
+        var configure = document.getElementById('configureMessagingProvider'); if (configure) configure.addEventListener('click', function () { var configData = collectMessagingSettings(); var configProvider = messagingCatalogItem(configData.provider); if (!configProvider) return; window.parent.postMessage({ type:'rbk-messaging-provider-config-dialog', provider:configProvider, connection:configData.connections[configProvider.key] }, '*'); });
+        var validate = document.getElementById('centerValidate'); if (validate) validate.addEventListener('click', function () { var data = collectMessagingSettings(); var connection = data.connections[data.provider]; if (!connection.workspace || !connection.widgetId || !connection.publicKey || !connection.allowedDomain) { showToast('error', '请填写完整的接入信息'); return; } connection.connected = true; connection.verifiedAt = new Date().toLocaleString('zh-CN', { hour12:false }); messagingDraft = data; renderMessagingCenter(); showToast('success', '配置验证成功（原型）'); });
+        var disconnect = document.getElementById('centerDisconnect'); if (disconnect) disconnect.addEventListener('click', function () { var data = collectMessagingSettings(); var connection = data.connections[data.provider]; connection.connected = false; connection.verifiedAt = ''; data.display.enabled = false; messagingDraft = data; renderMessagingCenter(); showToast('success', '已移除当前服务商配置，买家端展示已关闭'); });
+        document.querySelectorAll('[data-mount-mode]').forEach(function (button) { button.addEventListener('click', function () { currentMessagingSettings().display.mode = button.getAttribute('data-mount-mode'); renderMessagingCenter(); }); });
+        document.querySelectorAll('[data-messaging-position]').forEach(function (button) { button.addEventListener('click', function () { currentMessagingSettings().display.position = button.getAttribute('data-messaging-position'); renderMessagingCenter(); }); });
+        var enabled = document.getElementById('messagingEnabled'); if (enabled) enabled.addEventListener('change', function () { currentMessagingSettings().display.enabled = enabled.checked; renderMessagingCenter(); });
+        var builderOverride = document.getElementById('messagingBuilderOverride'); if (builderOverride) builderOverride.addEventListener('change', function () { currentMessagingSettings().display.builderOverride = builderOverride.checked; });
+        var launcherText = document.getElementById('messagingLauncherText'); if (launcherText) launcherText.addEventListener('input', function () { currentMessagingSettings().display.launcherText = launcherText.value.trim() || '在线咨询'; var preview = document.getElementById('messagingPreviewLauncher'); if (preview) preview.lastElementChild.textContent = currentMessagingSettings().display.launcherText; });
+        document.getElementById('resetMessagingSettings').addEventListener('click', function () { messagingDraft = messagingSettings(); renderMessagingCenter(); });
+        document.getElementById('messagingSettingsForm').addEventListener('submit', saveMessagingSettings);
+      }
+      function provinceOptions(country, value) {
+        var options = country === 'US' ? [['CA', 'California'], ['NY', 'New York'], ['TX', 'Texas']] : country === 'GB' ? [['ENG', 'England'], ['SCT', 'Scotland']] : [['BJ', '北京'], ['SH', '上海'], ['GD', '广东'], ['ZJ', '浙江']];
+        return options.map(function (item) { return '<option value="' + item[0] + '"' + selected(value, item[0]) + '>' + item[1] + '</option>'; }).join('');
+      }
+      function renderNav() {
+        nav.innerHTML = '<div class="settings-nav-title">商店配置</div>' + sections.map(function (section) {
+          return '<button class="settings-nav-item' + (section.key === activeSection ? ' active' : '') + '" type="button" data-section="' + section.key + '"><span class="settings-nav-icon" aria-hidden="true">' + section.icon + '</span><span>' + section.label + '</span></button>';
+        }).join('');
+      }
+      function renderBasicInfo() {
+        if (!currentShop) { workspace.innerHTML = '<div class="settings-panel"><div class="settings-empty"><div><h2>暂无可配置的商店</h2><p>请先创建或选择一个商店，再完成基本信息配置。</p></div></div></div>'; return; }
+        var data = shopSettings();
+        var logo = pendingLogo || currentShop.logo;
+        var logoMarkup = logo ? '<img src="' + escapeHtml(logo) + '" alt="商店 Logo">' : escapeHtml(currentShop.name.charAt(0));
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><h2 class="settings-panel-title">基本信息</h2><p class="settings-panel-desc">设置商店对客户、合作伙伴和服务提供商展示的基础资料。</p></div>' +
+          '<form id="basicSettingsForm"><div class="settings-form">' +
+          '<section class="settings-section"><h3 class="settings-section-title">商店资料</h3><p class="settings-section-desc">基础联系方式用于订单通知、客户支持和服务沟通。</p>' +
+          '<div class="settings-field"><label class="settings-label">商家 Logo</label><div class="settings-logo-row"><div class="settings-logo-preview" id="shopLogoPreview" style="background:' + escapeHtml(currentShop.color || '#D4845A') + ';">' + logoMarkup + '</div><div class="settings-logo-copy"><button class="settings-logo-action" type="button" id="uploadShopLogo"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>上传图片</button><p class="settings-hint">建议使用 200 × 200 px 的 PNG、JPEG 或 WebP 图片。</p></div></div></div>' +
+          '<div class="settings-grid" style="margin-top:20px;"><div class="settings-field"><label class="settings-label" for="storeName"><span class="settings-required">*</span> 商店名称</label><input class="settings-input" id="storeName" maxlength="50" value="' + escapeHtml(currentShop.name) + '"></div>' +
+          '<div class="settings-field"><label class="settings-label" for="storeEmail"><span class="settings-required">*</span> 商店电子邮件</label><input class="settings-input" id="storeEmail" type="email" value="' + escapeHtml(data.email) + '"></div>' +
+          '<div class="settings-field"><label class="settings-label" for="storePhone">商店电话</label><input class="settings-input" id="storePhone" type="tel" placeholder="例如：+86 21 5555 8888" value="' + escapeHtml(data.phone) + '"></div>' +
+          '<div class="settings-field"><label class="settings-label" for="serviceEmail">客服邮箱</label><input class="settings-input" id="serviceEmail" type="email" placeholder="例如：help@example.com" value="' + escapeHtml(data.serviceEmail) + '"></div></div></section>' +
+          '<section class="settings-section"><h3 class="settings-section-title">经营区域与结算</h3><p class="settings-section-desc">这些信息会作为商店默认经营环境，具体市场规则将在国际化、运费和关税中单独配置。</p><div class="settings-grid">' +
+          '<div class="settings-field"><label class="settings-label" for="operatingCountry"><span class="settings-required">*</span> 店铺经营国家/地区</label><select class="settings-select" id="operatingCountry"><option value="CN"' + selected(data.country, 'CN') + '>中国大陆</option><option value="US"' + selected(data.country, 'US') + '>美国</option><option value="GB"' + selected(data.country, 'GB') + '>英国</option></select></div>' +
+          '<div class="settings-field"><label class="settings-label" for="storeTimezone"><span class="settings-required">*</span> 店铺经营所在地时区</label><select class="settings-select" id="storeTimezone"><option value="Asia/Shanghai"' + selected(data.timezone, 'Asia/Shanghai') + '>中国标准时间 (GMT+08:00)</option><option value="America/Los_Angeles"' + selected(data.timezone, 'America/Los_Angeles') + '>太平洋时间 (GMT-08:00)</option><option value="America/New_York"' + selected(data.timezone, 'America/New_York') + '>东部时间 (GMT-05:00)</option><option value="Europe/London"' + selected(data.timezone, 'Europe/London') + '>格林尼治时间 (GMT+00:00)</option></select></div>' +
+          '<div class="settings-field"><label class="settings-label" for="settlementCurrency"><span class="settings-required">*</span> 结算币种</label><select class="settings-select" id="settlementCurrency"><option value="CNY"' + selected(data.currency, 'CNY') + '>CNY - 人民币</option><option value="USD"' + selected(data.currency, 'USD') + '>USD - 美元</option><option value="GBP"' + selected(data.currency, 'GBP') + '>GBP - 英镑</option></select></div>' +
+          '<div class="settings-field"><label class="settings-label" for="storeStatus"><span class="settings-required">*</span> 店铺状态</label><select class="settings-select" id="storeStatus"><option value="active"' + selected(currentShop.status, 'active') + '>营业中</option><option value="disabled"' + selected(currentShop.status, 'disabled') + '>已停用</option></select><p class="settings-hint">停用后商店不会对外提供服务。</p></div></div></section>' +
+          '<section class="settings-section"><h3 class="settings-section-title">店铺经营所在地</h3><p class="settings-section-desc">用于发票、税务、配送和法定信息展示。</p><div class="settings-grid address-grid">' +
+          '<div class="settings-field span-3"><label class="settings-label" for="companyName">公司名称</label><input class="settings-input" id="companyName" placeholder="请输入公司名称" value="' + escapeHtml(data.companyName) + '"></div>' +
+          '<div class="settings-field"><label class="settings-label" for="addressCountry"><span class="settings-required">*</span> 国家/地区</label><select class="settings-select" id="addressCountry"><option value="CN"' + selected(data.country, 'CN') + '>中国大陆</option><option value="US"' + selected(data.country, 'US') + '>美国</option><option value="GB"' + selected(data.country, 'GB') + '>英国</option></select></div>' +
+          '<div class="settings-field"><label class="settings-label" for="addressProvince">省/州</label><select class="settings-select" id="addressProvince">' + provinceOptions(data.country, data.province) + '</select></div>' +
+          '<div class="settings-field"><label class="settings-label" for="addressCity">城市</label><input class="settings-input" id="addressCity" placeholder="请输入城市" value="' + escapeHtml(data.city) + '"></div>' +
+          '<div class="settings-field span-2"><label class="settings-label" for="addressLine">详细地址</label><input class="settings-input" id="addressLine" placeholder="请输入街道、门牌号等详细地址" value="' + escapeHtml(data.address) + '"></div>' +
+          '<div class="settings-field"><label class="settings-label" for="postalCode">邮编</label><input class="settings-input" id="postalCode" autocomplete="postal-code" placeholder="请输入邮编" value="' + escapeHtml(data.postalCode) + '"></div>' +
+          '</div></section></div><div class="settings-save-bar"><span class="settings-save-status" id="basicSaveStatus" hidden>基本信息已保存</span><button class="btn btn-secondary" type="button" id="resetBasicSettings">重置</button><button class="btn btn-primary" type="submit">保存</button></div></form></div>';
+        bindBasicEvents();
+      }
+      function paymentMethodCatalog() { return [
+        { key:'cards', name:'信用卡', category:'信用卡', description:'支持 Visa、Mastercard 等信用卡。', providers:['stripe','airwallex','qianhai'] },
+        { key:'paypal', name:'PayPal', category:'其他支付方式', description:'买家使用 PayPal 账户完成支付。', providers:['paypal'] },
+        { key:'afterpay', name:'Afterpay', category:'其他支付方式', description:'符合条件的买家可选择先买后付。', providers:['afterpay'] },
+        { key:'qianhai', name:'钱海支付', category:'其他支付方式', description:'买家通过钱海支付完成付款。', providers:['qianhai'] },
+        { key:'airwallex', name:'空中云汇支付', category:'其他支付方式', description:'买家通过空中云汇提供的支付方式完成付款。', providers:['airwallex'] }
+      ]; }
+      function paymentMethodCatalogItem(key) { return paymentMethodCatalog().filter(function (item) { return item.key === key; })[0]; }
+      function buyerCheckoutPreviewMethods(data) { return data.buyerMethods.filter(function (key) { if (key === 'cards') return !!(data.cardRouting.primary && data.providers[data.cardRouting.primary] && data.providers[data.cardRouting.primary].connected); var item = paymentMethodCatalogItem(key); return !!(item && item.providers.some(function (providerKey) { return data.providers[providerKey] && data.providers[providerKey].connected; })); }).map(function (key) { var item = paymentMethodCatalogItem(key); return key === 'cards' ? { name:'信用卡', description:'Visa、Mastercard', key:key } : { name:item.name, description:item.description, key:key }; }); }
+      function paymentMethodAvailable(item, providers) { return item.providers.some(function (key) { return providers[key] && providers[key].connected; }); }
+      function paymentSettings() {
+        if (paymentDraft) return paymentDraft;
+        var saved = currentShop && currentShop.settings && currentShop.settings.payments ? currentShop.settings.payments : {};
+        var providers = saved.providers || {};
+        var defaultBuyerMethods = ['cards', 'paypal', 'afterpay', 'qianhai', 'airwallex'];
+        var buyerMethods = Array.isArray(saved.buyerMethods) ? saved.buyerMethods : defaultBuyerMethods;
+        if (buyerMethods.some(function (key) { return ['apple_pay','google_pay','klarna','ideal'].indexOf(key) !== -1; })) buyerMethods = buyerMethods.filter(function (key) { return ['apple_pay','google_pay','klarna','ideal'].indexOf(key) === -1; }).concat(['afterpay','qianhai','airwallex'].filter(function (key) { return buyerMethods.indexOf(key) === -1; }));
+        var data = { buyerMethods: buyerMethods.filter(function (key, index, list) { return !!paymentMethodCatalogItem(key) && list.indexOf(key) === index; }), cardRouting: Object.assign({ primary:'stripe', fallback:true }, saved.cardRouting || {}), providers: {
+          stripe: Object.assign({ name:'Stripe', type:'信用卡 · Visa、Mastercard', connected:true, onboardingState:'connected', accountLabel:'已授权商户账户' }, providers.stripe || {}),
+          airwallex: Object.assign({ name:'空中云汇', type:'信用卡 · 本地支付方式', connected:true, onboardingState:'connected', accountLabel:'已完成企业认证' }, providers.airwallex || {}),
+          qianhai: Object.assign({ name:'钱海', type:'信用卡 · Visa、Mastercard', connected:false, onboardingState:'not_started', accountLabel:'' }, providers.qianhai || {}),
+          paypal: Object.assign({ name:'PayPal', type:'PayPal 钱包支付', connected:true, onboardingState:'connected', accountLabel:'已授权商户账户' }, providers.paypal || {}),
+          afterpay: Object.assign({ name:'Afterpay', type:'先买后付', connected:false, onboardingState:'not_started', accountLabel:'' }, providers.afterpay || {})
+        }};
+        if (!data.providers[data.cardRouting.primary] || !data.providers[data.cardRouting.primary].connected) data.cardRouting.primary = ['stripe','airwallex','qianhai'].filter(function (key) { return data.providers[key].connected; })[0] || '';
+        return data;
+      }
+      function persistPaymentSettings(data) { paymentDraft = data; }
+      function commitPaymentSettings() { var data = paymentSettings(); ['airwallex','qianhai','afterpay'].forEach(function (key) { var provider = data.providers[key]; var fields = key === 'airwallex' ? ['clientId','apiKey','webhookToken'] : key === 'qianhai' ? ['account','terminalId','secretKey'] : ['merchantId','secretKey']; var config = provider.config || {}; if (fields.every(function (field) { return String(config[field] || '').trim(); })) { provider.connected = true; provider.onboardingState = 'connected'; provider.accountLabel = '已完成配置'; } }); data.buyerMethods = data.buyerMethods.filter(function (key) { if (key === 'cards') return !!data.providers[data.cardRouting.primary] && data.providers[data.cardRouting.primary].connected; var item = paymentMethodCatalogItem(key); return !!(item && item.providers.some(function (providerKey) { return data.providers[providerKey] && data.providers[providerKey].connected; })); }); currentShop.settings = currentShop.settings || {}; currentShop.settings.payments = data; persistCurrentShop(); paymentDraft = null; }
+      function paymentProviderConfigPanel(data) { if (!activePaymentProviderConfig || !data.providers[activePaymentProviderConfig]) return ''; var key = activePaymentProviderConfig; var provider = data.providers[key]; var fieldSets = { airwallex:[['clientId','唯一客户 ID','Enter Unique client ID',false],['apiKey','客户端 API 密钥','Enter Client API key',true],['webhookToken','Webhook 令牌','Enter Webhook Token',true]], qianhai:[['account','账号','输入 Oceanpayment 账号',false],['terminalId','终端号','输入终端号',false],['secretKey','秘钥','输入秘钥',true]], afterpay:[['merchantId','MerchantId','输入 MerchantId',false],['secretKey','SecretKey','输入 SecretKey',true]] }; var fields = fieldSets[key] || []; var config = provider.config || {}; var content = fields.length ? '<div class="settings-grid">' + fields.map(function (field) { return '<div class="settings-field"><label class="settings-label" for="paymentConfig_' + field[0] + '"><span class="settings-required">*</span> ' + field[1] + '</label><input class="settings-input" id="paymentConfig_' + field[0] + '" type="' + (field[3] ? 'password' : 'text') + '" autocomplete="off" placeholder="' + field[2] + '" value="' + escapeAttribute(config[field[0]] || '') + '" data-inline-payment-field="' + field[0] + '"></div>'; }).join('') + '</div>' : '<div class="payment-method-summary-empty">' + escapeHtml(provider.name) + ' 已授权。保存后会按当前选择同步到买家端。</div>'; return '<section class="settings-section"><h3 class="settings-section-title">配置 ' + escapeHtml(provider.name) + '</h3><p class="settings-section-desc">' + (fields.length ? '填写服务商提供的收款信息，点击页面底部保存后生效。' : '授权状态由平台统一管理，无需填写额外字段。') + '</p>' + content + '</section>'; }
+      function paymentProviderLogo(key, name) {
+        var logoSources = { stripe:'https://cdn.simpleicons.org/stripe/635BFF?viewbox=auto', airwallex:'https://cdn.simpleicons.org/airwallex/0A6B78?viewbox=auto', qianhai:'https://www.oceanpayment.com/favicon.ico', paypal:'https://cdn.simpleicons.org/paypal/003087?viewbox=auto', afterpay:'https://cdn.simpleicons.org/afterpay/000000?viewbox=auto' };
+        return '<span class="payment-provider-mark' + (key === 'qianhai' ? ' is-oceanpayment' : '') + '" aria-label="' + escapeAttribute(name) + ' Logo"><img src="' + logoSources[key] + '" alt="" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.classList.add(\'is-fallback\');"></span>';
+      }
+      function paymentProviderProgress(provider) { var states = { connected:{ label:'已连接', action:'管理' }, needs_information:{ label:'需补资料', action:'补充资料' }, pending_review:{ label:'等待审核', action:'查看状态' }, rejected:{ label:'审核未通过', action:'重新提交' }, authorization:{ label:'等待授权', action:'继续授权' }, not_started:{ label:'未开通', action:'申请开通' } }; return states[provider.onboardingState] || (provider.connected ? states.connected : states.not_started); }
+      function paymentProviderRow(key, provider) { var progress = paymentProviderProgress(provider); return '<div class="payment-provider-row"><div class="payment-provider-name">' + paymentProviderLogo(key, provider.name) + '<div><strong>' + escapeHtml(provider.name) + '</strong><span>' + escapeHtml(provider.type) + '</span></div></div><span class="messaging-status' + (provider.connected ? ' connected' : '') + '"><span class="messaging-status-dot"></span>' + progress.label + '</span><button class="messaging-mini-button" type="button" data-payment-provider="' + key + '">' + progress.action + '</button></div>'; }
+      function paymentMethodLogo(key, name) { var sources = { cards:'https://cdn.simpleicons.org/stripe/635BFF?viewbox=auto', paypal:'https://cdn.simpleicons.org/paypal/003087?viewbox=auto', afterpay:'https://cdn.simpleicons.org/afterpay/000000?viewbox=auto', qianhai:'https://www.oceanpayment.com/favicon.ico', airwallex:'https://www.airwallex.com/favicon.ico' }; return '<span class="payment-method-logo" aria-label="' + escapeAttribute(name) + ' Logo"><img src="' + sources[key] + '" alt="" referrerpolicy="no-referrer" onerror="this.remove();"></span>'; }
+      function paymentMethodSummaryRow(key, index, data) { var item = paymentMethodCatalogItem(key); var providerKey = key === 'cards' ? data.cardRouting.primary : item && (item.providers.filter(function (provider) { return data.providers[provider] && data.providers[provider].connected; })[0] || item.providers[0]); var configured = !!(providerKey && data.providers[providerKey] && data.providers[providerKey].connected); var name = key === 'cards' && providerKey ? data.providers[providerKey].name + '信用卡' : item.name; var choice = key === 'cards' ? '<button class="messaging-mini-button" type="button" data-select-card-provider>选择服务商</button>' : '<span class="payment-method-choice-spacer" aria-hidden="true"></span>'; var status = '<span class="messaging-status' + (configured ? ' connected' : '') + '"><span class="messaging-status-dot"></span>' + (configured ? '已配置' : '未配置') + '</span>'; var action = providerKey ? '<button class="messaging-mini-button" type="button" data-configure-payment-provider="' + providerKey + '">配置</button>' : ''; var controls = key === 'cards' ? status + choice + action : choice + status + action; return '<div class="payment-method-summary-row" data-payment-method-summary="' + key + '" draggable="true"><span class="payment-method-order">' + (index + 1) + '</span>' + paymentMethodLogo(key === 'cards' ? providerKey : key, name) + '<div><strong>' + escapeHtml(name) + '</strong><span>' + escapeHtml(item.description) + '</span></div>' + controls + '<span class="payment-method-drag-handle" aria-label="拖拽调整顺序" title="拖拽调整顺序"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="3" r="1.25"/><circle cx="11" cy="3" r="1.25"/><circle cx="5" cy="8" r="1.25"/><circle cx="11" cy="8" r="1.25"/><circle cx="5" cy="13" r="1.25"/><circle cx="11" cy="13" r="1.25"/></svg></span></div>'; }
+      function renderPaymentSettings() {
+        if (!currentShop) { workspace.innerHTML = '<div class="settings-empty"><div><h2>未找到商店</h2><p>请返回商店列表后重新进入配置。</p></div></div>'; return; }
+        var data = paymentSettings(); var cardMethods = data.buyerMethods.filter(function (key) { return key === 'cards'; }); var otherMethods = data.buyerMethods.filter(function (key) { return key !== 'cards'; }); var cardMethodRows = cardMethods.map(function (key, index) { return paymentMethodSummaryRow(key, index, data); }).join(''); var otherMethodRows = otherMethods.map(function (key, index) { return paymentMethodSummaryRow(key, index, data); }).join('');
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><div class="payment-header-row"><div><h2 class="settings-panel-title">支付配置</h2><p class="settings-panel-desc">连接收款服务商，并管理买家结账时可选择的支付方式。</p></div><button class="messaging-mini-button" type="button" data-preview-payment-checkout>查看买家端示例</button></div></div><div class="settings-form"><section class="settings-section"><h3 class="settings-section-title">信用卡支付</h3><p class="settings-section-desc">暂支持 Stripe、空中云汇和钱海；三家服务商只能选择一家作为当前生效的信用卡服务商。</p><div class="payment-method-summary">' + (cardMethodRows || '<div class="payment-method-summary-empty">请先配置支持信用卡的收款服务商。</div>') + '</div></section><section class="settings-section"><div class="messaging-center-toolbar"><div><h3 class="settings-section-title">其他支付方式</h3><p class="settings-section-desc">买家将按以下顺序看到已启用的其他支付方式。</p></div><button class="messaging-mini-button payment-method-manager" type="button" data-manage-payment-methods>选择其他支付方式</button></div><div class="payment-method-summary">' + (otherMethodRows || '<div class="payment-method-summary-empty">暂未启用其他支付方式。</div>') + '</div></section></div><div class="settings-save-bar"><span class="settings-save-status" id="paymentSaveStatus" hidden>支付配置已保存并生效</span><button class="btn btn-primary" type="button" data-save-payment-settings>保存并生效</button></div></div>';
+        workspace.querySelectorAll('[data-configure-payment-provider]').forEach(function (button) { button.addEventListener('click', function () { var key = button.getAttribute('data-configure-payment-provider'); var next = paymentSettings(); window.parent.postMessage({ type:'rbk-payment-provider-dialog', providerKey:key, provider:next.providers[key] }, '*'); }); });
+        var selectCardProviderButton = workspace.querySelector('[data-select-card-provider]');
+        if (selectCardProviderButton) selectCardProviderButton.addEventListener('click', function () { var next = paymentSettings(); window.parent.postMessage({ type:'rbk-credit-card-provider-dialog', providers:next.providers, currentKey:next.cardRouting.primary }, '*'); });
+        var draggingPaymentMethod = ''; workspace.querySelectorAll('[data-payment-method-summary]').forEach(function (row) { row.addEventListener('dragstart', function (event) { draggingPaymentMethod = row.getAttribute('data-payment-method-summary'); event.dataTransfer.effectAllowed = 'move'; }); row.addEventListener('dragover', function (event) { if (!draggingPaymentMethod || draggingPaymentMethod === row.getAttribute('data-payment-method-summary')) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }); row.addEventListener('drop', function (event) { var target = row.getAttribute('data-payment-method-summary'); if (!draggingPaymentMethod || !target) return; event.preventDefault(); var next = paymentSettings(); var from = next.buyerMethods.indexOf(draggingPaymentMethod); var to = next.buyerMethods.indexOf(target); if (from < 0 || to < 0 || from === to) return; next.buyerMethods.splice(from, 1); next.buyerMethods.splice(to, 0, draggingPaymentMethod); persistPaymentSettings(next); renderPaymentSettings(); }); row.addEventListener('dragend', function () { draggingPaymentMethod = ''; }); });
+        workspace.querySelector('[data-manage-payment-methods]').addEventListener('click', function () { var next = paymentSettings(); window.parent.postMessage({ type:'rbk-payment-method-catalog-dialog', catalog:paymentMethodCatalog().filter(function (item) { return item.key !== 'cards'; }).map(function (item) { return Object.assign({}, item, { available:paymentMethodAvailable(item, next.providers) }); }), buyerMethods:next.buyerMethods.filter(function (key) { return key !== 'cards'; }) }, '*'); });
+        workspace.querySelector('[data-save-payment-settings]').addEventListener('click', function () { window.parent.postMessage({ type:'rbk-payment-activation-confirm-dialog' }, '*'); });
+        workspace.querySelector('[data-preview-payment-checkout]').addEventListener('click', function () { window.parent.postMessage({ type:'rbk-payment-checkout-preview-dialog', methods:buyerCheckoutPreviewMethods(paymentSettings()) }, '*'); });
+      }
+      window.addEventListener('message', function (event) { if (event.source !== window.parent) return; var message = event.data || {}; if (message.type === 'rbk-payment-provider-saved') { var data = paymentSettings(); data.providers[message.providerKey] = Object.assign(data.providers[message.providerKey], message.provider); if (message.primaryCardProvider) { data.cardRouting.primary = message.primaryCardProvider; activePaymentProviderConfig = message.primaryCardProvider; } persistPaymentSettings(data); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-routing-saved') { var routingData = paymentSettings(); routingData.cardRouting = Object.assign(routingData.cardRouting, message.cardRouting); persistPaymentSettings(routingData); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-methods-saved') { var methodData = paymentSettings(); var selectedOtherMethods = Array.isArray(message.buyerMethods) ? message.buyerMethods.filter(function (key, index, list) { return key !== 'cards' && !!paymentMethodCatalogItem(key) && list.indexOf(key) === index; }) : methodData.buyerMethods.filter(function (key) { return key !== 'cards'; }); methodData.buyerMethods = (methodData.buyerMethods.indexOf('cards') !== -1 ? ['cards'] : []).concat(selectedOtherMethods); persistPaymentSettings(methodData); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-activation-confirmed') { commitPaymentSettings(); activePaymentProviderConfig = ''; if (activeSection === 'payments') renderPaymentSettings(); showToast('success', '支付配置已保存并在买家端生效'); } });
+      function renderPending(section) {
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><h2 class="settings-panel-title">' + section.label + '</h2><p class="settings-panel-desc">' + section.desc + '</p></div><div class="settings-empty"><div><div class="settings-empty-icon" aria-hidden="true">' + section.icon + '</div><h2>' + section.label + '正在建设</h2><p>配置框架已建立。后续将在此处完成该配置项的具体规则、连接状态和保存流程。</p></div></div></div>';
+      }
+      function renderWorkspace() { var section = sections.filter(function (item) { return item.key === activeSection; })[0]; if (activeSection === 'basic') renderBasicInfo(); else if (activeSection === 'whatsapp') renderMessagingCenter(); else if (activeSection === 'payments') renderPaymentSettings(); else renderPending(section); }
+      function render() { renderNav(); renderWorkspace(); }
+      function updateProvince() { var country = document.getElementById('addressCountry').value; document.getElementById('addressProvince').innerHTML = provinceOptions(country, ''); }
+      function bindBasicEvents() {
+        document.getElementById('uploadShopLogo').addEventListener('click', function () { document.getElementById('shopLogoInput').click(); });
+        document.getElementById('resetBasicSettings').addEventListener('click', function () { pendingLogo = ''; currentShop = getCurrentShop(); renderWorkspace(); });
+        document.getElementById('addressCountry').addEventListener('change', updateProvince);
+        document.getElementById('basicSettingsForm').addEventListener('submit', saveBasicInfo);
+      }
+      function saveBasicInfo(event) {
+        event.preventDefault();
+        var name = document.getElementById('storeName').value.trim();
+        var email = document.getElementById('storeEmail').value.trim();
+        if (!name) { showToast('error', '请输入商店名称'); document.getElementById('storeName').focus(); return; }
+        if (!email) { showToast('error', '请输入商店电子邮件'); document.getElementById('storeEmail').focus(); return; }
+        var basic = { email: email, phone: document.getElementById('storePhone').value.trim(), serviceEmail: document.getElementById('serviceEmail').value.trim(), country: document.getElementById('operatingCountry').value, timezone: document.getElementById('storeTimezone').value, currency: document.getElementById('settlementCurrency').value, companyName: document.getElementById('companyName').value.trim(), province: document.getElementById('addressProvince').value, city: document.getElementById('addressCity').value.trim(), address: document.getElementById('addressLine').value.trim(), postalCode: document.getElementById('postalCode').value.trim() };
+        currentShop.name = name; currentShop.status = document.getElementById('storeStatus').value; if (pendingLogo) currentShop.logo = pendingLogo; currentShop.settings = currentShop.settings || {}; currentShop.settings.basic = basic;
+        var shops = loadShops(); var index = shops.findIndex(function (shop) { return shop.id === currentShop.id; }); if (index !== -1) { shops[index] = currentShop; saveShops(shops); }
+        renderSidebar('settings');
+        var status = document.getElementById('basicSaveStatus'); status.hidden = false; setTimeout(function () { status.hidden = true; }, 2400); showToast('success', '基本信息已保存');
+      }
+      nav.addEventListener('click', function (event) { var button = event.target.closest('[data-section]'); if (!button) return; activeSection = button.getAttribute('data-section'); render(); });
+      document.getElementById('shopLogoInput').addEventListener('change', function (event) { var file = event.target.files && event.target.files[0]; if (!file) return; var reader = new FileReader(); reader.onload = function (loaded) { pendingLogo = loaded.target.result; var preview = document.getElementById('shopLogoPreview'); if (preview) preview.innerHTML = '<img src="' + escapeHtml(pendingLogo) + '" alt="商店 Logo">'; }; reader.readAsDataURL(file); });
+      render();
+    }());
   </script>
 </body>
 </html>

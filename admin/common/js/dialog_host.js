@@ -479,6 +479,15 @@ if (iframeContainer) {
       var src = sources[item.key] || 'https://cdn.simpleicons.org/visa/1A1F71?viewbox=auto';
       return '<span aria-label="' + escapePaymentDialogHtml(item.name) + ' Logo" style="display:grid;width:32px;height:32px;overflow:hidden;border:1px solid #e8e1da;border-radius:8px;place-items:center;background:#fff;"><img src="' + src + '" alt="" referrerpolicy="no-referrer" style="display:block;width:24px;height:24px;object-fit:contain;" onerror="this.style.display=\'none\';"></span>';
     }
+    function paymentMethodCatalogSummary(item) {
+      var summaries = {
+        paypal:'参考手续费：3.49% + 固定费用 / 笔 · 支持 11 种本地支付方式',
+        afterpay:'参考手续费：6% + US$0.30 / 笔 · 支持 2 种本地支付方式',
+        qianhai:'参考手续费：3.5% + US$0.30 / 笔 · 支持 10 种本地支付方式',
+        airwallex:'参考手续费：2.9% + US$0.30 / 笔 · 支持 15 种本地支付方式'
+      };
+      return summaries[item.key] || item.description || '';
+    }
     function methodRows() {
       return availableCatalog.slice().sort(function(left, right) {
         var leftOrder = buyerMethods.indexOf(left.key);
@@ -489,7 +498,7 @@ if (iframeContainer) {
         return catalog.indexOf(left) - catalog.indexOf(right);
       }).map(function(item) {
         var isEnabled = buyerMethods.indexOf(item.key) !== -1;
-        return '<div data-payment-method-row data-payment-method-key="' + escapePaymentDialogHtml(item.key) + '" style="display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:12px;min-height:68px;padding:10px 14px;border-top:1px solid #eee7e0;box-sizing:border-box;"><input type="checkbox" data-payment-method-toggle="' + escapePaymentDialogHtml(item.key) + '" aria-label="启用 ' + escapePaymentDialogHtml(item.name) + '"' + (isEnabled ? ' checked' : '') + '>' + paymentMethodLogo(item) + '<div><strong style="display:block;color:#2e2823;font:600 14px/1.4 system-ui,sans-serif;">' + escapePaymentDialogHtml(item.name) + '</strong><span style="display:block;margin-top:2px;color:#7b7168;font:400 12px/1.5 system-ui,sans-serif;">' + escapePaymentDialogHtml(item.description) + '</span></div></div>';
+        return '<div data-payment-method-row data-payment-method-key="' + escapePaymentDialogHtml(item.key) + '" style="display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:12px;min-height:68px;padding:10px 14px;border-top:1px solid #eee7e0;box-sizing:border-box;"><input type="checkbox" data-payment-method-toggle="' + escapePaymentDialogHtml(item.key) + '" aria-label="启用 ' + escapePaymentDialogHtml(item.name) + '"' + (isEnabled ? ' checked' : '') + '>' + paymentMethodLogo(item) + '<div><strong style="display:block;color:#2e2823;font:600 14px/1.4 system-ui,sans-serif;">' + escapePaymentDialogHtml(item.name) + '</strong><span style="display:block;margin-top:2px;color:#7b7168;font:400 12px/1.5 system-ui,sans-serif;">' + escapePaymentDialogHtml(paymentMethodCatalogSummary(item)) + '</span></div></div>';
       }).join('');
     }
     function renderCatalog() {
@@ -557,12 +566,13 @@ if (iframeContainer) {
     var host = document.getElementById('dialogHost');
     if (!host) { host = document.createElement('div'); host.id = 'dialogHost'; document.body.appendChild(host); }
     var logoSources = { stripe:'https://cdn.simpleicons.org/stripe/635BFF?viewbox=auto', airwallex:'https://www.airwallex.com/favicon.ico', qianhai:'https://www.oceanpayment.com/favicon.ico' };
+    var fees = { stripe:'参考手续费：2.9% + US$0.30 / 笔', airwallex:'参考手续费：2.9% + US$0.30 / 笔', qianhai:'参考手续费：3.5% + US$0.30 / 笔' };
     var rows = ['stripe','airwallex','qianhai'].map(function(key) {
       var provider = (providers || {})[key] || {};
       var name = escapePaymentDialogHtml(provider.name || key);
       var isCurrent = key === currentKey;
       var state = provider.connected ? '已配置' : '未配置';
-      return '<button type="button" data-credit-card-provider="' + key + '" style="display:grid;width:100%;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;min-height:68px;padding:10px 14px;border:0;border-top:1px solid #eee7e0;background:' + (isCurrent ? '#fffaf4' : '#fff') + ';color:#2e2823;text-align:left;cursor:pointer;"><span aria-label="' + name + ' Logo" style="display:grid;width:32px;height:32px;overflow:hidden;border:1px solid #e8e1da;border-radius:8px;place-items:center;background:#fff;"><img src="' + logoSources[key] + '" alt="" referrerpolicy="no-referrer" style="display:block;width:24px;height:24px;object-fit:contain;" onerror="this.style.display=\'none\';"></span><span><strong style="display:block;font:600 14px/1.4 system-ui,sans-serif;">' + name + '信用卡</strong><span style="display:block;margin-top:2px;color:#7b7168;font:400 12px/1.5 system-ui,sans-serif;">' + (provider.connected ? '选择后立即作为当前生效的信用卡服务商。' : '完成配置后可作为当前生效的信用卡服务商。') + '</span></span><span style="color:' + (provider.connected ? '#129e5a' : '#8b8178') + ';font:400 12px/1.5 system-ui,sans-serif;white-space:nowrap;">' + (isCurrent ? '● 当前生效' : state) + '</span></button>';
+      return '<button type="button" data-credit-card-provider="' + key + '" style="display:grid;width:100%;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;min-height:68px;padding:10px 14px;border:0;border-top:1px solid #eee7e0;background:' + (isCurrent ? '#fffaf4' : '#fff') + ';color:#2e2823;text-align:left;cursor:pointer;"><span aria-label="' + name + ' Logo" style="display:grid;width:32px;height:32px;overflow:hidden;border:1px solid #e8e1da;border-radius:8px;place-items:center;background:#fff;"><img src="' + logoSources[key] + '" alt="" referrerpolicy="no-referrer" style="display:block;width:24px;height:24px;object-fit:contain;" onerror="this.style.display=\'none\';"></span><span><strong style="display:block;font:600 14px/1.4 system-ui,sans-serif;">' + name + '信用卡</strong><span style="display:block;margin-top:2px;color:#7b7168;font:400 12px/1.5 system-ui,sans-serif;">' + fees[key] + ' · 支持 7 种国际卡组织</span></span><span style="color:' + (provider.connected ? '#129e5a' : '#8b8178') + ';font:400 12px/1.5 system-ui,sans-serif;white-space:nowrap;">' + (isCurrent ? '● 当前生效' : state) + '</span></button>';
     }).join('');
     paymentProviderSource = source;
     paymentProviderDialog = document.createElement('div');

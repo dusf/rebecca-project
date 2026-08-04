@@ -26,7 +26,7 @@
 .add-product-header .page-title {
   font-size: 18px;
   font-weight: 700;
-  font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+  font-family: var(--font-sans);
   color: hsl(var(--foreground));
 }
 .add-product-actions {

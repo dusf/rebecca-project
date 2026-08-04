@@ -192,6 +192,10 @@ if (iframeContainer) {
   }
 
   function closePaymentProviderDialog() {
+    ['shippingLocationCountry', 'shippingLocationProvince'].forEach(function(selectId) {
+      var dropdown = document.getElementById(selectId + 'Dropdown');
+      if (dropdown) dropdown.remove();
+    });
     if (paymentProviderDialog) { paymentProviderDialog.remove(); paymentProviderDialog = null; }
     if (paymentProviderKeydown) { document.removeEventListener('keydown', paymentProviderKeydown); paymentProviderKeydown = null; }
     paymentProviderSource = null;
@@ -624,6 +628,66 @@ if (iframeContainer) {
     document.addEventListener('keydown', paymentProviderKeydown);
   }
 
+  // ---- 发货地点配置：由父页面承载，完整覆盖后台视口 ----
+  function openShippingLocationDialog(source, location) {
+    closePaymentProviderDialog();
+    var host = document.getElementById('dialogHost');
+    if (!host) { host = document.createElement('div'); host.id = 'dialogHost'; document.body.appendChild(host); }
+    location = location || {};
+    var countries = { CN: '中国大陆', US: '美国', GB: '英国' };
+    var provinces = {
+      CN: ['广东省', '浙江省', '江苏省', '上海市', '北京市'],
+      US: ['California', 'New York', 'Texas', 'Washington'],
+      GB: ['England', 'Scotland', 'Wales', 'Northern Ireland']
+    };
+    var country = location.country || 'CN';
+    var province = location.province || (provinces[country] || [])[0] || '';
+    function optionList(values, value) {
+      return values.map(function(item) { return '<option value="' + escapePaymentDialogHtml(item) + '"' + (item === value ? ' selected' : '') + '>' + escapePaymentDialogHtml(item) + '</option>'; }).join('');
+    }
+    function provinceOptions(value, selected) { return optionList(provinces[value] || [], selected); }
+    paymentProviderSource = source;
+    paymentProviderDialog = document.createElement('div');
+    paymentProviderDialog.id = 'shippingLocationDialog';
+    paymentProviderDialog.setAttribute('role', 'presentation');
+    paymentProviderDialog.style.cssText = 'position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(25,21,18,.46);box-sizing:border-box;';
+    paymentProviderDialog.innerHTML = '<section role="dialog" aria-modal="true" aria-labelledby="shippingLocationDialogTitle" style="width:min(640px,100%);max-height:calc(100vh - 48px);overflow:auto;box-sizing:border-box;padding:24px;border:1px solid #e8e1da;border-radius:12px;background:#fff;box-shadow:0 24px 56px rgba(42,32,24,.25);"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;"><div><h2 id="shippingLocationDialogTitle" style="margin:0;color:#2e2823;font:600 16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;">' + (location.id ? '编辑发货地点' : '添加发货地点') + '</h2><p style="margin:4px 0 0;color:#7b7168;font:400 12px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;">地点名称会在买家结账时作为发货地点展示，也用于 SKU 库存和 ERP 库存同步。</p></div><button type="button" data-shipping-location-close aria-label="关闭" style="width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:#7b7168;font:400 24px/1 system-ui,sans-serif;cursor:pointer;">×</button></div><form data-shipping-location-form style="margin-top:20px;"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;"><label style="grid-column:1 / -1;display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">地点名称<input required name="name" maxlength="80" placeholder="例如：深圳主仓" value="' + escapePaymentDialogHtml(location.name || '') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;"></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">国家/地区<select required name="country" data-shipping-country style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;background:#fff;color:#2e2823;font:400 14px/1 system-ui,sans-serif;">' + Object.keys(countries).map(function(key) { return '<option value="' + key + '"' + (key === country ? ' selected' : '') + '>' + countries[key] + '</option>'; }).join('') + '</select></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">省/州<select required name="province" data-shipping-province style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;background:#fff;color:#2e2823;font:400 14px/1 system-ui,sans-serif;">' + provinceOptions(country, province) + '</select></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">城市<input required name="city" maxlength="80" placeholder="请输入城市" value="' + escapePaymentDialogHtml(location.city || '') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;"></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">邮编<input required name="postalCode" maxlength="20" placeholder="请输入邮编" value="' + escapePaymentDialogHtml(location.postalCode || '') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;"></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">电话区号<input required name="phoneCode" maxlength="8" placeholder="例如：+86" value="' + escapePaymentDialogHtml(location.phoneCode || '+86') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;"></label><label style="display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;">电话号码<input required name="phone" maxlength="30" placeholder="请输入电话号码" value="' + escapePaymentDialogHtml(location.phone || '') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;"></label></div><div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:20px;padding:14px 0;border-top:1px solid #eee7e0;border-bottom:1px solid #eee7e0;"><label style="display:flex;align-items:center;gap:8px;color:#2e2823;font:500 14px/1.5 system-ui,sans-serif;cursor:pointer;"><input type="checkbox" name="available"' + (location.available !== false ? ' checked' : '') + ' style="width:16px;height:16px;margin:0;accent-color:#c58c54;">地点可用</label><label style="display:flex;align-items:center;gap:8px;color:#2e2823;font:500 14px/1.5 system-ui,sans-serif;cursor:pointer;"><input type="checkbox" name="erpConnected"' + (location.erpConnected !== false ? ' checked' : '') + ' style="width:16px;height:16px;margin:0;accent-color:#c58c54;">开启三方 ERP 库存连接</label><label style="display:flex;align-items:center;gap:8px;color:#2e2823;font:500 14px/1.5 system-ui,sans-serif;cursor:pointer;"><input type="checkbox" name="isDefault"' + (location.isDefault ? ' checked' : '') + ' style="width:16px;height:16px;margin:0;accent-color:#c58c54;">设为默认地点</label></div><p style="margin:10px 0 0;color:#7b7168;font:400 12px/1.6 system-ui,sans-serif;">默认地点是商城的兜底主仓库，建议设置为库存最全、发货最频繁的主仓库。</p><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;"><button type="button" data-shipping-location-close style="height:36px;padding:0 14px;border:1px solid #e8e1da;border-radius:8px;background:#fff;color:#4d443d;font:500 12px/1 system-ui,sans-serif;cursor:pointer;">取消</button><button type="submit" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#c58c54;color:#fff;font:600 12px/1 system-ui,sans-serif;cursor:pointer;">保存地点</button></div></form></section>';
+    host.appendChild(paymentProviderDialog);
+    paymentProviderDialog.querySelectorAll('[data-shipping-location-close]').forEach(function(button) { button.addEventListener('click', closePaymentProviderDialog); });
+    var form = paymentProviderDialog.querySelector('[data-shipping-location-form]');
+    var countrySelect = paymentProviderDialog.querySelector('[data-shipping-country]'); var provinceSelect = paymentProviderDialog.querySelector('[data-shipping-province]');
+    countrySelect.id = 'shippingLocationCountry'; provinceSelect.id = 'shippingLocationProvince';
+    var formGrid = form.firstElementChild;
+    var addressField = document.createElement('label');
+    addressField.style.cssText = 'grid-column:1 / -1;display:block;color:#2e2823;font:600 14px/1.5 system-ui,sans-serif;';
+    addressField.innerHTML = '详细地址<input name="address" maxlength="160" placeholder="请输入街道、门牌号等详细地址" value="' + escapePaymentDialogHtml(location.address || '') + '" style="display:block;width:100%;height:40px;box-sizing:border-box;margin-top:6px;padding:0 12px;border:1px solid #e8e1da;border-radius:8px;color:#2e2823;font:400 14px/1 system-ui,sans-serif;">';
+    formGrid.appendChild(addressField);
+    form.querySelectorAll('input[type="checkbox"]').forEach(function(input) {
+      var label = input.parentElement; var visual = document.createElement('span');
+      input.setAttribute('data-shipping-checkbox-input', ''); input.style.cssText = 'position:absolute;width:1px;height:1px;margin:-1px;opacity:0;pointer-events:none;';
+      visual.className = 'checkbox' + (input.checked ? ' checked' : ''); visual.setAttribute('data-shipping-checkbox-visual', ''); visual.setAttribute('aria-hidden', 'true'); visual.textContent = input.checked ? '✓' : '';
+      input.insertAdjacentElement('afterend', visual);
+      input.addEventListener('change', function() { visual.classList.toggle('checked', input.checked); visual.textContent = input.checked ? '✓' : ''; });
+    });
+    function refreshShippingSearchableSelect(select) {
+      if (select._searchable) {
+        var refs = select._searchable;
+        if (refs.dropdown && refs.dropdown.parentNode) refs.dropdown.remove();
+        if (refs.wrapper && refs.wrapper.parentNode) refs.wrapper.remove();
+        select.style.display = ''; select._searchable = null;
+      }
+      if (typeof buildSearchableSelect === 'function') buildSearchableSelect(select);
+    }
+    if (typeof initSearchableSelects === 'function') initSearchableSelects();
+    countrySelect.addEventListener('change', function() { provinceSelect.innerHTML = provinceOptions(countrySelect.value, (provinces[countrySelect.value] || [])[0] || ''); refreshShippingSearchableSelect(provinceSelect); });
+    form.addEventListener('submit', function(event) { event.preventDefault(); if (!form.checkValidity()) { form.reportValidity(); return; } if (paymentProviderSource) paymentProviderSource.postMessage({ type:'rbk-shipping-location-saved', location:{ id: location.id || ('location_' + Date.now()), name:String(form.elements.name.value || '').trim(), country:form.elements.country.value, province:form.elements.province.value, city:String(form.elements.city.value || '').trim(), postalCode:String(form.elements.postalCode.value || '').trim(), phoneCode:String(form.elements.phoneCode.value || '').trim(), phone:String(form.elements.phone.value || '').trim(), available:form.elements.available.checked, erpConnected:form.elements.erpConnected.checked, isDefault:form.elements.isDefault.checked } }, '*'); closePaymentProviderDialog(); });
+    paymentProviderDialog.addEventListener('click', function(event) { if (event.target === paymentProviderDialog) closePaymentProviderDialog(); });
+    paymentProviderKeydown = function(event) { if (event.key === 'Escape') closePaymentProviderDialog(); };
+    document.addEventListener('keydown', paymentProviderKeydown);
+    form.addEventListener('submit', function(event) { event.preventDefault(); event.stopImmediatePropagation(); if (!form.checkValidity()) { form.reportValidity(); return; } if (paymentProviderSource) paymentProviderSource.postMessage({ type:'rbk-shipping-location-saved', location:{ id: location.id || ('location_' + Date.now()), name:String(form.elements.name.value || '').trim(), country:form.elements.country.value, province:form.elements.province.value, city:String(form.elements.city.value || '').trim(), postalCode:String(form.elements.postalCode.value || '').trim(), address:String(form.elements.address.value || '').trim(), phoneCode:String(form.elements.phoneCode.value || '').trim(), phone:String(form.elements.phone.value || '').trim(), available:form.elements.available.checked, erpConnected:form.elements.erpConnected.checked, isDefault:form.elements.isDefault.checked } }, '*'); closePaymentProviderDialog(); }, true);
+    var firstField = paymentProviderDialog.querySelector('input'); if (firstField) firstField.focus();
+  }
+
   window.addEventListener('message', function(event) {
     var message = event.data || {};
     var activeIframe = getActiveIframe();
@@ -637,6 +701,7 @@ if (iframeContainer) {
     if (message.type === 'rbk-payment-method-catalog-dialog') openPaymentMethodCatalogDialog(event.source, message);
     if (message.type === 'rbk-messaging-provider-dialog') openMessagingProviderDialog(event.source, message);
     if (message.type === 'rbk-messaging-provider-config-dialog') openMessagingProviderConfigDialog(event.source, message);
+    if (message.type === 'rbk-shipping-location-dialog') openShippingLocationDialog(event.source, message.location || null);
   });
 
   // ---- Escape 键关闭对话框 ----

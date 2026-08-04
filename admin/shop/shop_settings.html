@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../common/css/commons.css?v=10">
+  <link rel="stylesheet" href="../common/css/commons.css?v=13">
   <style>
     .main-area > .content { align-items: center; overflow-x: auto; }
     .settings-page { width: 1100px; flex: 0 0 1100px; margin: 0 auto; padding: 8px 0 40px; }
@@ -191,7 +191,27 @@
     .payment-route-summary { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px; border:1px solid hsl(var(--border)); border-radius:10px; background:hsl(var(--muted)); }
     .payment-route-summary strong { display:block; font-size:14px; }
     .payment-route-summary span { display:block; margin-top:3px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.5; }
-    @media (max-width:760px) { .payment-provider-row { grid-template-columns:minmax(0,1fr) auto; } .payment-provider-row .messaging-status { grid-column:1; } .payment-route-summary { align-items:flex-start; flex-direction:column; } }
+    .shipping-location-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .shipping-location-default { padding:16px; border:1px solid hsl(var(--primary) / .28); border-radius:10px; background:hsl(var(--primary-50)); }
+    .shipping-location-default-top { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .shipping-location-default-title { display:block; color:hsl(var(--foreground)); font-size:14px; font-weight:600; line-height:1.5; }
+    .shipping-location-default-title span { color:hsl(var(--muted-foreground)); font-weight:500; }
+    .shipping-location-default-name { display:block; margin-top:7px; color:hsl(var(--foreground)); font-size:16px; font-weight:600; line-height:1.5; }
+    .shipping-location-default-copy { margin:5px 0 0; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.6; }
+    .shipping-location-default-note { display:block; margin-top:12px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.5; }
+    .shipping-location-default-badge { display:inline-flex; align-items:center; min-height:24px; padding:0 8px; border-radius:999px; background:hsl(var(--background)); color:hsl(var(--primary-700)); font-size:12px; font-weight:600; white-space:nowrap; }
+    .shipping-location-list { overflow:hidden; border:1px solid hsl(var(--border)); border-radius:10px; }
+    .shipping-location-row { display:grid; grid-template-columns:minmax(0,1fr) 104px 132px auto; align-items:center; gap:16px; min-height:86px; padding:12px 16px; border-top:1px solid hsl(var(--border)); }
+    .shipping-location-row:first-child { border-top:0; }
+    .shipping-location-name { display:flex; align-items:center; gap:8px; min-width:0; }
+    .shipping-location-name strong { display:block; overflow:hidden; color:hsl(var(--foreground)); font-size:14px; font-weight:600; line-height:1.5; text-overflow:ellipsis; white-space:nowrap; }
+    .shipping-location-default-tag { display:inline-flex; align-items:center; min-height:20px; padding:0 6px; border-radius:5px; background:hsl(var(--primary-50)); color:hsl(var(--primary-700)); font-size:12px; font-weight:600; white-space:nowrap; }
+    .shipping-location-meta { display:block; margin-top:4px; overflow:hidden; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.5; text-overflow:ellipsis; white-space:nowrap; }
+    .shipping-location-status { display:flex; flex-direction:column; gap:4px; color:hsl(var(--muted-foreground)); font-size:12px; line-height:1.4; }
+    .shipping-location-status strong { color:hsl(var(--foreground)); font-size:12px; font-weight:600; }
+    .shipping-location-status .messaging-status { font-size:12px; }
+    .shipping-location-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+    @media (max-width:760px) { .payment-provider-row { grid-template-columns:minmax(0,1fr) auto; } .payment-provider-row .messaging-status { grid-column:1; } .payment-route-summary { align-items:flex-start; flex-direction:column; } .shipping-location-row { grid-template-columns:minmax(0,1fr) auto; } .shipping-location-status { display:none; } .shipping-location-actions { grid-column:1 / -1; justify-content:flex-start; } }
     @media (max-width:760px) { .messaging-provider-row { grid-template-columns:minmax(0,1fr) auto; } .messaging-provider-row > :nth-child(2),.messaging-provider-row > :nth-child(3),.messaging-provider-row.is-header { display:none; } .messaging-center-toolbar,.messaging-current { align-items:flex-start; flex-direction:column; } .messaging-center-search { width:100%; } .messaging-context-card { grid-template-columns:1fr; } .messaging-dialog-row { grid-template-columns:minmax(0,1fr) auto; } .messaging-dialog-row .messaging-status { grid-column:1; } }
     @media (max-width: 860px) { .settings-layout { grid-template-columns: 1fr; } .settings-nav { position: static; display: flex; gap: 4px; overflow-x: auto; } .settings-nav-title { display: none; } .settings-nav-item { width: auto; flex: 0 0 auto; white-space: nowrap; } .settings-grid.address-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .settings-field.span-3 { grid-column: span 2; } .messaging-layout { grid-template-columns: 1fr; } }
     @media (max-width: 600px) { .main-area > .content { align-items: stretch; overflow-x: visible; } .settings-page { width: 100%; flex-basis: 100%; padding-bottom: 24px; } .settings-panel-header, .settings-form, .settings-save-bar { padding-left: 16px; padding-right: 16px; } .settings-grid, .settings-grid.address-grid { grid-template-columns: 1fr; } .settings-field.span-2, .settings-field.span-3 { grid-column: span 1; } .settings-save-bar { flex-wrap: wrap; } .settings-save-status { width: 100%; margin-right: 0; } }
@@ -222,9 +242,10 @@
         { key: 'basic', label: '基本信息', desc: '商店资料、经营区域与所在地', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>' },
         { key: 'whatsapp', label: '即时通讯', desc: '接入客服工具并设置买家端聊天入口', icon: '<svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z"/><path d="M9 9.5c.5 2 2 3.5 4 4"/></svg>' },
         { key: 'payments', label: '支付配置', desc: '多服务商与买家端支付方式', icon: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></svg>' },
-        { key: 'shipping', label: '发货和配送', desc: '发货地点、配送方式与履约', icon: '<svg viewBox="0 0 24 24"><path d="M3 6h12v11H3z"/><path d="M15 10h4l2 3v4h-6z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>' },
+        { key: 'inventory-locations', label: '发货地点', desc: '管理库存存放与发货地点', icon: '<svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M4 9h16M9 20v-6h6v6"/></svg>' },
+        { key: 'shipping', label: '本地配送', desc: '发货地点、配送方式与履约', icon: '<svg viewBox="0 0 24 24"><path d="M3 6h12v11H3z"/><path d="M15 10h4l2 3v4h-6z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>' },
+        { key: 'shipping-rates', label: '运费策略', desc: '运费规则与配送区域', icon: '<svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>' },
         { key: 'international', label: '国际化', desc: '语言、市场与本地化内容', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>' },
-        { key: 'shipping-rates', label: '运费', desc: '运费规则与配送区域', icon: '<svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>' },
         { key: 'duties', label: '关税', desc: '进口税费与结算规则', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>' },
         { key: 'domain', label: '域名与 SSL', desc: '自定义域名、SSL 与解析状态', icon: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg>' },
         { key: 'short-links', label: '短链接', desc: '为商店页面生成可追踪短链接', icon: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/><path d="M12 7h5M17 7v5"/></svg>' },
@@ -478,10 +499,66 @@
         workspace.querySelector('[data-preview-payment-checkout]').addEventListener('click', function () { window.parent.postMessage({ type:'rbk-payment-checkout-preview-dialog', methods:buyerCheckoutPreviewMethods(paymentSettings()) }, '*'); });
       }
       window.addEventListener('message', function (event) { if (event.source !== window.parent) return; var message = event.data || {}; if (message.type === 'rbk-payment-provider-saved') { var data = paymentSettings(); data.providers[message.providerKey] = Object.assign(data.providers[message.providerKey], message.provider); if (message.primaryCardProvider) { data.cardRouting.primary = message.primaryCardProvider; activePaymentProviderConfig = message.primaryCardProvider; } persistPaymentSettings(data); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-routing-saved') { var routingData = paymentSettings(); routingData.cardRouting = Object.assign(routingData.cardRouting, message.cardRouting); persistPaymentSettings(routingData); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-methods-saved') { var methodData = paymentSettings(); var selectedOtherMethods = Array.isArray(message.buyerMethods) ? message.buyerMethods.filter(function (key, index, list) { return key !== 'cards' && !!paymentMethodCatalogItem(key) && list.indexOf(key) === index; }) : methodData.buyerMethods.filter(function (key) { return key !== 'cards'; }); methodData.buyerMethods = (methodData.buyerMethods.indexOf('cards') !== -1 ? ['cards'] : []).concat(selectedOtherMethods); persistPaymentSettings(methodData); if (activeSection === 'payments') renderPaymentSettings(); return; } if (message.type === 'rbk-payment-activation-confirmed') { commitPaymentSettings(); activePaymentProviderConfig = ''; if (activeSection === 'payments') renderPaymentSettings(); showToast('success', '支付配置已保存并在买家端生效'); } });
+      function shippingLocationDefaults() {
+        return {
+          id: 'location_default', name: (currentShop && currentShop.name ? currentShop.name + ' 主仓' : '主仓'), country: 'CN', province: '广东省', city: '深圳市', postalCode: '518000', address: '', phoneCode: '+86', phone: '', available: true, erpConnected: true, isDefault: true
+        };
+      }
+      function normalizeShippingLocation(location, index) {
+        var item = Object.assign(shippingLocationDefaults(), location || {});
+        item.id = item.id || ('location_' + Date.now() + '_' + index);
+        item.name = String(item.name || '').trim(); item.country = item.country || 'CN'; item.province = item.province || ''; item.city = String(item.city || '').trim(); item.postalCode = String(item.postalCode || '').trim(); item.address = String(item.address || '').trim(); item.phoneCode = item.phoneCode || '+86'; item.phone = String(item.phone || '').trim(); item.available = item.available !== false; item.erpConnected = item.erpConnected !== false; item.isDefault = !!item.isDefault;
+        return item;
+      }
+      function shippingLocations() {
+        var saved = currentShop && currentShop.settings && currentShop.settings.shippingLocations;
+        var locations = Array.isArray(saved) && saved.length ? saved.map(normalizeShippingLocation) : [shippingLocationDefaults()];
+        var defaultFound = false;
+        locations.forEach(function (item) { if (item.isDefault && !defaultFound) defaultFound = true; else item.isDefault = false; });
+        if (!defaultFound) locations[0].isDefault = true;
+        return locations;
+      }
+      function saveShippingLocations(locations) {
+        currentShop.settings = currentShop.settings || {};
+        currentShop.settings.shippingLocations = locations.map(normalizeShippingLocation);
+        persistCurrentShop();
+      }
+      function shippingLocationCountryName(country) { return { CN: '中国大陆', US: '美国', GB: '英国' }[country] || country; }
+      function shippingLocationAddress(location) {
+        return [shippingLocationCountryName(location.country), location.province, location.city, location.address, location.postalCode].filter(Boolean).map(escapeHtml).join(' · ');
+      }
+      function shippingLocationRow(location) {
+        var availability = location.available ? '<span class="messaging-status connected"><span class="messaging-status-dot"></span>可用</span>' : '<span class="messaging-status"><span class="messaging-status-dot"></span>已停用</span>';
+        var erp = location.erpConnected ? '<span class="messaging-status connected"><span class="messaging-status-dot"></span>已开启</span>' : '<span class="messaging-status"><span class="messaging-status-dot"></span>未开启</span>';
+        var defaultAction = location.isDefault ? '' : '<button class="messaging-mini-button" type="button" data-set-default-shipping-location="' + escapeAttribute(location.id) + '">设为默认</button>';
+        return '<div class="shipping-location-row"><div><div class="shipping-location-name"><strong>' + escapeHtml(location.name) + '</strong>' + (location.isDefault ? '<span class="shipping-location-default-tag">默认地点</span>' : '') + '</div><span class="shipping-location-meta">' + shippingLocationAddress(location) + (location.phone ? ' · ' + escapeHtml(location.phoneCode + ' ' + location.phone) : '') + '</span></div><div class="shipping-location-status"><strong>地点状态</strong>' + availability + '</div><div class="shipping-location-status"><strong>ERP 库存连接</strong>' + erp + '</div><div class="shipping-location-actions"><button class="messaging-mini-button" type="button" data-edit-shipping-location="' + escapeAttribute(location.id) + '">编辑</button>' + defaultAction + '<button class="messaging-mini-button" type="button" data-toggle-shipping-location="' + escapeAttribute(location.id) + '">' + (location.available ? '停用' : '启用') + '</button></div></div>';
+      }
+      function renderShippingLocations() {
+        if (!currentShop) { workspace.innerHTML = '<div class="settings-panel"><div class="settings-empty"><div><h2>未找到商店</h2><p>请返回商店列表后重新进入配置。</p></div></div></div>'; return; }
+        var locations = shippingLocations(); var defaultLocation = locations.filter(function (location) { return location.isDefault; })[0];
+        workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><div class="shipping-location-toolbar"><div><h2 class="settings-panel-title">发货地点</h2><p class="settings-panel-desc">管理库存存放、发货和取货地点；地点名称会在买家结账时作为发货地点展示。</p></div><button class="btn btn-primary" type="button" data-add-shipping-location>添加地点</button></div></div><div class="settings-form"><section class="settings-section"><div class="shipping-location-default"><div class="shipping-location-default-top"><div><span class="shipping-location-default-title">默认地点 <span>(Default location)</span></span><strong class="shipping-location-default-name">' + escapeHtml(defaultLocation.name) + '</strong><p class="shipping-location-default-copy">商城的兜底主仓库。新商品库存、未匹配路由的订单及实时运费计算均默认基于此地点。</p></div><span class="shipping-location-default-badge">默认地点</span></div><span class="shipping-location-default-note">建议设置为您库存最全、发货最频繁的主仓库。</span></div></section><section class="settings-section"><div class="messaging-center-toolbar"><div><h3 class="settings-section-title">地点列表</h3><p class="settings-section-desc">地点可用于 SKU 多地点库存、发货取货和第三方 ERP 库存同步。</p></div><span class="settings-section-desc" style="margin:0;">共 ' + locations.length + ' 个地点</span></div><div class="shipping-location-list">' + locations.map(shippingLocationRow).join('') + '</div></section></div></div>';
+        workspace.querySelector('[data-add-shipping-location]').addEventListener('click', function () { window.parent.postMessage({ type: 'rbk-shipping-location-dialog' }, '*'); });
+        workspace.querySelectorAll('[data-edit-shipping-location]').forEach(function (button) { button.addEventListener('click', function () { var location = locations.filter(function (item) { return item.id === button.getAttribute('data-edit-shipping-location'); })[0]; if (location) window.parent.postMessage({ type: 'rbk-shipping-location-dialog', location: location }, '*'); }); });
+        workspace.querySelectorAll('[data-set-default-shipping-location]').forEach(function (button) { button.addEventListener('click', function () { var id = button.getAttribute('data-set-default-shipping-location'); locations.forEach(function (location) { location.isDefault = location.id === id; }); saveShippingLocations(locations); renderShippingLocations(); showToast('success', '已设为默认地点'); }); });
+        workspace.querySelectorAll('[data-toggle-shipping-location]').forEach(function (button) { button.addEventListener('click', function () { var id = button.getAttribute('data-toggle-shipping-location'); var location = locations.filter(function (item) { return item.id === id; })[0]; if (!location) return; if (location.isDefault && location.available) { showToast('error', '默认地点必须保持可用，请先设置其他地点为默认地点'); return; } location.available = !location.available; saveShippingLocations(locations); renderShippingLocations(); showToast('success', location.available ? '地点已启用' : '地点已停用'); }); });
+      }
+      window.addEventListener('message', function (event) {
+        if (event.source !== window.parent) return;
+        var message = event.data || {};
+        if (message.type !== 'rbk-shipping-location-saved' || !message.location) return;
+        var locations = shippingLocations(); var location = normalizeShippingLocation(message.location, locations.length);
+        var index = locations.findIndex(function (item) { return item.id === location.id; });
+        if (location.isDefault) locations.forEach(function (item) { item.isDefault = false; });
+        if (index === -1) locations.push(location); else locations[index] = location;
+        if (!locations.some(function (item) { return item.isDefault; })) locations[0].isDefault = true;
+        saveShippingLocations(locations);
+        if (activeSection === 'inventory-locations') renderShippingLocations();
+        showToast('success', '发货地点已保存');
+      });
       function renderPending(section) {
         workspace.innerHTML = '<div class="settings-panel"><div class="settings-panel-header"><h2 class="settings-panel-title">' + section.label + '</h2><p class="settings-panel-desc">' + section.desc + '</p></div><div class="settings-empty"><div><div class="settings-empty-icon" aria-hidden="true">' + section.icon + '</div><h2>' + section.label + '正在建设</h2><p>配置框架已建立。后续将在此处完成该配置项的具体规则、连接状态和保存流程。</p></div></div></div>';
       }
-      function renderWorkspace() { var section = sections.filter(function (item) { return item.key === activeSection; })[0]; if (activeSection === 'basic') renderBasicInfo(); else if (activeSection === 'whatsapp') renderMessagingCenter(); else if (activeSection === 'payments') renderPaymentSettings(); else renderPending(section); }
+      function renderWorkspace() { var section = sections.filter(function (item) { return item.key === activeSection; })[0]; if (activeSection === 'basic') renderBasicInfo(); else if (activeSection === 'whatsapp') renderMessagingCenter(); else if (activeSection === 'payments') renderPaymentSettings(); else if (activeSection === 'inventory-locations') renderShippingLocations(); else renderPending(section); }
       function render() { renderNav(); renderWorkspace(); }
       function updateProvince() { var country = document.getElementById('addressCountry').value; document.getElementById('addressProvince').innerHTML = provinceOptions(country, ''); }
       function bindBasicEvents() {

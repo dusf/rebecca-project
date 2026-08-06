@@ -1,0 +1,148 @@
+/* ============================================
+   NOIRÉ HAIR — 商城前台基础样式
+   风格：Luxury Organic（高端温暖有机风）
+   色调精确匹配设计稿：奶油暖色 + 深棕 + 金棕
+   ============================================ */
+
+/* ---------- 设计变量 ---------- */
+:root {
+  /* 色彩 — 精确匹配设计稿 */
+  --shop-bg: #F5EDE4;
+  --shop-bg-white: #FFFFFF;
+  --shop-bg-warm: #F0E8DD;
+  --shop-bg-card: #FDFBF8;
+  --shop-text: #3D2E1E;
+  --shop-text-secondary: #8B7D6B;
+  --shop-text-light: #B0A08A;
+  --shop-accent: #B8956B;
+  --shop-accent-light: #D4C4A8;
+  --shop-accent-dark: #96754D;
+  --shop-btn-bg: #5C4A3A;
+  --shop-btn-text: #FFFFFF;
+  --shop-border: #E0D5C5;
+  --shop-border-light: #EDE5D8;
+  --shop-star: #C4A77D;
+  --shop-error: #C0392B;
+  --shop-announcement-bg: #5C4A3A;
+  --shop-announcement-text: #D4C4A8;
+
+  /* 字体 */
+  --shop-font-serif: 'Playfair Display', 'Noto Serif SC', 'STSong', 'SimSun', Georgia, serif;
+  --shop-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* 间距 */
+  --shop-space-xs: 4px;
+  --shop-space-sm: 8px;
+  --shop-space-md: 16px;
+  --shop-space-lg: 24px;
+  --shop-space-xl: 40px;
+  --shop-space-2xl: 64px;
+  --shop-space-3xl: 80px;
+
+  /* 圆角 */
+  --shop-radius-sm: 4px;
+  --shop-radius: 8px;
+  --shop-radius-lg: 12px;
+
+  /* 阴影 */
+  --shop-shadow: 0 1px 4px rgba(61, 46, 30, 0.06);
+  --shop-shadow-md: 0 4px 16px rgba(61, 46, 30, 0.08);
+  --shop-shadow-lg: 0 8px 32px rgba(61, 46, 30, 0.1);
+
+  /* 容器 */
+  --shop-container: 1200px;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--shop-font-sans);
+  color: var(--shop-text);
+  background: var(--shop-bg);
+  line-height: 1.6;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+input { font-family: inherit; border: none; outline: none; }
+ul, ol { list-style: none; }
+
+/* ---------- 通用工具类 ---------- */
+.shop-container {
+  max-width: var(--shop-container);
+  margin: 0 auto;
+  padding: 0 var(--shop-space-lg);
+}
+
+/* 按钮 */
+.shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 36px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  border-radius: var(--shop-radius-sm);
+  transition: all 0.3s ease;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.shop-btn-primary {
+  background: var(--shop-btn-bg);
+  color: var(--shop-btn-text);
+}
+.shop-btn-primary:hover {
+  background: var(--shop-accent-dark);
+}
+
+.shop-btn-outline {
+  background: transparent;
+  color: var(--shop-text);
+  border: 1px solid var(--shop-text);
+}
+.shop-btn-outline:hover {
+  background: var(--shop-text);
+  color: var(--shop-bg);
+}
+
+/* 标题 */
+.shop-heading-serif {
+  font-family: var(--shop-font-serif);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--shop-text);
+}
+
+/* 分隔标签 */
+.shop-tag {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--shop-accent);
+  margin-bottom: var(--shop-space-sm);
+}
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--shop-accent-light); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--shop-accent); }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 768px) {
+  .shop-container { padding: 0 var(--shop-space-md); }
+  .shop-btn { padding: 12px 28px; font-size: 13px; }
+}

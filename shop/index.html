@@ -3,10 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>商城 - 用户端</title>
+  <title>NOIRÉ HAIR — 奢华假发</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common/css/base.css">
+  <link rel="stylesheet" href="common/css/header.css">
+  <link rel="stylesheet" href="common/css/footer.css">
+  <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-  <h1>商城前端（用户端）</h1>
-  <p>包含商品浏览、购物车、订单、用户中心等页面。</p>
+  <!-- 头部（JS 动态渲染） -->
+  <div id="shopHeader"></div>
+
+  <!-- ==================== Hero ==================== -->
+  <section class="hero">
+    <div class="shop-container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <h1 class="hero-title" data-i18n="hero.title">奢华秀发，<br>焕新演绎</h1>
+          <p class="hero-subtitle" data-i18n="hero.subtitle">高端真人发产品，隐形自然设计。<br>让自信与美同行。</p>
+          <div class="hero-actions">
+            <a href="#" class="shop-btn shop-btn-primary" data-i18n="hero.cta1">选购假发</a>
+            <a href="#" class="shop-btn shop-btn-outline" data-i18n="hero.cta2">探索系列</a>
+          </div>
+        </div>
+        <div class="hero-image">
+          <img src="images/hero-model.png" alt="NOIRÉ HAIR 模特展示">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 分类卡片 ==================== -->
+  <section class="categories">
+    <div class="shop-container">
+      <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+  </section>
+
+  <!-- ==================== 热销精选 ==================== -->
+  <section class="bestsellers" id="bestsellers">
+    <div class="shop-container">
+      <div class="bestsellers-header">
+        <div class="bestsellers-header-left">
+          <span class="shop-tag" data-i18n="bestsellers.tag">热销精选</span>
+          <h2 class="bestsellers-title" data-i18n="bestsellers.title">深受喜爱</h2>
+        </div>
+        <a href="#" class="bestsellers-viewall">
+          <span data-i18n="bestsellers.viewAll">查看全部</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+      <div class="bestsellers-carousel">
+        <button class="carousel-arrow carousel-prev" id="carouselPrev" aria-label="Previous">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="carousel-track" id="productTrack"></div>
+        <button class="carousel-arrow carousel-next" id="carouselNext" aria-label="Next">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 工艺 ==================== -->
+  <section class="craft">
+    <div class="shop-container">
+      <div class="craft-inner">
+        <div class="craft-media">
+          <img src="images/craft-lace.png" alt="隐形蕾丝工艺">
+          <button class="craft-play" aria-label="Play video">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+        <div class="craft-content">
+          <span class="shop-tag" data-i18n="craft.subtitle">匠心打造，自然无痕</span>
+          <h2 class="craft-title" data-i18n="craft.title">隐形蕾丝工艺</h2>
+          <p class="craft-desc" data-i18n="craft.desc">我们的隐形蕾丝工艺，完美贴合头皮，发际线自然无痕，佩戴舒适稳固，呈现宛如天生的秀发质感。</p>
+          <ul class="craft-features">
+            <li>
+              <span class="craft-feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </span>
+              <div>
+                <strong data-i18n="craft.f1Title">隐形蕾丝技术</strong>
+                <span data-i18n="craft.f1Desc">超轻薄蕾丝，边缘自然服帖</span>
+              </div>
+            </li>
+            <li>
+              <span class="craft-feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </span>
+              <div>
+                <strong data-i18n="craft.f2Title">匠心手工制作</strong>
+                <span data-i18n="craft.f2Desc">手工逐根钩织，细节精致出众</span>
+              </div>
+            </li>
+            <li>
+              <span class="craft-feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </span>
+              <div>
+                <strong data-i18n="craft.f3Title">甄选优质真人发</strong>
+                <span data-i18n="craft.f3Desc">精选优质真人发，光泽自然</span>
+              </div>
+            </li>
+          </ul>
+          <a href="#" class="shop-btn shop-btn-primary" data-i18n="craft.cta">了解更多</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 发色/发质 ==================== -->
+  <section class="textures">
+    <div class="shop-container">
+      <div class="textures-inner">
+        <div class="textures-header">
+          <span class="shop-tag" data-i18n="textures.subtitle">发色与发质</span>
+          <h2 class="textures-title" data-i18n="textures.title">为你而生，<br>尽显魅力</h2>
+        </div>
+        <div class="textures-swatches" id="textureSwatches"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 信任徽章 ==================== -->
+  <section class="trust">
+    <div class="shop-container">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <h4 data-i18n="trust.shipping">全球极速配送</h4>
+          <p data-i18n="trust.shippingDesc">快速直达，安心送达</p>
+        </div>
+        <div class="trust-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <h4 data-i18n="trust.returns">30天无忧退换</h4>
+          <p data-i18n="trust.returnsDesc">无忧退换，购物更安心</p>
+        </div>
+        <div class="trust-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h4 data-i18n="trust.payment">安全支付</h4>
+          <p data-i18n="trust.paymentDesc">多重加密，支付安全</p>
+        </div>
+        <div class="trust-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <h4 data-i18n="trust.consult">专家顾问服务</h4>
+          <p data-i18n="trust.consultDesc">一对一专属顾问，全程贴心</p>
+        </div>
+        <div class="trust-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          <h4 data-i18n="trust.quality">甄选真人发</h4>
+          <p data-i18n="trust.qualityDesc">真人发质，健康自然</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 底部（JS 动态渲染） -->
+  <div id="shopFooter"></div>
+
+  <!-- ==================== 脚本 ==================== -->
+  <script src="common/js/i18n.js"></script>
+  <script src="common/js/header.js"></script>
+  <script src="common/js/footer.js"></script>
+  <script src="js/index.js"></script>
 </body>
 </html>

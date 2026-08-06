@@ -1,0 +1,166 @@
+/* ============================================
+   NOIRÉ HAIR — 底部组件样式
+   ============================================ */
+
+.shop-footer {
+  background: var(--shop-bg);
+  border-top: 1px solid var(--shop-border-light);
+  padding: 48px 0 40px;
+}
+
+/* 上半部分：品牌 + 链接 + 订阅 */
+.shop-footer-top {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 0.8fr 0.8fr 1.2fr;
+  gap: var(--shop-space-xl);
+  margin-bottom: var(--shop-space-xl);
+}
+
+/* 品牌列 */
+.shop-footer-brand .shop-logo {
+  margin-bottom: var(--shop-space-md);
+}
+.shop-footer-brand p {
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+  line-height: 1.8;
+}
+
+/* 社交图标 */
+.shop-social {
+  display: flex;
+  gap: var(--shop-space-sm);
+  margin-top: var(--shop-space-lg);
+}
+.shop-social a {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--shop-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--shop-text-secondary);
+}
+.shop-social a:hover {
+  background: var(--shop-text);
+  border-color: var(--shop-text);
+  color: #fff;
+}
+.shop-social svg { width: 16px; height: 16px; }
+
+/* 链接列 */
+.shop-footer-col h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+  margin-bottom: var(--shop-space-md);
+}
+
+.shop-footer-col ul li {
+  margin-bottom: var(--shop-space-sm);
+}
+
+.shop-footer-col ul li a {
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+  transition: color 0.2s;
+}
+.shop-footer-col ul li a:hover {
+  color: var(--shop-accent-dark);
+}
+
+/* 订阅列 */
+.shop-footer-newsletter h4 {
+  font-family: var(--shop-font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--shop-text);
+  margin-bottom: var(--shop-space-sm);
+}
+
+.shop-footer-newsletter p {
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+  margin-bottom: var(--shop-space-md);
+  line-height: 1.6;
+}
+
+.shop-newsletter-form {
+  display: flex;
+  gap: var(--shop-space-sm);
+}
+
+.shop-newsletter-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 13px;
+  background: var(--shop-bg);
+  border: 1px solid var(--shop-border);
+  border-radius: var(--shop-radius-sm);
+  color: var(--shop-text);
+}
+.shop-newsletter-input::placeholder { color: var(--shop-text-light); }
+.shop-newsletter-input:focus { border-color: var(--shop-accent); }
+
+.shop-newsletter-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--shop-text);
+  color: #fff;
+  border-radius: var(--shop-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.shop-newsletter-btn:hover { background: var(--shop-accent-dark); }
+.shop-newsletter-btn svg { width: 18px; height: 18px; }
+
+/* 底部版权栏 */
+.shop-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--shop-space-lg);
+  border-top: 1px solid var(--shop-border-light);
+}
+
+.shop-footer-legal {
+  display: flex;
+  gap: var(--shop-space-lg);
+}
+.shop-footer-legal a {
+  font-size: 12px;
+  color: var(--shop-text-light);
+  transition: color 0.2s;
+}
+.shop-footer-legal a:hover { color: var(--shop-text); }
+
+.shop-footer-copyright {
+  font-size: 12px;
+  color: var(--shop-text-light);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 768px) {
+  .shop-footer { padding: 32px 0 40px; }
+
+  .shop-footer-top {
+    grid-template-columns: 1fr;
+    gap: var(--shop-space-xl);
+  }
+
+  .shop-footer-bottom {
+    flex-direction: column;
+    gap: var(--shop-space-md);
+    text-align: center;
+  }
+
+  .shop-footer-legal {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

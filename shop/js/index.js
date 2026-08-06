@@ -11,9 +11,9 @@
 
   // 分类 — 使用 i18n key，语言切换时自动翻译
   var CATEGORIES = [
-    { nameKey: 'categories.wig', descKey: 'categories.wigDesc', image: 'images/category-wig.png', link: '#' },
-    { nameKey: 'categories.extension', descKey: 'categories.extensionDesc', image: 'images/category-extension.png', link: '#' },
-    { nameKey: 'categories.topper', descKey: 'categories.topperDesc', image: 'images/category-topper.png', link: '#' }
+    { anchor: 'wig', nameKey: 'categories.wig', descKey: 'categories.wigDesc', image: 'images/category-wig.png', link: '#' },
+    { anchor: 'extension', nameKey: 'categories.extension', descKey: 'categories.extensionDesc', image: 'images/category-extension.png', link: '#' },
+    { anchor: 'accessory', nameKey: 'categories.topper', descKey: 'categories.topperDesc', image: 'images/category-topper.png', link: '#' }
   ];
 
   // 产品 — 使用 i18n key，语言切换时自动翻译
@@ -48,7 +48,7 @@
     if (!grid) return;
 
     grid.innerHTML = CATEGORIES.map(function (cat) {
-      return '<a href="' + cat.link + '" class="category-card">' +
+      return '<a href="' + cat.link + '" class="category-card" id="' + cat.anchor + '">' +
         '<div class="category-card-text">' +
           '<h3 data-i18n="' + cat.nameKey + '">' + I.t(cat.nameKey) + '</h3>' +
           '<p data-i18n="' + cat.descKey + '">' + I.t(cat.descKey) + '</p>' +

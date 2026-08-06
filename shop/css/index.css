@@ -3,6 +3,11 @@
    1:1 还原设计稿：色调 / 布局 / 间距 / 字号
    ============================================ */
 
+/* 锚点滚动时避开吸顶头部（公告 + 导航） */
+#category, #wig, #extension, #accessory, #bestsellers, #brand, #help {
+  scroll-margin-top: 130px;
+}
+
 /* ==================== Hero ==================== */
 .hero {
   padding: 64px 0 48px;

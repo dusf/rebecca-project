@@ -17,13 +17,15 @@
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
   };
 
-  /* ---------- 导航配置 ---------- */
+  /* ---------- 导航配置（一级菜单栏） ---------- */
   var NAV_ITEMS = [
-    { key: 'nav.home',        page: 'index.html' },
-    { key: 'nav.bestsellers', page: '#bestsellers' },
-    { key: 'nav.new',         page: '#new' },
-    { key: 'nav.about',       page: '#about' },
-    { key: 'nav.help',        page: '#help' }
+    { key: 'nav.new',        page: '#new' },
+    { key: 'nav.wig',        page: '#wig' },
+    { key: 'nav.extension',  page: '#extension' },
+    { key: 'nav.bestsellers',page: '#bestsellers' },
+    { key: 'nav.accessory',  page: '#accessory' },
+    { key: 'nav.brand',      page: '#brand' },
+    { key: 'nav.help',       page: '#help' }
   ];
 
   /* ---------- 渲染头部 ---------- */

@@ -17,11 +17,13 @@
       // ---- 公告栏 ----
       'announcement.text': '全球极速配送 · 单笔订单满 ¥2,299 免运费',
 
-      // ---- 导航 ----
-      'nav.home': '首页',
-      'nav.bestsellers': '热销爆款',
+      // ---- 导航（一级菜单栏） ----
       'nav.new': '新品',
-      'nav.about': '关于我们',
+      'nav.wig': '假发',
+      'nav.extension': '接发',
+      'nav.bestsellers': '热门系列',
+      'nav.accessory': '配件',
+      'nav.brand': '品牌故事',
       'nav.help': '帮助中心',
 
       // ---- 头部操作 ----
@@ -145,10 +147,12 @@
     'en-US': {
       'announcement.text': 'Free express shipping worldwide on orders over ¥2,299',
 
-      'nav.home': 'Home',
-      'nav.bestsellers': 'Best Sellers',
       'nav.new': 'New Arrivals',
-      'nav.about': 'About Us',
+      'nav.wig': 'Wigs',
+      'nav.extension': 'Extensions',
+      'nav.bestsellers': 'Hot Collections',
+      'nav.accessory': 'Accessories',
+      'nav.brand': 'Brand Story',
       'nav.help': 'Help Center',
 
       'header.search': 'Search',
@@ -263,10 +267,12 @@
     'fr-FR': {
       'announcement.text': 'Livraison express mondiale · Offerte dès ¥2 299 d\'achat',
 
-      'nav.home': 'Accueil',
-      'nav.bestsellers': 'Meilleures Ventes',
       'nav.new': 'Nouveautés',
-      'nav.about': 'À Propos',
+      'nav.wig': 'Perruques',
+      'nav.extension': 'Extensions',
+      'nav.bestsellers': 'Collections Populaires',
+      'nav.accessory': 'Accessoires',
+      'nav.brand': 'Notre Histoire',
       'nav.help': 'Aide',
 
       'header.search': 'Rechercher',

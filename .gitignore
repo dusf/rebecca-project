@@ -11,6 +11,7 @@ package-lock.json
 
 # ===== 调试截图与配置快照 =====
 *.png
+!shop/images/*.png
 *.yaml
 
 # ===== 临时调试脚本 =====

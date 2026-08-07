@@ -12,13 +12,28 @@
 .hero {
   padding: 64px 0 48px;
   background: var(--shop-bg);
+  overflow: hidden;
 }
 
-.hero-inner {
+.hero-carousel {
+  position: relative;
+}
+
+.hero-slide {
+  display: none;
+  animation: heroFadeIn 0.5s ease;
+}
+
+.hero-slide.active {
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: flex-start;
   gap: 0;
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .hero-content {
@@ -66,10 +81,67 @@
   mix-blend-mode: multiply;
 }
 
+/* Hero 轮播导航 */
+.hero-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--shop-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  color: var(--shop-text);
+}
+.hero-nav:hover {
+  background: var(--shop-text);
+  color: #fff;
+  border-color: var(--shop-text);
+}
+.hero-nav svg {
+  width: 20px;
+  height: 20px;
+}
+.hero-nav-prev {
+  left: -60px;
+}
+.hero-nav-next {
+  right: -60px;
+}
+
+.hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--shop-border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.hero-dot.active {
+  background: var(--shop-accent);
+  width: 24px;
+  border-radius: 4px;
+}
+
 /* ==================== 分类卡片 ==================== */
 .categories {
-  padding: 0 0 20px;
-  margin-top: -50px;
+  padding: 40px 0 20px;
+  margin-top: 0;
   position: relative;
   z-index: 2;
 }

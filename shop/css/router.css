@@ -1,0 +1,72 @@
+/* ============================================
+   NOIRÉ HAIR — 路由器样式
+   ============================================ */
+
+/* ==================== 内容区 ==================== */
+.shop-content {
+  min-height: calc(100vh - 72px - 200px); /* 减去 header 和 footer 高度 */
+  background: var(--shop-bg);
+}
+
+/* ==================== 加载状态 ==================== */
+.shop-content-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.shop-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--shop-border);
+  border-top-color: var(--shop-accent);
+  border-radius: 50%;
+  animation: shop-spin 0.8s linear infinite;
+}
+
+@keyframes shop-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== 错误状态 ==================== */
+.shop-content-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: 16px;
+  color: var(--shop-text-secondary);
+}
+
+/* ==================== 首页部分 ==================== */
+.shop-home-section {
+  display: block;
+}
+
+.shop-home-section.hidden {
+  display: none;
+}
+
+/* ==================== 页面过渡动画 ==================== */
+.shop-content.fade-in {
+  animation: shop-fade-in 0.3s ease;
+}
+
+@keyframes shop-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 768px) {
+  .shop-content {
+    min-height: calc(100vh - 60px - 180px);
+  }
+}

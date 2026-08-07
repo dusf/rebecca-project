@@ -1,0 +1,369 @@
+/**
+ * NOIRÉ HAIR — 搜索弹层（居中模态对话框）
+ * 由 header.js 动态注入到 body，公共组件，全站复用
+ */
+
+/* ==================== 遮罩 ==================== */
+.shop-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 16px 16px;
+  overflow-y: auto;
+  animation: shopSearchFade 0.2s ease;
+}
+
+.shop-search-overlay.open {
+  display: flex;
+}
+
+@keyframes shopSearchFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ==================== 弹层卡片 ==================== */
+.shop-search-modal {
+  width: 100%;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  animation: shopSearchPop 0.22s ease;
+}
+
+@keyframes shopSearchPop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== 顶部搜索框 ==================== */
+.shop-search-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--shop-border, #eee);
+}
+
+.shop-search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shop-search-input-wrap svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--shop-text-sec, #8a7f72);
+  flex-shrink: 0;
+}
+
+.shop-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: var(--shop-font, inherit);
+  color: var(--shop-text, #2b2520);
+  background: transparent;
+}
+
+.shop-search-input::placeholder {
+  color: #b3a89b;
+}
+
+.shop-search-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.shop-search-range-label {
+  font-size: 14px;
+  color: var(--shop-text-sec, #8a7f72);
+  white-space: nowrap;
+}
+
+/* 可搜索 combobox 风格的范围选择 */
+.shop-search-range-combo {
+  position: relative;
+  width: 120px;
+}
+
+.shop-search-range-combo .combo-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--shop-border, #e0d8cc);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--shop-text, #2b2520);
+  background: #faf7f2;
+  outline: none;
+  cursor: text;
+}
+
+.shop-search-range-combo .combo-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  stroke: #A0937D;
+  stroke-width: 2.5;
+  pointer-events: none;
+}
+
+.shop-search-range-combo .combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--shop-border, #e0d8cc);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+}
+
+.shop-search-range-combo.open .combo-menu {
+  display: block;
+}
+
+.shop-search-range-combo .combo-item {
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--shop-text, #2b2520);
+  cursor: pointer;
+}
+
+.shop-search-range-combo .combo-item:hover,
+.shop-search-range-combo .combo-item.active {
+  background: #f5efe6;
+}
+
+.shop-search-range-combo .combo-item .combo-index {
+  color: #b3a89b;
+  margin-right: 6px;
+}
+
+.shop-search-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--shop-text-sec, #8a7f72);
+  transition: background 0.15s;
+}
+
+.shop-search-close:hover {
+  background: #f5efe6;
+}
+
+.shop-search-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==================== 弹层主体 ==================== */
+.shop-search-body {
+  padding: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.shop-search-section + .shop-search-section {
+  margin-top: 28px;
+}
+
+.shop-search-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shop-text, #2b2520);
+  margin-bottom: 14px;
+}
+
+.shop-search-clear {
+  font-size: 13px;
+  color: var(--shop-text-sec, #8a7f72);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.shop-search-clear:hover {
+  color: var(--shop-text, #2b2520);
+}
+
+/* 热词 / 标签 */
+.shop-search-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.shop-search-tag {
+  padding: 7px 16px;
+  background: #f5efe6;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--shop-text, #2b2520);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shop-search-tag:hover {
+  background: #ece2d3;
+  border-color: #d9ccb8;
+}
+
+/* 推荐商品横向列表 */
+.shop-search-products {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.shop-search-product {
+  flex: 0 0 140px;
+  cursor: pointer;
+}
+
+.shop-search-product-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #f3eee7;
+  margin-bottom: 8px;
+}
+
+.shop-search-product-name {
+  font-size: 13px;
+  color: var(--shop-text, #2b2520);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-search-product-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text, #2b2520);
+}
+
+/* 热门分类网格 */
+.shop-search-cats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.shop-search-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: #faf7f2;
+  border: 1px solid var(--shop-border, #efe9df);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shop-search-cat:hover {
+  background: #f5efe6;
+  border-color: #d9ccb8;
+}
+
+.shop-search-cat-icon {
+  width: 36px;
+  height: 36px;
+  stroke: var(--shop-text, #2b2520);
+}
+
+.shop-search-cat-label {
+  font-size: 13px;
+  color: var(--shop-text, #2b2520);
+}
+
+/* 最近搜索 */
+.shop-search-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--shop-text, #2b2520);
+  cursor: pointer;
+  border-bottom: 1px solid #f3eee7;
+}
+
+.shop-search-recent-item:hover {
+  color: var(--shop-text-sec, #8a7f72);
+}
+
+.shop-search-recent-item svg {
+  width: 16px;
+  height: 16px;
+  stroke: #b3a89b;
+}
+
+/* ==================== 移动端适配 ==================== */
+@media (max-width: 768px) {
+  .shop-search-overlay {
+    padding: 24px 12px;
+  }
+
+  .shop-search-modal {
+    max-width: 100%;
+  }
+
+  .shop-search-top {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .shop-search-range {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .shop-search-range-combo {
+    width: 160px;
+  }
+
+  .shop-search-body {
+    padding: 16px;
+  }
+
+  .shop-search-cats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

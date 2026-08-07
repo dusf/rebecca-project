@@ -14,43 +14,624 @@
     bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
     menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
-    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    fire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    leaf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    // 配件图标
+    cap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c0-4.97 4.03-9 9-9s9 4.03 9 9"/><path d="M3 12h18"/><path d="M3 12c0 2.76 2.24 5 5 5h8c2.76 0 5-2.24 5-5"/></svg>',
+    comb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><path d="M6 3c0 1.5-1 2.5-2 3.5S2 9 2 10.5V12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-1.5c0-1.5-.8-2.5-1.8-3.5S18 4.5 18 3"/><path d="M6 3c0 1.5-1 2.5-2 3.5S2 9 2 10.5V12"/><path d="M10 3v18"/><path d="M14 3v18"/></svg>',
+    sleep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M3 12h18"/><path d="M3 12c0 2.76 2.24 5 5 5h8c2.76 0 5-2.24 5-5"/></svg>',
+    stand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M12 12h.01"/></svg>',
+    tool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    // 品牌图标
+    leaf2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+    hands: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>',
+    flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+    face: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M12 12h.01"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+    // 帮助中心图标
+    guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    wear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M12 12h.01"/></svg>',
+    truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
+    headset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    user2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
   };
 
   /* ---------- 导航配置（一级菜单栏） ---------- */
   var NAV_ITEMS = [
-    { key: 'nav.new',        page: '#new' },
-    { key: 'nav.wig',        page: '#wig' },
-    { key: 'nav.extension',  page: '#extension' },
-    { key: 'nav.bestsellers',page: '#bestsellers' },
-    { key: 'nav.accessory',  page: '#accessory' },
-    { key: 'nav.brand',      page: '#brand' },
-    { key: 'nav.help',       page: '#help' }
+    { key: 'nav.new',        page: 'new-arrivals/index.html' },
+    { key: 'nav.wig',        page: '#wig', hasMegaMenu: true },
+    { key: 'nav.extension',  page: '#extension', hasMegaMenu: true },
+    { key: 'nav.bestsellers',page: '#bestsellers', hasMegaMenu: true },
+    { key: 'nav.accessory',  page: '#accessory', hasMegaMenu: true },
+    { key: 'nav.brand',      page: '#brand', hasMegaMenu: true },
+    { key: 'nav.help',       page: '#help', hasMegaMenu: true }
   ];
+
+  /* ---------- Mega Menu 数据（假发分类） ---------- */
+  var WIG_MEGA_MENU = {
+    columns: [
+      {
+        titleKey: 'mega.wigType',
+        items: [
+          { key: 'mega.noGlue', page: '#' },
+          { key: 'mega.hdLace', page: '#' },
+          { key: 'mega.laceFront', page: '#' },
+          { key: 'mega.closure', page: '#' },
+          { key: 'mega.fullLace', page: '#' },
+          { key: 'mega.upart', page: '#' },
+          { key: 'mega.vpart', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.texture',
+        items: [
+          { key: 'mega.straight', page: '#' },
+          { key: 'mega.deepWave', page: '#' },
+          { key: 'mega.looseWave', page: '#' },
+          { key: 'mega.deepCurl', page: '#' },
+          { key: 'mega.bodyWave', page: '#' },
+          { key: 'mega.naturalCurl', page: '#' },
+          { key: 'mega.voluminous', page: '#' },
+          { key: 'mega.smallCurl', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.length',
+        items: [
+          { key: 'mega.len8_12', page: '#' },
+          { key: 'mega.len14_18', page: '#' },
+          { key: 'mega.len20_24', page: '#' },
+          { key: 'mega.len26_30', page: '#' },
+          { key: 'mega.len32plus', page: '#' },
+          { key: 'mega.lengthGuide', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.color',
+        items: [
+          { key: 'mega.naturalBlack', page: '#' },
+          { key: 'mega.darkBrown', page: '#' },
+          { key: 'mega.chocolateBrown', page: '#' },
+          { key: 'mega.honeyBrown', page: '#' },
+          { key: 'mega.golden', page: '#' },
+          { key: 'mega.red', page: '#' },
+          { key: 'mega.highlight', page: '#' },
+          { key: 'mega.ombre', page: '#' }
+        ]
+      }
+    ],
+    promo: {
+      image: 'images/jiafa.png',
+      titleKey: 'mega.seasonPick',
+      ctaKey: 'mega.explore'
+    }
+  };
+
+  /* ---------- Mega Menu 数据（接发分类） ---------- */
+  var EXTENSION_MEGA_MENU = {
+    columns: [
+      {
+        titleKey: 'mega.extInstall',
+        items: [
+          { key: 'mega.extClipIn', page: '#' },
+          { key: 'mega.extTapeIn', page: '#' },
+          { key: 'mega.extWeft', page: '#' },
+          { key: 'mega.extHandTied', page: '#' },
+          { key: 'mega.extMicroRing', page: '#' },
+          { key: 'mega.extITip', page: '#' },
+          { key: 'mega.extUTip', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.extTexture',
+        items: [
+          { key: 'mega.extStraight', page: '#' },
+          { key: 'mega.extBigWave', page: '#' },
+          { key: 'mega.extLooseWave', page: '#' },
+          { key: 'mega.extDeepWave', page: '#' },
+          { key: 'mega.extWaterWave', page: '#' },
+          { key: 'mega.extNaturalCurl', page: '#' },
+          { key: 'mega.extVoluminous', page: '#' },
+          { key: 'mega.extSmallCurl', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.extLength',
+        items: [
+          { key: 'mega.extLen12_16', page: '#' },
+          { key: 'mega.extLen18_20', page: '#' },
+          { key: 'mega.extLen22_24', page: '#' },
+          { key: 'mega.extLen26_30', page: '#' },
+          { key: 'mega.extLen32plus', page: '#' },
+          { key: 'mega.extLengthGuide', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.extColor',
+        items: [
+          { key: 'mega.extNaturalBlack', page: '#' },
+          { key: 'mega.extDarkBrown', page: '#' },
+          { key: 'mega.extChocolateBrown', page: '#' },
+          { key: 'mega.extHoneyBrown', page: '#' },
+          { key: 'mega.extGolden', page: '#' },
+          { key: 'mega.extHighlight', page: '#' },
+          { key: 'mega.extOmbre', page: '#' },
+          { key: 'mega.extColorMatch', page: '#' }
+        ]
+      },
+      {
+        titleKey: 'mega.extNeed',
+        items: [
+          { key: 'mega.extAddLength', page: '#' },
+          { key: 'mega.extAddVolume', page: '#' },
+          { key: 'mega.extAddHighlight', page: '#' },
+          { key: 'mega.extTemporary', page: '#' },
+          { key: 'mega.extRemovable', page: '#' },
+          { key: 'mega.extLongTerm', page: '#' }
+        ]
+      }
+    ],
+    promo: {
+      image: 'images/jiefa.png',
+      titleKey: 'mega.seasonPick',
+      ctaKey: 'mega.explore'
+    }
+  };
+
+  /* ---------- Mega Menu 数据（帮助中心分类） ---------- */
+  var HELP_MEGA_MENU = {
+    type: 'help',
+    columns: [
+      {
+        icon: 'guide',
+        titleKey: 'mega.helpGuide',
+        items: [
+          { key: 'mega.helpWigGuide', page: '#' },
+          { key: 'mega.helpExtGuide', page: '#' },
+          { key: 'mega.helpWigType', page: '#' },
+          { key: 'mega.helpLaceType', page: '#' },
+          { key: 'mega.helpLength', page: '#' },
+          { key: 'mega.helpColor', page: '#' },
+          { key: 'mega.helpMeasure', page: '#' }
+        ]
+      },
+      {
+        icon: 'wear',
+        titleKey: 'mega.helpWear',
+        items: [
+          { key: 'mega.helpWigTutorial', page: '#' },
+          { key: 'mega.helpNoGlue', page: '#' },
+          { key: 'mega.helpLaceCut', page: '#' },
+          { key: 'mega.helpFixMethod', page: '#' },
+          { key: 'mega.helpInstall', page: '#' },
+          { key: 'mega.helpRemove', page: '#' },
+          { key: 'mega.helpSleep', page: '#' },
+          { key: 'mega.helpVideo', page: '#' }
+        ]
+      },
+      {
+        icon: 'truck',
+        titleKey: 'mega.helpOrder',
+        items: [
+          { key: 'mega.helpQueryOrder', page: '#' },
+          { key: 'mega.helpTrack', page: '#' },
+          { key: 'mega.helpDelivery', page: '#' },
+          { key: 'mega.helpTime', page: '#' },
+          { key: 'mega.helpShipping', page: '#' },
+          { key: 'mega.helpCustoms', page: '#' },
+          { key: 'mega.helpCancel', page: '#' }
+        ]
+      },
+      {
+        icon: 'shield',
+        titleKey: 'mega.helpReturn',
+        items: [
+          { key: 'mega.helpReturnPolicy', page: '#' },
+          { key: 'mega.helpApplyReturn', page: '#' },
+          { key: 'mega.helpRefund', page: '#' },
+          { key: 'mega.helpQuality', page: '#' },
+          { key: 'mega.helpWrong', page: '#' },
+          { key: 'mega.helpDamage', page: '#' },
+          { key: 'mega.helpModifyOrder', page: '#' }
+        ]
+      },
+      {
+        icon: 'headset',
+        titleKey: 'mega.helpContact',
+        items: [],
+        isContact: true
+      }
+    ],
+    contact: {
+      subtitleKey: 'mega.helpContactSub',
+      ctaKey: 'mega.helpContactBtn',
+      methods: [
+        { icon: 'chat', key: 'mega.helpLiveChat', page: '#' },
+        { icon: 'mail', key: 'mega.helpEmail', page: '#' },
+        { icon: 'user2', key: 'mega.helpConsult', page: '#' }
+      ]
+    }
+  };
+
+  /* ---------- Mega Menu 数据（品牌故事分类） ---------- */
+  var BRAND_MEGA_MENU = {
+    type: 'list',
+    columns: [
+      {
+        icon: 'leaf2',
+        titleKey: 'mega.brandOrigin',
+        items: [
+          { key: 'mega.brand初心', page: '#' },
+          { key: 'mega.brandStory', page: '#' },
+          { key: 'mega.brandHistory', page: '#' }
+        ]
+      },
+      {
+        icon: 'hands',
+        titleKey: 'mega.brandCraft',
+        items: [
+          { key: 'mega.brandLace', page: '#' },
+          { key: 'mega.brandHandTied', page: '#' },
+          { key: 'mega.brandCap', page: '#' }
+        ]
+      },
+      {
+        icon: 'flame',
+        titleKey: 'mega.brandQuality',
+        items: [
+          { key: 'mega.brandRealHair', page: '#' },
+          { key: 'mega.brandSelect', page: '#' },
+          { key: 'mega.brandTest', page: '#' }
+        ]
+      },
+      {
+        icon: 'face',
+        titleKey: 'mega.brandPhilosophy',
+        items: [
+          { key: 'mega.brandNatural', page: '#' },
+          { key: 'mega.brandConfidence', page: '#' },
+          { key: 'mega.brandLongTerm', page: '#' }
+        ]
+      },
+      {
+        icon: 'heart',
+        titleKey: 'mega.brandStories',
+        items: [
+          { key: 'mega.brandUserStory', page: '#' },
+          { key: 'mega.brandBeforeAfter', page: '#' },
+          { key: 'mega.brandCommunity', page: '#' }
+        ]
+      }
+    ],
+    promo: {
+      image: 'images/pinpai.png',
+      titleKey: 'mega.brandTitle',
+      subtitleKey: 'mega.brandSub',
+      ctaKey: 'mega.brandExplore'
+    }
+  };
+
+  /* ---------- Mega Menu 数据（配件分类） ---------- */
+  var ACCESSORY_MEGA_MENU = {
+    type: 'list',
+    columns: [
+      {
+        icon: 'cap',
+        titleKey: 'mega.accFix',
+        items: [
+          { key: 'mega.accWigCap', page: '#' },
+          { key: 'mega.accAntiSlip', page: '#' },
+          { key: 'mega.accFixBand', page: '#' },
+          { key: 'mega.accClip', page: '#' },
+          { key: 'mega.accEdgeBand', page: '#' },
+          { key: 'mega.accLaceFix', page: '#' }
+        ]
+      },
+      {
+        icon: 'comb',
+        titleKey: 'mega.accStyle',
+        items: [
+          { key: 'mega.accWigComb', page: '#' },
+          { key: 'mega.accWideTooth', page: '#' },
+          { key: 'mega.accEdgeComb', page: '#' },
+          { key: 'mega.accPuff', page: '#' },
+          { key: 'mega.accSection', page: '#' },
+          { key: 'mega.accKit', page: '#' }
+        ]
+      },
+      {
+        icon: 'sleep',
+        titleKey: 'mega.accSleep',
+        items: [
+          { key: 'mega.accSilkCap', page: '#' },
+          { key: 'mega.accSatinCap', page: '#' },
+          { key: 'mega.accSleepBand', page: '#' },
+          { key: 'mega.accPillow', page: '#' },
+          { key: 'mega.accKit', page: '#' }
+        ]
+      },
+      {
+        icon: 'stand',
+        titleKey: 'mega.accStore',
+        items: [
+          { key: 'mega.accStand', page: '#' },
+          { key: 'mega.accFoldable', page: '#' },
+          { key: 'mega.accWigHead', page: '#' },
+          { key: 'mega.accDustBag', page: '#' },
+          { key: 'mega.accTravel', page: '#' }
+        ]
+      },
+      {
+        icon: 'tool',
+        titleKey: 'mega.accInstall',
+        items: [
+          { key: 'mega.accTweezers', page: '#' },
+          { key: 'mega.accRingTool', page: '#' },
+          { key: 'mega.accRemover', page: '#' },
+          { key: 'mega.accSectionClip', page: '#' },
+          { key: 'mega.accInstallKit', page: '#' }
+        ]
+      }
+    ],
+    promo: {
+      image: 'images/peijian.png',
+      titleKey: 'mega.accTitle',
+      subtitleKey: 'mega.accSub',
+      ctaKey: 'mega.accExplore'
+    }
+  };
+
+  /* ---------- Mega Menu 数据（热门系列分类） ---------- */
+  var BESTSELLERS_MEGA_MENU = {
+    type: 'list',
+    columns: [
+      {
+        icon: 'fire',
+        titleKey: 'mega.bsHotList',
+        items: [
+          { key: 'mega.bsHotWig', page: '#' },
+          { key: 'mega.bsHotExt', page: '#' },
+          { key: 'mega.bsWeekHot', page: '#' },
+          { key: 'mega.bsUserTop', page: '#' }
+        ]
+      },
+      {
+        icon: 'star',
+        titleKey: 'mega.bsBeginner',
+        items: [
+          { key: 'mega.bsEasyStart', page: '#' },
+          { key: 'mega.bsFirstBuy', page: '#' }
+        ]
+      },
+      {
+        icon: 'leaf',
+        titleKey: 'mega.bsNatural',
+        items: [
+          { key: 'mega.bsNaturalLine', page: '#' },
+          { key: 'mega.bsRealFeel', page: '#' }
+        ]
+      },
+      {
+        icon: 'star',
+        titleKey: 'mega.bsScene',
+        items: [
+          { key: 'mega.bsDaily', page: '#' },
+          { key: 'mega.bsDate', page: '#' },
+          { key: 'mega.bsWedding', page: '#' },
+          { key: 'mega.bsParty', page: '#' },
+          { key: 'mega.bsVacation', page: '#' },
+          { key: 'mega.bsContent', page: '#' }
+        ]
+      },
+      {
+        icon: 'sun',
+        titleKey: 'mega.bsSeason',
+        items: [
+          { key: 'mega.bsSeasonPick', page: '#' }
+        ]
+      }
+    ],
+    promo: {
+      image: 'images/xilie.png',
+      titleKey: 'mega.bsSeriesPick',
+      subtitleKey: 'mega.bsSeriesSub',
+      ctaKey: 'mega.bsExplore'
+    }
+  };
+
+  /* ---------- 渲染 Mega Menu HTML ---------- */
+  function renderMegaMenu(menu) {
+    // 帮助中心布局
+    if (menu.type === 'help') {
+      var columnsHtml = menu.columns.map(function (col) {
+        var iconSvg = ICONS[col.icon] || '';
+        if (col.isContact) {
+          // 联系我们列 - 特殊布局
+          var contactMethodsHtml = menu.contact.methods.map(function (m) {
+            var mIconSvg = ICONS[m.icon] || '';
+            return '<a href="' + m.page + '" class="help-contact-method" data-i18n="' + m.key + '">' + mIconSvg + '<span>' + I.t(m.key) + '</span></a>';
+          }).join('');
+          var subtitleHtml = menu.contact.subtitleKey ? '<p class="help-contact-subtitle" data-i18n="' + menu.contact.subtitleKey + '">' + I.t(menu.contact.subtitleKey) + '</p>' : '';
+          return '<div class="help-column help-contact-column">' +
+            '<div class="help-column-header">' +
+              '<span class="help-column-icon">' + iconSvg + '</span>' +
+              '<h4 class="help-column-title" data-i18n="' + col.titleKey + '">' + I.t(col.titleKey) + '</h4>' +
+            '</div>' +
+            '<div class="help-contact-body">' +
+              subtitleHtml +
+              '<a href="#" class="help-contact-cta" data-i18n="' + menu.contact.ctaKey + '">' + I.t(menu.contact.ctaKey) + '</a>' +
+              '<div class="help-contact-methods">' + contactMethodsHtml + '</div>' +
+            '</div>' +
+          '</div>';
+        }
+        var itemsHtml = col.items.map(function (item) {
+          return '<a href="' + item.page + '" class="help-list-item" data-i18n="' + item.key + '">' + I.t(item.key) + '<span class="help-item-arrow">›</span></a>';
+        }).join('');
+        return '<div class="help-column">' +
+          '<div class="help-column-header">' +
+            '<span class="help-column-icon">' + iconSvg + '</span>' +
+            '<h4 class="help-column-title" data-i18n="' + col.titleKey + '">' + I.t(col.titleKey) + '</h4>' +
+          '</div>' +
+          '<div class="help-column-items">' + itemsHtml + '</div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="mega-menu mega-menu-help">' +
+        '<div class="mega-menu-inner">' +
+          '<div class="help-columns">' + columnsHtml + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // 配件列表布局
+    if (menu.type === 'list') {
+      var columnsHtml = menu.columns.map(function (col) {
+        var iconSvg = ICONS[col.icon] || '';
+        var itemsHtml = col.items.map(function (item) {
+          return '<a href="' + item.page + '" class="acc-list-item" data-i18n="' + item.key + '">' + I.t(item.key) + '</a>';
+        }).join('');
+        return '<div class="acc-column">' +
+          '<div class="acc-column-header">' +
+            '<span class="acc-column-icon">' + iconSvg + '</span>' +
+            '<h4 class="acc-column-title" data-i18n="' + col.titleKey + '">' + I.t(col.titleKey) + '</h4>' +
+          '</div>' +
+          '<div class="acc-column-items">' + itemsHtml + '</div>' +
+        '</div>';
+      }).join('');
+
+      var promoHtml = '<div class="mega-menu-promo">' +
+        '<img src="' + menu.promo.image + '" alt="Promo" class="mega-menu-promo-img">' +
+        '<div class="mega-menu-promo-content">' +
+          '<span class="mega-menu-promo-tag" data-i18n="' + menu.promo.titleKey + '">' + I.t(menu.promo.titleKey) + '</span>' +
+          (menu.promo.subtitleKey ? '<span class="mega-menu-promo-sub" data-i18n="' + menu.promo.subtitleKey + '">' + I.t(menu.promo.subtitleKey) + '</span>' : '') +
+          '<a href="#" class="mega-menu-promo-cta" data-i18n="' + menu.promo.ctaKey + '">' + I.t(menu.promo.ctaKey) + '</a>' +
+        '</div>' +
+      '</div>';
+
+      return '<div class="mega-menu mega-menu-acc">' +
+        '<div class="mega-menu-inner">' +
+          '<div class="acc-columns">' + columnsHtml + '</div>' +
+          promoHtml +
+        '</div>' +
+      '</div>';
+    }
+
+    // 热门系列列表布局
+    if (menu.type === 'list') {
+      var columnsHtml = menu.columns.map(function (col) {
+        var iconSvg = ICONS[col.icon] || '';
+        var itemsHtml = col.items.map(function (item) {
+          return '<a href="' + item.page + '" class="bs-list-item" data-i18n="' + item.key + '">' + I.t(item.key) + '<span class="bs-item-arrow">›</span></a>';
+        }).join('');
+        return '<div class="bs-column">' +
+          '<div class="bs-column-header">' +
+            '<span class="bs-column-icon">' + iconSvg + '</span>' +
+            '<h4 class="bs-column-title" data-i18n="' + col.titleKey + '">' + I.t(col.titleKey) + '</h4>' +
+          '</div>' +
+          '<div class="bs-column-items">' + itemsHtml + '</div>' +
+        '</div>';
+      }).join('');
+
+      var promoHtml = '<div class="mega-menu-promo">' +
+        '<img src="' + menu.promo.image + '" alt="Promo" class="mega-menu-promo-img">' +
+        '<div class="mega-menu-promo-content">' +
+          '<span class="mega-menu-promo-tag" data-i18n="' + menu.promo.titleKey + '">' + I.t(menu.promo.titleKey) + '</span>' +
+          (menu.promo.subtitleKey ? '<span class="mega-menu-promo-sub" data-i18n="' + menu.promo.subtitleKey + '">' + I.t(menu.promo.subtitleKey) + '</span>' : '') +
+          '<a href="#" class="mega-menu-promo-cta" data-i18n="' + menu.promo.ctaKey + '">' + I.t(menu.promo.ctaKey) + '</a>' +
+        '</div>' +
+      '</div>';
+
+      return '<div class="mega-menu mega-menu-bs">' +
+        '<div class="mega-menu-inner">' +
+          '<div class="bs-columns">' + columnsHtml + '</div>' +
+          promoHtml +
+        '</div>' +
+      '</div>';
+    }
+
+    // 假发/接发列表布局
+    var isExtension = menu === EXTENSION_MEGA_MENU;
+    var columnsClass = 'mega-menu-columns' + (isExtension ? ' ext-5cols' : '');
+
+    var columnsHtml = menu.columns.map(function (col) {
+      var itemsHtml = col.items.map(function (item) {
+        return '<a href="' + item.page + '" class="mega-menu-item" data-page="' + item.page + '" data-i18n="' + item.key + '">' + I.t(item.key) + '</a>';
+      }).join('');
+      return '<div class="mega-menu-column">' +
+        '<h4 class="mega-menu-column-title" data-i18n="' + col.titleKey + '">' + I.t(col.titleKey) + '</h4>' +
+        '<div class="mega-menu-items">' + itemsHtml + '</div>' +
+      '</div>';
+    }).join('');
+
+    var promoHtml = '<div class="mega-menu-promo">' +
+      '<img src="' + menu.promo.image + '" alt="Promo" class="mega-menu-promo-img">' +
+      '<div class="mega-menu-promo-content">' +
+        '<span class="mega-menu-promo-tag" data-i18n="' + menu.promo.titleKey + '">' + I.t(menu.promo.titleKey) + '</span>' +
+        '<a href="#" class="mega-menu-promo-cta" data-i18n="' + menu.promo.ctaKey + '">' + I.t(menu.promo.ctaKey) + '</a>' +
+      '</div>' +
+    '</div>';
+
+    return '<div class="mega-menu">' +
+      '<div class="mega-menu-inner">' +
+        '<div class="' + columnsClass + '">' + columnsHtml + '</div>' +
+        promoHtml +
+      '</div>' +
+    '</div>';
+  }
 
   /* ---------- 渲染头部 ---------- */
   function renderHeader(activePage) {
     var header = document.getElementById('shopHeader');
     if (!header) return;
 
-    var currentLocale = I.getLocale();
-    var locales = I.getSupported();
+    var currentCountry = I.getCountry();
+    var countries = I.getCountries();
+    var currentCountryInfo = I.getCountryInfo();
 
     var navHtml = NAV_ITEMS.map(function (item) {
       var isActive = activePage === item.page;
-      return '<a href="' + item.page + '" class="shop-nav-link' + (isActive ? ' active' : '') + '" data-i18n="' + item.key + '">' + I.t(item.key) + '</a>';
+      var hasMega = item.hasMegaMenu ? ' has-mega' : '';
+      var megaArrow = item.hasMegaMenu ? ICONS.chevron : '';
+      var megaHtml = '';
+      if (item.hasMegaMenu) {
+        var menuData = item.key === 'nav.wig' ? WIG_MEGA_MENU : (item.key === 'nav.extension' ? EXTENSION_MEGA_MENU : (item.key === 'nav.bestsellers' ? BESTSELLERS_MEGA_MENU : (item.key === 'nav.accessory' ? ACCESSORY_MEGA_MENU : (item.key === 'nav.brand' ? BRAND_MEGA_MENU : HELP_MEGA_MENU))));
+        megaHtml = renderMegaMenu(menuData);
+      }
+      var navHref = item.page.startsWith('#') ? '#' : item.page;
+      return '<div class="shop-nav-item' + hasMega + '">' +
+        '<a href="' + navHref + '" class="shop-nav-link' + (isActive ? ' active' : '') + '" data-page="' + item.page + '" data-i18n="' + item.key + '">' + I.t(item.key) + megaArrow + '</a>' +
+        megaHtml +
+      '</div>';
     }).join('');
 
-    var langOptionsHtml = locales.map(function (loc) {
-      return '<button class="shop-locale-option' + (loc === currentLocale ? ' active' : '') + '" data-locale="' + loc + '">' + I.getLocaleName(loc) + '</button>';
+    // 国家选择器 HTML
+    var countryOptionsHtml = Object.keys(countries).map(function (code) {
+      var country = countries[code];
+      var isActive = code === currentCountry;
+      return '<div class="shop-country-option' + (isActive ? ' active' : '') + '" data-country="' + code + '">' +
+        '<span class="shop-country-flag">' + country.flag + '</span>' +
+        '<span class="shop-country-name">' + country.name + '</span>' +
+        '<span class="shop-country-info">' + country.locale + ' · ' + country.currencySymbol + '</span>' +
+      '</div>';
     }).join('');
 
     var mobileNavHtml = NAV_ITEMS.map(function (item) {
-      return '<a href="' + item.page + '" class="shop-mobile-nav-link" data-i18n="' + item.key + '">' + I.t(item.key) + '</a>';
+      var navHref = item.page.startsWith('#') ? '#' : item.page;
+      return '<a href="' + navHref + '" class="shop-mobile-nav-link" data-page="' + item.page + '" data-i18n="' + item.key + '">' + I.t(item.key) + '</a>';
     }).join('');
 
-    var mobileLangHtml = locales.map(function (loc) {
-      return '<button class="shop-mobile-locale-opt' + (loc === currentLocale ? ' active' : '') + '" data-locale="' + loc + '">' + I.getLocaleName(loc) + '</button>';
+    var mobileCountryHtml = Object.keys(countries).map(function (code) {
+      var country = countries[code];
+      var isActive = code === currentCountry;
+      return '<button class="shop-mobile-country-opt' + (isActive ? ' active' : '') + '" data-country="' + code + '">' +
+        country.flag + ' ' + country.name +
+      '</button>';
     }).join('');
 
     header.innerHTML =
@@ -62,14 +643,15 @@
       '<div class="shop-header">' +
         '<div class="shop-container shop-header-inner">' +
           '<button class="shop-hamburger" id="shopHamburger" aria-label="Menu">' + ICONS.menu + '</button>' +
-          '<a href="index.html" class="shop-logo">NOIRÉ</a>' +
+          '<a href="#home" class="shop-logo" data-page="#home">NOIRÉ</a>' +
           '<nav class="shop-nav">' + navHtml + '</nav>' +
           '<div class="shop-header-actions">' +
-            '<div class="shop-locale-selector">' +
-              '<button class="shop-locale-btn" id="shopLocaleBtn">' +
-                '<span id="localeCurrentName">' + I.getLocaleName(currentLocale) + '</span>' + ICONS.chevron +
+            '<div class="shop-country-selector">' +
+              '<button class="shop-country-btn" id="shopCountryBtn">' +
+                '<span class="shop-country-btn-flag">' + currentCountryInfo.flag + '</span>' +
+                '<span id="countryCurrentName">' + currentCountryInfo.name + '</span>' + ICONS.chevron +
               '</button>' +
-              '<div class="shop-locale-dropdown" id="shopLocaleDropdown">' + langOptionsHtml + '</div>' +
+              '<div class="shop-country-dropdown" id="shopCountryDropdown">' + countryOptionsHtml + '</div>' +
             '</div>' +
             '<button class="shop-icon-btn" data-action="search" aria-label="' + I.t('header.search') + '">' + ICONS.search + '</button>' +
             '<button class="shop-icon-btn" data-action="account" aria-label="' + I.t('header.account') + '">' + ICONS.user + '</button>' +
@@ -84,9 +666,9 @@
         '<div class="shop-mobile-nav-panel">' +
           '<button class="shop-mobile-nav-close" id="shopMobileNavClose">' + ICONS.close + '</button>' +
           mobileNavHtml +
-          '<div class="shop-mobile-locale">' +
-            '<div class="shop-mobile-locale-label" data-i18n="header.lang">' + I.t('header.lang') + '</div>' +
-            '<div class="shop-mobile-locale-options">' + mobileLangHtml + '</div>' +
+          '<div class="shop-mobile-country">' +
+            '<div class="shop-mobile-country-label" data-i18n="header.country">' + I.t('header.country') + '</div>' +
+            '<div class="shop-mobile-country-options">' + mobileCountryHtml + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -96,26 +678,52 @@
 
   /* ---------- 绑定交互 ---------- */
   function bindEvents() {
-    // 语言切换下拉
-    var localeBtn = document.getElementById('shopLocaleBtn');
-    var localeDropdown = document.getElementById('shopLocaleDropdown');
-    if (localeBtn && localeDropdown) {
-      localeBtn.addEventListener('click', function (e) {
+    // Mega Menu 悬停交互
+    var megaItems = document.querySelectorAll('.shop-nav-item.has-mega');
+    megaItems.forEach(function (item) {
+      var menu = item.querySelector('.mega-menu');
+      if (!menu) return;
+
+      var timeout;
+      item.addEventListener('mouseenter', function () {
+        clearTimeout(timeout);
+        menu.classList.add('show');
+      });
+      item.addEventListener('mouseleave', function () {
+        timeout = setTimeout(function () {
+          menu.classList.remove('show');
+        }, 150);
+      });
+      menu.addEventListener('mouseenter', function () {
+        clearTimeout(timeout);
+      });
+      menu.addEventListener('mouseleave', function () {
+        timeout = setTimeout(function () {
+          menu.classList.remove('show');
+        }, 150);
+      });
+    });
+
+    // 国家切换下拉
+    var countryBtn = document.getElementById('shopCountryBtn');
+    var countryDropdown = document.getElementById('shopCountryDropdown');
+    if (countryBtn && countryDropdown) {
+      countryBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        localeDropdown.classList.toggle('show');
-        localeBtn.classList.toggle('open');
+        countryDropdown.classList.toggle('show');
+        countryBtn.classList.toggle('open');
       });
       document.addEventListener('click', function () {
-        localeDropdown.classList.remove('show');
-        localeBtn.classList.remove('open');
+        countryDropdown.classList.remove('show');
+        countryBtn.classList.remove('open');
       });
     }
 
-    // 语言选项点击
-    document.querySelectorAll('.shop-locale-option, .shop-mobile-locale-opt').forEach(function (btn) {
+    // 国家选项点击
+    document.querySelectorAll('.shop-country-option, .shop-mobile-country-opt').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var locale = this.getAttribute('data-locale');
-        if (locale) I.setLocale(locale);
+        var country = this.getAttribute('data-country');
+        if (country) I.setCountry(country);
       });
     });
 
@@ -136,6 +744,61 @@
     }
   }
 
+  /* ---------- 导航点击处理 ---------- */
+  function bindNavClicks() {
+    // 桌面导航链接
+    document.querySelectorAll('.shop-nav-link[data-page]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var page = this.getAttribute('data-page');
+        if (page && !page.startsWith('#')) {
+          e.preventDefault();
+          if (window.ShopRouter) {
+            window.ShopRouter.loadPage(page);
+          }
+        }
+      });
+    });
+
+    // 移动端导航链接
+    document.querySelectorAll('.shop-mobile-nav-link[data-page]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var page = this.getAttribute('data-page');
+        if (page && !page.startsWith('#')) {
+          e.preventDefault();
+          if (window.ShopRouter) {
+            window.ShopRouter.loadPage(page);
+          }
+          // 关闭移动端导航
+          var mobileNav = document.getElementById('shopMobileNav');
+          if (mobileNav) mobileNav.classList.remove('open');
+        }
+      });
+    });
+  }
+
+  /* ---------- 搜索图标点击 ---------- */
+  function bindSearchToggle() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-action="search"]');
+      if (!btn) return;
+      e.preventDefault();
+      if (window.ShopSearch) window.ShopSearch.open();
+    });
+  }
+
   /* ---------- 导出 ---------- */
   window.ShopHeader = { render: renderHeader };
+
+  // 页面加载完成后绑定导航点击与搜索弹层
+  function onReady() {
+    bindNavClicks();
+    bindSearchToggle();
+    if (window.ShopSearch) window.ShopSearch.init();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
 })();

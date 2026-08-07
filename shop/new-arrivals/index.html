@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOIRÉ HAIR — 新品上市</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/base.css">
+  <link rel="stylesheet" href="../common/css/header.css">
+  <link rel="stylesheet" href="../common/css/footer.css">
+  <link rel="stylesheet" href="css/new-arrivals.css">
+</head>
+<body>
+  <!-- 内容区域（由 router.js 加载到 index.html） -->
+  <main class="na-page">
+    <!-- Hero -->
+    <section class="na-hero">
+      <div class="shop-container">
+        <h1 class="na-hero-title" data-i18n="na.page.title">新品上市</h1>
+        <p class="na-hero-subtitle" data-i18n="na.page.subtitle">探索本季最新发品，引领时尚潮流</p>
+        <p class="na-hero-desc" data-i18n="na.page.newDesc">精选优质发丝，匠心制作，为您带来全新体验</p>
+      </div>
+    </section>
+
+    <!-- 分类卡片 -->
+    <section class="na-section">
+      <div class="shop-container">
+        <div class="na-section-header">
+          <h2 class="na-section-title" data-i18n="na.page.viewAll">查看全部</h2>
+          <p class="na-section-subtitle" data-i18n="na.page.newDesc">探索本季最新发品</p>
+        </div>
+        <div class="na-cat-grid" id="naCatGrid"></div>
+      </div>
+    </section>
+
+    <!-- 产品网格 -->
+    <section class="na-section">
+      <div class="shop-container">
+        <div class="na-section-header">
+          <h2 class="na-section-title" data-i18n="na.page.moreProducts">更多新品</h2>
+          <p class="na-section-subtitle" data-i18n="na.page.trendDesc">紧跟时尚潮流，展现独特魅力</p>
+        </div>
+        <div class="na-prod-grid" id="naProductGrid"></div>
+      </div>
+    </section>
+
+    <!-- 流行趋势 -->
+    <section class="na-section">
+      <div class="shop-container">
+        <div class="na-section-header">
+          <h2 class="na-section-title" data-i18n="na.page.trendTitle">本季流行趋势</h2>
+          <p class="na-section-subtitle" data-i18n="na.page.trendDesc">紧跟时尚潮流，展现独特魅力</p>
+        </div>
+        <div class="na-trend-grid" id="naTrendGrid"></div>
+      </div>
+    </section>
+
+    <!-- 匠心工艺 -->
+    <section class="na-section">
+      <div class="shop-container">
+        <div class="na-section-header">
+          <h2 class="na-section-title" data-i18n="na.page.craftTitle">匠心工艺</h2>
+          <p class="na-section-subtitle" data-i18n="na.page.craftDesc">每一顶假发都经过精心制作，确保品质卓越</p>
+        </div>
+        <div class="na-craft-grid" id="naCraftGrid"></div>
+      </div>
+    </section>
+
+    <!-- 更多产品轮播 -->
+    <section class="na-more-section">
+      <div class="na-more-header">
+        <h2 class="na-more-title" data-i18n="na.page.moreProducts">更多新品</h2>
+        <a href="#" class="na-more-link" data-i18n="na.page.viewAll">查看全部 →</a>
+      </div>
+      <div class="na-carousel-nav">
+        <button class="na-carousel-arrow na-carousel-arrow-prev" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="na-carousel-arrow na-carousel-arrow-next" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="na-more-track-wrapper">
+        <div class="na-more-track" id="naMoreTrack"></div>
+      </div>
+    </section>
+
+    <!-- 订阅 -->
+    <section class="na-subscribe">
+      <div class="na-subscribe-inner">
+        <h2 class="na-subscribe-title" data-i18n="na.page.subscribeTitle">订阅获取新品资讯</h2>
+        <p class="na-subscribe-desc" data-i18n="na.page.subscribeDesc">第一时间了解最新产品与独家优惠</p>
+        <form class="na-subscribe-form" id="naSubscribeForm">
+          <input type="email" class="na-subscribe-input" placeholder="输入您的邮箱" data-i18n-placeholder="na.subscribe.placeholder" required>
+          <button type="submit" class="na-subscribe-btn" data-i18n="na.page.subscribeBtn">订阅</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="../common/js/i18n.js"></script>
+  <script src="js/new-arrivals.js"></script>
+</body>
+</html>

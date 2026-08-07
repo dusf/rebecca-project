@@ -1,0 +1,615 @@
+/**
+ * NOIRÉ HAIR — 新品页面样式
+ * 依赖：shop/common/css/base.css
+ */
+
+/* ==================== 页面容器 ==================== */
+.na-page {
+  background: var(--shop-bg);
+  min-height: 100vh;
+}
+
+.na-hero {
+  position: relative;
+  padding: 72px 0 64px;
+  background-image: url('../../images/xinpinzhuti.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* 半透明遮罩，保证文字在主题图上清晰可读 */
+.na-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: 0;
+}
+
+.na-hero > .shop-container {
+  position: relative;
+  z-index: 1;
+}
+
+.na-hero-title {
+  font-family: var(--shop-font-serif);
+  font-size: 42px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.na-hero-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 28px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+}
+
+.na-hero-desc {
+  max-width: 520px;
+  margin: 0 auto;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== 分类卡片 ==================== */
+.na-section {
+  padding: 48px 0;
+}
+
+.na-section + .na-section {
+  border-top: 1px solid var(--shop-border);
+}
+
+.na-section-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.na-section-title {
+  font-family: var(--shop-font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--shop-text);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.na-section-subtitle {
+  font-size: 14px;
+  color: var(--shop-text-sec);
+}
+
+.na-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.na-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--shop-border);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.na-cat-card:hover {
+  border-color: var(--shop-accent);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.na-cat-card-arrow {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 18px;
+  color: var(--shop-text-sec);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.na-cat-card:hover .na-cat-card-arrow {
+  opacity: 1;
+}
+
+.na-cat-card-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+  border: 2px solid var(--shop-border);
+  background: #f3eee7; /* 兜底背景，避免图片未加载时塌陷 */
+}
+
+.na-cat-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--shop-text);
+  margin-bottom: 6px;
+}
+
+.na-cat-card-desc {
+  font-size: 12px;
+  color: var(--shop-text-sec);
+  line-height: 1.5;
+}
+
+/* ==================== 产品网格 ==================== */
+.na-prod-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.na-product-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--shop-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.na-product-card:hover {
+  border-color: var(--shop-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.na-product-img-wrap {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3/4;
+  background: #f5f0eb;
+}
+
+.na-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.na-product-card:hover .na-product-img {
+  transform: scale(1.05);
+}
+
+.na-product-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: var(--shop-accent);
+  color: #fff;
+}
+
+.na-product-badge.limited {
+  background: #8b6914;
+}
+
+.na-product-wishlist {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: var(--shop-text-sec);
+}
+
+.na-product-wishlist:hover {
+  background: var(--shop-accent);
+  color: #fff;
+}
+
+.na-product-wishlist svg {
+  width: 16px;
+  height: 16px;
+}
+
+.na-product-info {
+  padding: 16px;
+}
+
+.na-product-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--shop-text);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.na-product-spec {
+  font-size: 12px;
+  color: var(--shop-text-sec);
+  margin-bottom: 8px;
+}
+
+.na-product-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--shop-accent);
+  margin-bottom: 8px;
+}
+
+.na-product-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.na-stars {
+  display: flex;
+  gap: 1px;
+  color: #d4a853;
+  font-size: 12px;
+}
+
+.na-star-empty {
+  color: var(--shop-border);
+}
+
+.na-rating-count {
+  font-size: 12px;
+  color: var(--shop-text-sec);
+}
+
+/* ==================== 趋势卡片 ==================== */
+.na-trend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.na-trend-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4/5;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.na-trend-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.na-trend-card:hover .na-trend-img {
+  transform: scale(1.05);
+}
+
+.na-trend-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: #fff;
+}
+
+.na-trend-title {
+  font-family: var(--shop-font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.na-trend-desc {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.na-trend-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* ==================== 工艺卡片 ==================== */
+.na-craft-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.na-craft-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--shop-border);
+  transition: all 0.3s ease;
+}
+
+.na-craft-card:hover {
+  border-color: var(--shop-accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.na-craft-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--shop-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--shop-accent);
+}
+
+.na-craft-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.na-craft-content {
+  flex: 1;
+}
+
+.na-craft-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--shop-text);
+  margin-bottom: 6px;
+}
+
+.na-craft-desc {
+  font-size: 13px;
+  color: var(--shop-text-sec);
+  line-height: 1.6;
+}
+
+/* ==================== 更多产品轮播 ==================== */
+.na-more-section {
+  padding: 48px 0;
+  border-top: 1px solid var(--shop-border);
+}
+
+.na-more-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+}
+
+.na-more-title {
+  font-family: var(--shop-font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--shop-text);
+}
+
+.na-more-link {
+  font-size: 14px;
+  color: var(--shop-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.na-more-link:hover {
+  text-decoration: underline;
+}
+
+.na-carousel-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.na-carousel-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--shop-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: var(--shop-text);
+}
+
+.na-carousel-arrow:hover {
+  background: var(--shop-accent);
+  border-color: var(--shop-accent);
+  color: #fff;
+}
+
+.na-carousel-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.na-more-track-wrapper {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  overflow: hidden;
+}
+
+.na-more-track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s ease;
+}
+
+.na-more-item {
+  flex: 0 0 calc(33.333% - 14px);
+  min-width: 0;
+}
+
+/* ==================== 订阅区域 ==================== */
+.na-subscribe {
+  padding: 64px 0;
+  background: linear-gradient(135deg, #f5f0eb 0%, #ede4d8 100%);
+  text-align: center;
+}
+
+.na-subscribe-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.na-subscribe-title {
+  font-family: var(--shop-font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--shop-text);
+  margin-bottom: 10px;
+}
+
+.na-subscribe-desc {
+  font-size: 14px;
+  color: var(--shop-text-sec);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.na-subscribe-form {
+  display: flex;
+  gap: 12px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.na-subscribe-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--shop-border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  color: var(--shop-text);
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.na-subscribe-input:focus {
+  border-color: var(--shop-accent);
+}
+
+.na-subscribe-input::placeholder {
+  color: var(--shop-text-sec);
+}
+
+.na-subscribe-btn {
+  padding: 12px 24px;
+  background: var(--shop-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.na-subscribe-btn:hover {
+  background: #8b6914;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 1024px) {
+  .na-cat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .na-prod-grid,
+  .na-trend-grid,
+  .na-craft-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .na-more-item {
+    flex: 0 0 calc(50% - 10px);
+  }
+}
+
+@media (max-width: 768px) {
+  .na-hero {
+    padding: 56px 0 48px;
+  }
+
+  .na-hero-title {
+    font-size: 32px;
+  }
+  
+  .na-cat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .na-prod-grid,
+  .na-trend-grid,
+  .na-craft-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .na-more-item {
+    flex: 0 0 100%;
+  }
+  
+  .na-more-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .na-subscribe-form {
+    flex-direction: column;
+  }
+}

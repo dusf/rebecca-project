@@ -9,6 +9,31 @@
 
   /* ==================== Mock 数据（商家自定义文案，后续从后台 API 获取） ==================== */
 
+  // Hero 轮播 — 使用 i18n key，语言切换时自动翻译
+  var HERO_SLIDES = [
+    {
+      image: 'images/hero-model.png',
+      titleKey: 'hero.title',
+      subtitleKey: 'hero.subtitle',
+      cta1Key: 'hero.cta1',
+      cta2Key: 'hero.cta2'
+    },
+    {
+      image: 'images/hero-model-2.png',
+      titleKey: 'hero.title2',
+      subtitleKey: 'hero.subtitle2',
+      cta1Key: 'hero.cta1',
+      cta2Key: 'hero.cta2'
+    },
+    {
+      image: 'images/hero-model-3.png',
+      titleKey: 'hero.title3',
+      subtitleKey: 'hero.subtitle3',
+      cta1Key: 'hero.cta1',
+      cta2Key: 'hero.cta2'
+    }
+  ];
+
   // 分类 — 使用 i18n key，语言切换时自动翻译
   var CATEGORIES = [
     { anchor: 'wig', nameKey: 'categories.wig', descKey: 'categories.wigDesc', image: 'images/category-wig.png', link: '#' },
@@ -41,6 +66,90 @@
     { nameKey: 'textures.honeyTea', image: 'images/honey-tea.png' },
     { nameKey: 'textures.highlightGold', image: 'images/highlight-gold.png' }
   ];
+
+  /* ==================== 渲染 Hero 轮播 ==================== */
+  var heroCurrentIndex = 0;
+  var heroTotalSlides = HERO_SLIDES.length;
+
+  function renderHero() {
+    var heroSection = document.querySelector('.hero');
+    if (!heroSection) return;
+
+    var slidesHtml = HERO_SLIDES.map(function (slide, i) {
+      var activeClass = i === 0 ? ' active' : '';
+      return '<div class="hero-slide' + activeClass + '" data-index="' + i + '">' +
+        '<div class="hero-content">' +
+          '<h1 class="hero-title" data-i18n="' + slide.titleKey + '">' + I.t(slide.titleKey) + '</h1>' +
+          '<p class="hero-subtitle" data-i18n="' + slide.subtitleKey + '">' + I.t(slide.subtitleKey) + '</p>' +
+          '<div class="hero-actions">' +
+            '<a href="#" class="shop-btn shop-btn-primary" data-i18n="' + slide.cta1Key + '">' + I.t(slide.cta1Key) + '</a>' +
+            '<a href="#" class="shop-btn shop-btn-outline" data-i18n="' + slide.cta2Key + '">' + I.t(slide.cta2Key) + '</a>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hero-image">' +
+          '<img src="' + slide.image + '" alt="NOIRÉ HAIR">' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    var dotsHtml = HERO_SLIDES.map(function (_, i) {
+      return '<button class="hero-dot' + (i === 0 ? ' active' : '') + '" data-index="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>';
+    }).join('');
+
+    heroSection.innerHTML =
+      '<div class="shop-container">' +
+        '<div class="hero-carousel">' +
+          slidesHtml +
+          '<button class="hero-nav hero-nav-prev" aria-label="Previous slide">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
+          '</button>' +
+          '<button class="hero-nav hero-nav-next" aria-label="Next slide">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</button>' +
+          '<div class="hero-dots">' + dotsHtml + '</div>' +
+        '</div>' +
+      '</div>';
+
+    bindHeroCarousel();
+  }
+
+  function bindHeroCarousel() {
+    var slides = document.querySelectorAll('.hero-slide');
+    var dots = document.querySelectorAll('.hero-dot');
+    var prevBtn = document.querySelector('.hero-nav-prev');
+    var nextBtn = document.querySelector('.hero-nav-next');
+
+    function goToSlide(index) {
+      if (index < 0) index = heroTotalSlides - 1;
+      if (index >= heroTotalSlides) index = 0;
+
+      slides[heroCurrentIndex].classList.remove('active');
+      dots[heroCurrentIndex].classList.remove('active');
+
+      heroCurrentIndex = index;
+
+      slides[heroCurrentIndex].classList.add('active');
+      dots[heroCurrentIndex].classList.add('active');
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        goToSlide(heroCurrentIndex - 1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        goToSlide(heroCurrentIndex + 1);
+      });
+    }
+
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () {
+        goToSlide(parseInt(this.getAttribute('data-index'), 10));
+      });
+    });
+  }
 
   /* ==================== 渲染分类卡片 ==================== */
   function renderCategories() {
@@ -76,6 +185,9 @@
     var track = document.getElementById('productTrack');
     if (!track) return;
 
+    var countryInfo = I.getCountryInfo();
+    var currencySymbol = countryInfo.currencySymbol;
+
     track.innerHTML = PRODUCTS.map(function (p) {
       var badgeHtml = p.badge
         ? '<span class="product-badge" data-i18n="' + p.badge + '">' + I.t(p.badge) + '</span>'
@@ -91,7 +203,7 @@
         '<div class="product-card-body">' +
           '<h3 data-i18n="' + p.nameKey + '">' + I.t(p.nameKey) + '</h3>' +
           '<div class="product-card-specs" data-i18n="' + p.specKey + '">' + I.t(p.specKey) + '</div>' +
-          '<div class="product-card-price">' + I.t('common.currency') + p.price + '</div>' +
+          '<div class="product-card-price">' + currencySymbol + p.price + '</div>' +
           '<div class="product-card-rating">' +
             '<div class="product-stars">' + renderStars(p.rating) + '</div>' +
             '<span class="product-reviews">(' + p.reviews.toLocaleString() + ')</span>' +
@@ -150,24 +262,33 @@
     });
   }
 
-  /* ==================== 语言切换后重新渲染动态内容 ==================== */
-  function onLocaleChanged() {
+  /* ==================== 国家切换后重新渲染动态内容 ==================== */
+  function onCountryChanged(e) {
+    var country = e.detail.country;
+    var locale = e.detail.locale;
+    var countryCode = e.detail.countryCode;
+    // 直接更新语言，不触发递归
     I.applyAll();
+    renderHero();
     renderCategories();
     renderProducts();
     renderTextures();
     // 更新页面标题
     document.title = I.t('page.title');
-    // 更新 header locale 按钮显示文字
-    var currName = document.getElementById('localeCurrentName');
-    if (currName) { currName.textContent = I.getLocaleName(I.getLocale()); }
-    // 更新桌面端 locale 下拉选项 active 状态
-    document.querySelectorAll('.shop-locale-option').forEach(function (btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-locale') === I.getLocale());
+    // 更新国家选择器显示
+    var countryBtn = document.getElementById('shopCountryBtn');
+    if (countryBtn) {
+      var flagSpan = countryBtn.querySelector('.shop-country-btn-flag');
+      var nameSpan = document.getElementById('countryCurrentName');
+      if (flagSpan) flagSpan.textContent = country.flag;
+      if (nameSpan) nameSpan.textContent = country.name;
+    }
+    // 更新国家下拉选项的 active 状态
+    document.querySelectorAll('.shop-country-option').forEach(function (opt) {
+      opt.classList.toggle('active', opt.getAttribute('data-country') === countryCode);
     });
-    // 更新移动端 locale 选项 active 状态
-    document.querySelectorAll('.shop-mobile-locale-opt').forEach(function (btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-locale') === I.getLocale());
+    document.querySelectorAll('.shop-mobile-country-opt').forEach(function (opt) {
+      opt.classList.toggle('active', opt.getAttribute('data-country') === countryCode);
     });
   }
 
@@ -176,17 +297,39 @@
     ShopHeader.render('index.html');
     ShopFooter.render();
     document.title = I.t('page.title');
+    renderHero();
     renderCategories();
     renderProducts();
     renderTextures();
     bindCarousel();
     I.applyAll();
-    document.addEventListener('localeChanged', onLocaleChanged);
+    document.addEventListener('countryChanged', onCountryChanged);
   }
 
+  // 监听页面加载事件，由 router.js 触发
+  document.addEventListener('pageLoaded', function (e) {
+    if (e.detail && e.detail.module === 'index') {
+      init();
+    }
+  });
+
+  // 如果 router.js 还没加载，直接初始化
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () {
+      // 等待 router.js 加载完成
+      if (window.ShopRouter) {
+        // router.js 已加载，等待 pageLoaded 事件
+      } else {
+        // router.js 未加载，直接初始化
+        init();
+      }
+    });
   } else {
-    init();
+    if (window.ShopRouter) {
+      // router.js 已加载，等待 pageLoaded 事件
+    } else {
+      // router.js 未加载，直接初始化
+      init();
+    }
   }
 })();

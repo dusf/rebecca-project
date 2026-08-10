@@ -33,6 +33,14 @@
     heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
     // 帮助中心图标
     guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    // 个人中心下拉菜单图标
+    order: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    mapPin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    helpCircle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    logOut: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
     wear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M12 12h.01"/></svg>',
     truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
     shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
@@ -585,6 +593,47 @@
     '</div>';
   }
 
+  /* ---------- 账户下拉菜单 HTML ---------- */
+  function getAccountHtml() {
+    var user = (window.ShopAccount && window.ShopAccount.getUser) ? window.ShopAccount.getUser() : null;
+    var loggedIn = !!(user && localStorage.getItem('noire_logged_in') === '1');
+    var avatarChar = loggedIn && user.email ? user.email.charAt(0).toUpperCase() : '';
+    var avatarHtml = loggedIn
+      ? '<div class="shop-account-avatar">' + avatarChar + '</div>'
+      : ICONS.user;
+    var dropdownHtml =
+      '<div class="shop-account-dropdown" id="shopAccountDropdown">' +
+        '<div class="shop-account-profile">' +
+          '<div class="shop-account-avatar shop-account-avatar-lg">' + (loggedIn ? avatarChar : 'U') + '</div>' +
+          '<div class="shop-account-meta">' +
+            '<div class="shop-account-name">' + (loggedIn ? (user.name || user.email) : 'NOIRÉ 会员') + '</div>' +
+            '<div class="shop-account-level">♦ NOIRÉ 会员 · 2560 积分</div>' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="shop-account-main-btn" data-page="user/index.html">查看个人中心 →</button>' +
+        '<div class="shop-account-group-title">购物与订单</div>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="orders">' + ICONS.order + '<span>我的订单</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="favorites">' + ICONS.heart + '<span>我的收藏</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="history">' + ICONS.clock + '<span>浏览记录</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="addresses">' + ICONS.mapPin + '<span>收货地址</span></a>' +
+        '<div class="shop-account-group-title">资产与权益</div>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="wallet">' + ICONS.wallet + '<span>我的钱包</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="points">' + ICONS.star + '<span>积分权益</span></a>' +
+        '<div class="shop-account-group-title">账户与偏好</div>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="settings">' + ICONS.settings + '<span>账号设置</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="subscriptions">' + ICONS.mail + '<span>邮件订阅管理</span></a>' +
+        '<div class="shop-account-group-title">支持与服务</div>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="help">' + ICONS.helpCircle + '<span>帮助中心</span></a>' +
+        '<a href="#" class="shop-account-link" data-action="account-menu" data-value="contact">' + ICONS.headset + '<span>联系客服</span></a>' +
+        '<div class="shop-account-divider"></div>' +
+        '<button type="button" class="shop-account-link shop-account-logout" id="shopAccountLogout">' + ICONS.logOut + '<span>退出登录</span></button>' +
+      '</div>';
+    return '<div class="shop-account-wrap" id="shopAccountWrap">' +
+      '<button class="shop-icon-btn" data-action="account" aria-label="' + I.t('header.account') + '">' + avatarHtml + '</button>' +
+      dropdownHtml +
+    '</div>';
+  }
+
   /* ---------- 渲染头部 ---------- */
   function renderHeader(activePage) {
     var header = document.getElementById('shopHeader');
@@ -654,7 +703,7 @@
               '<div class="shop-country-dropdown" id="shopCountryDropdown">' + countryOptionsHtml + '</div>' +
             '</div>' +
             '<button class="shop-icon-btn" data-action="search" aria-label="' + I.t('header.search') + '">' + ICONS.search + '</button>' +
-            '<button class="shop-icon-btn" data-action="account" aria-label="' + I.t('header.account') + '">' + ICONS.user + '</button>' +
+            getAccountHtml() +
             '<button class="shop-icon-btn" data-action="cart" aria-label="' + I.t('header.cart') + '">' +
               ICONS.bag + '<span class="shop-cart-badge" id="shopCartBadge">0</span>' +
             '</button>' +
@@ -787,8 +836,11 @@
         if (window.ShopSearch) window.ShopSearch.open();
       } else if (action === 'account') {
         e.preventDefault();
-        if (window.ShopAccount) {
-          window.ShopAccount.handleAccountClick();
+        var loggedIn = window.ShopAccount && window.ShopAccount.isLoggedIn && window.ShopAccount.isLoggedIn();
+        if (loggedIn) {
+          toggleAccountDropdown();
+        } else {
+          if (window.ShopAccount) window.ShopAccount.open('login');
         }
       } else if (action === 'cart') {
         e.preventDefault();
@@ -797,13 +849,78 @@
     });
   }
 
+  /* ---------- 账户下拉菜单交互 ---------- */
+  function closeAccountDropdown() {
+    var wrap = document.getElementById('shopAccountWrap');
+    if (wrap) wrap.classList.remove('open');
+  }
+
+  function toggleAccountDropdown() {
+    var wrap = document.getElementById('shopAccountWrap');
+    if (!wrap) return;
+    var willOpen = !wrap.classList.contains('open');
+    closeAccountDropdown();
+    if (willOpen) wrap.classList.add('open');
+  }
+
+  function bindAccountDropdown() {
+    // 点击外部关闭
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#shopAccountWrap')) closeAccountDropdown();
+    });
+
+    // 菜单项点击
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('[data-action="account-menu"]');
+      if (!link) return;
+      e.preventDefault();
+      closeAccountDropdown();
+      var label = link.querySelector('span');
+      alert('「' + (label ? label.textContent : link.getAttribute('data-value')) + '」功能开发中');
+    });
+
+    // 查看个人中心
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.shop-account-main-btn');
+      if (!btn) return;
+      e.preventDefault();
+      closeAccountDropdown();
+      if (window.ShopRouter) window.ShopRouter.loadPage('user/index.html');
+    });
+
+    // 退出登录
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('#shopAccountLogout');
+      if (!btn) return;
+      e.preventDefault();
+      if (window.ShopAccount && window.ShopAccount.logout) {
+        window.ShopAccount.logout();
+      }
+      closeAccountDropdown();
+      updateAccountState();
+      alert('已退出登录');
+    });
+  }
+
+  function updateAccountState() {
+    var wrap = document.getElementById('shopAccountWrap');
+    if (!wrap) return;
+    var parent = wrap.parentNode;
+    if (!parent) return;
+    var div = document.createElement('div');
+    div.innerHTML = getAccountHtml();
+    var newWrap = div.firstChild;
+    parent.replaceChild(newWrap, wrap);
+  }
+
   /* ---------- 导出 ---------- */
-  window.ShopHeader = { render: renderHeader };
+  window.ShopHeader = { render: renderHeader, updateAccountState: updateAccountState };
 
   // 页面加载完成后绑定导航点击与搜索弹层
   function onReady() {
     bindNavClicks();
     bindHeaderActions();
+    bindAccountDropdown();
     if (window.ShopSearch) window.ShopSearch.init();
     if (window.ShopAccount) window.ShopAccount.init();
   }

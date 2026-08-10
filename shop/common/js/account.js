@@ -288,7 +288,11 @@
   }
 
   function onLoginSuccess() {
-    // 登录成功后刷新当前页面或跳个人中心
+    // 同步刷新 header 头像和下拉菜单状态
+    if (window.ShopHeader && window.ShopHeader.updateAccountState) {
+      window.ShopHeader.updateAccountState();
+    }
+    // 登录成功后跳个人中心
     if (window.ShopRouter) {
       window.ShopRouter.loadPage('user/index.html');
     }

@@ -1,23 +1,15 @@
 /**
- * NOIRÉ HAIR — 搜索弹层（居中模态对话框）
+ * NOIRÉ HAIR — 搜索通栏弹层（全宽，与一级导航二级通栏弹层 mega-menu 一致风格）
  * 公共组件，全站复用。由 header.js 初始化时调用 ShopSearch.init()。
  */
 (function () {
   'use strict';
 
-  var overlay = null;
+  var overlay = null;   // 遮罩（覆盖 header 以下区域，点击关闭）
+  var panel = null;     // 通栏面板（固定在 header 下方，全宽）
   var inputEl = null;
-  var rangeCombo = null;
+  var clearBtn = null;
   var recentKey = 'noire_search_recent';
-
-  // 搜索范围选项
-  var RANGE_OPTIONS = [
-    { value: 'all', label: '全部' },
-    { value: 'product', label: '商品' },
-    { value: 'article', label: '文章' },
-    { value: 'page', label: '页面' }
-  ];
-  var currentRange = 'all';
 
   // 热门搜索
   var HOT_KEYWORDS = ['蕾丝假发', '全蕾丝', '发片', '接发', '波波头', '长直发', '大波浪', '男士假发'];
@@ -27,98 +19,113 @@
     { name: '自然黑 13×4 前蕾丝假发', price: '￥1,299', img: 'images/xinpinzhuti.png' },
     { name: '深棕 全蕾丝长卷发', price: '￥1,599', img: 'images/xilie.png' },
     { name: '奶茶棕 波波头假发', price: '￥899', img: 'images/jiafa.png' },
-    { name: '亚麻金 大波浪假发', price: '￥1,099', img: 'images/jiefa.png' }
+    { name: '亚麻金 大波浪假发', price: '￥1,099', img: 'images/jiefa.png' },
+    { name: '黑棕 微卷锁骨发', price: '￥999', img: 'images/pinpai.png' },
+    { name: '巧克力棕 长直发', price: '￥1,199', img: 'images/peijian.png' }
   ];
 
-  // 热门分类
+  // 热门分类（配真实主题图）
   var HOT_CATS = [
-    { key: 'wig', label: '假发' },
-    { key: 'closure', label: '发片' },
-    { key: 'frontal', label: '发帘' },
-    { key: 'extension', label: '接发' },
-    { key: 'care', label: '护理' },
-    { key: 'tool', label: '工具' },
-    { key: 'men', label: '男士' },
-    { key: 'kids', label: '儿童' }
+    { key: 'wig', label: '假发', img: 'images/category-wig.png' },
+    { key: 'closure', label: '发片', img: 'images/category-topper.png' },
+    { key: 'frontal', label: '发帘', img: 'images/craft-lace.png' },
+    { key: 'extension', label: '接发', img: 'images/category-extension.png' },
+    { key: 'care', label: '护理', img: 'images/chocolate-brown.png' },
+    { key: 'tool', label: '工具', img: 'images/peijian.png' },
+    { key: 'men', label: '男士', img: 'images/hero-model.png' },
+    { key: 'kids', label: '儿童', img: 'images/xilie.png' }
   ];
 
   /* ==================== 初始化 ==================== */
   function init() {
     if (overlay) return; // 已初始化
-    buildOverlay();
+    seedRecent();
+    buildDom();
     bindEvents();
     renderRecent();
   }
 
-  /* ==================== 构建 DOM ==================== */
-  function buildOverlay() {
-    overlay = document.createElement('div');
-    overlay.className = 'shop-search-overlay';
-    overlay.id = 'shopSearchOverlay';
-    overlay.innerHTML = template();
-    document.body.appendChild(overlay);
+  // 首次无记录时写入演示数据，方便用户参照截图效果查看
+  function seedRecent() {
+    if (localStorage.getItem(recentKey) === null) {
+      localStorage.setItem(recentKey, JSON.stringify(['24英寸假发', '大波浪接发', '金色假发']));
+    }
+  }
 
-    inputEl = overlay.querySelector('.shop-search-input');
-    rangeCombo = overlay.querySelector('.shop-search-range-combo');
+  /* ==================== 构建 DOM（通栏） ==================== */
+  function buildDom() {
+    overlay = document.createElement('div');
+    overlay.id = 'shopSearchOverlay';
+
+    panel = document.createElement('div');
+    panel.id = 'shopSearchPanel';
+    panel.innerHTML = template();
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(panel);
+
+    inputEl = panel.querySelector('.ss-input');
+    clearBtn = panel.querySelector('.ss-clear');
   }
 
   function template() {
     var catsHtml = HOT_CATS.map(function (c) {
-      return '<div class="shop-search-cat" data-cat="' + c.key + '">' +
-        '<svg class="shop-search-cat-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>' +
-        '<span class="shop-search-cat-label">' + c.label + '</span>' +
-        '</div>';
+      return '<div class="ss-cat" data-cat="' + c.key + '">' +
+        '<div class="ss-cat-img"><img src="' + c.img + '" alt="' + c.label + '"></div>' +
+        '<span class="ss-cat-name">' + c.label + '</span>' +
+      '</div>';
     }).join('');
 
     var productsHtml = RECOMMEND_PRODUCTS.map(function (p) {
-      return '<div class="shop-search-product" data-name="' + p.name + '">' +
-        '<img class="shop-search-product-img" src="' + p.img + '" alt="">' +
-        '<div class="shop-search-product-name">' + p.name + '</div>' +
-        '<div class="shop-search-product-price">' + p.price + '</div>' +
-        '</div>';
+      return '<div class="ss-product" data-name="' + p.name + '">' +
+        '<img class="ss-product-img" src="' + p.img + '" alt="">' +
+        '<div class="ss-product-info">' +
+          '<div class="ss-product-name">' + p.name + '</div>' +
+          '<div class="ss-product-price">' + p.price + '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
     var hotHtml = HOT_KEYWORDS.map(function (k) {
-      return '<span class="shop-search-tag" data-keyword="' + k + '">' + k + '</span>';
+      return '<span class="ss-tag" data-keyword="' + k + '">' + k + '</span>';
     }).join('');
 
     return '' +
-      '<div class="shop-search-modal" role="dialog" aria-label="搜索">' +
-        '<div class="shop-search-top">' +
-          '<div class="shop-search-input-wrap">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-            '<input class="shop-search-input" type="text" placeholder="搜索商品、文章、页面...">' +
-          '</div>' +
-          '<div class="shop-search-range">' +
-            '<span class="shop-search-range-label">搜索范围</span>' +
-            '<div class="shop-search-range-combo">' +
-              '<input class="combo-input" type="text" value="全部" readonly>' +
-              '<svg class="combo-arrow" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
-              '<div class="combo-menu">' +
-                RANGE_OPTIONS.map(function (o, i) {
-                  return '<div class="combo-item" data-value="' + o.value + '"><span class="combo-index">' + (i + 1) + '. </span>' + o.label + '</div>';
-                }).join('') +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<button class="shop-search-close" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>' +
+      '<div class="ss-inner">' +
+        '<div class="ss-search-bar">' +
+          '<svg class="ss-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<input class="ss-input" type="text" placeholder="搜索假发、接发、配件...">' +
+          '<button type="button" class="ss-clear" title="清除">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>' +
+          '<button type="button" class="ss-panel-close" title="关闭">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+          '</button>' +
         '</div>' +
-        '<div class="shop-search-body">' +
-          '<div class="shop-search-section" id="shopSearchRecentSection">' +
-            '<div class="shop-search-section-title">最近搜索 <button class="shop-search-clear" id="shopSearchClear">清空</button></div>' +
-            '<div id="shopSearchRecentList"></div>' +
+        '<div class="ss-panel-body">' +
+          '<div class="ss-section" id="shopSearchRecentSection">' +
+            '<div class="ss-panel-title">' +
+              '最近搜索' +
+              '<button type="button" class="ss-clear-all" id="shopSearchClear">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
+                '清除记录' +
+              '</button>' +
+            '</div>' +
+            '<div class="ss-tags" id="shopSearchRecentList"></div>' +
           '</div>' +
-          '<div class="shop-search-section">' +
-            '<div class="shop-search-section-title">热门搜索</div>' +
-            '<div class="shop-search-tags">' + hotHtml + '</div>' +
+          '<div class="ss-section">' +
+            '<div class="ss-panel-title">热门搜索</div>' +
+            '<div class="ss-tags">' + hotHtml + '</div>' +
           '</div>' +
-          '<div class="shop-search-section">' +
-            '<div class="shop-search-section-title">为你推荐</div>' +
-            '<div class="shop-search-products">' + productsHtml + '</div>' +
+          '<div class="ss-section">' +
+            '<div class="ss-panel-title">为你推荐' +
+              '<a href="javascript:void(0)" class="ss-more" data-more="recommend">查看更多 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>' +
+            '</div>' +
+            '<div class="ss-products">' + productsHtml + '</div>' +
           '</div>' +
-          '<div class="shop-search-section">' +
-            '<div class="shop-search-section-title">热门分类</div>' +
-            '<div class="shop-search-cats">' + catsHtml + '</div>' +
+          '<div class="ss-section">' +
+            '<div class="ss-panel-title">热门分类</div>' +
+            '<div class="ss-cats">' + catsHtml + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -126,40 +133,31 @@
 
   /* ==================== 事件绑定 ==================== */
   function bindEvents() {
-    // 点击遮罩（非弹层）关闭
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) close();
-    });
+    // 点击遮罩（header 以下区域）关闭
+    overlay.addEventListener('click', function () { close(); });
 
     // 关闭按钮
-    overlay.querySelector('.shop-search-close').addEventListener('click', close);
+    panel.querySelector('.ss-panel-close').addEventListener('click', close);
+
+    // 清除输入
+    clearBtn.addEventListener('click', function () {
+      inputEl.value = '';
+      inputEl.focus();
+      clearBtn.classList.remove('show');
+    });
+
+    // 输入时显示/隐藏清除按钮
+    inputEl.addEventListener('input', function () {
+      clearBtn.classList.toggle('show', inputEl.value.length > 0);
+    });
 
     // 输入框回车搜索
     inputEl.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') doSearch(inputEl.value.trim());
     });
 
-    // 范围 combobox
-    var comboInput = rangeCombo.querySelector('.combo-input');
-    comboInput.addEventListener('click', function () {
-      rangeCombo.classList.toggle('open');
-    });
-    rangeCombo.querySelectorAll('.combo-item').forEach(function (item) {
-      item.addEventListener('click', function () {
-        currentRange = item.getAttribute('data-value');
-        comboInput.value = item.textContent.trim();
-        rangeCombo.classList.remove('open');
-      });
-    });
-    // 点击外部收起范围菜单
-    document.addEventListener('click', function (e) {
-      if (rangeCombo && !rangeCombo.contains(e.target)) {
-        rangeCombo.classList.remove('open');
-      }
-    });
-
     // 热词
-    overlay.querySelectorAll('.shop-search-tag').forEach(function (tag) {
+    panel.querySelectorAll('.ss-tag[data-keyword]').forEach(function (tag) {
       tag.addEventListener('click', function () {
         inputEl.value = tag.getAttribute('data-keyword');
         doSearch(inputEl.value);
@@ -167,23 +165,31 @@
     });
 
     // 推荐商品
-    overlay.querySelectorAll('.shop-search-product').forEach(function (p) {
+    panel.querySelectorAll('.ss-product').forEach(function (p) {
       p.addEventListener('click', function () {
         doSearch(p.getAttribute('data-name'));
       });
     });
 
     // 热门分类
-    overlay.querySelectorAll('.shop-search-cat').forEach(function (c) {
+    panel.querySelectorAll('.ss-cat').forEach(function (c) {
       c.addEventListener('click', function () {
-        inputEl.value = c.querySelector('.shop-search-cat-label').textContent;
-        doSearch(inputEl.value);
+        doSearch(c.querySelector('.ss-cat-name').textContent);
       });
     });
 
-    // 最近搜索项
-    overlay.addEventListener('click', function (e) {
-      var item = e.target.closest('.shop-search-recent-item');
+    // 最近搜索项：点击文字搜索，点击 × 删除单条
+    panel.addEventListener('click', function (e) {
+      var delBtn = e.target.closest('.ss-tag-close');
+      if (delBtn) {
+        e.stopPropagation();
+        var kw = delBtn.getAttribute('data-del');
+        var recent = getRecent().filter(function (k) { return k !== kw; });
+        localStorage.setItem(recentKey, JSON.stringify(recent));
+        renderRecent();
+        return;
+      }
+      var item = e.target.closest('.ss-recent-tag');
       if (item) {
         inputEl.value = item.getAttribute('data-kw');
         doSearch(inputEl.value);
@@ -191,21 +197,27 @@
     });
 
     // 清空最近搜索
-    overlay.querySelector('#shopSearchClear').addEventListener('click', function () {
+    panel.querySelector('#shopSearchClear').addEventListener('click', function () {
       localStorage.removeItem(recentKey);
       renderRecent();
     });
 
+    // 查看更多（为你推荐）
+    panel.querySelector('.ss-more[data-more="recommend"]').addEventListener('click', function (e) {
+      e.preventDefault();
+      goSearch('');
+    });
+
     // ESC 关闭
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+      if (e.key === 'Escape' && panel.classList.contains('show')) close();
     });
   }
 
   /* ==================== 最近搜索 ==================== */
   function renderRecent() {
-    var list = overlay.querySelector('#shopSearchRecentList');
-    var section = overlay.querySelector('#shopSearchRecentSection');
+    var list = panel.querySelector('#shopSearchRecentList');
+    var section = panel.querySelector('#shopSearchRecentSection');
     var recent = getRecent();
     if (!recent.length) {
       section.style.display = 'none';
@@ -213,10 +225,12 @@
     }
     section.style.display = '';
     list.innerHTML = recent.map(function (kw) {
-      return '<div class="shop-search-recent-item" data-kw="' + kw + '">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' +
-        '<span>' + kw + '</span>' +
-        '</div>';
+      return '<span class="ss-tag ss-recent-tag" data-kw="' + kw + '">' +
+        kw +
+        '<button type="button" class="ss-tag-close" data-del="' + kw + '" title="删除">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button>' +
+      '</span>';
     }).join('');
   }
 
@@ -242,25 +256,30 @@
       return;
     }
     pushRecent(keyword);
-    // 后续接真实搜索页/结果页，这里先 console 并关闭弹层
-    console.log('[搜索]', { keyword: keyword, range: currentRange });
+    goSearch(keyword);
+  }
+
+  function goSearch(keyword) {
     close();
-    // TODO: 跳转到搜索结果页（如 ?bankuai=search&q=xxx）
+    var url = 'index.html?bankuai=search';
+    if (keyword) url += '&q=' + encodeURIComponent(keyword);
+    window.location.href = url;
   }
 
   /* ==================== 打开 / 关闭 ==================== */
   function open() {
     if (!overlay) init();
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    overlay.classList.add('show');
+    panel.classList.add('show');
     renderRecent();
     setTimeout(function () { inputEl && inputEl.focus(); }, 50);
   }
 
   function close() {
     if (!overlay) return;
-    overlay.classList.remove('open');
-    document.body.style.overflow = '';
+    overlay.classList.remove('show');
+    panel.classList.remove('show');
+    if (inputEl) { inputEl.value = ''; clearBtn.classList.remove('show'); }
   }
 
   /* ==================== 暴露接口 ==================== */

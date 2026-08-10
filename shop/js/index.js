@@ -87,7 +87,7 @@
           '</div>' +
         '</div>' +
         '<div class="hero-image">' +
-          '<img src="' + slide.image + '" alt="NOIRÉ HAIR">' +
+          '<div class="hero-image-bg" style="background-image: url(\'' + slide.image + '\');"></div>' +
         '</div>' +
       '</div>';
     }).join('');

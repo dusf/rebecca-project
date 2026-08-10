@@ -294,11 +294,47 @@
     }
   }
 
+  function openAccountDialog() {
+    var user = getUser() || {};
+    var html =
+      '<div class="account-logged-card">' +
+        '<div class="account-logged-avatar">' + (user.name ? user.name.charAt(0).toUpperCase() : 'U') + '</div>' +
+        '<div class="account-logged-name">' + (user.name || 'NOIRÉ 用户') + '</div>' +
+        '<div class="account-logged-email">' + (user.email || '') + '</div>' +
+      '</div>' +
+      '<div class="account-logged-actions">' +
+        '<button type="button" class="account-btn account-btn-primary" id="accountGoCenter">进入个人中心</button>' +
+        '<button type="button" class="account-btn account-btn-ghost" id="accountLogoutBtn">退出登录</button>' +
+      '</div>';
+
+    var modal = document.getElementById('accountModalPanel');
+    if (modal) {
+      var right = modal.querySelector('.account-modal-right');
+      if (right) {
+        right.innerHTML =
+          '<div class="account-modal-header">' +
+            '<h2 class="account-modal-title">账户中心</h2>' +
+            '<button type="button" class="account-modal-close" aria-label="关闭">×</button>' +
+          '</div>' + html;
+        bindClose(right);
+        var go = right.querySelector('#accountGoCenter');
+        var out = right.querySelector('#accountLogoutBtn');
+        if (go) go.addEventListener('click', function () {
+          closeModal();
+          if (window.ShopRouter) window.ShopRouter.loadPage('user/index.html');
+        });
+        if (out) out.addEventListener('click', function () {
+          logout();
+          closeModal();
+        });
+      }
+    }
+    openModal();
+  }
+
   function handleAccountClick() {
     if (isLoggedIn()) {
-      if (window.ShopRouter) {
-        window.ShopRouter.loadPage('user/index.html');
-      }
+      openAccountDialog();
     } else {
       openModal('login');
     }

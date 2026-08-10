@@ -434,47 +434,6 @@
 }
 .account-modal-footer a:hover { text-decoration: underline; }
 
-/* 已登录账户中心卡片 */
-.account-logged-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 24px;
-}
-.account-logged-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--shop-accent, #8b5e3c);
-  color: #fff;
-  font-size: 26px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-}
-.account-logged-name {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--shop-text, #4a3b2f);
-}
-.account-logged-email {
-  font-size: 13px;
-  color: var(--shop-text-secondary, #7a6b5b);
-  margin-top: 4px;
-}
-.account-logged-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.account-logged-actions .account-btn {
-  width: 100%;
-  height: 44px;
-}
-
 .account-hint {
   font-size: 11px;
   color: var(--shop-text-secondary, #7a6b5b);

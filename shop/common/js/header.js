@@ -776,13 +776,24 @@
     });
   }
 
-  /* ---------- 搜索图标点击 ---------- */
-  function bindSearchToggle() {
+  /* ---------- 图标按钮点击 ---------- */
+  function bindHeaderActions() {
     document.addEventListener('click', function (e) {
-      var btn = e.target.closest('[data-action="search"]');
+      var btn = e.target.closest('[data-action]');
       if (!btn) return;
-      e.preventDefault();
-      if (window.ShopSearch) window.ShopSearch.open();
+      var action = btn.getAttribute('data-action');
+      if (action === 'search') {
+        e.preventDefault();
+        if (window.ShopSearch) window.ShopSearch.open();
+      } else if (action === 'account') {
+        e.preventDefault();
+        if (window.ShopAccount) {
+          window.ShopAccount.handleAccountClick();
+        }
+      } else if (action === 'cart') {
+        e.preventDefault();
+        alert('购物车页面正在设计中');
+      }
     });
   }
 
@@ -792,8 +803,9 @@
   // 页面加载完成后绑定导航点击与搜索弹层
   function onReady() {
     bindNavClicks();
-    bindSearchToggle();
+    bindHeaderActions();
     if (window.ShopSearch) window.ShopSearch.init();
+    if (window.ShopAccount) window.ShopAccount.init();
   }
 
   if (document.readyState === 'loading') {

@@ -95,20 +95,23 @@
   // 脚本文件名可能与 HTML 文件名不同，在此映射
   var PAGE_SCRIPT_MAP = {
     'new-arrivals/index.html': 'new-arrivals/js/new-arrivals.js',
-    'search/index.html': 'search/js/search-results.js'
+    'search/index.html': 'search/js/search-results.js',
+    'user/index.html': 'user/js/user.js'
   };
 
   /* ==================== 页面样式映射 ==================== */
   // 样式文件名可能与模块名不同，在此映射；未映射则使用默认规则
   var PAGE_STYLE_MAP = {
-    'search/index.html': 'search/css/search-results.css'
+    'search/index.html': 'search/css/search-results.css',
+    'user/index.html': 'user/css/user.css'
   };
 
   /* ==================== 已知页面模块 ==================== */
   // 这些 bankuai 值对应真实存在的页面模块；其余（如 wig）仅作 URL 展示与导航高亮
   var KNOWN_PAGES = {
     'new-arrivals': 'new-arrivals/index.html',
-    'search': 'search/index.html'
+    'search': 'search/index.html',
+    'user': 'user/index.html'
   };
 
   /* ==================== 加载外部页面 ==================== */
@@ -224,7 +227,8 @@
     var titleMap = {
       'index.html': 'NOIRÉ HAIR — 奢华假发',
       'new-arrivals/index.html': 'NOIRÉ HAIR — 新品上市',
-      'search/index.html': 'NOIRÉ HAIR — 搜索结果'
+      'search/index.html': 'NOIRÉ HAIR — 搜索结果',
+      'user/index.html': 'NOIRÉ HAIR — 个人中心'
     };
     document.title = titleMap[pagePath] || 'NOIRÉ HAIR';
   }

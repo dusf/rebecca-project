@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOIRÉ HAIR — 个人中心</title>
+  <link rel="stylesheet" href="css/user.css">
+</head>
+<body>
+  <div class="user-page" id="userPage">
+    <div class="user-container">
+      <aside class="user-sidebar">
+        <div class="user-card">
+          <div class="user-avatar">
+            <span id="userAvatar">N</span>
+          </div>
+          <div class="user-info">
+            <h2 class="user-name" id="userName">NOIRÉ 会员</h2>
+            <p class="user-email" id="userEmail">member@noire.com</p>
+            <div class="user-points">
+              <span class="points-value" id="userPoints">100</span>
+              <span class="points-label">积分</span>
+            </div>
+          </div>
+        </div>
+        <nav class="user-menu">
+          <a href="#" class="user-menu-item active">我的订单</a>
+          <a href="#" class="user-menu-item">我的收藏</a>
+          <a href="#" class="user-menu-item">地址管理</a>
+          <a href="#" class="user-menu-item">账户设置</a>
+          <a href="#" class="user-menu-item" id="userLogout">退出登录</a>
+        </nav>
+      </aside>
+
+      <main class="user-main">
+        <div class="user-section">
+          <h3 class="user-section-title">我的订单</h3>
+          <div class="user-empty" id="userEmpty">
+            <div class="user-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <polyline points="2,7 12,13 22,7"/>
+              </svg>
+            </div>
+            <p class="user-empty-title">暂无订单</p>
+            <p class="user-empty-desc">个人中心页面正在设计中，敬请期待完整版。</p>
+            <a href="#" class="user-empty-btn" id="userBackHome">去逛逛</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/user.js"></script>
+</body>
+</html>

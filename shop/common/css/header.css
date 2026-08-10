@@ -865,7 +865,6 @@
   .shop-nav { display: none; }
   .shop-hamburger { display: flex; }
   .shop-header-actions .shop-locale-selector { display: none; }
-  .shop-header-actions .shop-icon-btn[data-action="account"] { display: none; }
   .shop-header-inner { height: 60px; }
   .shop-logo { font-size: 18px; letter-spacing: 3px; }
   .shop-header-actions { gap: 4px; }

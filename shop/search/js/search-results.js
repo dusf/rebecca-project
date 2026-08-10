@@ -242,7 +242,8 @@
     window.history.replaceState({}, '', newUrl);
   }
 
-  function getFilteredProducts() {
+  // 通用过滤：关键词 + 左侧筛选 + 价格（不含范围 scope）
+  function applyBaseFilters() {
     var list = state.allProducts.slice();
 
     // 关键词匹配
@@ -252,14 +253,6 @@
         return p.name.toLowerCase().indexOf(kw) !== -1 ||
                p.spec.toLowerCase().indexOf(kw) !== -1;
       });
-    }
-
-    // 搜索范围
-    if (state.scope !== 'all') {
-      // 简化演示：假发=type包含wig相关，接发=extension，配件=tool
-      if (state.scope === 'wig') list = list.filter(function (p) { return p.type !== 'tool'; });
-      else if (state.scope === 'extension') list = list.filter(function (p) { return p.type === 'closure' || p.type === 'frontal'; });
-      else if (state.scope === 'accessory') list = list.filter(function (p) { return p.type === 'tool'; });
     }
 
     // 筛选
@@ -276,6 +269,37 @@
     var max = state.priceMax != null ? state.priceMax : PRICE_MAX;
     list = list.filter(function (p) { return p.price >= min && p.price <= max; });
 
+    return list;
+  }
+
+  // 按范围分类统计（基于通用过滤结果，便于各 tab 显示数量）
+  function matchScope(p, scope) {
+    if (scope === 'all') return true;
+    if (scope === 'wig') return p.type !== 'tool';
+    if (scope === 'extension') return p.type === 'closure' || p.type === 'frontal';
+    if (scope === 'accessory') return p.type === 'tool';
+    return true;
+  }
+
+  function computeScopeCounts() {
+    var base = applyBaseFilters();
+    var counts = { all: base.length, wig: 0, extension: 0, accessory: 0 };
+    base.forEach(function (p) {
+      if (matchScope(p, 'wig')) counts.wig++;
+      if (matchScope(p, 'extension')) counts.extension++;
+      if (matchScope(p, 'accessory')) counts.accessory++;
+    });
+    return counts;
+  }
+
+  function getFilteredProducts() {
+    var list = applyBaseFilters();
+
+    // 搜索范围
+    if (state.scope !== 'all') {
+      list = list.filter(function (p) { return matchScope(p, state.scope); });
+    }
+
     // 排序
     if (state.sort === 'price-asc') {
       list.sort(function (a, b) { return a.price - b.price; });
@@ -290,12 +314,25 @@
   }
 
   function renderAll() {
-    var filtered = getFilteredProducts();
-    renderResultCount(filtered.length);
-    renderRelated();
-    renderActiveFilters();
-    renderGrid(filtered);
-    renderPagination(filtered.length);
+    try {
+      var filtered = getFilteredProducts();
+      renderResultCount(filtered.length);
+      renderScopeCounts();
+      renderRelated();
+      renderActiveFilters();
+      renderGrid(filtered);
+      renderPagination(filtered.length);
+    } catch (err) {
+      console.error('[search-results] renderAll error:', err);
+    }
+  }
+
+  function renderScopeCounts() {
+    var counts = computeScopeCounts();
+    document.querySelectorAll('#srScopeTabs .tab-count').forEach(function (el) {
+      var scope = el.getAttribute('data-count');
+      el.textContent = counts[scope] != null ? counts[scope] : 0;
+    });
   }
 
   function renderResultCount(total) {
@@ -333,10 +370,17 @@
 
   function renderGrid(products) {
     var container = document.getElementById('srGrid');
+    var empty = document.getElementById('srEmptyState');
+    var pagination = document.getElementById('srPagination');
     if (!products.length) {
-      container.innerHTML = '<div class="empty-state"><p>未找到相关商品，请尝试其他关键词或筛选条件</p></div>';
+      container.style.display = 'none';
+      if (pagination) pagination.style.display = 'none';
+      if (empty) empty.style.display = 'block';
       return;
     }
+    container.style.display = '';
+    if (pagination) pagination.style.display = '';
+    if (empty) empty.style.display = 'none';
     var start = (state.page - 1) * state.pageSize;
     var pageProducts = products.slice(start, start + state.pageSize);
     container.innerHTML = pageProducts.map(function (p) {

@@ -35,10 +35,10 @@
       <!-- 搜索范围 -->
       <div class="scope-tabs" id="srScopeTabs">
         <span class="label">搜索范围：</span>
-        <button class="tab active" data-scope="all">全部</button>
-        <button class="tab" data-scope="wig">假发</button>
-        <button class="tab" data-scope="extension">接发</button>
-        <button class="tab" data-scope="accessory">配件</button>
+        <button class="tab active" data-scope="all">全部<i class="tab-count" data-count="all">0</i></button>
+        <button class="tab" data-scope="wig">假发<i class="tab-count" data-count="wig">0</i></button>
+        <button class="tab" data-scope="extension">接发<i class="tab-count" data-count="extension">0</i></button>
+        <button class="tab" data-scope="accessory">配件<i class="tab-count" data-count="accessory">0</i></button>
       </div>
 
       <!-- 主体：左筛选 + 右结果 -->
@@ -165,6 +165,18 @@
           </div>
 
           <div class="product-grid" id="srGrid"></div>
+
+          <div class="empty-state" id="srEmptyState" style="display:none;">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <path d="M8 11h6M11 8v6"/>
+              </svg>
+            </div>
+            <p class="empty-title">未找到相关商品</p>
+            <p class="empty-desc">请尝试其他关键词或调整筛选条件</p>
+          </div>
 
           <div class="pagination" id="srPagination"></div>
         </div>

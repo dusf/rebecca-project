@@ -89,6 +89,23 @@
       '</div>' +
     '</div>';
 
+  var SOCIAL_ICONS = {
+    google: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09a6.6 6.6 0 0 1 0-4.18V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>',
+    x: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>',
+    tiktok: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .58.05.84.13V9.4a6.33 6.33 0 0 0-1-.05A6.34 6.34 0 1 0 14.97 16V9.04a8.27 8.27 0 0 0 4.62 1.4V7.04a4.85 4.85 0 0 1-1-1.35z"/></svg>'
+  };
+
+  function buildSocialBtns() {
+    var order = ['google', 'facebook', 'tiktok', 'x'];
+    var labels = { google: 'Google', facebook: 'Facebook', tiktok: 'TikTok', x: 'X' };
+    return '<div class="account-social-btns">' +
+      order.map(function (key) {
+        return '<button type="button" class="account-social-btn" data-social="' + key + '">' +
+          SOCIAL_ICONS[key] + '<span>' + labels[key] + '</span></button>';
+      }).join('') + '</div>';
+  }
+
   function buildLoginPanel() {
     return '<div class="account-modal-heading"><h2>欢迎回来</h2><p>登录账号，继续你的专属美发之旅</p></div>' +
       '<form class="account-form" id="loginForm">' +
@@ -107,10 +124,7 @@
         '<button type="submit" class="account-submit-btn">立即登录</button>' +
       '</form>' +
       '<div class="account-divider"><span>或使用以下方式登录</span></div>' +
-      '<div class="account-social-btns">' +
-        '<button type="button" class="account-social-btn" data-social="google"><span>Google</span></button>' +
-        '<button type="button" class="account-social-btn" data-social="facebook"><span>Facebook</span></button>' +
-      '</div>' +
+      buildSocialBtns() +
       '<div class="account-modal-footer">还没有账号？<a href="#" data-switch="register">立即注册</a></div>';
   }
 
@@ -141,10 +155,7 @@
         '<button type="submit" class="account-submit-btn">注册并领取 100 积分</button>' +
       '</form>' +
       '<div class="account-divider"><span>或使用以下方式注册</span></div>' +
-      '<div class="account-social-btns">' +
-        '<button type="button" class="account-social-btn" data-social="google"><span>Google</span></button>' +
-        '<button type="button" class="account-social-btn" data-social="facebook"><span>Facebook</span></button>' +
-      '</div>' +
+      buildSocialBtns() +
       '<div class="account-hint"><span>' + ICONS.check + '</span>若第三方账号未返回邮箱信息，系统将引导补充邮箱后完成注册。</div>' +
       '<div class="account-modal-footer">已有账号？<a href="#" data-switch="login">立即登录</a></div>';
   }

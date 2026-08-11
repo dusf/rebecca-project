@@ -45,75 +45,7 @@
       <div class="search-layout">
         <!-- 左侧筛选 -->
         <aside class="search-filters" id="srFilters">
-          <div class="filter-block">
-            <div class="filter-title">
-              <span>假发类型</span>
-              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="filter-content">
-              <label><input type="checkbox" data-filter="type" value="hd"><span>HD蕾丝假发</span></label>
-              <label><input type="checkbox" data-filter="type" value="glueless"><span>无胶假发</span></label>
-              <label><input type="checkbox" data-filter="type" value="closure"><span>Closure假发</span></label>
-              <label><input type="checkbox" data-filter="type" value="frontal"><span>蕾丝前额头套</span></label>
-              <label><input type="checkbox" data-filter="type" value="full-lace"><span>全蕾丝假发</span></label>
-            </div>
-          </div>
-
-          <div class="filter-block">
-            <div class="filter-title">
-              <span>发型纹理</span>
-              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="filter-content">
-              <label><input type="checkbox" data-filter="texture" value="straight"><span>直发</span></label>
-              <label><input type="checkbox" data-filter="texture" value="deep-wave"><span>深波浪</span></label>
-              <label><input type="checkbox" data-filter="texture" value="body-wave"><span>大波浪</span></label>
-              <label><input type="checkbox" data-filter="texture" value="loose-wave"><span>松散波浪</span></label>
-              <label><input type="checkbox" data-filter="texture" value="water-wave"><span>水波纹</span></label>
-              <label><input type="checkbox" data-filter="texture" value="natural-curl"><span>自然卷</span></label>
-            </div>
-          </div>
-
-          <div class="filter-block">
-            <div class="filter-title">
-              <span>长度</span>
-              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="filter-content">
-              <label><input type="checkbox" data-filter="length" value="8-12"><span>8-12英寸</span></label>
-              <label><input type="checkbox" data-filter="length" value="14-18"><span>14-18英寸</span></label>
-              <label><input type="checkbox" data-filter="length" value="20-24"><span>20-24英寸</span></label>
-              <label><input type="checkbox" data-filter="length" value="32"><span>32英寸以上</span></label>
-              <label><input type="checkbox" data-filter="length" value="35"><span>35英寸以上</span></label>
-            </div>
-          </div>
-
-          <div class="filter-block">
-            <div class="filter-title">
-              <span>颜色</span>
-              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="filter-content color-grid">
-              <label class="color-option" data-color="natural-black"><span class="dot" style="background:#1a1a1a"></span><span>自然黑</span></label>
-              <label class="color-option" data-color="dark-brown"><span class="dot" style="background:#3d2314"></span><span>深棕色</span></label>
-              <label class="color-option" data-color="chocolate"><span class="dot" style="background:#5c3a21"></span><span>巧克力棕</span></label>
-              <label class="color-option" data-color="honey"><span class="dot" style="background:#b87333"></span><span>蜂蜜棕</span></label>
-              <label class="color-option" data-color="golden"><span class="dot" style="background:#c8a25f"></span><span>金色</span></label>
-              <label class="color-option" data-color="ombre"><span class="dot" style="background:linear-gradient(135deg,#1a1a1a,#c8a25f)"></span><span>挑染色</span></label>
-            </div>
-          </div>
-
-          <div class="filter-block">
-            <div class="filter-title">
-              <span>工艺</span>
-              <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="filter-content">
-              <label><input type="checkbox" data-filter="craft" value="pre-plucked"><span>预拔发际线</span></label>
-              <label><input type="checkbox" data-filter="craft" value="hd-lace"><span>HD蕾丝</span></label>
-              <label><input type="checkbox" data-filter="craft" value="handmade"><span>手工钩织</span></label>
-            </div>
-          </div>
+          <div class="filter-groups" id="srFilterGroups"></div>
 
           <div class="filter-block">
             <div class="filter-title">
@@ -154,7 +86,9 @@
               <button class="sort-btn active" data-sort="recommend">综合推荐</button>
               <button class="sort-btn" data-sort="new">新品优先</button>
               <button class="sort-btn" data-sort="sales">销量优先</button>
+              <button class="sort-btn" data-sort="reviews-desc">评论优先</button>
               <button class="sort-btn" data-sort="price-asc">价格从低到高</button>
+              <button class="sort-btn" data-sort="price-desc">价格从高到低</button>
             </div>
           </div>
 

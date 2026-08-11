@@ -4,52 +4,271 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NOIRÉ HAIR — 个人中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../common/css/base.css">
+  <link rel="stylesheet" href="../common/css/header.css">
+  <link rel="stylesheet" href="../common/css/footer.css">
   <link rel="stylesheet" href="css/user.css">
 </head>
 <body>
-  <div class="user-page" id="userPage">
-    <div class="user-container">
-      <aside class="user-sidebar">
-        <div class="user-card">
-          <div class="user-avatar">
-            <span id="userAvatar">N</span>
-          </div>
-          <div class="user-info">
-            <h2 class="user-name" id="userName">NOIRÉ 会员</h2>
-            <p class="user-email" id="userEmail">member@noire.com</p>
-            <div class="user-points">
-              <span class="points-value" id="userPoints">100</span>
-              <span class="points-label">积分</span>
-            </div>
-          </div>
+  <main class="uc-page">
+    <nav class="uc-breadcrumb" aria-label="面包屑">
+      <a href="#" data-page="index.html">个人中心</a>
+      <span>/</span>
+      <span>会员中心</span>
+    </nav>
+
+    <div class="uc-layout">
+      <!-- 左侧边栏 -->
+      <aside class="uc-sidebar">
+        <div class="uc-user-card">
+          <div class="uc-avatar" id="ucSidebarAvatar">优</div>
+          <h2 class="uc-user-name" id="ucSidebarName">优雅女士</h2>
+          <span class="uc-member-badge" id="ucSidebarLevel">NOIRÉ 会员</span>
+          <p class="uc-points"><span id="ucSidebarPoints">2560</span> 积分</p>
+          <button type="button" class="uc-edit-btn" data-page="user/settings.html">编辑个人资料</button>
         </div>
-        <nav class="user-menu">
-          <a href="#" class="user-menu-item active">我的订单</a>
-          <a href="#" class="user-menu-item">我的收藏</a>
-          <a href="#" class="user-menu-item">地址管理</a>
-          <a href="#" class="user-menu-item">账户设置</a>
-          <a href="#" class="user-menu-item" id="userLogout">退出登录</a>
+
+        <nav class="uc-menu" aria-label="个人中心菜单">
+          <ul class="uc-menu-top">
+            <li><a href="#" class="active" data-page="user/index.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>个人中心</a></li>
+          </ul>
+          <div class="uc-menu-group">
+            <h3 class="uc-menu-title">购物与订单</h3>
+            <ul>
+              <li><a href="#" data-page="user/orders.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 14h.01"/><path d="M13 14h.01"/><path d="M17 14h.01"/></svg></span>我的订单</a></li>
+              <li><a href="#" data-page="user/wishlist.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>我的收藏</a></li>
+              <li><a href="#" data-page="user/history.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>浏览记录</a></li>
+              <li><a href="#" data-page="user/address.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>收货地址</a></li>
+            </ul>
+          </div>
+          <div class="uc-menu-group">
+            <h3 class="uc-menu-title">资产与权益</h3>
+            <ul>
+              <li><a href="#" data-page="user/wallet.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 11a4 4 0 0 1 0 8"/><path d="M20 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2"/></svg></span>我的钱包</a></li>
+              <li><a href="#" data-page="user/points.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>积分权益</a></li>
+            </ul>
+          </div>
+          <div class="uc-menu-group">
+            <h3 class="uc-menu-title">账号与偏好</h3>
+            <ul>
+              <li><a href="#" data-page="user/settings.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>账号设置</a></li>
+              <li><a href="#" data-page="user/subscriptions.html"><span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>邮箱订阅管理</a></li>
+            </ul>
+          </div>
+          <a href="#" class="uc-back-home" data-page="index.html">
+            <span class="uc-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+            返回首页
+          </a>
         </nav>
       </aside>
 
-      <main class="user-main">
-        <div class="user-section">
-          <h3 class="user-section-title">我的订单</h3>
-          <div class="user-empty" id="userEmpty">
-            <div class="user-empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <polyline points="2,7 12,13 22,7"/>
-              </svg>
+      <!-- 主内容区 -->
+      <div class="uc-main">
+        <!-- 会员信息卡 -->
+        <section class="uc-hero-card">
+          <div class="uc-hero-main">
+            <div class="uc-hero-avatar" id="ucHeroAvatar">优</div>
+            <div class="uc-hero-info">
+              <div class="uc-hero-name-row">
+                <h1 class="uc-hero-name" id="ucHeroName">优雅女士</h1>
+                <span class="uc-hero-badge" id="ucHeroLevel">NOIRÉ 会员</span>
+              </div>
+              <p class="uc-hero-welcome">欢迎回来，感谢您对 NOIRÉ 的信任与支持。</p>
+              <p class="uc-hero-date">会员自 <span id="ucHeroDate">2024.03.15</span> 加入</p>
             </div>
-            <p class="user-empty-title">暂无订单</p>
-            <p class="user-empty-desc">个人中心页面正在设计中，敬请期待完整版。</p>
-            <a href="#" class="user-empty-btn" id="userBackHome">去逛逛</a>
           </div>
-        </div>
-      </main>
+          <div class="uc-hero-stats">
+            <div class="uc-stat">
+              <span class="uc-stat-label">可用积分</span>
+              <span class="uc-stat-value" id="ucHeroPoints">2,680</span>
+              <a href="#" data-page="user/points.html">积分明细 ></a>
+            </div>
+            <div class="uc-stat uc-stat-divider"></div>
+            <div class="uc-stat">
+              <span class="uc-stat-label">钱包余额</span>
+              <span class="uc-stat-value" id="ucHeroBalance">¥520.00</span>
+              <a href="#" data-page="user/wallet.html">查看钱包 ></a>
+            </div>
+          </div>
+          <div class="uc-hero-benefits">
+            <div class="uc-level-grade">
+              <span class="uc-level-tag" id="ucLevelTag">金卡会员</span>
+              <span class="uc-level-tip" id="ucLevelTip">再消费 ¥0 升级</span>
+            </div>
+            <div class="uc-level-progress">
+              <div class="uc-level-track">
+                <div class="uc-level-fill" id="ucLevelFill" style="width:0%"></div>
+              </div>
+              <div class="uc-level-scale">
+                <span>银卡</span>
+                <span>金卡</span>
+                <span>铂金</span>
+                <span>钻石</span>
+              </div>
+            </div>
+            <a href="#" data-page="user/benefits.html">查看会员权益 ></a>
+          </div>
+        </section>
+
+        <!-- 快捷入口 -->
+        <section class="uc-quick-actions">
+          <a href="#" class="uc-quick-item" data-page="user/orders.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg></span>
+            <span class="uc-quick-title">我的订单</span>
+            <span class="uc-quick-desc">查看全部订单</span>
+          </a>
+          <a href="#" class="uc-quick-item" data-page="user/wishlist.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+            <span class="uc-quick-title">我的收藏</span>
+            <span class="uc-quick-desc">心仪好物收藏</span>
+          </a>
+          <a href="#" class="uc-quick-item" data-page="user/history.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <span class="uc-quick-title">浏览记录</span>
+            <span class="uc-quick-desc">最近浏览商品</span>
+          </a>
+          <a href="#" class="uc-quick-item" data-page="user/address.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <span class="uc-quick-title">收货地址</span>
+            <span class="uc-quick-desc">管理收货地址</span>
+          </a>
+          <a href="#" class="uc-quick-item" data-page="user/wallet.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 11a4 4 0 0 1 0 8"/></svg></span>
+            <span class="uc-quick-title">我的钱包</span>
+            <span class="uc-quick-desc">余额/优惠券</span>
+          </a>
+          <a href="#" class="uc-quick-item" data-page="user/points.html">
+            <span class="uc-quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>
+            <span class="uc-quick-title">积分权益</span>
+            <span class="uc-quick-desc">积分兑换礼遇</span>
+          </a>
+        </section>
+
+        <!-- 我的订单 -->
+        <section class="uc-section">
+          <div class="uc-section-header">
+            <h2>我的订单</h2>
+            <a href="#" data-page="user/orders.html">查看全部订单 ></a>
+          </div>
+          <div class="uc-order-status">
+            <a href="#" class="uc-order-item" data-page="user/orders.html?status=pending">
+              <span class="uc-order-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+              <span class="uc-order-label">待付款</span>
+              <span class="uc-order-badge" id="ucOrderPending">2</span>
+            </a>
+            <a href="#" class="uc-order-item" data-page="user/orders.html?status=shipped">
+              <span class="uc-order-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+              <span class="uc-order-label">待发货</span>
+              <span class="uc-order-badge" id="ucOrderShipped">3</span>
+            </a>
+            <a href="#" class="uc-order-item" data-page="user/orders.html?status=received">
+              <span class="uc-order-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+              <span class="uc-order-label">待收货</span>
+              <span class="uc-order-badge" id="ucOrderReceived">1</span>
+            </a>
+            <a href="#" class="uc-order-item" data-page="user/orders.html?status=completed">
+              <span class="uc-order-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+              <span class="uc-order-label">已完成</span>
+            </a>
+            <a href="#" class="uc-order-item" data-page="user/orders.html?status=aftersale">
+              <span class="uc-order-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+              <span class="uc-order-label">售后/退换</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- 我的权益 & 资产 -->
+        <section class="uc-section">
+          <div class="uc-section-header">
+            <h2>我的权益 & 资产</h2>
+          </div>
+          <div class="uc-assets-grid">
+            <div class="uc-asset-card">
+              <span class="uc-asset-value" id="ucAssetPoints">2,680</span>
+              <span class="uc-asset-label">可用积分</span>
+              <a href="#" data-page="user/points.html">积分明细 ></a>
+            </div>
+            <div class="uc-asset-card">
+              <span class="uc-asset-value" id="ucAssetCoupons">3</span>
+              <span class="uc-asset-label">优惠券</span>
+              <a href="#" data-page="user/wallet.html">查看优惠券 ></a>
+            </div>
+            <div class="uc-asset-card uc-asset-feature">
+              <span class="uc-asset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+              <span class="uc-asset-label">会员专享包邮</span>
+              <small>单笔订单满 ¥2,299</small>
+              <a href="#" data-page="user/benefits.html">查看详情 ></a>
+            </div>
+            <div class="uc-asset-card uc-asset-feature">
+              <span class="uc-asset-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+              <span class="uc-asset-label">新品优先购</span>
+              <small>享新品上市优先购买权</small>
+              <a href="#" data-page="new-arrivals/index.html">立即探索 ></a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 会员专属权益 -->
+        <section class="uc-section">
+          <div class="uc-section-header">
+            <h2>会员专属权益</h2>
+            <a href="#" data-page="user/benefits.html">查看全部权益 ></a>
+          </div>
+          <div class="uc-benefits-grid">
+            <div class="uc-benefit-item">
+              <span class="uc-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>
+              <div class="uc-benefit-text">
+                <h4>积分兑好礼</h4>
+                <p>积分可兑换精选礼品</p>
+              </div>
+            </div>
+            <div class="uc-benefit-item">
+              <span class="uc-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s1.5-2 5-2 5 2 5 2"/><path d="M14 16s1.5-2 5-2 5 2 5 2"/><line x1="12" y1="4" x2="12" y2="11"/><line x1="8" y1="8" x2="16" y2="8"/></svg></span>
+              <div class="uc-benefit-text">
+                <h4>生日礼遇</h4>
+                <p>生日当月享双倍积分</p>
+              </div>
+            </div>
+            <div class="uc-benefit-item">
+              <span class="uc-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+              <div class="uc-benefit-text">
+                <h4>新品优先购</h4>
+                <p>享新品上市优先购买权</p>
+              </div>
+            </div>
+            <div class="uc-benefit-item">
+              <span class="uc-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+              <div class="uc-benefit-text">
+                <h4>专属客服</h4>
+                <p>一对一专属服务通道</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 浏览记录 -->
+        <section class="uc-section">
+          <div class="uc-section-header">
+            <h2>浏览记录</h2>
+            <a href="#" data-page="user/history.html">查看全部 ></a>
+          </div>
+          <div class="uc-product-scroll" id="ucHistoryList"></div>
+        </section>
+
+        <!-- 猜你喜欢 -->
+        <section class="uc-section">
+          <div class="uc-section-header">
+            <h2>猜你喜欢</h2>
+            <a href="#" data-page="product/list.html">查看全部 ></a>
+          </div>
+          <div class="uc-product-scroll" id="ucRecommendList"></div>
+        </section>
+      </div>
     </div>
-  </div>
+  </main>
 
   <script src="js/user.js"></script>
 </body>

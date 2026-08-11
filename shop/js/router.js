@@ -14,39 +14,52 @@
 
   /* ==================== 页面加载 ==================== */
   function loadPage(pagePath) {
-    // 防止重复加载同一页面
-    if (pagePath === currentPage) return;
+    // 分离基础路径与查询参数（如 product/detail.html?id=1）
+    var qIdx = pagePath.indexOf('?');
+    var basePath = qIdx !== -1 ? pagePath.substring(0, qIdx) : pagePath;
 
-    currentPage = pagePath;
+    // 防止重复加载同一页面（以基础路径判断，避免 query 变化导致重复加载）
+    if (basePath === currentPage) return;
+
+    currentPage = basePath;
 
     // 同步 URL（query 模式，始终嵌套在 shop/index.html 下）
-    syncUrl(pagePath);
+    syncUrl(pagePath, basePath);
 
     // 更新页面标题
-    updatePageTitle(pagePath);
+    updatePageTitle(basePath);
 
     // 更新导航激活状态
-    updateNavActive(pagePath);
+    updateNavActive(basePath);
 
     // 加载页面内容
-    fetchPageContent(pagePath);
+    fetchPageContent(pagePath, basePath);
   }
 
   /* ==================== 同步 URL（query 模式 ?bankuai=xxx） ==================== */
-  function syncUrl(pagePath) {
+  function syncUrl(pagePath, basePath) {
     var params = new URLSearchParams(window.location.search);
-    if (pagePath === 'index.html') {
+    if (basePath === 'index.html') {
       params.delete('bankuai');
+      params.delete('id');
     } else {
       // 用 KNOWN_PAGES 的 key 作为 bankuai（如 new-arrivals），更短更友好
-      var bankuai = pagePath.replace(/\.html$/, '');
+      var bankuai = basePath.replace(/\.html$/, '');
       for (var key in KNOWN_PAGES) {
-        if (KNOWN_PAGES[key] === pagePath) {
+        if (KNOWN_PAGES[key] === basePath) {
           bankuai = key;
           break;
         }
       }
       params.set('bankuai', bankuai);
+      // 若传入的 pagePath 本身带 query，保留其中的参数（如 id）
+      var pageQ = pagePath.indexOf('?');
+      if (pageQ !== -1) {
+        var extra = new URLSearchParams(pagePath.substring(pageQ));
+        extra.forEach(function (value, key) {
+          params.set(key, value);
+        });
+      }
     }
     var query = params.toString();
     var newUrl = window.location.pathname + (query ? '?' + query : '');
@@ -56,7 +69,7 @@
   }
 
   /* ==================== 获取页面内容 ==================== */
-  function fetchPageContent(pagePath) {
+  function fetchPageContent(pagePath, basePath) {
     var contentArea = document.getElementById('shopContent');
     if (!contentArea) return;
 
@@ -64,7 +77,7 @@
     var homeSection = document.getElementById('homeSection');
     var externalBox = ensureExternalBox(contentArea);
 
-    if (pagePath === 'index.html') {
+    if (basePath === 'index.html') {
       // 显示首页，隐藏外部容器
       if (homeSection) homeSection.style.display = '';
       externalBox.style.display = 'none';
@@ -76,7 +89,7 @@
       externalBox.style.display = '';
       externalBox.innerHTML = '<div class="shop-content-loading"><div class="shop-loading-spinner"></div></div>';
       // 其他页面：从对应目录加载
-      loadExternalPage(pagePath, externalBox);
+      loadExternalPage(pagePath, basePath, externalBox);
     }
   }
 
@@ -96,14 +109,16 @@
   var PAGE_SCRIPT_MAP = {
     'new-arrivals/index.html': 'new-arrivals/js/new-arrivals.js',
     'search/index.html': 'search/js/search-results.js',
-    'user/index.html': 'user/js/user.js'
+    'user/index.html': 'user/js/user.js',
+    'product/detail.html': 'product/js/detail.js'
   };
 
   /* ==================== 页面样式映射 ==================== */
   // 样式文件名可能与模块名不同，在此映射；未映射则使用默认规则
   var PAGE_STYLE_MAP = {
     'search/index.html': 'search/css/search-results.css',
-    'user/index.html': 'user/css/user.css'
+    'user/index.html': 'user/css/user.css?v=5',
+    'product/detail.html': 'product/css/detail.css'
   };
 
   /* ==================== 已知页面模块 ==================== */
@@ -111,18 +126,19 @@
   var KNOWN_PAGES = {
     'new-arrivals': 'new-arrivals/index.html',
     'search': 'search/index.html',
-    'user': 'user/index.html'
+    'user': 'user/index.html',
+    'product/detail': 'product/detail.html'
   };
 
   /* ==================== 加载外部页面 ==================== */
-  function loadExternalPage(pagePath, container) {
-    // 解析路径
-    var parts = pagePath.split('/');
+  function loadExternalPage(pagePath, basePath, container) {
+    // 解析路径（统一使用不带 query 的 basePath）
+    var parts = basePath.split('/');
     var moduleName = parts[0];
     var fileName = parts[1] || 'index.html';
 
-    // 构建 HTML 路径
-    var htmlPath = moduleName + '/' + fileName;
+    // HTML 路径（basePath 已不含 query）
+    var htmlPath = basePath;
 
     // 加载 HTML 片段
     fetch(htmlPath)
@@ -137,16 +153,16 @@
         // 注入内容
         container.innerHTML = content;
 
-        // 加载页面脚本（使用映射表或默认规则）
-        var scriptPath = PAGE_SCRIPT_MAP[pagePath] || (moduleName + '/js/' + fileName.replace('.html', '.js'));
+        // 加载页面脚本（使用映射表或默认规则，key 用 basePath）
+        var scriptPath = PAGE_SCRIPT_MAP[basePath] || (moduleName + '/js/' + fileName.replace('.html', '.js'));
         loadPageScript(scriptPath);
 
-        // 加载页面样式（使用映射表或默认规则）
-        var stylePath = PAGE_STYLE_MAP[pagePath] || (moduleName + '/css/' + moduleName + '.css');
+        // 加载页面样式（使用映射表或默认规则，key 用 basePath）
+        var stylePath = PAGE_STYLE_MAP[basePath] || (moduleName + '/css/' + moduleName + '.css');
         loadPageStyle(stylePath);
 
         // 触发页面初始化
-        triggerPageInit(moduleName, fileName);
+        triggerPageInit(moduleName, fileName.split('?')[0]);
 
         // 重新应用 i18n
         if (I && I.applyAll) I.applyAll();
@@ -228,7 +244,8 @@
       'index.html': 'NOIRÉ HAIR — 奢华假发',
       'new-arrivals/index.html': 'NOIRÉ HAIR — 新品上市',
       'search/index.html': 'NOIRÉ HAIR — 搜索结果',
-      'user/index.html': 'NOIRÉ HAIR — 个人中心'
+      'user/index.html': 'NOIRÉ HAIR — 个人中心',
+      'product/detail.html': 'NOIRÉ HAIR — 商品详情'
     };
     document.title = titleMap[pagePath] || 'NOIRÉ HAIR';
   }
@@ -284,15 +301,23 @@
     if (!bankuai) {
       return 'index.html';
     }
+
+    var basePath = '';
     // 优先从 KNOWN_PAGES 取值，否则默认加 index.html
     if (KNOWN_PAGES[bankuai]) {
-      return KNOWN_PAGES[bankuai];
+      basePath = KNOWN_PAGES[bankuai];
+    } else {
+      basePath = bankuai;
+      if (!basePath.endsWith('.html')) {
+        basePath = basePath + '/index.html';
+      }
     }
-    var p = bankuai;
-    if (!p.endsWith('.html')) {
-      p = p + '/index.html';
-    }
-    return p;
+
+    // 把 URL 中的 query 参数（如 id）附加回去
+    var params = new URLSearchParams(window.location.search);
+    params.delete('bankuai');
+    var extra = params.toString();
+    return extra ? basePath + '?' + extra : basePath;
   }
 
   /* ==================== 导航点击处理 ==================== */

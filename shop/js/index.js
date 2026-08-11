@@ -43,14 +43,14 @@
 
   // 产品 — 使用 i18n key，语言切换时自动翻译
   var PRODUCTS = [
-    { nameKey: 'product.p1Name', specKey: 'product.p1Spec', price: '2,299', rating: 4.5, reviews: 1234, badge: '', image: 'images/1.png' },
-    { nameKey: 'product.p2Name', specKey: 'product.p2Spec', price: '2,299', rating: 4.8, reviews: 987, badge: '', image: 'images/2.png' },
-    { nameKey: 'product.p3Name', specKey: 'product.p3Spec', price: '2,299', rating: 4.6, reviews: 756, badge: '', image: 'images/3.png' },
-    { nameKey: 'product.p4Name', specKey: 'product.p4Spec', price: '2,499', rating: 4.7, reviews: 1102, badge: 'bestsellers.badge', image: 'images/4.png' },
-    { nameKey: 'product.p5Name', specKey: 'product.p5Spec', price: '2,299', rating: 4.4, reviews: 642, badge: '', image: 'images/5.png' },
-    { nameKey: 'product.p6Name', specKey: 'product.p6Spec', price: '1,899', rating: 4.3, reviews: 534, badge: '', image: 'images/product-1.png' },
-    { nameKey: 'product.p7Name', specKey: 'product.p7Spec', price: '2,699', rating: 4.9, reviews: 876, badge: '', image: 'images/product-2.png' },
-    { nameKey: 'product.p8Name', specKey: 'product.p8Spec', price: '1,999', rating: 4.5, reviews: 445, badge: '', image: 'images/product-3.png' }
+    { id: 1, nameKey: 'product.p1Name', specKey: 'product.p1Spec', price: '2,299', rating: 4.5, reviews: 1234, badge: '', image: 'images/1.png' },
+    { id: 2, nameKey: 'product.p2Name', specKey: 'product.p2Spec', price: '2,299', rating: 4.8, reviews: 987, badge: '', image: 'images/2.png' },
+    { id: 3, nameKey: 'product.p3Name', specKey: 'product.p3Spec', price: '2,299', rating: 4.6, reviews: 756, badge: '', image: 'images/3.png' },
+    { id: 4, nameKey: 'product.p4Name', specKey: 'product.p4Spec', price: '2,499', rating: 4.7, reviews: 1102, badge: 'bestsellers.badge', image: 'images/4.png' },
+    { id: 5, nameKey: 'product.p5Name', specKey: 'product.p5Spec', price: '2,299', rating: 4.4, reviews: 642, badge: '', image: 'images/5.png' },
+    { id: 6, nameKey: 'product.p6Name', specKey: 'product.p6Spec', price: '1,899', rating: 4.3, reviews: 534, badge: '', image: 'images/product-1.png' },
+    { id: 7, nameKey: 'product.p7Name', specKey: 'product.p7Spec', price: '2,699', rating: 4.9, reviews: 876, badge: '', image: 'images/product-2.png' },
+    { id: 8, nameKey: 'product.p8Name', specKey: 'product.p8Spec', price: '1,999', rating: 4.5, reviews: 445, badge: '', image: 'images/product-3.png' }
   ];
 
   // 发色发质 — 图片卡片
@@ -192,7 +192,7 @@
       var badgeHtml = p.badge
         ? '<span class="product-badge" data-i18n="' + p.badge + '">' + I.t(p.badge) + '</span>'
         : '';
-      return '<div class="product-card">' +
+      return '<div class="product-card" data-id="' + p.id + '" data-page="product/detail.html?id=' + p.id + '">' +
         '<div class="product-card-image">' +
           '<img src="' + p.image + '" alt="' + I.t(p.nameKey) + '">' +
           badgeHtml +
@@ -218,6 +218,18 @@
         e.preventDefault();
         e.stopPropagation();
         this.classList.toggle('wished');
+      });
+    });
+
+    // 商品卡片点击进入详情页
+    track.querySelectorAll('.product-card').forEach(function (card) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('.product-wishlist')) return;
+        var page = card.getAttribute('data-page');
+        if (page && window.ShopRouter && window.ShopRouter.loadPage) {
+          window.ShopRouter.loadPage(page);
+        }
       });
     });
   }

@@ -21,33 +21,35 @@
 }
 
 .account-modal {
-  width: 960px;
+  width: auto;
   max-width: 100%;
   max-height: 90vh;
   background: var(--shop-bg, #f7f1ea);
   border-radius: 16px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 450px 450px;
+  grid-template-rows: minmax(0, 1fr);
   box-shadow: 0 24px 60px rgba(74, 59, 47, 0.25);
 }
 
 /* 左侧品牌权益区 */
 .account-modal-left {
   position: relative;
-  background: linear-gradient(180deg, rgba(74, 59, 47, 0.35) 0%, rgba(74, 59, 47, 0.65) 100%),
-              url('../../images/hero-model.png') center/cover no-repeat;
-  color: #fff;
-  padding: 48px 32px;
+  background: url('../../images/z2.png') center/cover no-repeat;
+  color: #F5E6D3;
+  padding: 40px 36px 44px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  overflow: hidden;
+  min-height: 0;
 }
 .account-modal-left::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(74, 59, 47, 0.55) 100%);
+  background: linear-gradient(180deg, rgba(40, 26, 16, 0.35) 0%, rgba(40, 26, 16, 0.72) 100%);
 }
 .account-modal-brand,
 .account-modal-benefits {
@@ -58,89 +60,136 @@
 .account-modal-brand .brand-label {
   font-size: 13px;
   font-weight: 400;
-  opacity: 0.85;
-  letter-spacing: 0.1em;
-  margin: 0 0 12px;
+  letter-spacing: 0.25em;
+  color: rgba(245, 230, 211, 0.85);
+  margin: 0 0 14px;
 }
 .account-modal-brand .brand-logo {
   font-family: 'Playfair Display', serif;
-  font-size: 42px;
+  font-size: 56px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  color: #E8D4B8;
   margin: 0;
+  line-height: 1;
+}
+.account-modal-brand .brand-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.45em;
+  color: rgba(245, 230, 211, 0.72);
+  margin: 8px 0 0;
+  text-indent: 0.45em;
+}
+.account-modal-brand .brand-sub span {
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: rgba(232, 212, 184, 0.55);
 }
 .account-modal-brand .brand-tagline {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 300;
   margin: 18px 0 0;
   line-height: 1.5;
-  opacity: 0.92;
+  color: rgba(245, 230, 211, 0.92);
+}
+.brand-divider {
+  width: 32px;
+  height: 2px;
+  background: #C9A86A;
+  margin: 12px 0 0;
 }
 
 .account-modal-benefits {
-  margin-top: auto;
+  margin-top: 32px;
 }
 .account-benefit-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 .account-benefit-item:last-child { margin-bottom: 0; }
 .account-benefit-icon {
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(255,255,255,0.45);
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(232, 212, 184, 0.55);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: #E8D4B8;
 }
 .account-benefit-icon svg {
   width: 22px;
   height: 22px;
 }
 .account-benefit-text h4 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  margin: 0 0 3px;
+  color: #F5E6D3;
+  margin: 0 0 4px;
 }
 .account-benefit-text p {
   font-size: 12px;
   margin: 0;
-  opacity: 0.78;
+  color: rgba(245, 230, 211, 0.7);
 }
 
 /* 右侧表单区 */
 .account-modal-right {
   position: relative;
-  padding: 42px 48px 48px;
+  padding: 28px 36px 44px;
+  min-width: 280px;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
 }
+.account-modal-wrap {
+  position: relative;
+  display: inline-block;
+}
 .account-modal-close {
   position: absolute;
-  top: 18px;
-  right: 20px;
-  width: 32px;
-  height: 32px;
+  top: -14px;
+  right: -14px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: transparent;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(74, 59, 47, 0.22);
   color: var(--shop-text-secondary, #7a6b5b);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
   padding: 0;
+  z-index: 2;
 }
-.account-modal-close:hover { color: var(--shop-text, #4a3b2f); }
+.account-modal-close:hover { color: var(--shop-text, #4a3b2f); background: #f3ece4; }
 .account-modal-close svg {
   width: 20px;
   height: 20px;
+}
+
+.account-modal-brand-top {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--shop-text, #4a3b2f);
+  text-align: center;
+  margin-bottom: 24px;
 }
 
 .account-modal-tabs {
@@ -168,6 +217,7 @@
 }
 
 .account-modal-heading {
+  display: none;
   text-align: center;
   margin-bottom: 28px;
 }
@@ -183,42 +233,6 @@
   color: var(--shop-text-secondary, #7a6b5b);
   margin: 0;
 }
-
-/* 快速权益条 */
-.account-quick-benefits {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 28px;
-  padding: 18px 20px;
-  background: var(--shop-card-bg, rgba(255,255,255,0.6));
-  border: 1px solid var(--shop-border, #e8e0d6);
-  border-radius: 12px;
-}
-.account-quick-benefit {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.account-quick-benefit svg {
-  width: 24px;
-  height: 24px;
-  color: var(--shop-accent, #8b5e3c);
-}
-.account-quick-benefit strong {
-  display: block;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--shop-accent, #8b5e3c);
-  line-height: 1.2;
-}
-.account-quick-benefit span {
-  display: block;
-  font-size: 11px;
-  color: var(--shop-text-secondary, #7a6b5b);
-  line-height: 1.3;
-}
-
 /* 表单 */
 .account-form {
   display: flex;
@@ -345,7 +359,7 @@
 .account-remember input {
   width: 14px;
   height: 14px;
-  accent-color: var(--shop-accent, #8b5e3c);
+  accent-color: hsl(30 40% 54%);
 }
 .account-forgot {
   color: var(--shop-accent, #8b5e3c);
@@ -364,7 +378,7 @@
   width: 14px;
   height: 14px;
   margin-top: 2px;
-  accent-color: var(--shop-accent, #8b5e3c);
+  accent-color: hsl(30 40% 54%);
 }
 .account-agreement a {
   color: var(--shop-accent, #8b5e3c);
@@ -395,8 +409,8 @@
 
 .account-social-btns {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 .account-social-btn {
   display: flex;
@@ -471,9 +485,5 @@
   }
   .account-social-btns {
     grid-template-columns: 1fr 1fr;
-  }
-  .account-quick-benefits {
-    gap: 16px;
-    padding: 14px;
   }
 }

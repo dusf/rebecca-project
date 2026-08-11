@@ -16,6 +16,8 @@
     gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,12 20,22 4,22 4,12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
     percent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>',
+    cake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21h-16a2 2 0 0 1 -2 -2v-7.5a.5 .5 0 0 1 .5 -.5h19a.5 .5 0 0 1 .5 .5v7.5a2 2 0 0 1 -2 2z"/><path d="M10 11v-6a2 2 0 0 1 4 0v6"/><path d="M3 11h18"/><path d="M12 21v-6"/></svg>',
+    crown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l4 -8 4 8 4 -8 4 8"/><path d="M3 16h18v2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-2z"/></svg>',
     heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
     sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6"/><path d="M21 11A9 9 0 0 0 5.25 6.25L2.5 9"/><path d="M3 13a9 9 0 0 0 15.75 4.75l2.75-2.75"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
@@ -49,14 +51,24 @@
 
   function getUser() { return userInfo; }
 
+  var SOCIAL_ICONS = {
+    google: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09a6.6 6.6 0 0 1 0-4.18V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>',
+    x: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>',
+    tiktok: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .58.05.84.13V9.4a6.33 6.33 0 0 0-1-.05A6.34 6.34 0 1 0 14.97 16V9.04a8.27 8.27 0 0 0 4.62 1.4V7.04a4.85 4.85 0 0 1-1-1.35z"/></svg>'
+  };
+
   var modalHtml =
     '<div class="account-modal-overlay" id="accountModalOverlay">' +
-      '<div class="account-modal">' +
+      '<div class="account-modal-wrap">' +
+        '<button class="account-modal-close" id="accountModalClose" aria-label="关闭">' + ICONS.close + '</button>' +
+        '<div class="account-modal">' +
         '<div class="account-modal-left">' +
           '<div class="account-modal-brand">' +
             '<p class="brand-label">欢迎加入</p>' +
             '<h1 class="brand-logo">NOIRÉ</h1>' +
-            '<p class="brand-tagline">注册即享专属礼遇，开启你的奢美发艺之旅</p>' +
+            '<p class="brand-tagline">注册即享专属礼遇</p>' +
+            '<div class="brand-divider"></div>' +
           '</div>' +
           '<div class="account-modal-benefits">' +
             '<div class="account-benefit-item">' +
@@ -65,20 +77,20 @@
             '</div>' +
             '<div class="account-benefit-item">' +
               '<div class="account-benefit-icon">' + ICONS.percent + '</div>' +
-              '<div class="account-benefit-text"><h4>会员专属优惠</h4><p>尊享会员价与积分福利</p></div>' +
+              '<div class="account-benefit-text"><h4>会员专属优惠</h4><p>尊享会员专属折扣与活动</p></div>' +
             '</div>' +
             '<div class="account-benefit-item">' +
-              '<div class="account-benefit-icon">' + ICONS.heart + '</div>' +
-              '<div class="account-benefit-text"><h4>收藏与订单同步</h4><p>跨设备同步，随时随地管理</p></div>' +
+              '<div class="account-benefit-icon">' + ICONS.cake + '</div>' +
+              '<div class="account-benefit-text"><h4>生日特别礼遇</h4><p>专属生日礼券与双倍积分</p></div>' +
             '</div>' +
             '<div class="account-benefit-item">' +
-              '<div class="account-benefit-icon">' + ICONS.bell + '</div>' +
-              '<div class="account-benefit-text"><h4>新品动态抢先知</h4><p>第一时间获取新品与专属活动</p></div>' +
+              '<div class="account-benefit-icon">' + ICONS.crown + '</div>' +
+              '<div class="account-benefit-text"><h4>新品抢先体验</h4><p>优先了解新品与限量发售</p></div>' +
             '</div>' +
           '</div>' +
         '</div>' +
         '<div class="account-modal-right">' +
-          '<button class="account-modal-close" id="accountModalClose" aria-label="关闭">' + ICONS.close + '</button>' +
+          '<div class="account-modal-brand-top">NOIRÉ</div>' +
           '<div class="account-modal-tabs">' +
             '<button class="account-modal-tab active" data-tab="login">登录</button>' +
             '<button class="account-modal-tab" data-tab="register">注册</button>' +
@@ -87,14 +99,8 @@
           '<div class="account-panel" data-panel="register">' + buildRegisterPanel() + '</div>' +
         '</div>' +
       '</div>' +
+      '</div>' +
     '</div>';
-
-  var SOCIAL_ICONS = {
-    google: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09a6.6 6.6 0 0 1 0-4.18V7.07H2.18a11 11 0 0 0 0 9.86l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>',
-    facebook: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>',
-    x: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>',
-    tiktok: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000000" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .58.05.84.13V9.4a6.33 6.33 0 0 0-1-.05A6.34 6.34 0 1 0 14.97 16V9.04a8.27 8.27 0 0 0 4.62 1.4V7.04a4.85 4.85 0 0 1-1-1.35z"/></svg>'
-  };
 
   function buildSocialBtns() {
     var order = ['google', 'facebook', 'tiktok', 'x'];
@@ -130,11 +136,6 @@
 
   function buildRegisterPanel() {
     return '<div class="account-modal-heading"><h2>欢迎加入 NOIRÉ</h2><p>注册成为会员，解锁专属礼遇</p></div>' +
-      '<div class="account-quick-benefits">' +
-        '<div class="account-quick-benefit"><div>' + ICONS.gift + '</div><div><strong>100 积分</strong><span>新入注册即得</span></div></div>' +
-        '<div class="account-quick-benefit"><div>' + ICONS.bell + '</div><div><strong>新品优先通知</strong><span>抢先获取上新</span></div></div>' +
-        '<div class="account-quick-benefit"><div>' + ICONS.percent + '</div><div><strong>会员专属优惠</strong><span>折扣与积分福利</span></div></div>' +
-      '</div>' +
       '<form class="account-form" id="registerForm">' +
         '<div class="account-input-group">' +
           '<label>邮箱地址</label>' +
@@ -172,10 +173,6 @@
   }
 
   function bindModalEvents() {
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) closeModal();
-    });
-
     var closeBtn = document.getElementById('accountModalClose');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
@@ -298,24 +295,13 @@
     }
   }
 
-  function handleAccountClick() {
-    if (isLoggedIn()) {
-      if (window.ShopRouter) {
-        window.ShopRouter.loadPage('user/index.html');
-      }
-    } else {
-      openModal('login');
-    }
-  }
-
   window.ShopAccount = {
     init: init,
     open: openModal,
     close: closeModal,
     isLoggedIn: isLoggedIn,
     getUser: getUser,
-    logout: logout,
-    handleAccountClick: handleAccountClick
+    logout: logout
   };
 
   if (document.readyState === 'loading') {

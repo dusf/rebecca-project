@@ -2,12 +2,40 @@
 (function () {
   'use strict';
 
+  // 点击右侧「评价数」一键滚动到评论区
+  (function initRatingScroll() {
+    var trigger = document.getElementById('pdRatingCount');
+    var target = document.getElementById('pdReviewsSection');
+    if (!trigger || !target) return;
+    function scrollToReviews() {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    trigger.addEventListener('click', scrollToReviews);
+    trigger.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        scrollToReviews();
+      }
+    });
+  })();
+
   // 图库切换
   var mainImage = document.getElementById('pdMainImage');
+  var mainGallery = document.querySelector('.pd-gallery-main');
   var thumbs = document.querySelectorAll('.pd-thumb[data-src]');
   var thumbsContainer = document.getElementById('pdGalleryThumbs');
   var thumbPrev = document.querySelector('.pd-thumb-prev');
   var thumbNext = document.querySelector('.pd-thumb-next');
+  var playBtn = document.getElementById('pdPlayBtn');
+
+  function syncVideoState(thumb) {
+    if (!mainGallery) return;
+    if (thumb && thumb.getAttribute('data-type') === 'video') {
+      mainGallery.classList.add('is-video');
+    } else {
+      mainGallery.classList.remove('is-video');
+    }
+  }
 
   function updateThumbArrows() {
     if (!thumbsContainer || !thumbPrev || !thumbNext) return;
@@ -29,8 +57,20 @@
       if (mainImage && src) mainImage.src = src;
       thumbs.forEach(function (x) { x.classList.remove('active'); });
       t.classList.add('active');
+      syncVideoState(t);
     });
   });
+
+  if (playBtn) {
+    playBtn.addEventListener('click', function () {
+      // 当前为视频封面，点击可在此处插入真实 <video> 播放；此处仅作占位反馈
+      playBtn.classList.add('is-playing');
+    });
+  }
+
+  // 初始化：根据默认选中的缩略图同步视频状态
+  var activeThumb = document.querySelector('.pd-thumb.active');
+  syncVideoState(activeThumb);
 
   if (thumbPrev) thumbPrev.addEventListener('click', function () { scrollThumbs(-1); });
   if (thumbNext) thumbNext.addEventListener('click', function () { scrollThumbs(1); });
@@ -136,4 +176,77 @@
       alert('立即购买 - 跳转结算页');
     });
   }
+
+  // 产品详情「查看更多」逐步展开 / 收起
+  function initSellPointsToggle() {
+    var box = document.getElementById('pdSellpoints');
+    var toggle = document.getElementById('pdSpToggle');
+    var textEl = toggle ? toggle.querySelector('.pd-sp-toggle-text') : null;
+    if (!box || !toggle || !textEl) return;
+
+    var sections = Array.prototype.slice.call(box.querySelectorAll('.pd-sp-section'));
+    if (sections.length <= 2) return; // 内容不多时无需折叠
+
+    // 默认只展示前 2 个版块，其余隐藏
+    var visibleCount = 2;
+    function applyVisibility() {
+      sections.forEach(function (sec, i) {
+        sec.style.display = i < visibleCount ? '' : 'none';
+      });
+    }
+    applyVisibility();
+
+    function isAllShown() {
+      return visibleCount >= sections.length;
+    }
+
+    function renderState() {
+      if (isAllShown()) {
+        box.classList.add('is-expanded');
+        textEl.textContent = '收起';
+      } else {
+        box.classList.remove('is-expanded');
+        textEl.textContent = '查看更多';
+      }
+    }
+    renderState();
+
+    toggle.addEventListener('click', function () {
+      if (isAllShown()) {
+        // 收起：回到默认前 2 个版块
+        visibleCount = 2;
+        applyVisibility();
+        renderState();
+        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // 每次再多展开一个版块
+        visibleCount += 1;
+        applyVisibility();
+        renderState();
+        if (!isAllShown()) {
+          // 还有更多，滚动让刚出现的新版块可见
+          var last = sections[visibleCount - 1];
+          if (last) last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+  }
+  initSellPointsToggle();
+
+  // 评价区 Tab 点击 → 平滑滚动到对应版块
+  (function initReviewTabs() {
+    var tabs = document.querySelectorAll('.pd-reviews-tabs button');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var targetId = tab.getAttribute('data-target');
+        var target = document.getElementById(targetId);
+        if (target) {
+          var top = target.getBoundingClientRect().top + window.pageYOffset - 16;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      });
+    });
+  })();
 })();

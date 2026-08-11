@@ -153,6 +153,12 @@
         // 注入内容
         container.innerHTML = content;
 
+        // 修正图片路径：页面以 innerHTML 注入到 shop/index.html 下，
+        // 相对路径需以 index.html 为基准（去掉一级 ../），否则 GitHub Pages 上图片 404
+        container.querySelectorAll('img[src^="../images/"]').forEach(function (img) {
+          img.src = img.getAttribute('src').replace(/^\.\.\/images\//, 'images/');
+        });
+
         // 加载页面脚本（使用映射表或默认规则，key 用 basePath）
         var scriptPath = PAGE_SCRIPT_MAP[basePath] || (moduleName + '/js/' + fileName.replace('.html', '.js'));
         loadPageScript(scriptPath);

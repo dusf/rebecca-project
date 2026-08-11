@@ -98,6 +98,12 @@
         var content = extractBodyContent(html);
         contentArea.innerHTML = content;
 
+        // 修正图片路径：页面以 innerHTML 注入到 shop/index.html 下，
+        // 相对路径需以 index.html 为基准（去掉一级 ../），否则 GitHub Pages 上图片 404
+        contentArea.querySelectorAll('img[src^="../images/"]').forEach(function (img) {
+          img.src = img.getAttribute('src').replace(/^\.\.\/images\//, 'images/');
+        });
+
         // 加载页面脚本和样式
         var moduleName = pagePath.split('/')[0];
         var fileName = pagePath.split('/')[1] || 'index.html';

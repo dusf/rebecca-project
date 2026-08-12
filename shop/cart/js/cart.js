@@ -104,7 +104,7 @@
     return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 15;
   }
 
-  // ---------- 渲染商品列表 ----------
+  // ---------- 渲染商品列表（卡片式） ----------
   function renderCartList() {
     if (!cartData.length) {
       showEmpty();
@@ -114,35 +114,46 @@
 
     var html = '';
     cartData.forEach(function (item) {
-      html += '<div class="cart-item" data-id="' + item.id + '">'
-        + '<label class="cart-check-wrap">'
+      html += '<div class="cart-card" data-id="' + item.id + '">'
+        + '<label class="cart-check-wrap cart-card-check">'
         +   '<input type="checkbox"' + (item.checked ? ' checked' : '') + ' data-item-check="' + item.id + '">'
         +   '<span class="cart-checkbox"></span>'
         + '</label>'
-        + '<div class="cart-item-info">'
-        +   '<div class="cart-item-img-wrap"><img class="cart-item-img" src="' + item.image + '" alt="' + item.name + '"></div>'
-        +   '<div class="cart-item-detail">'
-        +     '<h3 class="cart-item-name">' + item.name + '</h3>'
-        +     '<div class="cart-item-specs">';
+        + '<div class="cart-card-body">'
+        +   '<div class="cart-card-img-wrap"><img class="cart-card-img" src="' + item.image + '" alt="' + item.name + '"></div>'
+        +   '<div class="cart-card-info">'
+        +     '<h3 class="cart-card-name">' + item.name + '</h3>'
+        +     '<div class="cart-card-specs">';
       for (var key in item.specs) {
-        html += '<span>' + item.specs[key] + '</span>';
+        html += '<span class="cart-spec-pill">' + item.specs[key] + '</span>';
       }
       html += '</div>';
       if (item.hasGift) {
-        html += '<div class="cart-item-gift-tag"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" width="12" height="12"><rect x="2" y="6" width="12" height="8" rx="1"/><path d="M8 6V14"/><path d="M10 9H6"/><path d="M11 6C10 5 9 4.5 8.5 4.5S7 5 6 6"/></svg>赠品：' + item.giftName + '</div>';
+        html += '<div class="cart-card-gift">'
+          +   '<svg class="cart-card-gift-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8V21"/><path d="M19 12H5"/><path d="M15.5 8C14.1 6.7 12.5 6 12 6s-2.1.7-3.5 2"/><path d="M8.5 8C9.9 6.7 11.5 6 12 6s2.1.7 3.5 2"/></svg>'
+          +   '<div class="cart-card-gift-text"><span class="cart-card-gift-label">赠品</span><span class="cart-card-gift-name">' + item.giftName + '</span></div>'
+          + '</div>';
       }
-      html +=   '</div></div>'
-        + '<div class="cart-item-price-col">' + formatPrice(item.price) + '</div>'
-        + '<div class="cart-item-qty-col">'
-        +   '<div class="cart-qty-control">'
-        +     '<button type="button" class="cart-qty-btn cart-qty-minus" data-qty-minus="' + item.id + '"' + (item.qty <= 1 ? ' disabled' : '') + '>-</button>'
-        +     '<input type="number" class="cart-qty-input" value="' + item.qty + '" min="1" max="99" data-qty-input="' + item.id + '">'
-        +     '<button type="button" class="cart-qty-btn cart-qty-plus" data-qty-plus="' + item.id + '">+</button>'
+      html +=   '</div>'
+        +   '<div class="cart-card-meta">'
+        +     '<div class="cart-card-price">'
+        +       '<span class="cart-meta-label">单价</span>'
+        +       '<span class="cart-meta-value">' + formatPrice(item.price) + '</span>'
+        +     '</div>'
+        +     '<div class="cart-card-qty">'
+        +       '<span class="cart-meta-label">数量</span>'
+        +       '<div class="cart-qty-control">'
+        +         '<button type="button" class="cart-qty-btn cart-qty-minus" data-qty-minus="' + item.id + '"' + (item.qty <= 1 ? ' disabled' : '') + '>-</button>'
+        +         '<input type="number" class="cart-qty-input" value="' + item.qty + '" min="1" max="99" data-qty-input="' + item.id + '">'
+        +         '<button type="button" class="cart-qty-btn cart-qty-plus" data-qty-plus="' + item.id + '">+</button>'
+        +       '</div>'
+        +     '</div>'
+        +     '<div class="cart-card-total">'
+        +       '<span class="cart-meta-label">小计</span>'
+        +       '<span class="cart-total-value">' + formatPrice(item.price * item.qty) + '</span>'
+        +     '</div>'
+        +     '<button type="button" class="cart-card-delete" data-delete="' + item.id + '">删除</button>'
         +   '</div>'
-        + '</div>'
-        + '<div class="cart-item-total-col">' + formatPrice(item.price * item.qty) + '</div>'
-        + '<div class="cart-item-action-col">'
-        +   '<button type="button" class="cart-item-delete" data-delete="' + item.id + '">删除</button>'
         + '</div>'
         + '</div>';
     });

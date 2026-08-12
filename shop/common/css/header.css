@@ -34,7 +34,7 @@
 /* ---------- 主导航栏 ---------- */
 .shop-header {
   background: var(--shop-bg);
-  border-bottom: none;
+  border-bottom: 1px solid var(--shop-border-light);
   position: sticky;
   top: 0;
   z-index: 100;

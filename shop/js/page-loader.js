@@ -103,6 +103,9 @@
         contentArea.querySelectorAll('img[src^="../images/"]').forEach(function (img) {
           img.src = img.getAttribute('src').replace(/^\.\.\/images\//, 'images/');
         });
+        contentArea.querySelectorAll('img[data-src^="../images/"]').forEach(function (img) {
+          img.setAttribute('data-src', img.getAttribute('data-src').replace(/^\.\.\/images\//, 'images/'));
+        });
 
         // 加载页面脚本和样式
         var moduleName = pagePath.split('/')[0];

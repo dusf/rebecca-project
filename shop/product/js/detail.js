@@ -53,13 +53,54 @@
 
   thumbs.forEach(function (t) {
     t.addEventListener('click', function () {
-      var src = t.getAttribute('data-src');
-      if (mainImage && src) mainImage.src = src;
-      thumbs.forEach(function (x) { x.classList.remove('active'); });
-      t.classList.add('active');
-      syncVideoState(t);
+      selectThumb(t);
     });
   });
+
+  // 选择指定缩略图并更新主图 / 计数 / 视频态
+  function selectThumb(t) {
+    if (!t) return;
+    var src = t.getAttribute('data-src');
+    if (mainImage && src) mainImage.src = src;
+    thumbs.forEach(function (x) { x.classList.remove('active'); });
+    t.classList.add('active');
+    syncVideoState(t);
+    updateGalleryCounter();
+    scrollThumbIntoView(t);
+  }
+
+  // 主图左右切换 + 计数显示（当前第几张/共多少张）
+  var galleryPrev = document.getElementById('pdGalleryPrev');
+  var galleryNext = document.getElementById('pdGalleryNext');
+  var galleryCounter = document.getElementById('pdGalleryCounter');
+
+  function currentIndex() {
+    for (var i = 0; i < thumbs.length; i++) {
+      if (thumbs[i].classList.contains('active')) return i;
+    }
+    return 0;
+  }
+
+  function updateGalleryCounter() {
+    if (!galleryCounter) return;
+    galleryCounter.textContent = (currentIndex() + 1) + '/' + thumbs.length;
+  }
+
+  function navigateGallery(dir) {
+    if (!thumbs.length) return;
+    var idx = currentIndex();
+    idx = (idx + dir + thumbs.length) % thumbs.length; // 循环切换
+    selectThumb(thumbs[idx]);
+  }
+
+  function scrollThumbIntoView(t) {
+    if (!thumbsContainer || !t) return;
+    var top = t.offsetTop - thumbsContainer.clientHeight / 2 + t.clientHeight / 2;
+    thumbsContainer.scrollTo({ top: top, behavior: 'smooth' });
+  }
+
+  if (galleryPrev) galleryPrev.addEventListener('click', function () { navigateGallery(-1); });
+  if (galleryNext) galleryNext.addEventListener('click', function () { navigateGallery(1); });
 
   if (playBtn) {
     playBtn.addEventListener('click', function () {
@@ -68,9 +109,10 @@
     });
   }
 
-  // 初始化：根据默认选中的缩略图同步视频状态
+  // 初始化：根据默认选中的缩略图同步视频状态与计数
   var activeThumb = document.querySelector('.pd-thumb.active');
   syncVideoState(activeThumb);
+  updateGalleryCounter();
 
   if (thumbPrev) thumbPrev.addEventListener('click', function () { scrollThumbs(-1); });
   if (thumbNext) thumbNext.addEventListener('click', function () { scrollThumbs(1); });

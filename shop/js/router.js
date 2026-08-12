@@ -158,6 +158,9 @@
         container.querySelectorAll('img[src^="../images/"]').forEach(function (img) {
           img.src = img.getAttribute('src').replace(/^\.\.\/images\//, 'images/');
         });
+        container.querySelectorAll('img[data-src^="../images/"]').forEach(function (img) {
+          img.setAttribute('data-src', img.getAttribute('data-src').replace(/^\.\.\/images\//, 'images/'));
+        });
 
         // 加载页面脚本（使用映射表或默认规则，key 用 basePath）
         var scriptPath = PAGE_SCRIPT_MAP[basePath] || (moduleName + '/js/' + fileName.replace('.html', '.js'));

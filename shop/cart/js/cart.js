@@ -5,12 +5,17 @@
 (function () {
   'use strict';
 
+  // 图片路径基准：通过 shop/index.html 路由注入时使用 images/，直接访问 cart.html 时使用 ../images/
+  var IMG_PREFIX = (window.location.pathname.indexOf('index.html') !== -1 && document.getElementById('shopContent'))
+    ? 'images/'
+    : '../images/';
+
   // ---------- 模拟数据 ----------
   var cartData = [
     {
       id: 'p001',
       name: 'NOIRÉ 13x4 透明蕾丝前额假发',
-      image: '../images/zp1.png',
+      image: IMG_PREFIX + 'zp1.png',
       price: 189.99,
       specs: { color: '#1B (自然黑)', length: '24 inch', density: '180%', cap: '中号' },
       qty: 1,
@@ -21,7 +26,7 @@
     {
       id: 'p002',
       name: 'NOIRÉ HD 5x5 闭合式蕾丝假发',
-      image: '../images/zp2.png',
+      image: IMG_PREFIX + 'zp2.png',
       price: 229.99,
       specs: { color: '#2 (深棕)', length: '22 inch', density: '200%', cap: '大号' },
       qty: 2,
@@ -31,7 +36,7 @@
     {
       id: 'p003',
       name: 'NOIRÉ 全手织蕾丝前额假发',
-      image: '../images/zp3.png',
+      image: IMG_PREFIX + 'zp3.png',
       price: 299.99,
       specs: { color: '#1B (自然黑)', length: '26 inch', density: '220%', cap: '小号' },
       qty: 1,
@@ -41,11 +46,11 @@
   ];
 
   var recommendData = [
-    { name: 'NOIRÉ 13x4 透明蕾丝前额假发', image: '../images/zp1.png', price: 189.99, oldPrice: 239.99 },
-    { name: 'NOIRÉ HD 5x5 闭合式蕾丝假发', image: '../images/zp2.png', price: 229.99, oldPrice: 279.99 },
-    { name: 'NOIRÉ 全手织蕾丝前额假发', image: '../images/zp3.png', price: 299.99, oldPrice: 359.99 },
-    { name: 'NOIRÉ 直发水波纹假发', image: '../images/l4.png', price: 259.99, oldPrice: 309.99 },
-    { name: 'NOIRÉ 深卷波浪假发', image: '../images/hair_model_asset_3.png', price: 279.99, oldPrice: 329.99 }
+    { name: 'NOIRÉ 13x4 透明蕾丝前额假发', image: IMG_PREFIX + 'zp1.png', price: 189.99, oldPrice: 239.99 },
+    { name: 'NOIRÉ HD 5x5 闭合式蕾丝假发', image: IMG_PREFIX + 'zp2.png', price: 229.99, oldPrice: 279.99 },
+    { name: 'NOIRÉ 全手织蕾丝前额假发', image: IMG_PREFIX + 'zp3.png', price: 299.99, oldPrice: 359.99 },
+    { name: 'NOIRÉ 直发水波纹假发', image: IMG_PREFIX + 'l4.png', price: 259.99, oldPrice: 309.99 },
+    { name: 'NOIRÉ 深卷波浪假发', image: IMG_PREFIX + 'hair_model_asset_3.png', price: 279.99, oldPrice: 329.99 }
   ];
 
   var FREE_SHIPPING_THRESHOLD = 229;

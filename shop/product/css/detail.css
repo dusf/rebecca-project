@@ -839,6 +839,49 @@
   gap: 12px;
   padding-top: 10px;
 }
+
+/* 预计送达时间 */
+.pd-delivery-info {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: #faf8f5;
+  border-radius: 8px;
+}
+.pd-delivery-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pd-delivery-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--pd-text);
+  flex-shrink: 0;
+}
+.pd-delivery-text {
+  font-size: 13px;
+  color: var(--pd-text);
+  line-height: 1.4;
+  flex: 1;
+}
+.pd-delivery-text strong {
+  font-weight: 600;
+  color: var(--pd-text);
+}
+.pd-delivery-tip-icon {
+  width: 17px;
+  height: 17px;
+  color: #999;
+  flex-shrink: 0;
+  cursor: help;
+}
+.pd-delivery-note {
+  margin: 8px 0 0 30px;
+  font-size: 11px;
+  color: #999;
+  line-height: 1.4;
+}
+
 .pd-qty {
   display: flex;
   align-items: center;

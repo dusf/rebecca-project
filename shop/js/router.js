@@ -110,7 +110,8 @@
     'new-arrivals/index.html': 'new-arrivals/js/new-arrivals.js',
     'search/index.html': 'search/js/search-results.js',
     'user/index.html': 'user/js/user.js',
-    'product/detail.html': 'product/js/detail.js'
+    'product/detail.html': 'product/js/detail.js',
+    'cart/cart.html': 'cart/js/cart.js'
   };
 
   /* ==================== 页面样式映射 ==================== */
@@ -118,7 +119,8 @@
   var PAGE_STYLE_MAP = {
     'search/index.html': 'search/css/search-results.css',
     'user/index.html': 'user/css/user.css?v=5',
-    'product/detail.html': 'product/css/detail.css'
+    'product/detail.html': 'product/css/detail.css',
+    'cart/cart.html': 'cart/css/cart.css'
   };
 
   /* ==================== 已知页面模块 ==================== */
@@ -127,7 +129,8 @@
     'new-arrivals': 'new-arrivals/index.html',
     'search': 'search/index.html',
     'user': 'user/index.html',
-    'product/detail': 'product/detail.html'
+    'product/detail': 'product/detail.html',
+    'cart': 'cart/cart.html'
   };
 
   /* ==================== 加载外部页面 ==================== */
@@ -137,8 +140,11 @@
     var moduleName = parts[0];
     var fileName = parts[1] || 'index.html';
 
-    // HTML 路径（basePath 已不含 query）
+    // HTML 路径（basePath 已不含 query），自动补 .html 后缀
     var htmlPath = basePath;
+    if (!htmlPath.endsWith('.html')) {
+      htmlPath = htmlPath + '.html';
+    }
 
     // 加载 HTML 片段
     fetch(htmlPath)

@@ -199,9 +199,9 @@
     addCartBtn.addEventListener('click', function () {
       // 跳转到购物车页面
       if (typeof window.ShopRouter !== 'undefined') {
-        window.ShopRouter.loadPage('cart/cart');
+        window.ShopRouter.loadPage('cart/cart.html');
       } else {
-        window.location.hash = '#cart/cart';
+        window.location.hash = '#cart';
       }
     });
   }

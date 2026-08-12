@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--uc-text-secondary);
   margin-bottom: 20px;
 }

@@ -71,7 +71,7 @@
 }
 
 .shop-nav-link {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--shop-text);
   position: relative;
@@ -628,7 +628,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--shop-text);
   padding: 6px 10px;

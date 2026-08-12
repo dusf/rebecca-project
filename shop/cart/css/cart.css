@@ -3,19 +3,14 @@
    风格：Luxury Organic（与商城统一）
    ============================================ */
 
-/* ---------- 页面标题区（面包屑 + 标题） ---------- */
-.cart-page-header {
-  background: transparent;
-  border-bottom: 1px solid var(--shop-border-light);
-  padding: 24px 0 20px;
-}
+/* ---------- 面包屑导航 ---------- */
 .cart-breadcrumb {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
   color: var(--shop-text-light);
-  margin-bottom: 10px;
+  padding: 16px 0 12px;
 }
 .cart-bc-link {
   color: var(--shop-text-secondary);
@@ -30,19 +25,6 @@
 }
 .cart-bc-current {
   color: var(--shop-text-light);
-}
-.cart-page-title {
-  font-family: var(--shop-font-serif);
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--shop-text);
-  margin: 0;
-}
-.cart-page-count {
-  font-size: 18px;
-  font-weight: 400;
-  color: var(--shop-text-secondary);
-  margin-left: 4px;
 }
 
 /* ---------- 主容器布局 ---------- */

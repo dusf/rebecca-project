@@ -59,7 +59,7 @@
   var cartListEl = document.getElementById('cartList');
   var cartEmptyEl = document.getElementById('cartEmpty');
   var cartContainerEl = document.getElementById('cartContainer');
-  var totalCountEl = document.getElementById('cartPageCount');
+  var totalCountEl = null; // 页面标题计数已移除
   var selectedCountEl = document.getElementById('cartSelectedCount');
   var subtotalEl = document.getElementById('cartSubtotal');
   var shippingEl = document.getElementById('cartShipping');

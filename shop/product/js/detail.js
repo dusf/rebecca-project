@@ -138,17 +138,6 @@
   initOptionGroup('pdLengthOptions');
   initOptionGroup('pdBundleOptions');
 
-  // 配送方式切换
-  var shippingOptions = document.querySelectorAll('.pd-shipping-option');
-  shippingOptions.forEach(function (opt) {
-    opt.addEventListener('click', function () {
-      shippingOptions.forEach(function (o) { o.classList.remove('active'); });
-      opt.classList.add('active');
-      var input = opt.querySelector('input[type="radio"]');
-      if (input) input.checked = true;
-    });
-  });
-
   // 数量增减
   var qtyInput = document.getElementById('pdQtyInput');
   var qtyMinus = document.getElementById('pdQtyMinus');

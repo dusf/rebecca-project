@@ -14,11 +14,17 @@
     <div class="cart-main">
       <!-- 全选栏 -->
       <div class="cart-list-toolbar">
-        <label class="cart-check-wrap">
-          <input type="checkbox" id="cartSelectAll" checked>
-          <span class="cart-checkbox"></span>
-          <span>全选</span>
-        </label>
+        <div class="cart-toolbar-left">
+          <label class="cart-check-wrap">
+            <input type="checkbox" id="cartSelectAll" checked>
+            <span class="cart-checkbox"></span>
+            <span>全选</span>
+          </label>
+          <span class="cart-selected-info">已选 <strong id="cartSelectedCountTop">0</strong> 件</span>
+        </div>
+        <div class="cart-toolbar-right">
+          <button class="cart-delete-selected-btn" id="cartDeleteSelectedTop">删除选中</button>
+        </div>
       </div>
 
       <!-- 商品列表 -->
@@ -32,23 +38,10 @@
             <span class="cart-checkbox"></span>
             <span>全选</span>
           </label>
-          <button class="cart-delete-selected-btn" id="cartDeleteSelected">删除选中</button>
+          <span class="cart-selected-info">已选 <strong id="cartSelectedCount">0</strong> 件</span>
         </div>
         <div class="cart-bottom-right">
-          <span class="cart-selected-info">已选 <strong id="cartSelectedCount">0</strong> 件</span>
-          <div class="cart-summary-row">
-            <span class="cart-summary-label">商品金额：</span>
-            <span class="cart-summary-value" id="cartSubtotal">$0.00</span>
-          </div>
-          <div class="cart-summary-row">
-            <span class="cart-summary-label">运费：</span>
-            <span class="cart-summary-value" id="cartShipping">$0.00</span>
-          </div>
-          <div class="cart-summary-row cart-total-row">
-            <span class="cart-summary-label">合计：</span>
-            <span class="cart-summary-value cart-total-value" id="cartGrandTotal">$0.00</span>
-          </div>
-          <button class="cart-checkout-btn" id="cartCheckoutBtn">去结算</button>
+          <button class="cart-delete-selected-btn" id="cartDeleteSelected">删除选中</button>
         </div>
       </div>
     </div>
@@ -67,25 +60,23 @@
             <span id="orderSubtotal">$0.00</span>
           </div>
           <div class="cart-order-row">
-            <span>运费</span>
-            <span id="orderShipping">$0.00</span>
+            <span>商品折扣</span>
+            <span class="cart-discount" id="orderDiscount">-$0.00</span>
           </div>
           <div class="cart-order-row">
-            <span>优惠折扣</span>
-            <span class="cart-discount" id="orderDiscount">-$0.00</span>
+            <span>预计运费</span>
+            <span id="orderShipping">结算页计算</span>
+          </div>
+          <div class="cart-order-row">
+            <span>预计税费</span>
+            <span id="orderTax">结算页计算</span>
           </div>
         </div>
         <div class="cart-order-total">
-          <span>应付总额</span>
+          <span>小计总额</span>
           <span id="orderGrandTotal">$0.00</span>
         </div>
         <button class="cart-checkout-btn cart-checkout-btn-full" id="cartSidebarCheckout">去结算</button>
-        <div class="cart-coupon-section">
-          <div class="cart-coupon-input-wrap">
-            <input type="text" class="cart-coupon-input" placeholder="输入优惠券码" id="cartCouponInput">
-            <button class="cart-coupon-btn" id="cartCouponApply">应用</button>
-          </div>
-        </div>
         <div class="cart-trust-badges">
           <div class="cart-trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -98,6 +89,16 @@
           <div class="cart-trust-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             <span>30天退换</span>
+          </div>
+        </div>
+        <div class="cart-pay-block">
+          <div class="cart-pay-title">支持以下支付方式</div>
+          <div class="cart-pay-icons">
+            <span class="cart-pay-ico" title="Klarna" aria-label="Klarna"><img src="https://cdn.simpleicons.org/klarna" alt="Klarna"></span>
+            <span class="cart-pay-ico" title="PayPal" aria-label="PayPal"><img src="https://cdn.simpleicons.org/paypal" alt="PayPal"></span>
+            <span class="cart-pay-ico" title="Afterpay" aria-label="Afterpay"><img src="https://cdn.simpleicons.org/afterpay" alt="Afterpay"></span>
+            <span class="cart-pay-ico" title="Visa" aria-label="Visa"><img src="https://cdn.simpleicons.org/visa" alt="Visa"></span>
+            <span class="cart-pay-ico" title="Mastercard" aria-label="Mastercard"><img src="https://cdn.simpleicons.org/mastercard" alt="Mastercard"></span>
           </div>
         </div>
       </div>

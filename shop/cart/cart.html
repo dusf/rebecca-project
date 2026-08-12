@@ -1,0 +1,128 @@
+<main class="cart-page">
+  <!-- 页面标题 -->
+  <div class="cart-header">
+    <div class="shop-container">
+      <h1 class="cart-title">购物车</h1>
+      <p class="cart-subtitle">共 <span id="cartTotalCount">0</span> 件商品</p>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="shop-container cart-container" id="cartContainer">
+    <!-- 购物车列表 -->
+    <div class="cart-main">
+      <!-- 表头 -->
+      <div class="cart-table-header">
+        <label class="cart-check-wrap">
+          <input type="checkbox" id="cartSelectAll" checked>
+          <span class="cart-checkbox"></span>
+          <span>全选</span>
+        </label>
+        <span class="col-product">商品信息</span>
+        <span class="col-price">单价</span>
+        <span class="col-qty">数量</span>
+        <span class="col-total">小计</span>
+        <span class="col-action">操作</span>
+      </div>
+
+      <!-- 商品列表 -->
+      <div class="cart-list" id="cartList"></div>
+
+      <!-- 底部操作栏 -->
+      <div class="cart-bottom-bar">
+        <div class="cart-bottom-left">
+          <label class="cart-check-wrap">
+            <input type="checkbox" id="cartSelectAllBottom" checked>
+            <span class="cart-checkbox"></span>
+            <span>全选</span>
+          </label>
+          <button class="cart-delete-selected-btn" id="cartDeleteSelected">删除选中</button>
+        </div>
+        <div class="cart-bottom-right">
+          <span class="cart-selected-info">已选 <strong id="cartSelectedCount">0</strong> 件</span>
+          <div class="cart-summary-row">
+            <span class="cart-summary-label">商品金额：</span>
+            <span class="cart-summary-value" id="cartSubtotal">$0.00</span>
+          </div>
+          <div class="cart-summary-row">
+            <span class="cart-summary-label">运费：</span>
+            <span class="cart-summary-value" id="cartShipping">$0.00</span>
+          </div>
+          <div class="cart-summary-row cart-total-row">
+            <span class="cart-summary-label">合计：</span>
+            <span class="cart-summary-value cart-total-value" id="cartGrandTotal">$0.00</span>
+          </div>
+          <button class="cart-checkout-btn" id="cartCheckoutBtn">去结算</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧订单摘要 -->
+    <aside class="cart-sidebar">
+      <div class="cart-order-card">
+        <h3 class="cart-order-title">订单摘要</h3>
+        <div class="cart-order-rows">
+          <div class="cart-order-row">
+            <span>商品数量</span>
+            <span id="orderItemCount">0 件</span>
+          </div>
+          <div class="cart-order-row">
+            <span>商品金额</span>
+            <span id="orderSubtotal">$0.00</span>
+          </div>
+          <div class="cart-order-row">
+            <span>运费</span>
+            <span id="orderShipping">$0.00</span>
+          </div>
+          <div class="cart-order-row">
+            <span>优惠折扣</span>
+            <span class="cart-discount" id="orderDiscount">-$0.00</span>
+          </div>
+        </div>
+        <div class="cart-order-total">
+          <span>应付总额</span>
+          <span id="orderGrandTotal">$0.00</span>
+        </div>
+        <button class="cart-checkout-btn cart-checkout-btn-full" id="cartSidebarCheckout">去结算</button>
+        <div class="cart-coupon-section">
+          <div class="cart-coupon-input-wrap">
+            <input type="text" class="cart-coupon-input" placeholder="输入优惠券码" id="cartCouponInput">
+            <button class="cart-coupon-btn" id="cartCouponApply">应用</button>
+          </div>
+        </div>
+        <div class="cart-trust-badges">
+          <div class="cart-trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>安全支付</span>
+          </div>
+          <div class="cart-trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <span>全球配送</span>
+          </div>
+          <div class="cart-trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span>30天退换</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 猜你喜欢 -->
+  <section class="cart-recommend">
+    <div class="shop-container">
+      <h2 class="cart-rec-title">猜你喜欢</h2>
+      <div class="cart-rec-grid" id="cartRecGrid"></div>
+    </div>
+  </section>
+
+  <!-- 空购物车 -->
+  <div class="cart-empty" id="cartEmpty" style="display:none;">
+    <div class="cart-empty-icon">
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="26" cy="24" r="20"/><path d="M6 58h44"/><path d="M12 58V38"/><path d="M44 58V38"/><path d="M14 22h24"/><path d="M26 14v20"/></svg>
+    </div>
+    <h2 class="cart-empty-title">您的购物车是空的</h2>
+    <p class="cart-empty-desc">快去挑选心仪的商品吧</p>
+    <a href="#" class="cart-empty-btn" id="cartGoShopping">去逛逛</a>
+  </div>
+</main>

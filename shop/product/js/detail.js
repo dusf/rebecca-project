@@ -197,8 +197,12 @@
   var buyNowBtn = document.getElementById('pdBuyNow');
   if (addCartBtn) {
     addCartBtn.addEventListener('click', function () {
-      // TODO: 接入购物车逻辑
-      alert('已加入购物车');
+      // 跳转到购物车页面
+      if (typeof window.ShopRouter !== 'undefined') {
+        window.ShopRouter.loadPage('cart/cart');
+      } else {
+        window.location.hash = '#cart/cart';
+      }
     });
   }
   if (buyNowBtn) {

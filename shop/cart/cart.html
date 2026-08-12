@@ -1,9 +1,13 @@
 <main class="cart-page">
-  <!-- 页面标题 -->
-  <div class="cart-header">
+  <!-- 面包屑 + 页面标题 -->
+  <div class="cart-page-header">
     <div class="shop-container">
-      <h1 class="cart-title">购物车</h1>
-      <p class="cart-subtitle">共 <span id="cartTotalCount">0</span> 件商品</p>
+      <nav class="cart-breadcrumb">
+        <a href="#" class="cart-bc-link" id="cartBcHome">首页</a>
+        <span class="cart-bc-sep">/</span>
+        <span class="cart-bc-current">购物车</span>
+      </nav>
+      <h1 class="cart-page-title">购物车<span class="cart-page-count" id="cartPageCount">(0)</span></h1>
     </div>
   </div>
 

@@ -59,7 +59,7 @@
   var cartListEl = document.getElementById('cartList');
   var cartEmptyEl = document.getElementById('cartEmpty');
   var cartContainerEl = document.getElementById('cartContainer');
-  var totalCountEl = document.getElementById('cartTotalCount');
+  var totalCountEl = document.getElementById('cartPageCount');
   var selectedCountEl = document.getElementById('cartSelectedCount');
   var subtotalEl = document.getElementById('cartSubtotal');
   var shippingEl = document.getElementById('cartShipping');
@@ -80,6 +80,7 @@
   var couponApplyBtn = document.getElementById('cartCouponApply');
   var goShoppingBtn = document.getElementById('cartGoShopping');
   var recGridEl = document.getElementById('cartRecGrid');
+  var bcHomeLink = document.getElementById('cartBcHome');
 
   // ---------- 工具函数 ----------
   function formatPrice(n) {
@@ -175,7 +176,7 @@
     var discount = sub > 300 ? Math.min(sub * 0.05, 30) : 0;
     var grand = sub + ship - discount;
 
-    if (totalCountEl) totalCountEl.textContent = totalItems;
+    if (totalCountEl) totalCountEl.textContent = '(' + totalItems + ')';
     if (selectedCountEl) selectedCountEl.textContent = checkedNum;
     if (subtotalEl) subtotalEl.textContent = formatPrice(sub);
     if (shippingEl) shippingEl.textContent = ship === 0 ? '免费' : formatPrice(ship);
@@ -342,12 +343,24 @@
   if (goShoppingBtn) {
     goShoppingBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      if (typeof window.ShopRouter !== 'undefined') {
-        window.ShopRouter.loadPage('new-arrivals');
-      } else {
-        window.location.hash = '#new-arrivals';
-      }
+      navigateToHome();
     });
+  }
+
+  // 面包屑首页
+  if (bcHomeLink) {
+    bcHomeLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      navigateToHome();
+    });
+  }
+
+  function navigateToHome() {
+    if (typeof window.ShopRouter !== 'undefined') {
+      window.ShopRouter.loadPage('new-arrivals');
+    } else {
+      window.location.hash = '#new-arrivals';
+    }
   }
 
   // ---------- 猜你喜欢点击跳转详情 ----------

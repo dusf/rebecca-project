@@ -570,7 +570,11 @@
       alert('请先选择要结算的商品');
       return;
     }
-    alert('前往结算页面，共 ' + items.length + ' 种商品，' + getCheckedCount() + ' 件');
+    if (typeof window.ShopRouter !== 'undefined') {
+      window.ShopRouter.loadPage('checkout');
+    } else {
+      window.location.href = 'checkout/checkout.html';
+    }
   }
 
   if (sidebarCheckoutBtn) sidebarCheckoutBtn.addEventListener('click', onCheckout);

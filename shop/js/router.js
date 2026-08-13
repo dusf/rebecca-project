@@ -18,6 +18,13 @@
     var qIdx = pagePath.indexOf('?');
     var basePath = qIdx !== -1 ? pagePath.substring(0, qIdx) : pagePath;
 
+    // 支持传入裸模块名（如 'checkout'）：自动映射到 KNOWN_PAGES 中的真实路径
+    if (KNOWN_PAGES[basePath]) {
+      var mapped = KNOWN_PAGES[basePath];
+      basePath = qIdx !== -1 ? mapped + pagePath.substring(qIdx) : mapped;
+      pagePath = basePath;
+    }
+
     // 防止重复加载同一页面（以基础路径判断，避免 query 变化导致重复加载）
     if (basePath === currentPage) return;
 
@@ -111,7 +118,8 @@
     'search/index.html': 'search/js/search-results.js',
     'user/index.html': 'user/js/user.js',
     'product/detail.html': 'product/js/detail.js',
-    'cart/cart.html': 'cart/js/cart.js'
+    'cart/cart.html': 'cart/js/cart.js',
+    'checkout/checkout.html': 'checkout/js/checkout.js'
   };
 
   /* ==================== 页面样式映射 ==================== */
@@ -120,7 +128,8 @@
     'search/index.html': 'search/css/search-results.css',
     'user/index.html': 'user/css/user.css?v=5',
     'product/detail.html': 'product/css/detail.css',
-    'cart/cart.html': 'cart/css/cart.css'
+    'cart/cart.html': 'cart/css/cart.css',
+    'checkout/checkout.html': 'checkout/css/checkout.css'
   };
 
   /* ==================== 已知页面模块 ==================== */
@@ -130,7 +139,8 @@
     'search': 'search/index.html',
     'user': 'user/index.html',
     'product/detail': 'product/detail.html',
-    'cart': 'cart/cart.html'
+    'cart': 'cart/cart.html',
+    'checkout': 'checkout/checkout.html'
   };
 
   /* ==================== 加载外部页面 ==================== */
@@ -260,7 +270,8 @@
       'new-arrivals/index.html': 'NOIRÉ HAIR — 新品上市',
       'search/index.html': 'NOIRÉ HAIR — 搜索结果',
       'user/index.html': 'NOIRÉ HAIR — 个人中心',
-      'product/detail.html': 'NOIRÉ HAIR — 商品详情'
+      'product/detail.html': 'NOIRÉ HAIR — 商品详情',
+      'checkout/checkout.html': 'NOIRÉ HAIR — 安全结算'
     };
     document.title = titleMap[pagePath] || 'NOIRÉ HAIR';
   }

@@ -336,7 +336,55 @@
 
   function handlePaymentChange(e) {
     var target = e.target.closest('input[name="payment"]');
-    if (target) updateRadioCards();
+    if (target) {
+      updateRadioCards();
+      toggleCardForm();
+    }
+  }
+
+  function toggleCardForm() {
+    var form = getShopContent().querySelector('#coCardForm');
+    var cardInput = getShopContent().querySelector('input[name="payment"][value="card"]');
+    if (!form || !cardInput) return;
+    if (cardInput.checked) {
+      form.removeAttribute('hidden');
+    } else {
+      form.setAttribute('hidden', '');
+    }
+  }
+
+  function formatCardNumber(e) {
+    var input = e.target;
+    var v = input.value.replace(/\D/g, '').substring(0, 19);
+    input.value = v.replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  function formatCardExpiry(e) {
+    var input = e.target;
+    var v = input.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) {
+      input.value = v.substring(0, 2) + '/' + v.substring(2);
+    } else {
+      input.value = v;
+    }
+  }
+
+  function validateCardForm() {
+    var cardInput = getShopContent().querySelector('input[name="payment"][value="card"]');
+    if (!cardInput || !cardInput.checked) return true;
+    var numberEl = document.getElementById('coCardNumber');
+    var expiryEl = document.getElementById('coCardExpiry');
+    var cvvEl = document.getElementById('coCardCvv');
+    var nameEl = document.getElementById('coCardName');
+    var number = numberEl ? numberEl.value.replace(/\s/g, '') : '';
+    var expiry = expiryEl ? expiryEl.value.trim() : '';
+    var cvv = cvvEl ? cvvEl.value.trim() : '';
+    var name = nameEl ? nameEl.value.trim() : '';
+    if (number.length < 13 || !/^\d+$/.test(number)) { alert('请输入有效的信用卡卡号'); return false; }
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) { alert('请输入有效期，格式为 MM/YY'); return false; }
+    if (!/^\d{3,4}$/.test(cvv)) { alert('请输入信用卡背面的安全码'); return false; }
+    if (!name) { alert('请输入持卡人姓名'); return false; }
+    return true;
   }
 
   // 不含积分抵扣的应付金额（订单金额口径，用于区间上限匹配与奖励积分计算），避免循环依赖
@@ -548,9 +596,65 @@
       alert('请填写必要的联系与收货信息');
       return;
     }
-    var totalEl = document.getElementById('coGrandTotal');
-    var total = totalEl ? totalEl.textContent : '';
-    alert('订单提交成功！应付总额 ' + total + '，感谢您的购买。');
+    if (!validateCardForm()) return;
+    openPayDialog();
+  }
+
+  function openPayDialog() {
+    var overlay = document.getElementById('coPayOverlay');
+    if (!overlay) return;
+
+    // 重置步骤状态（每次打开都从初始态开始）
+    var stepAuth = document.getElementById('coPayStepAuth');
+    var stepConfirm = document.getElementById('coPayStepConfirm');
+    var orderNo = document.getElementById('coPayOrderNo');
+    if (stepAuth) {
+      stepAuth.classList.add('is-active');
+      stepAuth.classList.remove('is-completed');
+    }
+    if (stepConfirm) {
+      stepConfirm.classList.remove('is-active', 'is-completed');
+    }
+    if (orderNo) orderNo.textContent = '正在生成...';
+
+    overlay.hidden = false;
+
+    // 清理上一次可能残留的定时器
+    if (window.__coPayTimer1) clearTimeout(window.__coPayTimer1);
+    if (window.__coPayTimer2) clearTimeout(window.__coPayTimer2);
+
+    // 阶段一：银行授权完成，进入订单确认
+    window.__coPayTimer1 = setTimeout(function () {
+      if (stepAuth) {
+        stepAuth.classList.add('is-completed');
+        stepAuth.classList.remove('is-active');
+      }
+      if (stepConfirm) stepConfirm.classList.add('is-active');
+      if (orderNo) orderNo.textContent = 'ORD-' + generateOrderNo();
+    }, 2500);
+
+    // 阶段二：跳转下单成功页
+    window.__coPayTimer2 = setTimeout(function () {
+      if (window.__coPayTimer1) clearTimeout(window.__coPayTimer1);
+      overlay.hidden = true;
+      goToOrderSuccess();
+    }, 4800);
+  }
+
+  function generateOrderNo() {
+    var suffix = Math.floor(Math.random() * 1000000).toString();
+    while (suffix.length < 6) suffix = '0' + suffix;
+    return '26' + suffix;
+  }
+
+  function goToOrderSuccess() {
+    if (typeof window.ShopRouter !== 'undefined') {
+      window.ShopRouter.loadPage('order-success');
+    } else if (window.parent !== window && typeof window.parent.ShopRouter !== 'undefined') {
+      window.parent.ShopRouter.loadPage('order-success');
+    } else {
+      window.location.href = '../order/success.html';
+    }
   }
 
   function navigateToHome(e) {
@@ -711,6 +815,13 @@
 
     // 初始化单选卡片状态
     updateRadioCards();
+    toggleCardForm();
+
+    // 信用卡输入格式化
+    var cardNumber = document.getElementById('coCardNumber');
+    var cardExpiry = document.getElementById('coCardExpiry');
+    if (cardNumber) cardNumber.addEventListener('input', formatCardNumber);
+    if (cardExpiry) cardExpiry.addEventListener('input', formatCardExpiry);
 
     // 初始化积分模块（展示可用积分 / 本单最多可抵扣，初始不抵扣）
     initPointsModule();

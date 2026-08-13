@@ -207,8 +207,12 @@
   }
   if (buyNowBtn) {
     buyNowBtn.addEventListener('click', function () {
-      // TODO: 接入结算流程
-      alert('立即购买 - 跳转结算页');
+      // 立即购买：跳转结算页面（演示数据，结算页为固定示例订单）
+      if (typeof window.ShopRouter !== 'undefined') {
+        window.ShopRouter.loadPage('checkout/checkout.html');
+      } else {
+        window.location.hash = '#checkout';
+      }
     });
   }
 

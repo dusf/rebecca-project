@@ -195,6 +195,51 @@
               </span>
             </label>
 
+            <!-- 信用卡表单 -->
+            <div class="checkout-card-form" id="coCardForm">
+              <div class="checkout-card-field">
+                <div class="checkout-input-wrap">
+                  <input type="text" id="coCardNumber" name="cardNumber" class="checkout-card-input" placeholder="卡号" inputmode="numeric" autocomplete="cc-number" maxlength="19">
+                  <svg class="checkout-input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="6" y="11" width="12" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 11V8a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="checkout-card-row">
+                <div class="checkout-card-field">
+                  <div class="checkout-input-wrap">
+                    <input type="text" id="coCardExpiry" name="cardExpiry" class="checkout-card-input" placeholder="有效期（月/年）" inputmode="numeric" autocomplete="cc-exp" maxlength="7">
+                  </div>
+                </div>
+                <div class="checkout-card-field">
+                  <div class="checkout-input-wrap">
+                    <input type="text" id="coCardCvv" name="cardCvv" class="checkout-card-input" placeholder="安全码" inputmode="numeric" autocomplete="cc-csc" maxlength="4">
+                    <svg class="checkout-input-icon checkout-input-help" viewBox="0 0 24 24" aria-label="安全码帮助">
+                      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M9.5 9a2.5 2.5 0 1 1 3.6-2.1c.4 1-.1 1.8-.9 2.5L12 12v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="12" cy="17" r="1" fill="currentColor"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="checkout-card-field">
+                <div class="checkout-input-wrap">
+                  <input type="text" id="coCardName" name="cardName" class="checkout-card-input" placeholder="持卡人姓名" autocomplete="cc-name">
+                </div>
+              </div>
+              <label class="checkout-billing-same">
+                <input type="checkbox" id="coBillingSame" class="checkout-check-input" checked>
+                <span class="checkout-check-box">
+                  <svg class="checkout-check-tick" viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="6 12 10 16 18 8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="checkout-check-label">使用收货地址作为账单地址</span>
+              </label>
+            </div>
+
             <label class="checkout-radio-card checkout-pay-card">
               <input type="radio" name="payment" value="paypal" class="checkout-radio-input">
               <span class="checkout-radio-circle"></span>
@@ -505,6 +550,88 @@
       <div class="co-coupon-dialog-actions">
         <button type="button" class="co-coupon-dialog-cancel" id="coCouponDialogCancel">取消</button>
         <button type="button" class="co-coupon-dialog-apply" id="coCouponDialogApply">应用优惠券</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 支付处理对话框 -->
+  <div class="co-pay-overlay" id="coPayOverlay" hidden>
+    <div class="co-pay-dialog" role="dialog" aria-modal="true" aria-label="支付处理中">
+      <div class="co-pay-spinner" aria-label="正在处理支付">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <circle class="co-pay-spinner-track" cx="32" cy="32" r="28"></circle>
+          <circle class="co-pay-spinner-bar" cx="32" cy="32" r="28"></circle>
+        </svg>
+      </div>
+
+      <h3 class="co-pay-title">正在处理支付</h3>
+      <p class="co-pay-subtitle">请勿关闭或刷新页面，我们正在与发卡行确认您的付款信息。</p>
+
+      <div class="co-pay-method">
+        <div class="co-pay-method-label">支付方式：信用卡</div>
+        <div class="co-pay-method-row">
+          <svg class="co-pay-visa" viewBox="0 0 48 16" aria-hidden="true">
+            <text x="0" y="13" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700" font-style="italic" fill="#1A1F71">VISA</text>
+          </svg>
+          <span class="co-pay-method-text">Visa 信用卡 **** 2846</span>
+        </div>
+      </div>
+
+      <ol class="co-pay-steps">
+        <li class="co-pay-step is-completed">
+          <div class="co-pay-step-indicator">
+            <svg class="co-pay-step-check" viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="6 12 10 16 18 8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="co-pay-step-body">
+            <div class="co-pay-step-title">验证卡片信息</div>
+            <div class="co-pay-step-desc">已完成</div>
+          </div>
+        </li>
+        <li class="co-pay-step is-active" id="coPayStepAuth">
+          <div class="co-pay-step-indicator"><span>2</span></div>
+          <div class="co-pay-step-body">
+            <div class="co-pay-step-title">银行授权中</div>
+            <div class="co-pay-step-desc">正在与发卡行确认，请稍候...</div>
+          </div>
+        </li>
+        <li class="co-pay-step" id="coPayStepConfirm">
+          <div class="co-pay-step-indicator"><span>3</span></div>
+          <div class="co-pay-step-body">
+            <div class="co-pay-step-title">正在确认订单</div>
+            <div class="co-pay-step-desc">等待授权结果</div>
+          </div>
+        </li>
+      </ol>
+
+      <p class="co-pay-hint">
+        <svg class="co-pay-hint-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <polyline points="12 7 12 12 16 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        通常需要几秒钟，请耐心等待。
+      </p>
+
+      <div class="co-pay-footer">
+        <div class="co-pay-ssl">
+          <svg class="co-pay-ssl-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="11" width="12" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 11V8a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+          </svg>
+          SSL 安全加密支付
+        </div>
+        <div class="co-pay-order-meta">
+          <div class="co-pay-meta-row">
+            <span class="co-pay-meta-label">订单金额：</span>
+            <span class="co-pay-meta-value">USD $369.00</span>
+          </div>
+          <div class="co-pay-meta-row">
+            <span class="co-pay-meta-label">订单编号：</span>
+            <span class="co-pay-meta-value" id="coPayOrderNo">正在生成...</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

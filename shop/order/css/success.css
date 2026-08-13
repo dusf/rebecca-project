@@ -1,0 +1,870 @@
+/* ============================================
+   NOIRÉ HAIR — 下单成功页样式
+   1:1 还原设计稿 · Luxury Organic
+   ============================================ */
+
+/* ---------- 页面级 ---------- */
+.order-success-page {
+  padding: 40px 0 0;
+  background: var(--shop-bg);
+  min-height: 100vh;
+}
+
+.os-container {
+  max-width: var(--shop-container);
+}
+
+/* ---------- Hero 成功区 ---------- */
+.os-hero {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  margin-bottom: 32px;
+}
+
+.os-hero-content {
+  flex: 0 0 46%;
+  max-width: 520px;
+}
+
+.os-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.os-badge-wreath {
+  width: 48px;
+  height: 96px;
+  color: var(--shop-accent);
+}
+
+.os-wreath-left {
+  margin-right: -4px;
+}
+
+.os-wreath-right {
+  margin-left: -4px;
+}
+
+.os-badge-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--shop-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(184, 149, 107, 0.28);
+  z-index: 1;
+}
+
+.os-badge-check {
+  width: 36px;
+  height: 36px;
+}
+
+.os-hero-title {
+  font-family: var(--shop-font-serif);
+  margin-bottom: 16px;
+}
+
+.os-hero-title-main {
+  display: block;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--shop-text);
+  line-height: 1.2;
+  letter-spacing: 1px;
+}
+
+.os-hero-title-sub {
+  display: block;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--shop-accent);
+  line-height: 1.3;
+  margin-top: 6px;
+}
+
+.os-hero-desc {
+  font-size: 14px;
+  color: var(--shop-text-secondary);
+  line-height: 1.8;
+}
+
+.os-hero-image-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.os-hero-image {
+  width: 100%;
+  max-width: 560px;
+  max-height: 460px;
+  object-fit: contain;
+  object-position: top center;
+  border-radius: var(--shop-radius-lg);
+  border: none;
+  outline: none;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(to right, transparent 0 4px, black 4px 100%);
+  mask-image: linear-gradient(to right, transparent 0 4px, black 4px 100%);
+}
+
+/* ---------- 订单信息条 ---------- */
+.os-order-info {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.os-info-card {
+  background: var(--shop-bg-card);
+  border-radius: var(--shop-radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--shop-shadow);
+}
+
+.os-info-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(184, 149, 107, 0.12);
+  color: var(--shop-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.os-info-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.os-info-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.os-info-label {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  flex-shrink: 0;
+}
+
+.os-info-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.os-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+  white-space: nowrap;
+}
+
+.os-copy-btn {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  border: 1px solid var(--shop-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  background: transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.os-copy-btn:hover {
+  color: var(--shop-btn-bg);
+  border-color: var(--shop-btn-bg);
+}
+
+/* ---------- 主内容面板 ---------- */
+.os-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  margin-bottom: 32px;
+  align-items: start;
+}
+
+.os-panel {
+  background: var(--shop-bg-card);
+  border-radius: var(--shop-radius-lg);
+  box-shadow: var(--shop-shadow);
+  overflow: hidden;
+}
+
+.os-panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--shop-border-light);
+}
+
+.os-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--shop-text);
+}
+
+/* ---------- 订单商品 ---------- */
+.os-product-list {
+  padding: 8px 0;
+}
+
+.os-product-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--shop-border-light);
+}
+
+.os-product-item:last-child {
+  border-bottom: none;
+}
+
+.os-product-thumb {
+  width: 88px;
+  height: 110px;
+  border-radius: var(--shop-radius);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--shop-bg-warm);
+}
+
+.os-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.os-product-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.os-product-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shop-text);
+  line-height: 1.4;
+}
+
+.os-product-spec,
+.os-product-qty {
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+}
+
+.os-product-gift {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  margin-top: 4px;
+}
+
+.os-product-gift svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--shop-accent);
+}
+
+.os-product-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shop-text);
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+/* ---------- 支付明细 ---------- */
+.os-payment-body {
+  padding: 20px 24px 16px;
+}
+
+.os-payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--shop-text-secondary);
+}
+
+.os-payment-row span:last-child {
+  color: var(--shop-text);
+  font-weight: 500;
+}
+
+.os-payment-deduct {
+  color: var(--shop-accent-dark) !important;
+}
+
+.os-payment-divider {
+  height: 1px;
+  background: var(--shop-border-light);
+  margin: 16px 0;
+}
+
+.os-payment-total {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shop-text) !important;
+  margin-bottom: 0;
+}
+
+.os-payment-total-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--shop-text) !important;
+}
+
+/* ---------- 积分卡片 ---------- */
+.os-points-card {
+  margin: 0 24px 20px;
+  background: var(--shop-bg-warm);
+  border-radius: var(--shop-radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.os-points-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(184, 149, 107, 0.18);
+  color: var(--shop-accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.os-points-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.os-points-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.os-points-label {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+}
+
+.os-points-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--shop-text);
+  line-height: 1.1;
+}
+
+.os-points-value span {
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.os-points-tip {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+}
+
+/* ---------- 操作按钮 ---------- */
+.os-actions {
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.os-btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  text-align: center;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.os-btn-primary {
+  background: var(--shop-btn-bg);
+  color: var(--shop-btn-text);
+}
+
+.os-btn-primary:hover {
+  background: var(--shop-accent-dark);
+}
+
+.os-btn-outline {
+  background: transparent;
+  color: var(--shop-btn-bg);
+  border: 1px solid var(--shop-btn-bg);
+}
+
+.os-btn-outline:hover {
+  background: var(--shop-btn-bg);
+  color: var(--shop-btn-text);
+}
+
+/* ---------- 订单进度时间线 ---------- */
+.os-progress-section {
+  margin-bottom: 32px;
+}
+
+.os-progress-head {
+  margin-bottom: 20px;
+}
+
+.os-progress-title {
+  font-family: var(--shop-font-serif);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.os-progress-title span:first-child {
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+  font-weight: 400;
+}
+
+.os-progress-title span:last-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--shop-text);
+}
+
+.os-progress-track {
+  background: var(--shop-bg-card);
+  border-radius: var(--shop-radius-lg);
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-shadow: var(--shop-shadow);
+}
+
+.os-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.os-step-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--shop-border);
+  color: var(--shop-text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.os-step-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.os-progress-step.is-active .os-step-icon {
+  background: var(--shop-accent);
+  border-color: var(--shop-accent);
+  color: #fff;
+}
+
+.os-step-body {
+  min-width: 0;
+}
+
+.os-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.os-step-desc {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-progress-arrow {
+  color: var(--shop-border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.os-progress-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- 服务承诺 ---------- */
+.os-services {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.os-service-item {
+  background: var(--shop-bg-card);
+  border-radius: var(--shop-radius-lg);
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: var(--shop-shadow);
+}
+
+.os-service-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--shop-accent);
+  flex-shrink: 0;
+}
+
+.os-service-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.os-service-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.os-service-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+}
+
+.os-service-desc {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---------- 继续探索 ---------- */
+.os-explore {
+  margin-bottom: 80px;
+}
+
+.os-explore-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.os-explore-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--shop-text);
+}
+
+.os-explore-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--shop-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.os-explore-more svg {
+  width: 16px;
+  height: 16px;
+}
+
+.os-explore-more:hover {
+  color: var(--shop-btn-bg);
+}
+
+.os-explore-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.os-explore-card {
+  background: var(--shop-bg-card);
+  border-radius: var(--shop-radius-lg);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shop-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.os-explore-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shop-shadow-md);
+}
+
+.os-explore-thumb {
+  width: 72px;
+  height: 90px;
+  border-radius: var(--shop-radius);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--shop-bg-warm);
+}
+
+.os-explore-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.os-explore-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.os-explore-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-explore-spec {
+  font-size: 12px;
+  color: var(--shop-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-explore-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--shop-text);
+}
+
+.os-explore-arrow {
+  color: var(--shop-accent);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.os-explore-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- 响应式适配 ---------- */
+@media (max-width: 1199px) {
+  .os-hero-title-main {
+    font-size: 34px;
+  }
+  .os-hero-title-sub {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 991px) {
+  .order-success-page {
+    padding-top: 32px;
+  }
+
+  .os-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  .os-hero-content {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+
+  .os-hero-image-wrap {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .os-hero-image {
+    max-width: 100%;
+    max-height: 420px;
+  }
+
+  .os-order-info {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .os-main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .os-payment-panel {
+    order: -1;
+  }
+
+  .os-services {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .os-explore-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .os-progress-track {
+    flex-wrap: wrap;
+    gap: 16px 8px;
+  }
+
+  .os-progress-step {
+    flex: 0 0 calc(50% - 16px);
+  }
+
+  .os-progress-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .order-success-page {
+    padding-top: 24px;
+  }
+
+  .os-hero-title-main {
+    font-size: 28px;
+  }
+
+  .os-hero-title-sub {
+    font-size: 22px;
+  }
+
+  .os-badge-circle {
+    width: 72px;
+    height: 72px;
+  }
+
+  .os-badge-check {
+    width: 30px;
+    height: 30px;
+  }
+
+  .os-badge-wreath {
+    width: 40px;
+    height: 80px;
+  }
+
+  .os-order-info {
+    grid-template-columns: 1fr;
+  }
+
+  .os-info-card {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .os-info-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .os-info-value-wrap {
+    justify-content: flex-end;
+  }
+
+  .os-product-item {
+    flex-wrap: wrap;
+  }
+
+  .os-product-price {
+    width: 100%;
+    text-align: right;
+    margin-top: 8px;
+  }
+
+  .os-points-value {
+    font-size: 20px;
+  }
+
+  .os-progress-step {
+    flex: 0 0 100%;
+  }
+
+  .os-progress-track {
+    padding: 20px;
+  }
+
+  .os-services {
+    grid-template-columns: 1fr;
+  }
+
+  .os-explore-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .os-explore-card {
+    padding: 12px;
+  }
+
+  .os-explore-thumb {
+    width: 64px;
+    height: 80px;
+  }
+}

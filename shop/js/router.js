@@ -119,7 +119,8 @@
     'user/index.html': 'user/js/user.js',
     'product/detail.html': 'product/js/detail.js',
     'cart/cart.html': 'cart/js/cart.js',
-    'checkout/checkout.html': 'checkout/js/checkout.js'
+    'checkout/checkout.html': 'checkout/js/checkout.js',
+    'order/success.html': 'order/js/success.js'
   };
 
   /* ==================== 页面样式映射 ==================== */
@@ -129,7 +130,8 @@
     'user/index.html': 'user/css/user.css?v=5',
     'product/detail.html': 'product/css/detail.css',
     'cart/cart.html': 'cart/css/cart.css',
-    'checkout/checkout.html': 'checkout/css/checkout.css'
+    'checkout/checkout.html': 'checkout/css/checkout.css',
+    'order/success.html': 'order/css/success.css'
   };
 
   /* ==================== 已知页面模块 ==================== */
@@ -140,7 +142,8 @@
     'user': 'user/index.html',
     'product/detail': 'product/detail.html',
     'cart': 'cart/cart.html',
-    'checkout': 'checkout/checkout.html'
+    'checkout': 'checkout/checkout.html',
+    'order-success': 'order/success.html'
   };
 
   /* ==================== 加载外部页面 ==================== */
@@ -271,8 +274,9 @@
       'search/index.html': 'NOIRÉ HAIR — 搜索结果',
       'user/index.html': 'NOIRÉ HAIR — 个人中心',
       'product/detail.html': 'NOIRÉ HAIR — 商品详情',
-      'checkout/checkout.html': 'NOIRÉ HAIR — 安全结算'
-    };
+      'checkout/checkout.html': 'NOIRÉ HAIR — 安全结算',
+      'order/success.html': 'NOIRÉ HAIR — 下单成功'
+      };
     document.title = titleMap[pagePath] || 'NOIRÉ HAIR';
   }
 

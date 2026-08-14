@@ -97,6 +97,167 @@
   color: var(--text-tertiary, #9e968b);
 }
 
+.checkout-section-action {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color, #e8e2da);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--brand-brown, #5d4037);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.checkout-section-action:hover {
+  background: rgba(93, 64, 55, 0.06);
+  border-color: var(--brand-brown, #5d4037);
+}
+
+/* 已选收货地址列表（默认呈现） */
+.co-addr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.co-addr-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--border-color, #e8e2da);
+  border-radius: 10px;
+}
+
+.co-addr-card-radio {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--text-tertiary, #9e968b);
+  position: relative;
+}
+
+.co-addr-card.is-selected .co-addr-card-radio {
+  border-color: var(--brand-brown, #5d4037);
+}
+
+.co-addr-card.is-selected .co-addr-card-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--brand-brown, #5d4037);
+}
+
+.co-addr-card.is-selected {
+  border-color: var(--brand-brown, #5d4037);
+  box-shadow: 0 0 0 2px rgba(93, 64, 55, 0.10);
+}
+
+.co-addr-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.co-addr-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.co-addr-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #3d3229);
+}
+
+.co-addr-card-default {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-brown, #5d4037);
+  background: rgba(93, 64, 55, 0.08);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.co-addr-card-line {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary, #6b6258);
+}
+
+.co-addr-card-edit {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.co-addr-card-edit:hover {
+  background: rgba(93, 64, 55, 0.06);
+  color: var(--brand-brown, #5d4037);
+}
+
+.co-addr-card-edit svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* 模拟按钮（虚线幽灵态） */
+.checkout-demo-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.checkout-demo-btn-ghost {
+  margin-top: 4px;
+  border: 1px dashed var(--text-tertiary, #9e968b);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+}
+
+.checkout-demo-btn-ghost:hover {
+  color: var(--brand-brown, #5d4037);
+  border-color: rgba(93, 64, 55, 0.45);
+  background: rgba(93, 64, 55, 0.04);
+}
+
+.checkout-demo-btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* 两个收货地址视图由 JS 切换显隐 */
+.co-addr-form.is-hidden,
+.co-addr-list.is-hidden {
+  display: none;
+}
+
 .checkout-points-available {
   margin-left: auto;
   font-size: 14px;
@@ -1883,6 +2044,837 @@
 }
 
 /* ========================
+   模拟提交失败按钮
+   ======================== */
+.checkout-fail-demo-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 16px;
+  border: 1px dashed var(--text-tertiary, #9e968b);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.checkout-fail-demo-btn:hover {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.45);
+  background: rgba(180, 35, 24, 0.04);
+}
+
+.checkout-fail-demo-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ========================
+   订单提交失败对话框
+   ======================== */
+.co-fail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(61, 50, 41, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.co-fail-overlay[hidden] {
+  display: none;
+}
+
+.co-fail-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--shop-bg-card, #FDFBF8);
+  border-radius: var(--shop-radius-lg, 16px);
+  box-shadow: var(--shop-shadow-md, 0 20px 50px rgba(0, 0, 0, 0.18));
+  padding: 44px 40px 36px;
+  text-align: center;
+  animation: co-fail-fade 0.25s ease;
+}
+
+@keyframes co-fail-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.co-fail-icon-wrap {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  color: #b42318;
+}
+
+.co-fail-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.co-fail-icon-circle {
+  opacity: 0.18;
+}
+
+.co-fail-icon-x {
+  opacity: 1;
+}
+
+.co-fail-title {
+  font-family: var(--shop-font-serif, "Playfair Display", serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--shop-text, #3d3229);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.co-fail-subtitle {
+  font-size: 14px;
+  color: var(--shop-text-secondary, #8a7f72);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.co-fail-reason {
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--shop-border-light, #e8e2da);
+  border-radius: var(--shop-radius, 10px);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.co-fail-reason-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.co-fail-reason-icon {
+  width: 20px;
+  height: 20px;
+  color: #b42318;
+  flex-shrink: 0;
+}
+
+.co-fail-reason-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--shop-text, #3d3229);
+}
+
+.co-fail-reason-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.co-fail-reason-item {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--shop-text, #3d3229);
+}
+
+.co-fail-reason-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--shop-text-tertiary, #9e968b);
+}
+
+.co-fail-keep {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  margin: 0 0 24px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--shop-text-secondary, #8a7f72);
+}
+
+.co-fail-keep-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary, #9e968b);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.co-fail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.co-fail-btn {
+  width: 100%;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.co-fail-btn:active {
+  transform: translateY(1px);
+}
+
+.co-fail-btn-primary {
+  border: 1px solid var(--brand-brown, #5d4037);
+  background: var(--brand-brown, #5d4037);
+  color: #fff;
+}
+
+.co-fail-btn-primary:hover {
+  background: #4a322b;
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.22);
+}
+
+.co-fail-btn-secondary {
+  border: 1px solid var(--shop-border, #d9d1c6);
+  background: #fff;
+  color: var(--shop-text, #3d3229);
+}
+
+.co-fail-btn-secondary:hover {
+  background: #f7f4f0;
+  border-color: var(--text-tertiary, #9e968b);
+}
+
+.co-fail-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brand-brown, #5d4037);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.co-fail-support:hover {
+  opacity: 0.8;
+}
+
+.co-fail-support-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.co-fail-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 14px 16px;
+  background: #fff8e6;
+  border: 1px solid #f0e0b8;
+  border-radius: 10px;
+}
+
+.co-fail-notice-icon {
+  width: 18px;
+  height: 18px;
+  color: #a37a00;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.co-fail-notice-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b5613;
+}
+
+/* ========================
+   模拟支付未完成按钮
+   ======================== */
+.checkout-unpaid-demo-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px dashed var(--text-tertiary, #9e968b);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.checkout-unpaid-demo-btn:hover {
+  color: #a37a00;
+  border-color: rgba(163, 122, 0, 0.45);
+  background: rgba(163, 122, 0, 0.04);
+}
+
+.checkout-unpaid-demo-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ========================
+   支付未完成对话框
+   ======================== */
+.co-unpaid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(61, 50, 41, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.co-unpaid-overlay[hidden] {
+  display: none;
+}
+
+.co-unpaid-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--shop-bg-card, #FDFBF8);
+  border-radius: var(--shop-radius-lg, 16px);
+  box-shadow: var(--shop-shadow-md, 0 20px 50px rgba(0, 0, 0, 0.18));
+  padding: 44px 40px 36px;
+  text-align: center;
+  animation: co-unpaid-fade 0.25s ease;
+}
+
+@keyframes co-unpaid-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.co-unpaid-icon-wrap {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  color: #a37a00;
+}
+
+.co-unpaid-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.co-unpaid-icon-circle {
+  opacity: 0.18;
+}
+
+.co-unpaid-icon-mark {
+  opacity: 1;
+}
+
+.co-unpaid-title {
+  font-family: var(--shop-font-serif, "Playfair Display", serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--shop-text, #3d3229);
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.co-unpaid-subtitle {
+  font-size: 14px;
+  color: var(--shop-text-secondary, #8a7f72);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.co-unpaid-order {
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--shop-border-light, #e8e2da);
+  border-radius: var(--shop-radius, 10px);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.co-unpaid-order-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.co-unpaid-order-label {
+  color: var(--shop-text-secondary, #8a7f72);
+  flex-shrink: 0;
+}
+
+.co-unpaid-order-value {
+  color: var(--shop-text, #3d3229);
+  font-weight: 500;
+}
+
+.co-unpaid-order-status {
+  color: #a37a00;
+}
+
+.co-unpaid-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  background: #fff7f5;
+  border: 1px solid #f2d6d0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.co-unpaid-reason-icon {
+  width: 32px;
+  height: 32px;
+  color: #b42318;
+  flex-shrink: 0;
+}
+
+.co-unpaid-reason-body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.co-unpaid-reason-label {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.co-unpaid-reason-text {
+  color: var(--shop-text, #3d3229);
+}
+
+.co-unpaid-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--shop-border-light, #e8e2da);
+  border-radius: 10px;
+}
+
+.co-unpaid-hint-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary, #9e968b);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.co-unpaid-hint-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--shop-text-secondary, #8a7f72);
+}
+
+.co-unpaid-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.co-unpaid-btn {
+  width: 100%;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.co-unpaid-btn:active {
+  transform: translateY(1px);
+}
+
+.co-unpaid-btn-primary {
+  border: 1px solid var(--brand-brown, #5d4037);
+  background: var(--brand-brown, #5d4037);
+  color: #fff;
+}
+
+.co-unpaid-btn-primary:hover {
+  background: #4a322b;
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.22);
+}
+
+.co-unpaid-btn-secondary {
+  border: 1px solid var(--shop-border, #d9d1c6);
+  background: #fff;
+  color: var(--shop-text, #3d3229);
+}
+
+.co-unpaid-btn-secondary:hover {
+  background: #f7f4f0;
+  border-color: var(--text-tertiary, #9e968b);
+}
+
+.co-unpaid-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 22px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brand-brown, #5d4037);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.co-unpaid-link:hover {
+  opacity: 0.8;
+}
+
+.co-unpaid-link-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.co-unpaid-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 14px 16px;
+  background: #fff8e6;
+  border: 1px solid #f0e0b8;
+  border-radius: 10px;
+}
+
+.co-unpaid-footer-icon {
+  width: 18px;
+  height: 18px;
+  color: #a37a00;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.co-unpaid-footer-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b5613;
+}
+
+/* ========================
+   更换收货地址对话框
+   ======================== */
+.co-addr-overlay,
+.co-add-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(61, 50, 41, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.co-addr-overlay[hidden],
+.co-add-overlay[hidden] {
+  display: none;
+}
+
+.co-addr-dialog,
+.co-add-dialog {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--shop-bg-card, #FDFBF8);
+  border-radius: var(--shop-radius-lg, 16px);
+  box-shadow: var(--shop-shadow-md, 0 20px 50px rgba(0, 0, 0, 0.18));
+  overflow: hidden;
+  animation: co-addr-fade 0.25s ease;
+}
+
+@keyframes co-addr-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.co-addr-dialog-header,
+.co-add-dialog-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--shop-border-light, #e8e2da);
+}
+
+.co-addr-dialog-title,
+.co-add-dialog-title {
+  font-family: var(--shop-font-serif, "Playfair Display", serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--shop-text, #3d3229);
+  margin: 0;
+}
+
+.co-addr-dialog-close,
+.co-add-dialog-close {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.co-addr-dialog-close:hover,
+.co-add-dialog-close:hover {
+  background: rgba(93, 64, 55, 0.08);
+  color: var(--brand-brown, #5d4037);
+}
+
+.co-addr-dialog-close svg,
+.co-add-dialog-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.co-addr-dialog-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.co-addr-dialog-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--border-color, #e8e2da);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.co-addr-dialog-card:hover {
+  border-color: var(--text-tertiary, #9e968b);
+}
+
+.co-addr-dialog-card.is-selected {
+  border-color: var(--brand-brown, #5d4037);
+  box-shadow: 0 0 0 2px rgba(93, 64, 55, 0.10);
+}
+
+.co-addr-dialog-card-radio {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--text-tertiary, #9e968b);
+  position: relative;
+}
+
+.co-addr-dialog-card.is-selected .co-addr-dialog-card-radio {
+  border-color: var(--brand-brown, #5d4037);
+}
+
+.co-addr-dialog-card.is-selected .co-addr-dialog-card-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--brand-brown, #5d4037);
+}
+
+.co-addr-dialog-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.co-addr-dialog-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #3d3229);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.co-addr-dialog-card-default {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-brown, #5d4037);
+  background: rgba(93, 64, 55, 0.08);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.co-addr-dialog-card-line {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary, #6b6258);
+}
+
+.co-addr-dialog-actions,
+.co-add-dialog-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--shop-border-light, #e8e2da);
+}
+
+.co-addr-dialog-add,
+.co-addr-dialog-confirm,
+.co-add-dialog-cancel,
+.co-add-dialog-save {
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.co-addr-dialog-add {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  border: 1px dashed var(--text-tertiary, #9e968b);
+  background: transparent;
+  color: var(--text-secondary, #6b6258);
+}
+
+.co-addr-dialog-add:hover {
+  color: var(--brand-brown, #5d4037);
+  border-color: rgba(93, 64, 55, 0.45);
+  background: rgba(93, 64, 55, 0.04);
+}
+
+.co-addr-dialog-add svg {
+  width: 16px;
+  height: 16px;
+}
+
+.co-addr-dialog-confirm {
+  flex: 1;
+  border: 1px solid var(--brand-brown, #5d4037);
+  background: var(--brand-brown, #5d4037);
+  color: #fff;
+}
+
+.co-addr-dialog-confirm:hover {
+  background: #4a322b;
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.22);
+}
+
+/* ========================
+   新增收货地址对话框
+   ======================== */
+.co-add-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.co-add-dialog-cancel {
+  flex: 0 0 120px;
+  border: 1px solid var(--shop-border, #d9d1c6);
+  background: #fff;
+  color: var(--shop-text, #3d3229);
+}
+
+.co-add-dialog-cancel:hover {
+  background: #f7f4f0;
+  border-color: var(--text-tertiary, #9e968b);
+}
+
+.co-add-dialog-save {
+  flex: 1;
+  border: 1px solid var(--brand-brown, #5d4037);
+  background: var(--brand-brown, #5d4037);
+  color: #fff;
+}
+
+.co-add-dialog-save:hover {
+  background: #4a322b;
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.22);
+}
+
+/* ========================
    Responsive
    ======================== */
 @media (max-width: 1024px) {
@@ -1934,6 +2926,55 @@
     text-align: center;
   }
 
+  .co-fail-dialog {
+    padding: 32px 24px;
+  }
+
+  .co-fail-icon-wrap {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 18px;
+  }
+
+  .co-fail-title {
+    font-size: 22px;
+  }
+
+  .co-fail-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .co-fail-reason {
+    padding: 16px;
+  }
+
+  .co-unpaid-dialog {
+    padding: 32px 24px;
+  }
+
+  .co-unpaid-icon-wrap {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 18px;
+  }
+
+  .co-unpaid-title {
+    font-size: 22px;
+  }
+
+  .co-unpaid-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .co-unpaid-order,
+  .co-unpaid-reason,
+  .co-unpaid-hint,
+  .co-unpaid-footer {
+    padding: 14px 16px;
+  }
+
   .checkout-section {
     padding: 16px;
   }
@@ -1965,6 +3006,39 @@
   .checkout-trust {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .co-addr-dialog,
+  .co-add-dialog {
+    max-width: 100%;
+  }
+
+  .co-addr-dialog-header,
+  .co-add-dialog-header {
+    padding: 16px 18px;
+  }
+
+  .co-addr-dialog-list,
+  .co-add-dialog-body {
+    padding: 16px 18px;
+  }
+
+  .co-addr-dialog-actions,
+  .co-add-dialog-actions {
+    flex-direction: column;
+    padding: 14px 18px;
+  }
+
+  .co-addr-dialog-add {
+    order: 2;
+  }
+
+  .co-addr-dialog-confirm {
+    order: 1;
+  }
+
+  .co-add-dialog-cancel {
+    flex: 1;
   }
 }
 

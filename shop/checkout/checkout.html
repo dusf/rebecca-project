@@ -51,82 +51,96 @@
             <div class="checkout-section-header">
               <span class="checkout-section-num">2</span>
               <h2 class="checkout-section-title">收货地址</h2>
+              <button type="button" class="checkout-section-action" id="coChangeAddrBtn">更换收货地址</button>
             </div>
-            <div class="checkout-form-row">
-              <div class="checkout-form-group">
-                <label class="checkout-label">国家 / 地区</label>
-                <div class="checkout-combo checkout-country-combo" id="coCountryCombo" data-default="US" data-required="1">
-                  <input type="text" class="checkout-combo-input checkout-input" id="coCountry" autocomplete="off" placeholder="选择国家 / 地区" value="🇺🇸 美国 +1" readonly>
-                  <svg class="checkout-combo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-                  <svg class="checkout-combo-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  <input type="hidden" id="coCountryValue" value="US">
-                  <div class="checkout-combo-menu" hidden></div>
-                </div>
-              </div>
-            </div>
-            <div class="checkout-form-row checkout-form-row-2">
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coFirstName">名字</label>
-                <input type="text" id="coFirstName" class="checkout-input" placeholder="名字" value="Sophia" required>
-              </div>
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coLastName">姓氏</label>
-                <input type="text" id="coLastName" class="checkout-input" placeholder="姓氏" value="Johnson" required>
-              </div>
-            </div>
-            <div class="checkout-form-row">
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coAddress">地址</label>
-                <input type="text" id="coAddress" class="checkout-input" placeholder="街道地址" value="1234 Beverly Blvd" required>
-              </div>
-            </div>
-            <div class="checkout-form-row">
-              <div class="checkout-form-group">
-                <input type="text" id="coApt" class="checkout-input" placeholder="添加公寓、套房号（可选）">
-              </div>
-            </div>
-            <div class="checkout-form-row checkout-form-row-3">
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coCity">城市</label>
-                <input type="text" id="coCity" class="checkout-input" placeholder="城市" value="Los Angeles" required>
-              </div>
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coState">州 / 省</label>
-                <div class="checkout-select-wrap">
-                  <select id="coState" class="checkout-select" required>
-                    <option value="CA" selected>California</option>
-                    <option value="NY">New York</option>
-                    <option value="TX">Texas</option>
-                    <option value="FL">Florida</option>
-                  </select>
-                  <svg class="checkout-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coZip">邮政编码</label>
-                <input type="text" id="coZip" class="checkout-input" placeholder="邮政编码" value="90048" required>
-              </div>
-            </div>
-            <div class="checkout-form-row">
-              <div class="checkout-form-group">
-                <label class="checkout-label" for="coPhone">电话（可选）</label>
-                <div class="checkout-phone-wrap">
-                  <div class="checkout-combo checkout-dial-combo" id="coDialCombo" data-default="+1|US">
-                    <input type="text" class="checkout-combo-input checkout-dial-input" id="coDial" autocomplete="off" placeholder="+1 美国" value="+1 美国" readonly>
+
+            <!-- 视图A：已保存地址列表（默认有地址时呈现） -->
+            <div class="co-addr-list" id="coAddrList"></div>
+
+            <!-- 视图B：首次/无地址填写表单（复用现有收货地址排版，默认无地址时呈现） -->
+            <div class="co-addr-form" id="coAddrForm">
+              <div class="checkout-form-row">
+                <div class="checkout-form-group">
+                  <label class="checkout-label">国家 / 地区</label>
+                  <div class="checkout-combo checkout-country-combo" id="coCountryCombo" data-default="US" data-required="1">
+                    <input type="text" class="checkout-combo-input checkout-input" id="coCountry" autocomplete="off" placeholder="选择国家 / 地区" value="🇺🇸 美国 +1" readonly>
                     <svg class="checkout-combo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                     <svg class="checkout-combo-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    <input type="hidden" id="coDialValue" value="+1|US">
+                    <input type="hidden" id="coCountryValue" value="US">
                     <div class="checkout-combo-menu" hidden></div>
                   </div>
-                  <input type="tel" id="coPhone" class="checkout-input checkout-phone-input" placeholder="323-555-1234" value="323-555-1234">
                 </div>
               </div>
+              <div class="checkout-form-row checkout-form-row-2">
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coFirstName">名字</label>
+                  <input type="text" id="coFirstName" class="checkout-input" placeholder="名字" value="晓" required>
+                </div>
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coLastName">姓氏</label>
+                  <input type="text" id="coLastName" class="checkout-input" placeholder="姓氏" value="陈" required>
+                </div>
+              </div>
+              <div class="checkout-form-row">
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coAddress">地址</label>
+                  <input type="text" id="coAddress" class="checkout-input" placeholder="街道地址" value="Beverly 大道 1234 号" required>
+                </div>
+              </div>
+              <div class="checkout-form-row">
+                <div class="checkout-form-group">
+                  <input type="text" id="coApt" class="checkout-input" placeholder="添加公寓、套房号（可选）">
+                </div>
+              </div>
+              <div class="checkout-form-row checkout-form-row-3">
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coCity">城市</label>
+                  <input type="text" id="coCity" class="checkout-input" placeholder="城市" value="洛杉矶" required>
+                </div>
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coState">州 / 省</label>
+                  <div class="checkout-select-wrap">
+                    <select id="coState" class="checkout-select" required>
+                      <option value="CA" selected>加州</option>
+                      <option value="NY">纽约州</option>
+                      <option value="TX">德克萨斯州</option>
+                      <option value="FL">佛罗里达州</option>
+                    </select>
+                    <svg class="checkout-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coZip">邮政编码</label>
+                  <input type="text" id="coZip" class="checkout-input" placeholder="邮政编码" value="90048" required>
+                </div>
+              </div>
+              <div class="checkout-form-row">
+                <div class="checkout-form-group">
+                  <label class="checkout-label" for="coPhone">电话（可选）</label>
+                  <div class="checkout-phone-wrap">
+                    <div class="checkout-combo checkout-dial-combo" id="coDialCombo" data-default="+1|US">
+                      <input type="text" class="checkout-combo-input checkout-dial-input" id="coDial" autocomplete="off" placeholder="+1 美国" value="+1 美国" readonly>
+                      <svg class="checkout-combo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                      <svg class="checkout-combo-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <input type="hidden" id="coDialValue" value="+1|US">
+                      <div class="checkout-combo-menu" hidden></div>
+                    </div>
+                    <input type="tel" id="coPhone" class="checkout-input checkout-phone-input" placeholder="323-555-1234" value="323-555-1234">
+                  </div>
+                </div>
+              </div>
+              <label class="checkout-check-wrap">
+                <input type="checkbox" class="checkout-check-input" id="coSaveAddress" checked>
+                <span class="checkout-check-box"></span>
+                <span class="checkout-check-text">保存为默认地址</span>
+              </label>
             </div>
-            <label class="checkout-check-wrap">
-              <input type="checkbox" class="checkout-check-input" id="coSaveAddress" checked>
-              <span class="checkout-check-box"></span>
-              <span class="checkout-check-text">保存为默认地址</span>
-            </label>
+
+            <!-- 模拟切换按钮：在「列表视图」与「表单视图」之间演示 -->
+            <button type="button" class="checkout-demo-btn checkout-demo-btn-ghost" id="coFakeAddrBtn">
+              <svg class="checkout-demo-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+              模拟切换收货地址视图
+            </button>
           </section>
 
           <!-- 3. 配送方式 -->
@@ -489,6 +503,16 @@
             立即安全支付
           </button>
 
+          <button type="button" class="checkout-fail-demo-btn" id="coFailDemoBtn">
+            <svg class="checkout-fail-demo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            模拟订单提交失败
+          </button>
+
+          <button type="button" class="checkout-unpaid-demo-btn" id="coUnpaidDemoBtn">
+            <svg class="checkout-unpaid-demo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            模拟支付未完成
+          </button>
+
           <p class="checkout-terms">继续下单，即表示您同意我们的 <a href="#">服务条款</a>、<a href="#">隐私政策</a> 和 <a href="#">退换政策</a>。</p>
         </div>
       </aside>
@@ -550,6 +574,235 @@
       <div class="co-coupon-dialog-actions">
         <button type="button" class="co-coupon-dialog-cancel" id="coCouponDialogCancel">取消</button>
         <button type="button" class="co-coupon-dialog-apply" id="coCouponDialogApply">应用优惠券</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 订单提交失败对话框 -->
+  <div class="co-fail-overlay" id="coFailOverlay" hidden>
+    <div class="co-fail-dialog" role="dialog" aria-modal="true" aria-label="订单提交失败">
+      <div class="co-fail-icon-wrap" aria-hidden="true">
+        <svg class="co-fail-icon" viewBox="0 0 80 80">
+          <circle class="co-fail-icon-circle" cx="40" cy="40" r="38" fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <path class="co-fail-icon-x" d="M32 32L48 48M48 32L32 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h3 class="co-fail-title">订单提交失败</h3>
+      <p class="co-fail-subtitle">很抱歉，订单暂未创建成功，您的支付尚未完成扣款。</p>
+
+      <div class="co-fail-reason">
+        <div class="co-fail-reason-header">
+          <svg class="co-fail-reason-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="co-fail-reason-title">失败原因</span>
+        </div>
+        <ul class="co-fail-reason-list">
+          <li class="co-fail-reason-item">22 英寸 / 棕色 / 3 包组合 库存不足</li>
+          <li class="co-fail-reason-item">优惠条件已发生变化，请重新确认订单信息。</li>
+        </ul>
+      </div>
+
+      <p class="co-fail-keep">
+        <svg class="co-fail-keep-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        您已填写的收货信息、配送方式、优惠券和积分设置将被保留。
+      </p>
+
+      <div class="co-fail-actions">
+        <button type="button" class="co-fail-btn co-fail-btn-primary" id="coFailBackBtn">返回结算页修改</button>
+        <button type="button" class="co-fail-btn co-fail-btn-secondary" id="coFailRetryBtn">刷新重试</button>
+      </div>
+
+      <a href="#" class="co-fail-support" id="coFailSupportLink">
+        <svg class="co-fail-support-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        联系客服
+      </a>
+
+      <div class="co-fail-notice">
+        <svg class="co-fail-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="co-fail-notice-text">本次未成功创建订单，请在修改后重新提交；系统不会重复扣款。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 支付未完成对话框 -->
+  <div class="co-unpaid-overlay" id="coUnpaidOverlay" hidden>
+    <div class="co-unpaid-dialog" role="dialog" aria-modal="true" aria-label="支付未完成">
+      <div class="co-unpaid-icon-wrap" aria-hidden="true">
+        <svg class="co-unpaid-icon" viewBox="0 0 80 80">
+          <circle class="co-unpaid-icon-circle" cx="40" cy="40" r="38" fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <g class="co-unpaid-icon-mark">
+            <line x1="40" y1="24" x2="40" y2="44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="40" cy="56" r="3.5" fill="currentColor"/>
+          </g>
+        </svg>
+      </div>
+
+      <h3 class="co-unpaid-title">支付未完成</h3>
+      <p class="co-unpaid-subtitle">订单已创建成功，但本次付款未成功，请完成支付以保留库存与优惠。</p>
+
+      <div class="co-unpaid-order">
+        <div class="co-unpaid-order-row">
+          <span class="co-unpaid-order-label">订单状态：</span>
+          <span class="co-unpaid-order-value co-unpaid-order-status">待付款</span>
+        </div>
+        <div class="co-unpaid-order-row">
+          <span class="co-unpaid-order-label">订单编号：</span>
+          <span class="co-unpaid-order-value" id="coUnpaidOrderNo">NO20260810-1024</span>
+        </div>
+        <div class="co-unpaid-order-row">
+          <span class="co-unpaid-order-label">支付方式：</span>
+          <span class="co-unpaid-order-value">信用卡</span>
+        </div>
+      </div>
+
+      <div class="co-unpaid-reason">
+        <svg class="co-unpaid-reason-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2" y="5" width="20" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="18" cy="15" r="4" fill="currentColor"/>
+          <path d="M18 13v4M16 15h4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <div class="co-unpaid-reason-body">
+          <span class="co-unpaid-reason-label">支付失败原因：</span>
+          <span class="co-unpaid-reason-text">发卡行拒绝交易 / 验证未通过</span>
+        </div>
+      </div>
+
+      <div class="co-unpaid-hint">
+        <svg class="co-unpaid-hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span class="co-unpaid-hint-text">请勿重复创建订单，您可以直接重新支付或更换支付方式。</span>
+      </div>
+
+      <div class="co-unpaid-actions">
+        <button type="button" class="co-unpaid-btn co-unpaid-btn-primary" id="coUnpaidPayBtn">重新支付</button>
+        <button type="button" class="co-unpaid-btn co-unpaid-btn-secondary" id="coUnpaidChangeBtn">更换支付方式</button>
+      </div>
+
+      <a href="#" class="co-unpaid-link" id="coUnpaidOrderLink">
+        查看我的订单
+        <svg class="co-unpaid-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <div class="co-unpaid-footer">
+        <svg class="co-unpaid-footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="co-unpaid-footer-text">您可以稍后完成支付，订单将保留在「我的订单 - 待付款」中。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 更换收货地址对话框 -->
+  <div class="co-addr-overlay" id="coAddrOverlay" hidden>
+    <div class="co-addr-dialog" role="dialog" aria-modal="true" aria-label="更换收货地址">
+      <div class="co-addr-dialog-header">
+        <h3 class="co-addr-dialog-title">选择收货地址</h3>
+        <button type="button" class="co-addr-dialog-close" id="coAddrCloseBtn" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="co-addr-dialog-list" id="coAddrDialogList"></div>
+
+      <div class="co-addr-dialog-actions">
+        <button type="button" class="co-addr-dialog-add" id="coAddrAddBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          新增收货地址
+        </button>
+        <button type="button" class="co-addr-dialog-confirm" id="coAddrConfirmBtn">使用选中地址</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增收货地址对话框 -->
+  <div class="co-add-overlay" id="coAddOverlay" hidden>
+    <div class="co-add-dialog" role="dialog" aria-modal="true" aria-label="新增收货地址">
+      <div class="co-add-dialog-header">
+        <h3 class="co-add-dialog-title">新增收货地址</h3>
+        <button type="button" class="co-add-dialog-close" id="coAddCloseBtn" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="co-add-dialog-body">
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label class="checkout-label">国家 / 地区</label>
+            <div class="checkout-combo" id="coAddCountryCombo" data-default="US" data-required="1">
+              <input type="text" class="checkout-combo-input checkout-input" id="coAddCountry" autocomplete="off" placeholder="选择国家 / 地区" value="🇺🇸 美国 +1" readonly>
+              <svg class="checkout-combo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg class="checkout-combo-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <input type="hidden" id="coAddCountryValue" value="US">
+              <div class="checkout-combo-menu" hidden></div>
+            </div>
+          </div>
+        </div>
+        <div class="checkout-form-row checkout-form-row-2">
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddFirstName">名字</label>
+            <input type="text" id="coAddFirstName" class="checkout-input" placeholder="名字">
+          </div>
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddLastName">姓氏</label>
+            <input type="text" id="coAddLastName" class="checkout-input" placeholder="姓氏">
+          </div>
+        </div>
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddAddress">地址</label>
+            <input type="text" id="coAddAddress" class="checkout-input" placeholder="街道地址">
+          </div>
+        </div>
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <input type="text" id="coAddApt" class="checkout-input" placeholder="添加公寓、套房号（可选）">
+          </div>
+        </div>
+        <div class="checkout-form-row checkout-form-row-3">
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddCity">城市</label>
+            <input type="text" id="coAddCity" class="checkout-input" placeholder="城市">
+          </div>
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddState">州 / 省</label>
+            <div class="checkout-select-wrap">
+              <select id="coAddState" class="checkout-select">
+                <option value="CA" selected>加州</option>
+                <option value="NY">纽约州</option>
+                <option value="TX">德克萨斯州</option>
+                <option value="FL">佛罗里达州</option>
+              </select>
+              <svg class="checkout-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddZip">邮政编码</label>
+            <input type="text" id="coAddZip" class="checkout-input" placeholder="邮政编码">
+          </div>
+        </div>
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="coAddPhone">电话（可选）</label>
+            <div class="checkout-phone-wrap">
+              <div class="checkout-combo checkout-dial-combo" id="coAddDialCombo" data-default="+1|US">
+                <input type="text" class="checkout-combo-input checkout-dial-input" id="coAddDial" autocomplete="off" placeholder="+1 美国" value="+1 美国" readonly>
+                <svg class="checkout-combo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="checkout-combo-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <input type="hidden" id="coAddDialValue" value="+1|US">
+                <div class="checkout-combo-menu" hidden></div>
+              </div>
+              <input type="tel" id="coAddPhone" class="checkout-input checkout-phone-input" placeholder="323-555-1234">
+            </div>
+          </div>
+        </div>
+        <label class="checkout-check-wrap">
+          <input type="checkbox" class="checkout-check-input" id="coAddDefault" checked>
+          <span class="checkout-check-box"></span>
+          <span class="checkout-check-text">设为默认地址</span>
+        </label>
+      </div>
+
+      <div class="co-add-dialog-actions">
+        <button type="button" class="co-add-dialog-cancel" id="coAddCancelBtn">取消</button>
+        <button type="button" class="co-add-dialog-save" id="coAddSaveBtn">保存地址</button>
       </div>
     </div>
   </div>

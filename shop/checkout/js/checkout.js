@@ -641,6 +641,47 @@
     }, 4800);
   }
 
+  function openFailDialog() {
+    var overlay = document.getElementById('coFailOverlay');
+    if (!overlay) return;
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFailDialog() {
+    var overlay = document.getElementById('coFailOverlay');
+    if (!overlay) return;
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function openUnpaidDialog() {
+    var overlay = document.getElementById('coUnpaidOverlay');
+    if (!overlay) return;
+    // 生成一个示例订单号
+    var orderNoEl = document.getElementById('coUnpaidOrderNo');
+    if (orderNoEl) {
+      var suffix = Math.floor(Math.random() * 10000).toString();
+      while (suffix.length < 4) suffix = '0' + suffix;
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = (now.getMonth() + 1).toString();
+      var d = now.getDate().toString();
+      if (m.length < 2) m = '0' + m;
+      if (d.length < 2) d = '0' + d;
+      orderNoEl.textContent = 'NO' + y + m + d + '-' + suffix;
+    }
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeUnpaidDialog() {
+    var overlay = document.getElementById('coUnpaidOverlay');
+    if (!overlay) return;
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
   function generateOrderNo() {
     var suffix = Math.floor(Math.random() * 1000000).toString();
     while (suffix.length < 6) suffix = '0' + suffix;
@@ -677,6 +718,55 @@
 
   function bindEvents() {
     var shopContent = getShopContent();
+
+    // ===== 收货地址：列表/表单视图切换、更换对话框、新增表单 =====
+    initAddressModule();
+
+    // 模拟切换按钮：在两个视图间演示
+    var fakeAddrBtn = document.getElementById('coFakeAddrBtn');
+    if (fakeAddrBtn) {
+      fakeAddrBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        toggleAddrView();
+      });
+    }
+
+    // 更换收货地址按钮 → 打开更换对话框
+    var changeAddrBtn = document.getElementById('coChangeAddrBtn');
+    if (changeAddrBtn) {
+      changeAddrBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openAddrDialog();
+      });
+    }
+
+    // 更换对话框：关闭 / 新增 / 确认 / 遮罩
+    var addrClose = document.getElementById('coAddrCloseBtn');
+    if (addrClose) addrClose.addEventListener('click', closeAddrDialog);
+    var addrAdd = document.getElementById('coAddrAddBtn');
+    if (addrAdd) addrAdd.addEventListener('click', openAddDialog);
+    var addrConfirm = document.getElementById('coAddrConfirmBtn');
+    if (addrConfirm) addrConfirm.addEventListener('click', confirmAddrDialog);
+    var addrOverlay = document.getElementById('coAddrOverlay');
+    if (addrOverlay) {
+      addrOverlay.addEventListener('click', function (e) {
+        if (e.target === addrOverlay) closeAddrDialog();
+      });
+    }
+
+    // 新增对话框：关闭 / 取消 / 保存 / 遮罩
+    var addClose = document.getElementById('coAddCloseBtn');
+    if (addClose) addClose.addEventListener('click', closeAddDialog);
+    var addCancel = document.getElementById('coAddCancelBtn');
+    if (addCancel) addCancel.addEventListener('click', closeAddDialog);
+    var addSave = document.getElementById('coAddSaveBtn');
+    if (addSave) addSave.addEventListener('click', saveAddDialog);
+    var addOverlay = document.getElementById('coAddOverlay');
+    if (addOverlay) {
+      addOverlay.addEventListener('click', function (e) {
+        if (e.target === addOverlay) closeAddDialog();
+      });
+    }
 
     // 单选卡片状态 + 配送/支付方式切换
     shopContent.addEventListener('change', function (e) {
@@ -792,6 +882,108 @@
     var submitBtn = document.getElementById('coSubmitOrder');
     if (submitBtn) submitBtn.addEventListener('click', submitOrder);
 
+    // 模拟提交失败按钮
+    var coFailDemoBtn = document.getElementById('coFailDemoBtn');
+    if (coFailDemoBtn) {
+      coFailDemoBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openFailDialog();
+      });
+    }
+
+    // 失败对话框：返回结算页修改
+    var coFailBackBtn = document.getElementById('coFailBackBtn');
+    if (coFailBackBtn) {
+      coFailBackBtn.addEventListener('click', function () {
+        closeFailDialog();
+      });
+    }
+
+    // 失败对话框：刷新重试
+    var coFailRetryBtn = document.getElementById('coFailRetryBtn');
+    if (coFailRetryBtn) {
+      coFailRetryBtn.addEventListener('click', function () {
+        closeFailDialog();
+        window.location.reload();
+      });
+    }
+
+    // 失败对话框：点击遮罩关闭
+    var coFailOverlay = document.getElementById('coFailOverlay');
+    if (coFailOverlay) {
+      coFailOverlay.addEventListener('click', function (e) {
+        if (e.target === coFailOverlay) closeFailDialog();
+      });
+    }
+
+    // 失败对话框：联系客服
+    var coFailSupportLink = document.getElementById('coFailSupportLink');
+    if (coFailSupportLink) {
+      coFailSupportLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (typeof window.ShopRouter !== 'undefined') {
+          window.ShopRouter.loadPage('help/index.html');
+        } else {
+          window.location.hash = '#help';
+        }
+      });
+    }
+
+    // 模拟支付未完成按钮
+    var coUnpaidDemoBtn = document.getElementById('coUnpaidDemoBtn');
+    if (coUnpaidDemoBtn) {
+      coUnpaidDemoBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openUnpaidDialog();
+      });
+    }
+
+    // 支付未完成对话框：重新支付
+    var coUnpaidPayBtn = document.getElementById('coUnpaidPayBtn');
+    if (coUnpaidPayBtn) {
+      coUnpaidPayBtn.addEventListener('click', function () {
+        closeUnpaidDialog();
+        // 重新走支付流程
+        submitOrder();
+      });
+    }
+
+    // 支付未完成对话框：更换支付方式
+    var coUnpaidChangeBtn = document.getElementById('coUnpaidChangeBtn');
+    if (coUnpaidChangeBtn) {
+      coUnpaidChangeBtn.addEventListener('click', function () {
+        closeUnpaidDialog();
+        // 滚动到支付方式区域并高亮
+        var paySection = document.querySelector('.checkout-section:has(#coPayCard)');
+        if (paySection) {
+          paySection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          paySection.style.outline = '2px solid rgba(93, 64, 55, 0.25)';
+          setTimeout(function () { paySection.style.outline = ''; }, 1200);
+        }
+      });
+    }
+
+    // 支付未完成对话框：查看我的订单
+    var coUnpaidOrderLink = document.getElementById('coUnpaidOrderLink');
+    if (coUnpaidOrderLink) {
+      coUnpaidOrderLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (typeof window.ShopRouter !== 'undefined') {
+          window.ShopRouter.loadPage('account/orders.html');
+        } else {
+          window.location.hash = '#account/orders';
+        }
+      });
+    }
+
+    // 支付未完成对话框：点击遮罩关闭
+    var coUnpaidOverlay = document.getElementById('coUnpaidOverlay');
+    if (coUnpaidOverlay) {
+      coUnpaidOverlay.addEventListener('click', function (e) {
+        if (e.target === coUnpaidOverlay) closeUnpaidDialog();
+      });
+    }
+
     // 面包屑首页
     var bcHome = shopContent.querySelector('[data-page="index.html"]');
     if (bcHome) bcHome.addEventListener('click', navigateToHome);
@@ -837,7 +1029,281 @@
     renderSummaryTips();
   }
 
-  // 应付/优惠变化时刷新「最多可抵扣」与「可赚积分」展示（不动用户已选的积分抵扣）
+  /* ========================
+     收货地址模块：列表/表单双视图
+     - 默认有地址 → 列表视图；无地址 → 表单视图
+     - 模拟按钮在两个视图间切换演示
+     - 更换对话框：列表单选 + 新增；新增对话框：复用表单排版
+     ======================== */
+  var ADDRESS_DATA = [
+    {
+      id: 'a1',
+      first: '晓', last: '陈',
+      country: 'US', countryLabel: '🇺🇸 美国 +1', dial: '+1',
+      address: ' Beverly 大道 1234 号', apt: '',
+      city: '洛杉矶', state: '加州', zip: '90048',
+      phone: '323-555-1234', isDefault: true
+    },
+    {
+      id: 'a2',
+      first: '晓', last: '陈',
+      country: 'US', countryLabel: '🇺🇸 美国 +1', dial: '+1',
+      address: '市场街 88 号', apt: '1205 室',
+      city: '纽约', state: '纽约州', zip: '10005',
+      phone: '212-555-7788', isDefault: false
+    }
+  ];
+  var currentAddrId = 'a1';
+
+  function initAddressModule() {
+    renderAddrList();
+    // 默认呈现：有地址 → 列表视图；无地址 → 表单视图
+    var hasAddr = ADDRESS_DATA.length > 0;
+    setAddrView(hasAddr ? 'list' : 'form');
+  }
+
+  function setAddrView(view) {
+    var list = document.getElementById('coAddrList');
+    var form = document.getElementById('coAddrForm');
+    var changeBtn = document.getElementById('coChangeAddrBtn');
+    if (view === 'list') {
+      if (list) list.classList.remove('is-hidden');
+      if (form) form.classList.add('is-hidden');
+      if (changeBtn) changeBtn.style.display = '';
+    } else {
+      if (list) list.classList.add('is-hidden');
+      if (form) form.classList.remove('is-hidden');
+      if (changeBtn) changeBtn.style.display = 'none';
+    }
+  }
+
+  function toggleAddrView() {
+    var form = document.getElementById('coAddrForm');
+    if (!form) return;
+    // 当前表单可见 → 切到列表；否则切到表单
+    if (form.classList.contains('is-hidden')) {
+      setAddrView('form');
+    } else {
+      setAddrView('list');
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function addrLineText(a) {
+    var line = a.address;
+    if (a.apt) line += ', ' + a.apt;
+    line += ', ' + a.city + ', ' + a.state + ' ' + a.zip;
+    return line;
+  }
+
+  function addrContactText(a) {
+    return a.first + ' ' + a.last + ' · ' + a.dial + ' ' + a.phone;
+  }
+
+  function renderAddrList() {
+    var list = document.getElementById('coAddrList');
+    if (!list) return;
+    list.innerHTML = '';
+    // 一级页面只显示当前选中的那一条收货地址
+    var a = ADDRESS_DATA.filter(function (x) { return x.id === currentAddrId; })[0];
+    if (!a) return;
+    var card = document.createElement('div');
+    card.className = 'co-addr-card is-selected';
+    card.setAttribute('data-id', a.id);
+    card.innerHTML =
+      '<span class="co-addr-card-radio"></span>' +
+      '<div class="co-addr-card-body">' +
+        '<div class="co-addr-card-top">' +
+          '<span class="co-addr-card-name">' + escapeHtml(a.first + ' ' + a.last) + '</span>' +
+          (a.isDefault ? '<span class="co-addr-card-default">默认</span>' : '') +
+        '</div>' +
+        '<div class="co-addr-card-line">' + escapeHtml(addrLineText(a)) + '</div>' +
+        '<div class="co-addr-card-line">' + escapeHtml(addrContactText(a)) + '</div>' +
+      '</div>' +
+      '<button type="button" class="co-addr-card-edit" data-edit="' + a.id + '" aria-label="编辑">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+      '</button>';
+    var editBtn = card.querySelector('.co-addr-card-edit');
+    if (editBtn) {
+      editBtn.addEventListener('click', function () {
+        openAddDialog(a.id);
+      });
+    }
+    list.appendChild(card);
+  }
+
+  /* ---- 更换收货地址对话框 ---- */
+  function openAddrDialog() {
+    var overlay = document.getElementById('coAddrOverlay');
+    if (!overlay) return;
+    renderAddrDialogList();
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAddrDialog() {
+    var overlay = document.getElementById('coAddrOverlay');
+    if (overlay) overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function renderAddrDialogList() {
+    var list = document.getElementById('coAddrDialogList');
+    if (!list) return;
+    list.innerHTML = '';
+    ADDRESS_DATA.forEach(function (a) {
+      var card = document.createElement('div');
+      card.className = 'co-addr-dialog-card' + (a.id === currentAddrId ? ' is-selected' : '');
+      card.setAttribute('data-id', a.id);
+      card.innerHTML =
+        '<span class="co-addr-dialog-card-radio"></span>' +
+        '<div class="co-addr-dialog-card-body">' +
+          '<div class="co-addr-dialog-card-name">' + escapeHtml(a.first + ' ' + a.last) +
+            (a.isDefault ? '<span class="co-addr-dialog-card-default">默认</span>' : '') +
+          '</div>' +
+          '<div class="co-addr-dialog-card-line">' + escapeHtml(addrLineText(a)) + '</div>' +
+          '<div class="co-addr-dialog-card-line">' + escapeHtml(addrContactText(a)) + '</div>' +
+        '</div>';
+      card.addEventListener('click', function () {
+        currentAddrId = a.id;
+        renderAddrDialogList();
+      });
+      list.appendChild(card);
+    });
+  }
+
+  function confirmAddrDialog() {
+    renderAddrList();
+    setAddrView('list');
+    closeAddrDialog();
+  }
+
+  /* ---- 新增收货地址对话框（复用表单排版） ---- */
+  function openAddDialog(editId) {
+    var overlay = document.getElementById('coAddOverlay');
+    if (!overlay) return;
+    var editing = null;
+    if (editId) {
+      editing = ADDRESS_DATA.filter(function (x) { return x.id === editId; })[0] || null;
+    }
+    overlay.setAttribute('data-edit', editId || '');
+    var titleEl = document.getElementById('coAddDialogTitle');
+    if (titleEl) titleEl.textContent = editing ? '编辑收货地址' : '新增收货地址';
+
+    // 填充表单
+    setValue('coAddFirstName', editing ? editing.first : '');
+    setValue('coAddLastName', editing ? editing.last : '');
+    setValue('coAddAddress', editing ? editing.address : '');
+    setValue('coAddApt', editing ? editing.apt : '');
+    setValue('coAddCity', editing ? editing.city : '');
+    var stateSel = document.getElementById('coAddState');
+    if (stateSel) stateSel.value = editing ? editing.state : 'CA';
+    setValue('coAddZip', editing ? editing.zip : '');
+    setValue('coAddPhone', editing ? editing.phone : '');
+    var countryInput = document.getElementById('coAddCountry');
+    var countryHidden = document.getElementById('coAddCountryValue');
+    if (countryInput) countryInput.value = editing ? editing.countryLabel : '🇺🇸 美国 +1';
+    if (countryHidden) countryHidden.value = editing ? editing.country : 'US';
+    var dialInput = document.getElementById('coAddDial');
+    var dialHidden = document.getElementById('coAddDialValue');
+    if (dialInput) dialInput.value = editing ? (editing.dial + ' 美国') : '+1 美国';
+    if (dialHidden) dialHidden.value = editing ? (editing.dial + '|' + editing.country) : '+1|US';
+    var defChk = document.getElementById('coAddDefault');
+    if (defChk) defChk.checked = editing ? editing.isDefault : true;
+
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAddDialog() {
+    var overlay = document.getElementById('coAddOverlay');
+    if (overlay) overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function setValue(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  function saveAddDialog() {
+    var overlay = document.getElementById('coAddOverlay');
+    var editId = overlay ? overlay.getAttribute('data-edit') : '';
+
+    // 简易校验
+    var first = (document.getElementById('coAddFirstName') || {}).value || '';
+    var last = (document.getElementById('coAddLastName') || {}).value || '';
+    var address = (document.getElementById('coAddAddress') || {}).value || '';
+    var city = (document.getElementById('coAddCity') || {}).value || '';
+    var zip = (document.getElementById('coAddZip') || {}).value || '';
+    if (!first || !last || !address || !city || !zip) {
+      alert('请填写姓名、地址、城市与邮政编码');
+      return;
+    }
+
+    var countryHidden = (document.getElementById('coAddCountryValue') || {}).value || 'US';
+    var dialHidden = (document.getElementById('coAddDialValue') || {}).value || '+1|US';
+    var dialParts = String(dialHidden).split('|');
+    var dialCode = dialParts[0] || '+1';
+    var countryVal = dialParts[1] || countryHidden;
+    var countryLabel = (document.getElementById('coAddCountry') || {}).value || '🇺🇸 美国 +1';
+    var stateSel = document.getElementById('coAddState');
+    var state = stateSel ? stateSel.value : 'CA';
+    var defChk = document.getElementById('coAddDefault');
+    var makeDefault = defChk ? defChk.checked : false;
+
+    if (editId) {
+      var idx = -1;
+      for (var i = 0; i < ADDRESS_DATA.length; i++) {
+        if (ADDRESS_DATA[i].id === editId) { idx = i; break; }
+      }
+      if (idx >= 0) {
+        var old = ADDRESS_DATA[idx];
+        ADDRESS_DATA[idx] = {
+          id: editId, first: first, last: last,
+          country: countryVal, countryLabel: countryLabel, dial: dialCode,
+          address: (document.getElementById('coAddAddress') || {}).value,
+          apt: (document.getElementById('coAddApt') || {}).value,
+          city: city, state: state, zip: zip,
+          phone: (document.getElementById('coAddPhone') || {}).value,
+          isDefault: makeDefault || old.isDefault
+        };
+      }
+    } else {
+      var newId = 'a' + (ADDRESS_DATA.length + 1) + '_' + Date.now();
+      ADDRESS_DATA.push({
+        id: newId, first: first, last: last,
+        country: countryVal, countryLabel: countryLabel, dial: dialCode,
+        address: (document.getElementById('coAddAddress') || {}).value,
+        apt: (document.getElementById('coAddApt') || {}).value,
+        city: city, state: state, zip: zip,
+        phone: (document.getElementById('coAddPhone') || {}).value,
+        isDefault: makeDefault
+      });
+    }
+
+    // 设为默认时，取消其他默认
+    if (makeDefault) {
+      ADDRESS_DATA.forEach(function (a) { if (a.id !== (editId || getLastId())) a.isDefault = false; });
+      var target = editId || getLastId();
+      ADDRESS_DATA.forEach(function (a) { if (a.id === target) a.isDefault = true; });
+      currentAddrId = target;
+    }
+
+    renderAddrList();
+    setAddrView('list');
+    closeAddDialog();
+  }
+
+  function getLastId() {
+    return ADDRESS_DATA.length ? ADDRESS_DATA[ADDRESS_DATA.length - 1].id : '';
+  }
+
   function refreshPointsMaxDisplay() {
     var maxPoints = getMaxDeductPoints();
     var maxValue = pointsToValue(maxPoints);

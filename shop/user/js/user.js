@@ -248,6 +248,12 @@
     }
   }
 
+  // 已开发完成、拥有独立页面的个人中心模块（命中则放行 router 跳转，不走占位）
+  var UC_BUILT_PAGES = {
+    'user/index.html': true,
+    'user/member.html': true
+  };
+
   // 捕获阶段拦截 user/* 链接，阻止 router.js 的 document 冒泡监听触发页面跳转
   document.addEventListener('click', function (e) {
     // 仅当个人中心页面已注入时拦截，避免误拦 header 等处的「查看个人中心」入口
@@ -257,6 +263,18 @@
     var page = link.getAttribute('data-page') || '';
     var base = page.split('?')[0];
     if (base.indexOf('user/') !== 0) return; // 只拦截个人中心内部链接
+
+    // 已开发独立页面的链接放行：交给 router.js 正常加载（用 loadPage 确保样式/脚本正确注入）
+    if (UC_BUILT_PAGES[base]) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.ShopRouter && ShopRouter.loadPage) {
+        ShopRouter.loadPage(base);
+      } else {
+        window.location.href = base;
+      }
+      return;
+    }
 
     e.preventDefault();
     e.stopPropagation();

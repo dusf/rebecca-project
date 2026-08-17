@@ -117,6 +117,7 @@
     'new-arrivals/index.html': 'new-arrivals/js/new-arrivals.js',
     'search/index.html': 'search/js/search-results.js',
     'user/index.html': 'user/js/user.js',
+    'user/member.html': 'user/js/member.js',
     'product/detail.html': 'product/js/detail.js',
     'cart/cart.html': 'cart/js/cart.js',
     'checkout/checkout.html': 'checkout/js/checkout.js',
@@ -128,6 +129,7 @@
   var PAGE_STYLE_MAP = {
     'search/index.html': 'search/css/search-results.css',
     'user/index.html': 'user/css/user.css?v=5',
+    'user/member.html': 'user/css/member.css',
     'product/detail.html': 'product/css/detail.css',
     'cart/cart.html': 'cart/css/cart.css',
     'checkout/checkout.html': 'checkout/css/checkout.css',
@@ -140,6 +142,7 @@
     'new-arrivals': 'new-arrivals/index.html',
     'search': 'search/index.html',
     'user': 'user/index.html',
+    'user/member': 'user/member.html',
     'product/detail': 'product/detail.html',
     'cart': 'cart/cart.html',
     'checkout': 'checkout/checkout.html',
@@ -273,6 +276,7 @@
       'new-arrivals/index.html': 'NOIRÉ HAIR — 新品上市',
       'search/index.html': 'NOIRÉ HAIR — 搜索结果',
       'user/index.html': 'NOIRÉ HAIR — 个人中心',
+    'user/member.html': 'NOIRÉ HAIR — 会员中心',
       'product/detail.html': 'NOIRÉ HAIR — 商品详情',
       'checkout/checkout.html': 'NOIRÉ HAIR — 安全结算',
       'order/success.html': 'NOIRÉ HAIR — 下单成功'
